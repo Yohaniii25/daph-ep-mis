@@ -1,0 +1,68 @@
+daph-ep-mis/                          ← Project root (upload to LGC / Docker)
+├── index.php                         ← Login page
+├── logout.php
+├── dashboard.php                     ← Redirects based on role
+├── config/
+│   ├── db_connect.php                ← DB connection (MySQLi)
+│   ├── constants.php                 ← All paths, site name, etc.
+│   └── session_check.php             ← Include in every page after login
+├── assets/
+│   ├── css/
+│   │   ├── bootstrap.min.css
+│   │   ├── style.css                 ← Custom government blue theme
+│   │   └── datatables.min.css
+│   ├── js/
+│   │   ├── jquery.min.js
+│   │   ├── bootstrap.min.js
+│   │   ├── datatables.min.js
+│   │   └── custom.js
+│   └── images/
+│       └── logo.png
+├── includes/
+│   ├── header.php
+│   ├── sidebar.php                   ← Menu changes according to role
+│   ├── footer.php
+│   └── functions.php                 ← Common functions (date format, language switch, etc.)
+├── auth/
+│   ├── login_process.php
+│   └── change_password.php
+├── uploads/
+│   ├── signatures/                   ← Digital signature images (for e-sign)
+│   └── reports/                      ← Generated PDFs
+├── modules/
+│   ├── hr/
+│   │   ├── leave_apply.php
+│   │   ├── leave_approve.php
+│   │   ├── staff_attendance.php
+│   │   └── diary_advance_programme.php
+│   ├── finance/
+│   │   ├── assets_register.php
+│   │   ├── procurement_plan.php
+│   │   └── revenue_collection.php
+│   ├── veterinary/
+│   │   ├── animal_treatment.php
+│   │   ├── disease_reporting.php
+│   │   ├── ai_castration.php
+│   │   ├── stock_management.php
+│   │   └── farmer_registration.php
+│   ├── farm/
+│   │   ├── poultry_hatchery.php
+│   │   ├── dairy_production.php
+│   │   └── fodder_distribution.php
+│   ├── project/
+│   │   ├── psdg_projects.php
+│   │   └── progress_physical_financial.php
+│   ├── training/
+│   │   └── farmer_training.php
+│   └── reports/
+│       ├── generate_pdf.php          ← Uses TCPDF or FPDF
+│       ├── provincial_summary.php
+│       └── district_dashboard.php
+├── admin/
+│   ├── manage_users.php              ← Create/edit the 130–220 logins
+│   ├── role_permissions.php          ← 10 roles × 60+ permissions matrix
+│   └── system_logs.php
+└── lang/
+    ├── en.php
+    ├── si.php                        ← Sinhala Unicode array
+    └── ta.php                        ← Tamil Unicode array
