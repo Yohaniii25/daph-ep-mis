@@ -1,0 +1,80 @@
+DAPH EASTERN PROVINCE MIS – BIRD’S EYE VIEW (90-Day Project)
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        1. USERS & OFFICES                       │
+└─────────────────────────────────────────────────────────────────┘
+           ▲           ▲           ▲           ▲           ▲
+           │           │           │           │           │
+Provincial   District   Subject     Farms      Veterinary   Admin/
+Director     Deputy    Matter      Deputy     Surgeons     Clerks
+(PD)         Directors Specialist  Director   (45 GVOs)    (Finance,
+             (3)       (SMS                   & LDOs       Planning,
+                                                        Accounts)
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     2. MAIN MODULES (10 Groups)                │
+└─────────────────────────────────────────────────────────────────┘
+
+1. Diary & Advance Programme
+   ├── Daily diary of every officer
+   ├── Advance to-do list
+   └── Approval workflow (PD → District DD → Vet Surgeon)
+
+2. Human Resources
+   ├── Staff attendance & leave
+   ├── Staff database
+   └── RTI activities
+
+3. Veterinary Field Activities (45 GVOs – the heart)
+   ├── Animal treatments (indoor/outdoor)
+   ├── Immunization & disease reporting
+   ├── Artificial insemination & castration
+   ├── Farmer registration & dairy hubs
+   └── Market price reporting (milk/meat/eggs)
+
+4. Stock & Supply Chain
+   ├── Drugs, vaccines, semen, certificates
+   ├── Stock in/out + expiry alerts
+   └── Minimum stock level warnings
+
+5. Revenue Collection
+   ├── Daily revenue from services & sales
+   └── Monthly revenue summary per office
+
+6. Farms & Training Centres
+   ├── Poultry hatchery, dairy farms, fodder
+   └── Farmer training programmes + revenue
+
+7. Development Projects
+   ├── PSDG, CBG, Line Ministry, NGO projects
+   └── Physical & financial progress tracking
+
+8. Reports Engine (20+ reports)
+   ├── Provincial summary
+   ├── District reports
+   ├── Stock status, Revenue, Disease, Project progress
+   └── All reports exportable to PDF & Excel
+
+9. Real-Time Dashboards (6 types)
+   1. Provincial Director Dashboard      → Whole province
+   2. District Dashboard (×3)            → Amparai / Batti / Trinco only
+   3. Subject Matter Specialist Dashboard→ Epidemiology + Supply chain
+   4. Farms Dashboard                    → Poultry + Dairy + Fodder
+   5. Veterinary Office Dashboard        → Used by all 45 GVOs
+   6. Admin & Finance Dashboard          → Leave, HR, Procurement
+
+10. Security & Compliance
+    ├── Role-based menu & data filtering
+    ├── Digital signature on approvals
+    ├── Full audit trail (who did what & when)
+    ├── SSL + SLCERT compliant
+    └── Trilingual (Sinhala / Tamil / English)
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    3. DATABASE TABLES (Main 25)                 │
+└─────────────────────────────────────────────────────────────────┘
+users, offices, districts, diary, diary_approval, leave, attendance,
+treatments, immunization, ai_castration, disease_reports, farmers,
+stock_items, stock_transactions, revenue, projects, project_progress,
+farm_production, training_programmes, audit_log, notifications,
+report_templates, user_roles, permissions, system_settings, languages
