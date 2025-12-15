@@ -55,10 +55,12 @@ daph-ep-mis/                          ← Project root (upload to LGC / Docker)
 │   │   │   ├── staff_attendance.php  ← Daily punch-in/out + reports
 │   │   │   └── diary_advance_programme.php ← Diary entry + advance to-do list (multi-day, attach files)
 │   │   ├── finance/
-│   │   │   ├── assets_register.php   ← Inventory table + add/edit
-│   │   │   ├── procurement_plan.php  ← Planning form + budget tracking
-│   │   │   └── revenue_collection.php ← Daily/weekly logs + charts (Figma pie for sources: drugs/vaccines/services)
-│   │   ├── veterinary/
+│   │   │   ├── assets_management.php   
+│   │   │   ├── procurement_plan.php  
+│   │   │   ├── finance_disbursementsources.php
+│   │   │   ├── veterinary_stores.php   
+│   │   |
+│   │   ├── veterinary
 │   │   │   ├── animal_treatment.php  ← Indoor/outdoor forms (species, symptoms, meds; Figma multi-step wizard)
 │   │   │   ├── disease_reporting.php ← Real-time alerts + provincial epi dashboard integration
 │   │   │   ├── ai_castration.php     ← AI/embryo/castration logs + materials distribution

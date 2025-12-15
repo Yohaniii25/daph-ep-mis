@@ -2,12 +2,12 @@
 $role = $_SESSION['role'] ?? '';
 $is_pd = ($role === 'provincial_director');
 $is_hr_user = ($role === 'administrator');
+$is_finance_admin = ($role === 'finance_admin');
 $base_path = '/daph-ep-mis/';
 $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 ?>
 
 <style>
-
     #layoutSidenav_nav {
         background: white !important;
         border-right: 1px solid #eee;
@@ -106,12 +106,36 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                     <?php endif; ?>
 
+                    <?php if ($is_finance_admin): ?>
+                        <!-- finance admin menu -->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" data-bs-toggle="collapse" href="#financeCollapse" role="button">
+                            Finance Management
+                            <i class="bi bi-chevron-down ms-auto"></i>
+                        </a>
+                        <div class="collapse" id="financeCollapse">
+                            <div class="ps-5">
+                                <a class="nav-link py-2" href="<?= $base_path ?>pages/modules/finance/assets_management.php">
+                                    Assets Management
+                                </a>
+                                <a class="nav-link py-2" href="<?= $base_path ?>pages/modules/finance/procurement_plan.php">
+                                    Procurement Plan
+                                </a>
+                                <a class="nav-link py-2" href="<?= $base_path ?>pages/modules/finance/finance_disbursementsources.php">
+                                    Finance Disbursement
+                                </a>
+                                <a class="nav-link py-2" href="<?= $base_path ?>pages/modules/finance/veterinary_stores.php">
+                                    Veterinary Stores
+                                </a>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                 </div>
                 <div class="horizontal-line"></div>
             </div>
 
             <div class="px pb">
-               <?php if (in_array($role, ['provincial_director', 'administrator'])): ?>
+                <?php if (in_array($role, ['provincial_director', 'administrator', 'finance_admin'])): ?>
                     <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
                         Settings
                     </a>

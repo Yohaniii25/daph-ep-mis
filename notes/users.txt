@@ -1,2 +1,6 @@
 yohanii725@gmail.com - 123yoh - provincial director
-hr@gmail.com - 3E[uI4r2qxh4 - admin
+hr@gmail.com - 3E[uI4r2qxh4 - administrator
+finance@gmail.com - fDR|62km!43t - finance admin
+
+
+'provincial_director','district_dd','veterinary_surgeon','ldo','sms','farms_dd','finance_admin','planning_officer','administrator','data_entry'
