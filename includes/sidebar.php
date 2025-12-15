@@ -1,71 +1,132 @@
-<!-- includes/sidebar.php  →  ONLY Provincial Director sees full menu -->
 <?php
 $role = $_SESSION['role'] ?? '';
 $is_pd = ($role === 'provincial_director');
+$is_hr_user = ($role === 'administrator');
+$base_path = '/daph-ep-mis/';
+$is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 ?>
 
-<div id="layoutSidenav_nav">
-    <nav class="sb-sidenav accordion sb-sidenav-dark" style="background:#6B0F1A; width:260px;">
-        <div class="sb-sidenav-menu">
-            <div class="nav">
+<style>
 
-                <!-- Logo Area -->
-                <div class="text-center py-4" style="background:rgba(255,255,255,0.1);">
-                    <img src="../assets/img/logo.png" height="60" class="mb-2">
-                    <h6 class="text-white mb-0">DAPH - EP MIS</h6>
+    #layoutSidenav_nav {
+        background: white !important;
+        border-right: 1px solid #eee;
+    }
+
+    .sb-sidenav-menu a {
+        color: #333 !important;
+        transition: background 0.3s, color 0.3s;
+    }
+
+    .sb-sidenav-menu a:hover {
+        background: #500707 !important;
+        color: white !important;
+    }
+
+    .sb-sidenav-menu a.bg-danger,
+    .sb-sidenav-menu a.active {
+        background: #500707 !important;
+        color: white !important;
+        font-weight: bold;
+    }
+
+    .border-white {
+        border-color: #ddd !important;
+    }
+
+    .text-white,
+    .text-white-50 {
+        color: #333 !important;
+    }
+
+    .text-white-50 {
+        color: #777 !important;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .text-danger:hover {
+        color: white !important;
+    }
+
+    .horizontal-line {
+        height: 1px;
+        background: #ddd;
+
+    }
+</style>
+
+<div id="layoutSidenav_nav">
+    <nav class="sb-sidenav accordion" style="background:#fff; height:100vh; width:260px; position:fixed; top:0; left:0; z-index:1030;">
+        <div class="sb-sidenav-menu h-100 d-flex flex-column justify-content-between">
+            <div>
+
+                <div class="text-center py-4 border-bottom">
+                    <img src="<?= $base_path ?>assets/img/logo.png" height="60" class="mb-2">
+
                 </div>
 
-                <!-- Always visible for everyone -->
-                <a class="nav-link <?= (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'active' : '' ?>" 
-                   href="../dashboard.php">
-                    <i class="bi bi-speedometer2 me-3"></i> Dashboard
-                </a>
-
-                <!-- ONLY PROVINCIAL DIRECTOR SEES THESE MENU ITEMS -->
-                <?php if ($is_pd): ?>
-
-                    <a class="nav-link" href="../pages/diary_management.php">
-                        <i class="bi bi-journal-text me-3"></i> Diary Management
+                <!-- Main Menu Items -->
+                <div class="sidebar-menu">
+                    <a class="nav-link d-flex align-items-center px-4 py-3 <?= $is_dashboard ? 'bg-danger' : '' ?>" href="<?= $base_path ?>dashboard.php">
+                        Dashboard
                     </a>
+                    <!-- Provincial Director Menu -->
+                    <?php if ($is_pd): ?>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/diary_management.php">
+                            Diary Management
+                        </a>
 
-                    <a class="nav-link" href="../pages/vehicle_management.php">
-                        <i class="bi bi-truck me-3"></i> Vehicle Management
-                    </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/vehicle_management.php">
+                            Vehicle Management
+                        </a>
 
-                    <a class="nav-link" href="../pages/reports.php">
-                        <i class="bi bi-file-earmark-bar-graph me-3"></i> Reports
-                    </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/reports.php">
+                            Reports
+                        </a>
+                    <?php endif; ?>
 
-                    <div class="sb-sidenav-menu-heading text-white-50 mt-4">System</div>
+                    <?php if ($is_hr_user): ?>
+                        <!-- HR Management Menu -->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/diary_management.php">
+                            HR Management
+                        </a>
 
-                    <a class="nav-link" href="../pages/settings.php">
-                        <i class="bi bi-gear me-3"></i> Settings
-                    </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/vehicle_management.php">
+                            Leave Managementt
+                        </a>
 
-                <?php endif; ?>
-                <!-- END OF PD-ONLY MENU -->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/reports.php">
+                            To-Do Tasks
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/reports.php">
+                            RTI Management
+                        </a>
+                    <?php endif; ?>
 
-                <!-- Common for all users who can see something -->
-                <?php if ($is_pd || in_array($role, ['district_dd','veterinary_surgeon','admin'])): ?>
-                    <a class="nav-link" href="../pages/my_diary.php">
-                        <i class="bi bi-journal me-3"></i> My Diary
-                    </a>
-                <?php endif; ?>
-
-                <!-- Logout for everyone -->
-                <div class="sb-sidenav-menu-heading text-white-50 mt-4">Account</div>
-                <a class="nav-link text-danger" href="../logout.php">
-                    <i class="bi bi-box-arrow-right me-3"></i> Logout
-                </a>
-
+                </div>
+                <div class="horizontal-line"></div>
             </div>
-        </div>
 
-        <!-- Footer inside sidebar -->
-        <div class="sb-sidenav-footer text-white" style="background:rgba(0,0,0,0.3);">
-            <div class="small">Logged in as:</div>
-            <strong><?= htmlspecialchars($_SESSION['full_name']) ?></strong><br>
-            <small><?= ucwords(str_replace('_', ' ', $role)) ?></small>
+            <div class="px pb">
+               <?php if (in_array($role, ['provincial_director', 'administrator'])): ?>
+                    <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
+                        Settings
+                    </a>
+                <?php endif; ?>
+
+                <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>logout.php">
+                    Logout
+                </a>
+
+                <div class="user-info mt-4 px-4 pb-4">
+                    <div style="color:#555;">Logged in as:</div>
+                    <strong style="color:#000;"><?= htmlspecialchars($_SESSION['full_name']) ?></strong><br>
+                    <small style="color:#777;"><?= ucwords(str_replace('_', ' ', $role)) ?></small>
+                </div>
+            </div>
         </div>
     </nav>
 </div>
