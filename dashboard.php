@@ -11,9 +11,9 @@ $dashboard_map = [
     'ldo'                 => 'pages/dashboard/veterinary_office.php',
     'sms'                 => 'pages/dashboard/sms.php',
     'farms_dd'            => 'pages/dashboard/farms.php',
-    'planning_officer'    => 'pages/dashboard/admin_finance.php',
-    'accountant'          => 'pages/dashboard/admin_finance.php',
-    'administrator'       => 'pages/dashboard/adminstrator.php'
+    'finance_admin'       => 'pages/dashboard/finance.php',
+    'administrator'       => 'pages/dashboard/adminstrator.php',
+    'planning_officer'    => 'pages/dashboard/planning_officer.php'
 ];
 
 $target = $dashboard_map[$role] ?? 'pages/dashboard/provincial_director.php';

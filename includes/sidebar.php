@@ -3,6 +3,7 @@ $role = $_SESSION['role'] ?? '';
 $is_pd = ($role === 'provincial_director');
 $is_hr_user = ($role === 'administrator');
 $is_finance_admin = ($role === 'finance_admin');
+$is_planning_officer = ($role === 'planning_officer');
 $base_path = '/daph-ep-mis/';
 $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 ?>
@@ -108,34 +109,39 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                     <?php if ($is_finance_admin): ?>
                         <!-- finance admin menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" data-bs-toggle="collapse" href="#financeCollapse" role="button">
+                        <a class="nav-link d-flex align-items-center px-4 py-3" ref="<?= $base_path ?>pages/modules/finance/assets_management.php">
                             Finance Management
-                            <i class="bi bi-chevron-down ms-auto"></i>
+
                         </a>
-                        <div class="collapse" id="financeCollapse">
-                            <div class="ps-5">
-                                <a class="nav-link py-2" href="<?= $base_path ?>pages/modules/finance/assets_management.php">
-                                    Assets Management
-                                </a>
-                                <a class="nav-link py-2" href="<?= $base_path ?>pages/modules/finance/procurement_plan.php">
-                                    Procurement Plan
-                                </a>
-                                <a class="nav-link py-2" href="<?= $base_path ?>pages/modules/finance/finance_disbursementsources.php">
-                                    Finance Disbursement
-                                </a>
-                                <a class="nav-link py-2" href="<?= $base_path ?>pages/modules/finance/veterinary_stores.php">
-                                    Veterinary Stores
-                                </a>
-                            </div>
-                        </div>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/assets_management.php">
+                            Assets Management
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/procurement_plan.php">
+                            Procurement Plan
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/finance_disbursementsources.php">
+                            Finance Disbursement
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/veterinary_stores.php">
+                            Veterinary Stores
+                        </a>
                     <?php endif; ?>
 
+                    <?php if ($is_planning_officer): ?>
+                        <!-- planning Ofiicer Menu-->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/project/psdg_projects.php">
+                            Development Projects (PSDG/CBG/NGO)
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/project/progress_physical_financial.php">
+                            Progress Reports (Physical & Financial)
+                        </a>
+                    <?php endif; ?>
                 </div>
                 <div class="horizontal-line"></div>
             </div>
 
             <div class="px pb">
-                <?php if (in_array($role, ['provincial_director', 'administrator', 'finance_admin'])): ?>
+                <?php if (in_array($role, ['provincial_director', 'administrator', 'finance_admin', 'planning_officer'])): ?>
                     <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
                         Settings
                     </a>
