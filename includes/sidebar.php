@@ -4,6 +4,7 @@ $is_pd = ($role === 'provincial_director');
 $is_hr_user = ($role === 'administrator');
 $is_finance_admin = ($role === 'finance_admin');
 $is_planning_officer = ($role === 'planning_officer');
+$is_sms = ($role === 'sms');
 $base_path = '/daph-ep-mis/';
 $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 ?>
@@ -136,12 +137,24 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             Progress Reports (Physical & Financial)
                         </a>
                     <?php endif; ?>
+                    <?php if ($is_sms): ?>
+                        <!-- Subject Matter Specialist Menu-->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/my_diary.php">
+                            My Diary
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/provincial_epidemiology.php">
+                            Provincial Epidemiology
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/veterinary_supply_chain.php">
+                            Veterinary Supply Chain
+                        </a>
+                    <?php endif; ?>
                 </div>
                 <div class="horizontal-line"></div>
             </div>
 
             <div class="px pb">
-                <?php if (in_array($role, ['provincial_director', 'administrator', 'finance_admin', 'planning_officer'])): ?>
+                <?php if (in_array($role, ['provincial_director', 'administrator', 'finance_admin', 'planning_officer', 'sms'])): ?>
                     <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
                         Settings
                     </a>

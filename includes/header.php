@@ -59,7 +59,7 @@ if (!isset($_SESSION['user_id'])) {
 
         #layoutSidenav_content {
             margin-left: 130px;
-            padding-top: 20px;
+            padding-top: 40px;
             min-height: 100vh;
             background: #fff;
         }
