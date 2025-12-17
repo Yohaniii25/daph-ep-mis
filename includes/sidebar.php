@@ -5,6 +5,8 @@ $is_hr_user = ($role === 'administrator');
 $is_finance_admin = ($role === 'finance_admin');
 $is_planning_officer = ($role === 'planning_officer');
 $is_sms = ($role === 'sms');
+$is_farms_dd = ($role === 'farms_dd');
+
 $base_path = '/daph-ep-mis/';
 $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 ?>
@@ -149,12 +151,28 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             Veterinary Supply Chain
                         </a>
                     <?php endif; ?>
+
+                    <?php if ($role === 'farms_dd'): ?>
+                        <!-- Farms Operations Menu -->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/poultry_hatchery.php">
+                            Poultry Operations
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/livestock_operations.php">
+                            Livestock Operations
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/fodder_distribution.php">
+                            Fodder Management
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/inputs_revenue.php">
+                            Inputs & Revenue
+                        </a>
+                    <?php endif; ?>
                 </div>
                 <div class="horizontal-line"></div>
             </div>
 
             <div class="px pb">
-                <?php if (in_array($role, ['provincial_director', 'administrator', 'finance_admin', 'planning_officer', 'sms'])): ?>
+                <?php if (in_array($role, ['provincial_director', 'administrator', 'finance_admin', 'planning_officer', 'sms', 'farms_dd'])): ?>
                     <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
                         Settings
                     </a>

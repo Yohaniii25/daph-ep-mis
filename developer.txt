@@ -1,3 +1,5 @@
+https://www.figma.com/design/TxnEoBDh2IPlFVsfDiktb4/Department-of-Animal-Production---Health?node-id=34-594&t=N3zA56OkWmf8Etf6-0
+
 daph-ep-mis/                          ← Project root (upload to LGC / Docker)
 ├── index.php                         ← Front controller: Session check → Login or Dashboard redirect
 ├── logout.php                        ← Clears session, redirects to index.php
@@ -68,8 +70,9 @@ daph-ep-mis/                          ← Project root (upload to LGC / Docker)
 │   │   │   └── farmer_registration.php ← DB for farms/farmers + dairy hubs
 │   │   ├── farm/
 │   │   │   ├── poultry_hatchery.php  ← Operations log + revenue
-│   │   │   ├── dairy_production.php  ← Milk yield/market price reporting
+│   │   │   ├── livestock_operations.php  ← Milk yield/market price reporting
 │   │   │   └── fodder_distribution.php ← Pasture materials supply + farmer training links
+|   |   |   ├── inputs_revenue.php
 │   │   ├── project/
 │   │   │   ├── psdg_projects.php     ← PSDG/CBG/NGO listing + add new
 │   │   │   └── progress_physical_financial.php ← Forms/charts for % complete (Figma bar/line graphs)

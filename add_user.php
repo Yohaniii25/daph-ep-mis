@@ -68,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="administrator">administrator</option>
                             <option value="finance_admin">Finance Admin</option>
                             <option value="planning_officer">Planning Officer</option>
+                            <option value="farms_dd">Deputy Director (Farms Operation)</option>
                         </select>
                     </div>
                     <div class="col-md-6">
