@@ -77,7 +77,9 @@ daph-ep-mis/                          ← Project root (upload to LGC / Docker)
 │   │   │   ├── psdg_projects.php     ← PSDG/CBG/NGO listing + add new
 │   │   │   └── progress_physical_financial.php ← Forms/charts for % complete (Figma bar/line graphs)
 │   │   └── training/
-│   │   │   └── farmer_training.php   ← Schedule/attendance/revenue
+│   │       └── training_activities.php   ← Schedule/attendance/revenue
+|   |       └── farmer_participation.php
+|   |       └── revenue_management.php
 │   │   └── sms/
 │   │       ├── my_diary.php                  ← Diary entry & advance programme
 │   │       ├── supply_stock_alerts.php       ← Low stock alerts + supply chain overview

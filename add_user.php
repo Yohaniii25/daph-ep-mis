@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="provincial_director">Provincial Director</option>
                             <option value="district_dd">District Deputy Director</option>
                             <option value="veterinary_surgeon">Veterinary Surgeon</option>
-                            <option value="ldo">Livestock Development Officer</option>
+                            <option value="training_officer">Training Officer</option>
                             <option value="sms">Subject Matter Specialist</option>
                             <option value="administrator">administrator</option>
                             <option value="finance_admin">Finance Admin</option>

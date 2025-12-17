@@ -6,6 +6,7 @@ $is_finance_admin = ($role === 'finance_admin');
 $is_planning_officer = ($role === 'planning_officer');
 $is_sms = ($role === 'sms');
 $is_farms_dd = ($role === 'farms_dd');
+$is_training_officer = ($role === 'training_officer');
 
 $base_path = '/daph-ep-mis/';
 $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
@@ -152,7 +153,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                     <?php endif; ?>
 
-                    <?php if ($role === 'farms_dd'): ?>
+                    <?php if ($is_farms_dd): ?>
                         <!-- Farms Operations Menu -->
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/poultry_hatchery.php">
                             Poultry Operations
@@ -167,17 +168,27 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             Inputs & Revenue
                         </a>
                     <?php endif; ?>
+                    <?php if ($is_training_officer): ?>
+                        <!-- Farms Operations Menu -->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/training/training_activities.php">
+                            Training Activities
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/training/farmer_participation.php">
+                            Farmer Participation
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/training/revenue_management.php">
+                            Revenue Management
+                        </a>
+                    <?php endif; ?>
                 </div>
                 <div class="horizontal-line"></div>
             </div>
 
             <div class="px pb">
-                <?php if (in_array($role, ['provincial_director', 'administrator', 'finance_admin', 'planning_officer', 'sms', 'farms_dd'])): ?>
-                    <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
-                        Settings
-                    </a>
-                <?php endif; ?>
 
+                <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
+                    Settings
+                </a>
                 <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>logout.php">
                     Logout
                 </a>
