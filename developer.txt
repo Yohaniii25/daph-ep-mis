@@ -77,15 +77,20 @@ daph-ep-mis/                          ← Project root (upload to LGC / Docker)
 │   │   │   ├── psdg_projects.php     ← PSDG/CBG/NGO listing + add new
 │   │   │   └── progress_physical_financial.php ← Forms/charts for % complete (Figma bar/line graphs)
 │   │   └── training/
-│   │       └── training_activities.php   ← Schedule/attendance/revenue
-|   |       └── farmer_participation.php
-|   |       └── revenue_management.php
+│   │   │   └── training_activities.php   ← Schedule/attendance/revenue
+|   |   │    └── farmer_participation.php
+|   |   │    └── revenue_management.php
 │   │   └── sms/
-│   │       ├── my_diary.php                  ← Diary entry & advance programme
-│   │       ├── supply_stock_alerts.php       ← Low stock alerts + supply chain overview
-│   │       ├── provincial_epidemiology.php   ← Provincial epi dashboard + map/chart
-│   │       └── veterinary_supply_chain.php   ← Full supply chain management
-│   ──── reports/
+│   │   │    ├── my_diary.php                  ← Diary entry & advance programme
+│   │   │    ├── supply_stock_alerts.php       ← Low stock alerts + supply chain overview
+│   │   │    ├── provincial_epidemiology.php   ← Provincial epi dashboard + map/chart
+│   │   │    └── veterinary_supply_chain.php   ← Full supply chain management
+│   │   ├── district/
+│   │   │   ├── Diary Management.php   
+│   │   │   ├── Revenue Management.php  
+│   │
+│   │
+│   │──── reports/
 │           ├── generate_pdf.php          ← AJAX endpoint: Calls Report.php class for status/risk/resource reports (SOW reqs)
 │           ├── provincial_summary.php    ← Consolidated view (Figma: tabbed, export buttons)
 │           └── district_dashboard.php    ← Per-district drill-down (links to role dashboards)

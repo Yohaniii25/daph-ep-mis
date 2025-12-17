@@ -7,6 +7,7 @@ $is_planning_officer = ($role === 'planning_officer');
 $is_sms = ($role === 'sms');
 $is_farms_dd = ($role === 'farms_dd');
 $is_training_officer = ($role === 'training_officer');
+$is_district_dd = ($role === 'district_dd');
 
 $base_path = '/daph-ep-mis/';
 $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
@@ -177,6 +178,16 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             Farmer Participation
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/training/revenue_management.php">
+                            Revenue Management
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($is_district_dd): ?>
+                        <!-- District Deputy Director Menu -->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/diary_management.php">
+                            Diary Management
+                        </a>
+
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/revenue_management.php">
                             Revenue Management
                         </a>
                     <?php endif; ?>
