@@ -8,6 +8,7 @@ $is_sms = ($role === 'sms');
 $is_farms_dd = ($role === 'farms_dd');
 $is_training_officer = ($role === 'training_officer');
 $is_district_dd = ($role === 'district_dd');
+$is_veterinary_surgeon = ($role === 'veterinary_surgeon');
 
 $base_path = '/daph-ep-mis/';
 $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
@@ -191,6 +192,34 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             Revenue Management
                         </a>
                     <?php endif; ?>
+                    <?php if ($is_veterinary_surgeon): ?>
+
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/staff_attendance.php">
+                            Staff Attendance & Leave
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/diary_advance_programme.php">
+                            My Diary & Programme
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/animal_treatment.php">
+                            Animal Treatment
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/immunization.php">
+                            Immunization Activities
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/disease_reporting.php">
+                            Disease Reporting
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/stock_management.php">
+                            Stock & Supply Management
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/revenue_reporting.php">
+                            Revenue Reporting
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/farmer_training.php">
+                            Farmer Training & Registration
+                        </a>
+                    <?php endif; ?>
+
                 </div>
                 <div class="horizontal-line"></div>
             </div>
