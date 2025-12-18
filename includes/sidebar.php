@@ -20,6 +20,29 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
         border-right: 1px solid #eee;
     }
 
+    .sb-sidenav-menu {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        max-height: 100vh !important;
+    }
+
+    .sb-sidenav-menu::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sb-sidenav-menu::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .sb-sidenav-menu::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    .sb-sidenav-menu::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
     .sb-sidenav-menu a {
         color: #333 !important;
         transition: background 0.3s, color 0.3s;
@@ -61,18 +84,16 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
     .horizontal-line {
         height: 1px;
         background: #ddd;
-
     }
 </style>
 
 <div id="layoutSidenav_nav">
     <nav class="sb-sidenav accordion" style="background:#fff; height:100vh; width:260px; position:fixed; top:0; left:0; z-index:1030;">
         <div class="sb-sidenav-menu h-100 d-flex flex-column justify-content-between">
-            <div>
+            <div style="flex: 1; overflow-y: auto; overflow-x: hidden;">
 
                 <div class="text-center py-4 border-bottom">
                     <img src="<?= $base_path ?>assets/img/logo.png" height="60" class="mb-2">
-
                 </div>
 
                 <!-- Main Menu Items -->
@@ -102,7 +123,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/vehicle_management.php">
-                            Leave Managementt
+                            Leave Management
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/reports.php">
@@ -115,9 +136,8 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                     <?php if ($is_finance_admin): ?>
                         <!-- finance admin menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" ref="<?= $base_path ?>pages/modules/finance/assets_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/assets_management.php">
                             Finance Management
-
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/assets_management.php">
                             Assets Management
@@ -134,7 +154,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     <?php endif; ?>
 
                     <?php if ($is_planning_officer): ?>
-                        <!-- planning Ofiicer Menu-->
+                        <!-- planning Officer Menu-->
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/project/psdg_projects.php">
                             Development Projects (PSDG/CBG/NGO)
                         </a>
@@ -171,7 +191,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                     <?php endif; ?>
                     <?php if ($is_training_officer): ?>
-                        <!-- Farms Operations Menu -->
+                        <!-- Training Officer Menu -->
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/training/training_activities.php">
                             Training Activities
                         </a>
@@ -224,7 +244,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                 <div class="horizontal-line"></div>
             </div>
 
-            <div class="px pb">
+            <div class="px pb" style="flex-shrink: 0;">
 
                 <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
                     Settings
