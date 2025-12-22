@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 20, 2025 at 01:17 PM
+-- Generation Time: Dec 22, 2025 at 05:23 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -44,6 +44,22 @@ CREATE TABLE `livestock_farms` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `staff`
+--
+
+CREATE TABLE `staff` (
+  `id` int(11) NOT NULL,
+  `reg_id` varchar(20) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `address` text NOT NULL,
+  `reg_date` date NOT NULL,
+  `department` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -66,8 +82,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`, `office_id`, `district`, `status`, `last_login`, `created_at`) VALUES
-(5, 'yo', 'yohanii725@gmail.com', '$2y$10$Y2H/a8CIg/6yrjaR3u4YAuNUSOmaHcpWu/TSJjYfLK8qLBbmN1FMa', 'Yohani Abeykoon', 'provincial_director', NULL, 'Provincial', 'active', '2025-12-15 13:25:07', '2025-12-12 11:30:50'),
-(7, 'adminstrator', 'hr@gmail.com', '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, 'Provincial', 'active', '2025-12-16 13:00:58', '2025-12-15 11:32:14'),
+(5, 'yo', 'yohanii725@gmail.com', '$2y$10$Y2H/a8CIg/6yrjaR3u4YAuNUSOmaHcpWu/TSJjYfLK8qLBbmN1FMa', 'Yohani Abeykoon', 'provincial_director', NULL, 'Provincial', 'active', '2025-12-22 16:11:55', '2025-12-12 11:30:50'),
+(7, 'adminstrator', 'admins@gmail.com', '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, 'Provincial', 'active', '2025-12-22 16:17:42', '2025-12-15 11:32:14'),
 (10, 'finance_admin', 'finance@gmail.com', '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, 'Provincial', 'active', '2025-12-16 13:12:26', '2025-12-16 07:42:06'),
 (11, 'Planning officer', 'planning@gmail.com', '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, 'Provincial', 'active', '2025-12-16 15:05:14', '2025-12-16 09:34:59'),
 (12, 'Subject Matter Specialist', 'sms@gmail.com', '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, 'Provincial', 'active', '2025-12-16 17:00:21', '2025-12-16 11:30:03'),
@@ -90,6 +106,13 @@ ALTER TABLE `livestock_farms`
   ADD KEY `idx_range` (`veterinary_range`);
 
 --
+-- Indexes for table `staff`
+--
+ALTER TABLE `staff`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `reg_id` (`reg_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -109,6 +132,12 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `livestock_farms`
 --
 ALTER TABLE `livestock_farms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `staff`
+--
+ALTER TABLE `staff`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

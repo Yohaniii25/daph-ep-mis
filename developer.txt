@@ -52,10 +52,10 @@ daph-ep-mis/                          ← Project root (upload to LGC / Docker)
 │   │   └── admin_finance.php         ← HR/leave/projects/finance summaries + approval queues
 │   ├── modules/                      ← Core functionality (Figma forms: inputs w/ validation, submit modals)
 │   │   ├── hr/
-│   │   │   ├── leave_apply.php       ← Form for staff leave (Figma: calendar picker, approval workflow)
-│   │   │   ├── leave_approve.php     ← PD/District table w/ approve/reject + e-sign button
-│   │   │   ├── staff_attendance.php  ← Daily punch-in/out + reports
-│   │   │   └── diary_advance_programme.php ← Diary entry + advance to-do list (multi-day, attach files)
+│   │   │   ├── employee_managment.php   
+│   │   │   ├── leave_management.php  
+│   │   │   ├── rti_management.php  
+│   │   │   └── todo_tasks.php 
 │   │   ├── finance/
 │   │   │   ├── assets_management.php   
 │   │   │   ├── procurement_plan.php  

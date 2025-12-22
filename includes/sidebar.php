@@ -118,7 +118,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                     <?php if ($is_hr_user): ?>
                         <!-- HR Management Menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/diary_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/employee_managment.php">
                             HR Management
                         </a>
 
