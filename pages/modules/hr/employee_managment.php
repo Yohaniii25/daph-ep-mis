@@ -1,23 +1,30 @@
 <?php
-require_once '../../../includes/header.php'; 
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../../../index.php");
+    exit();
+}
 
 if ($_SESSION['role'] !== 'administrator') {
     die("Access denied");
 }
-require_once '../../../config/db_connect.php'; 
-// Message
+
+require_once '../../../config/db_connect.php';
+
 $message = '';
 
-// Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Add Employee
     if (isset($_POST['add_employee'])) {
         $name = trim($_POST['name']);
         $address = trim($_POST['address']);
         $reg_date = $_POST['reg_date'];
         $department = trim($_POST['department']);
 
-        // Generate REG_ID: REG_2500001 (for 2025)
+        // Generate REG_ID
         $year = date('y', strtotime($reg_date));
         $result = $mysqli->query("SELECT COUNT(*) as count FROM staff WHERE reg_id LIKE 'REG_$year%'");
         $row = $result->fetch_assoc();
@@ -25,15 +32,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $reg_id = "REG_$year$next";
 
         $stmt = $mysqli->prepare("INSERT INTO staff (reg_id, name, address, reg_date, department) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $reg_id, $name, $address, $reg_date, $department);
-        if ($stmt->execute()) {
-            $message = '<div class="alert alert-success">Employee added successfully! REG_ID: <strong>' . $reg_id . '</strong></div>';
+        if (!$stmt) {
+            $message = '<div class="alert alert-danger">Error: ' . htmlspecialchars($mysqli->error) . '</div>';
         } else {
-            $message = '<div class="alert alert-danger">Error: Could not add employee (duplicate REG_ID or DB error).</div>';
+            $stmt->bind_param("sssss", $reg_id, $name, $address, $reg_date, $department);
+
+            if ($stmt->execute()) {
+                header("Location: employee_managment.php?success=1&reg_id=" . urlencode($reg_id));
+                exit(); 
+            } else {
+                $message = '<div class="alert alert-danger">Error: ' . htmlspecialchars($stmt->error) . '</div>';
+            }
         }
     }
 
-    // Edit Employee
     if (isset($_POST['edit_employee'])) {
         $id = (int)$_POST['id'];
         $name = trim($_POST['name']);
@@ -43,22 +55,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $mysqli->prepare("UPDATE staff SET name = ?, address = ?, reg_date = ?, department = ? WHERE id = ?");
         $stmt->bind_param("ssssi", $name, $address, $reg_date, $department, $id);
+
         if ($stmt->execute()) {
-            $message = '<div class="alert alert-success">Employee updated successfully!</div>';
+            header("Location: employee_managment.php?updated=1");
+            exit();
         } else {
             $message = '<div class="alert alert-danger">Error updating employee.</div>';
         }
     }
 
-    // Delete Employee
     if (isset($_POST['delete_employee'])) {
         $id = (int)$_POST['id'];
         $mysqli->query("DELETE FROM staff WHERE id = $id");
-        $message = '<div class="alert alert-success">Employee deleted.</div>';
+        header("Location: employee_managment.php?deleted=1");
+        exit();
     }
 }
 
-// Filters (GET)
+// Now include header after POST processing
+require_once '../../../includes/header.php';
+
+
+if (isset($_GET['success'])) {
+    $reg_id = $_GET['reg_id'] ?? '';
+    $message = '<div class="alert alert-success">Employee added successfully! REG_ID: <strong>' . htmlspecialchars($reg_id) . '</strong></div>';
+} elseif (isset($_GET['updated'])) {
+    $message = '<div class="alert alert-success">Employee updated successfully!</div>';
+} elseif (isset($_GET['deleted'])) {
+    $message = '<div class="alert alert-success">Employee deleted successfully!</div>';
+}
+
+
 $where = [];
 $params = [];
 $types = '';
@@ -86,11 +113,9 @@ if ($params) $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $employees = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Get departments for filter
 $depts_result = $mysqli->query("SELECT DISTINCT department FROM staff ORDER BY department");
 $depts = $depts_result->fetch_all(MYSQLI_ASSOC);
 
-// For edit modal
 $edit_employee = null;
 if (isset($_GET['edit'])) {
     $edit_id = (int)$_GET['edit'];
@@ -101,7 +126,7 @@ if (isset($_GET['edit'])) {
 }
 ?>
 
-<?php require_once '../../../includes/sidebar.php'; ?>
+
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
@@ -109,7 +134,6 @@ if (isset($_GET['edit'])) {
 
         <?= $message ?>
 
-        <!-- Filters + Add Button -->
         <div class="card shadow-sm mb-4">
             <div class="card-header d-flex justify-content-between align-items-center bg-light">
                 <h5 class="mb-0">Filter Employees</h5>
@@ -128,9 +152,9 @@ if (isset($_GET['edit'])) {
                         <select name="department" class="form-select">
                             <option value="">All Departments</option>
                             <?php foreach ($depts as $d): ?>
-                            <option value="<?= $d['department'] ?>" <?= ($_GET['department'] ?? '') === $d['department'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($d['department']) ?>
-                            </option>
+                                <option value="<?= $d['department'] ?>" <?= ($_GET['department'] ?? '') === $d['department'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($d['department']) ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -162,30 +186,30 @@ if (isset($_GET['edit'])) {
                         </thead>
                         <tbody>
                             <?php if (empty($employees)): ?>
-                            <tr>
-                                <td colspan="6" class="text-center py-4">No employees found</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No employees found</td>
+                                </tr>
                             <?php else: ?>
-                            <?php foreach ($employees as $emp): ?>
-                            <tr>
-                                <td><strong><?= htmlspecialchars($emp['reg_id']) ?></strong></td>
-                                <td><?= htmlspecialchars($emp['name']) ?></td>
-                                <td><?= htmlspecialchars($emp['address']) ?></td>
-                                <td><?= date('d M Y', strtotime($emp['reg_date'])) ?></td>
-                                <td><?= htmlspecialchars($emp['department']) ?></td>
-                                <td class="text-center">
-                                    <a href="?edit=<?= $emp['id'] ?>" class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editEmployeeModal">
-                                        Edit
-                                    </a>
-                                    <form method="POST" style="display:inline;">
-                                        <input type="hidden" name="id" value="<?= $emp['id'] ?>">
-                                        <button type="submit" name="delete_employee" class="btn btn-sm btn-danger" onclick="return confirm('Delete this employee?')">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
+                                <?php foreach ($employees as $emp): ?>
+                                    <tr>
+                                        <td><strong><?= htmlspecialchars($emp['reg_id']) ?></strong></td>
+                                        <td><?= htmlspecialchars($emp['name']) ?></td>
+                                        <td><?= htmlspecialchars($emp['address']) ?></td>
+                                        <td><?= date('d M Y', strtotime($emp['reg_date'])) ?></td>
+                                        <td><?= htmlspecialchars($emp['department']) ?></td>
+                                        <td class="text-center">
+                                            <a href="?edit=<?= $emp['id'] ?>" class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editEmployeeModal">
+                                                Edit
+                                            </a>
+                                            <form method="POST" style="display:inline;">
+                                                <input type="hidden" name="id" value="<?= $emp['id'] ?>">
+                                                <button type="submit" name="delete_employee" class="btn btn-sm btn-danger" onclick="return confirm('Delete this employee?')">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -235,51 +259,51 @@ if (isset($_GET['edit'])) {
 
 <!-- Edit Employee Modal (pre-filled) -->
 <?php if ($edit_employee): ?>
-<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-labelledby="editEmployeeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="POST">
-                <input type="hidden" name="id" value="<?= $edit_employee['id'] ?>">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editEmployeeModalLabel">Edit Employee - <?= htmlspecialchars($edit_employee['reg_id']) ?></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label>Name</label>
-                            <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($edit_employee['name']) ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Registration Date</label>
-                            <input type="date" name="reg_date" class="form-control" value="<?= $edit_employee['reg_date'] ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Department</label>
-                            <input type="text" name="department" class="form-control" value="<?= htmlspecialchars($edit_employee['department']) ?>" required>
-                        </div>
-                        <div class="col-12">
-                            <label>Address</label>
-                            <textarea name="address" class="form-control" rows="3" required><?= htmlspecialchars($edit_employee['address']) ?></textarea>
+    <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-labelledby="editEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST">
+                    <input type="hidden" name="id" value="<?= $edit_employee['id'] ?>">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editEmployeeModalLabel">Edit Employee - <?= htmlspecialchars($edit_employee['reg_id']) ?></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label>Name</label>
+                                <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($edit_employee['name']) ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Registration Date</label>
+                                <input type="date" name="reg_date" class="form-control" value="<?= $edit_employee['reg_date'] ?>" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Department</label>
+                                <input type="text" name="department" class="form-control" value="<?= htmlspecialchars($edit_employee['department']) ?>" required>
+                            </div>
+                            <div class="col-12">
+                                <label>Address</label>
+                                <textarea name="address" class="form-control" rows="3" required><?= htmlspecialchars($edit_employee['address']) ?></textarea>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="edit_employee" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="edit_employee" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-// Auto-open edit modal if ?edit=ID is in URL
-document.addEventListener('DOMContentLoaded', function() {
-    var editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
-    editModal.show();
-});
-</script>
+    <script>
+        // Auto-open edit modal if ?edit=ID is in URL
+        document.addEventListener('DOMContentLoaded', function() {
+            var editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+            editModal.show();
+        });
+    </script>
 <?php endif; ?>
 
 <?php require_once '../../../includes/footer.php'; ?>

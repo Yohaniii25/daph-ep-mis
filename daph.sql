@@ -24,26 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `livestock_farms`
---
-
-CREATE TABLE `livestock_farms` (
-  `id` int(11) NOT NULL,
-  `registration_no` varchar(50) NOT NULL,
-  `veterinary_range` varchar(100) NOT NULL,
-  `ds_division` varchar(100) NOT NULL,
-  `gn_division` varchar(100) NOT NULL,
-  `farmer_name` varchar(150) NOT NULL,
-  `nic_no` varchar(20) NOT NULL,
-  `address` text NOT NULL,
-  `registered_by` int(11) NOT NULL,
-  `registered_date` date DEFAULT curdate(),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `staff`
 --
 
@@ -97,15 +77,6 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`,
 --
 
 --
--- Indexes for table `livestock_farms`
---
-ALTER TABLE `livestock_farms`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `registration_no` (`registration_no`),
-  ADD KEY `idx_nic` (`nic_no`),
-  ADD KEY `idx_range` (`veterinary_range`);
-
---
 -- Indexes for table `staff`
 --
 ALTER TABLE `staff`
@@ -128,11 +99,6 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for dumped tables
 --
 
---
--- AUTO_INCREMENT for table `livestock_farms`
---
-ALTER TABLE `livestock_farms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `staff`
