@@ -24,28 +24,7 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `admin_diaries_todo`
---
 
-CREATE TABLE `admin_diaries_todo` (
-  `id` int(11) NOT NULL,
-  `type` enum('Task','Diary') NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `due_date` date DEFAULT NULL,
-  `entry_date` date DEFAULT curdate(),
-  `status` enum('Pending','Completed') DEFAULT 'Pending',
-  `created_by` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Dumping data for table `admin_diaries_todo`
---
-
-INSERT INTO `admin_diaries_todo` (`id`, `type`, `title`, `description`, `due_date`, `entry_date`, `status`, `created_by`, `created_at`) VALUES
-(1, 'Task', 'test', 'test', '2025-12-26', '2025-12-23', 'Pending', 7, '2025-12-23 12:58:05'),
-(2, 'Diary', 'Meeting with District DD', 'hi', NULL, '2025-12-23', 'Pending', 7, '2025-12-23 12:58:15');
 
 -- --------------------------------------------------------
 
@@ -141,13 +120,6 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`,
 -- Indexes for dumped tables
 --
 
---
--- Indexes for table `admin_diaries_todo`
---
-ALTER TABLE `admin_diaries_todo`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_type` (`type`),
-  ADD KEY `idx_date` (`entry_date`);
 
 --
 -- Indexes for table `leave_requests`
@@ -180,10 +152,8 @@ ALTER TABLE `users`
 --
 
 --
--- AUTO_INCREMENT for table `admin_diaries_todo`
+
 --
-ALTER TABLE `admin_diaries_todo`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `leave_requests`
