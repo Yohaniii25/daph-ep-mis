@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 23, 2025 at 12:46 PM
+-- Generation Time: Dec 24, 2025 at 01:08 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -24,6 +24,32 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `admin_diaries_todo`
+--
+
+CREATE TABLE `admin_diaries_todo` (
+  `id` int(11) NOT NULL,
+  `type` enum('Task','Diary') NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `entry_date` date DEFAULT curdate(),
+  `status` enum('Pending','Completed') DEFAULT 'Pending',
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `admin_diaries_todo`
+--
+
+INSERT INTO `admin_diaries_todo` (`id`, `type`, `title`, `description`, `due_date`, `entry_date`, `status`, `created_by`, `created_at`) VALUES
+(1, 'Task', 'test', 'test', '2025-12-26', '2025-12-23', 'Pending', 7, '2025-12-23 12:58:05'),
+(2, 'Diary', 'Meeting with District DD', 'hi', NULL, '2025-12-23', 'Pending', 7, '2025-12-23 12:58:15');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `leave_requests`
 --
 
@@ -39,6 +65,17 @@ CREATE TABLE `leave_requests` (
   `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
   `applied_date` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `leave_requests`
+--
+
+INSERT INTO `leave_requests` (`id`, `staff_id`, `reg_id`, `name`, `reason`, `from_date`, `to_date`, `department`, `status`, `applied_date`) VALUES
+(1, 1, 'REG_2500001', 'User 01', 'Sick Leave', '2025-12-26', '2025-12-28', 'Farm', 'Pending', '2025-12-23 12:38:53'),
+(2, 2, 'REG_2500002', 'User 02', 'Annual Leave', '2025-12-30', '2026-01-05', 'Finance', 'Pending', '2025-12-23 12:38:53'),
+(3, 19, 'REG_2500003', 'User 05', 'Medical Leave', '2025-12-24', '2025-12-27', 'Training', 'Approved', '2025-12-23 12:38:53'),
+(4, 1, 'REG_2500001', 'User 01', 'Casual Leave', '2025-12-20', '2025-12-21', 'Farm', 'Pending', '2025-12-23 12:38:53'),
+(5, 2, 'REG_2500002', 'User 02', 'Maternity Leave', '2026-01-01', '2026-03-31', 'Finance', 'Pending', '2025-12-23 12:38:53');
 
 -- --------------------------------------------------------
 
@@ -95,7 +132,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`,
 (10, 'finance_admin', 'finance@gmail.com', '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, 'Provincial', 'active', '2025-12-16 13:12:26', '2025-12-16 07:42:06'),
 (11, 'Planning officer', 'planning@gmail.com', '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, 'Provincial', 'active', '2025-12-16 15:05:14', '2025-12-16 09:34:59'),
 (12, 'Subject Matter Specialist', 'sms@gmail.com', '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, 'Provincial', 'active', '2025-12-16 17:00:21', '2025-12-16 11:30:03'),
-(13, 'Farms Officer', 'farms@gmail.com', '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', 'farms_dd', NULL, 'Provincial', 'active', '2025-12-18 17:21:32', '2025-12-17 08:46:28'),
+(13, 'Farms Officer', 'farms@gmail.com', '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', 'farms_dd', NULL, 'Provincial', 'active', '2025-12-23 18:30:27', '2025-12-17 08:46:28'),
 (15, 'Training Officer', 'training@gmail.com', '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', 'training_officer', NULL, 'Provincial', 'active', '2025-12-17 15:52:48', '2025-12-17 10:22:46'),
 (16, 'District Deputy Director', 'district_dd@gmail.com', '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', 'district_dd', NULL, 'Provincial', 'active', '2025-12-17 18:53:41', '2025-12-17 13:23:28'),
 (17, 'veterinary surgeon', 'veterinary@gmail.com', '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', 'veterinary_surgeon', NULL, 'Provincial', 'active', '2025-12-18 15:40:45', '2025-12-18 10:10:22');
@@ -103,6 +140,14 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`,
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `admin_diaries_todo`
+--
+ALTER TABLE `admin_diaries_todo`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`type`),
+  ADD KEY `idx_date` (`entry_date`);
 
 --
 -- Indexes for table `leave_requests`
@@ -135,10 +180,16 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `admin_diaries_todo`
+--
+ALTER TABLE `admin_diaries_todo`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `leave_requests`
 --
 ALTER TABLE `leave_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `staff`
