@@ -67,7 +67,7 @@ $entries = $result->fetch_all(MYSQLI_ASSOC);
             <div class="col-lg-6">
                 <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white">
-                        <h5>Add New Task (Advance Programme)</h5>
+                        <h5 style="color: white;">Add New Task (Advance Programme)</h5>
                     </div>
                     <div class="card-body">
                         <form method="POST">
@@ -93,7 +93,7 @@ $entries = $result->fetch_all(MYSQLI_ASSOC);
             <div class="col-lg-6">
                 <div class="card shadow-sm">
                     <div class="card-header bg-info text-white">
-                        <h5>Add Diary Entry</h5>
+                        <h5 style="color: white;">Add Diary Entry</h5>
                     </div>
                     <div class="card-body">
                         <form method="POST">
