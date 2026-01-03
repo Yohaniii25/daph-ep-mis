@@ -139,10 +139,6 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     <?php endif; ?>
 
                     <?php if ($is_finance_admin): ?>
-                        <!-- finance admin menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/assets_management.php">
-                            Finance Management
-                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/assets_management.php">
                             Assets Management
                         </a>

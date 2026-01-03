@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 24, 2025 at 01:08 PM
+-- Generation Time: Jan 03, 2026 at 02:17 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -24,7 +24,51 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `admin_diaries_todo`
+--
 
+CREATE TABLE `admin_diaries_todo` (
+  `id` int(11) NOT NULL,
+  `type` enum('Task','Diary') NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `entry_date` date DEFAULT curdate(),
+  `status` enum('Pending','Completed') DEFAULT 'Pending',
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `admin_diaries_todo`
+--
+
+INSERT INTO `admin_diaries_todo` (`id`, `type`, `title`, `description`, `due_date`, `entry_date`, `status`, `created_by`, `created_at`) VALUES
+(1, 'Task', 'test', 'test', '2025-12-26', '2025-12-23', 'Pending', 7, '2025-12-23 12:58:05'),
+(2, 'Diary', 'Meeting with District DD', 'hi', NULL, '2025-12-23', 'Pending', 7, '2025-12-23 12:58:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `diary_entries`
+--
+
+CREATE TABLE `diary_entries` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `entry_date` date NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('Draft','Submitted','Approved') COLLATE utf8mb4_unicode_ci DEFAULT 'Draft',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `diary_entries`
+--
+
+INSERT INTO `diary_entries` (`id`, `user_id`, `entry_date`, `title`, `notes`, `status`, `created_at`) VALUES
+(14, 5, '2026-01-03', 'test 01', 'test description edited', 'Draft', '2026-01-03 12:14:40');
 
 -- --------------------------------------------------------
 
@@ -106,10 +150,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`, `office_id`, `district`, `status`, `last_login`, `created_at`) VALUES
-(5, 'yo', 'yohanii725@gmail.com', '$2y$10$Y2H/a8CIg/6yrjaR3u4YAuNUSOmaHcpWu/TSJjYfLK8qLBbmN1FMa', 'Yohani Abeykoon', 'provincial_director', NULL, 'Provincial', 'active', '2025-12-22 16:11:55', '2025-12-12 11:30:50'),
+(5, 'yo', 'provinciald@gmail.com', '$2y$10$Y2H/a8CIg/6yrjaR3u4YAuNUSOmaHcpWu/TSJjYfLK8qLBbmN1FMa', 'Provincial Director', 'provincial_director', NULL, 'Provincial', 'active', '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
 (7, 'adminstrator', 'admins@gmail.com', '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, 'Provincial', 'active', '2025-12-23 16:39:33', '2025-12-15 11:32:14'),
-(10, 'finance_admin', 'finance@gmail.com', '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, 'Provincial', 'active', '2025-12-16 13:12:26', '2025-12-16 07:42:06'),
-(11, 'Planning officer', 'planning@gmail.com', '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, 'Provincial', 'active', '2025-12-16 15:05:14', '2025-12-16 09:34:59'),
+(10, 'finance_admin', 'finance@gmail.com', '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, 'Provincial', 'active', '2026-01-03 18:34:56', '2025-12-16 07:42:06'),
+(11, 'Planning officer', 'planning@gmail.com', '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, 'Provincial', 'active', '2026-01-03 16:13:10', '2025-12-16 09:34:59'),
 (12, 'Subject Matter Specialist', 'sms@gmail.com', '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, 'Provincial', 'active', '2025-12-16 17:00:21', '2025-12-16 11:30:03'),
 (13, 'Farms Officer', 'farms@gmail.com', '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', 'farms_dd', NULL, 'Provincial', 'active', '2025-12-23 18:30:27', '2025-12-17 08:46:28'),
 (15, 'Training Officer', 'training@gmail.com', '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', 'training_officer', NULL, 'Provincial', 'active', '2025-12-17 15:52:48', '2025-12-17 10:22:46'),
@@ -120,6 +164,20 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`,
 -- Indexes for dumped tables
 --
 
+--
+-- Indexes for table `admin_diaries_todo`
+--
+ALTER TABLE `admin_diaries_todo`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type` (`type`),
+  ADD KEY `idx_date` (`entry_date`);
+
+--
+-- Indexes for table `diary_entries`
+--
+ALTER TABLE `diary_entries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user_date` (`user_id`,`entry_date`);
 
 --
 -- Indexes for table `leave_requests`
@@ -152,8 +210,16 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `admin_diaries_todo`
+--
+ALTER TABLE `admin_diaries_todo`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `diary_entries`
+--
+ALTER TABLE `diary_entries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `leave_requests`
@@ -176,6 +242,12 @@ ALTER TABLE `users`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `diary_entries`
+--
+ALTER TABLE `diary_entries`
+  ADD CONSTRAINT `diary_entries_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
 -- Constraints for table `leave_requests`
