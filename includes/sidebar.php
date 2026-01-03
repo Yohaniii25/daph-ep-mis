@@ -103,15 +103,19 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     </a>
                     <!-- Provincial Director Menu -->
                     <?php if ($is_pd): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/diary_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/my_diary.php">
                             Diary Management
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/vehicle_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/approval_diaries.php">
+                            Approval of Diaries & Programmes
+                        </a>
+
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/vehicle_approval.php">
                             Vehicle Management
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/reports.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/provincial_reports.php">
                             Reports
                         </a>
                     <?php endif; ?>
