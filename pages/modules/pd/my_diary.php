@@ -1,5 +1,13 @@
 <?php
-require_once '../../../includes/header.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../../../index.php");
+    exit();
+}
 
 if ($_SESSION['role'] !== 'provincial_director') {
     die("Access denied");
@@ -9,7 +17,6 @@ require_once '../../../config/db_connect.php';
 
 $message = '';
 
-// REDIRECTS FIRST — BEFORE ANY OUTPUT TO PREVENT DUPLICATES
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_entry'])) {
         $entry_date = $_POST['entry_date'];
@@ -48,30 +55,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: my_diary.php?deleted=1");
         exit();
     }
-
-    if (isset($_POST['submit_entry'])) {
-        $id = (int)$_POST['entry_id'];
-        $stmt = $mysqli->prepare("UPDATE diary_entries SET status = 'Submitted' WHERE id = ? AND user_id = ?");
-        $stmt->bind_param("ii", $id, $_SESSION['user_id']);
-        $stmt->execute();
-
-        header("Location: my_diary.php?submitted=1");
-        exit();
-    }
 }
 
-// Show messages from redirect
-if (isset($_GET['added'])) $message = '<div class="alert alert-success">Diary entry added!</div>';
+require_once '../../../includes/header.php';
+
+
+if (isset($_GET['added'])) $message = '<div class="alert alert-success">Diary entry added successfully!</div>';
 if (isset($_GET['updated'])) $message = '<div class="alert alert-success">Diary entry updated!</div>';
 if (isset($_GET['deleted'])) $message = '<div class="alert alert-success">Diary entry deleted!</div>';
-if (isset($_GET['submitted'])) $message = '<div class="alert alert-success">Diary entry submitted for approval!</div>';
 
 // Fetch entries
 $user_id = $_SESSION['user_id'];
 $stmt = $mysqli->prepare("SELECT * FROM diary_entries WHERE user_id = ? ORDER BY entry_date DESC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$entries = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$result = $stmt->get_result();
+$entries = $result->fetch_all(MYSQLI_ASSOC);
 
 // For edit modal
 $edit_entry = null;
@@ -92,10 +91,9 @@ if (isset($_GET['edit'])) {
 
         <?= $message ?>
 
-        <!-- Add New Entry -->
         <div class="card shadow-sm mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Add New Diary Entry</h5>
+            <div class="card-header bg-primary text-white" style="color: white !important;">
+                <h5>Add New Diary Entry</h5>
             </div>
             <div class="card-body">
                 <form method="POST">
@@ -105,11 +103,11 @@ if (isset($_GET['edit'])) {
                             <input type="date" name="entry_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label">Title</label>
+                            <label class="form-label">Title (e.g., Meeting with District DD)</label>
                             <input type="text" name="title" class="form-control" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Notes / Details</label>
+                            <label class="form-label">Details / Notes</label>
                             <textarea name="notes" class="form-control" rows="4" required></textarea>
                         </div>
                         <div class="col-12 text-end">
@@ -122,8 +120,8 @@ if (isset($_GET['edit'])) {
 
         <!-- Diary Entries List -->
         <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">My Diary Entries</h5>
+            <div class="card-header bg-dark text-white" style="color: white !important;">
+                <h5>All Diary Entries</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -133,14 +131,13 @@ if (isset($_GET['edit'])) {
                                 <th>DATE</th>
                                 <th>TITLE</th>
                                 <th>NOTES</th>
-                                <th>STATUS</th>
                                 <th>ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($entries)): ?>
                             <tr>
-                                <td colspan="5" class="text-center py-4">No diary entries found</td>
+                                <td colspan="4" class="text-center py-4">No diary entries found</td>
                             </tr>
                             <?php else: ?>
                             <?php foreach ($entries as $entry): ?>
@@ -149,24 +146,13 @@ if (isset($_GET['edit'])) {
                                 <td><strong><?= htmlspecialchars($entry['title']) ?></strong></td>
                                 <td><?= nl2br(htmlspecialchars($entry['notes'])) ?></td>
                                 <td>
-                                    <span class="badge bg-<?= $entry['status'] === 'Submitted' ? 'warning' : ($entry['status'] === 'Approved' ? 'success' : 'secondary') ?>">
-                                        <?= $entry['status'] ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="?edit=<?= $entry['id'] ?>" class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editModal">
+                                    <a href="?edit=<?= $entry['id'] ?>" class="btn btn-sm btn-primary me-1">
                                         Edit
                                     </a>
                                     <form method="POST" style="display:inline;" onclick="return confirm('Delete this entry?')">
                                         <input type="hidden" name="entry_id" value="<?= $entry['id'] ?>">
-                                        <button type="submit" name="delete_entry" class="btn btn-sm btn-danger me-1">Delete</button>
+                                        <button type="submit" name="delete_entry" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
-                                    <?php if ($entry['status'] === 'Draft'): ?>
-                                    <form method="POST" style="display:inline;">
-                                        <input type="hidden" name="entry_id" value="<?= $entry['id'] ?>">
-                                        <button type="submit" name="submit_entry" class="btn btn-sm btn-info">Submit</button>
-                                    </form>
-                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -181,14 +167,14 @@ if (isset($_GET['edit'])) {
 
 <!-- Edit Modal -->
 <?php if ($edit_entry): ?>
-<div class="modal fade show" id="editModal" tabindex="-1" style="display:block;">
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form method="POST">
                 <input type="hidden" name="entry_id" value="<?= $edit_entry['id'] ?>">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Diary Entry</h5>
-                    <a href="my_diary.php" class="btn-close"></a>
+                    <h5 class="modal-title" id="editModalLabel">Edit Diary Entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
@@ -207,14 +193,20 @@ if (isset($_GET['edit'])) {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <a href="my_diary.php" class="btn btn-secondary">Cancel</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" name="edit_entry" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    editModal.show();
+});
+</script>
 <?php endif; ?>
 
 <?php require_once '../../../includes/footer.php'; ?>

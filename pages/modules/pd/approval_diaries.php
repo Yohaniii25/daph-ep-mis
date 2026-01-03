@@ -40,8 +40,8 @@ $pending_approvals = [
                                 <td><?= date('d M Y', strtotime($item['date'])) ?></td>
                                 <td><?= htmlspecialchars($item['summary']) ?></td>
                                 <td>
-                                    <button class="btn btn-sm btn-success me-1" disabled>Approve</button>
-                                    <button class="btn btn-sm btn-danger" disabled>Return for Revision</button>
+                                    <button class="btn btn-sm btn-success me-1">Approve</button>
+                                    <button class="btn btn-sm btn-danger">Return for Revision</button>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
