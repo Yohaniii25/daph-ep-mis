@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 03, 2026 at 02:17 PM
+-- Generation Time: Jan 10, 2026 at 03:05 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -29,23 +29,22 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `admin_diaries_todo` (
   `id` int(11) NOT NULL,
-  `type` enum('Task','Diary') NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
+  `type` enum('Task','Diary') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `due_date` date DEFAULT NULL,
-  `entry_date` date DEFAULT curdate(),
-  `status` enum('Pending','Completed') DEFAULT 'Pending',
+  `entry_date` date NOT NULL,
+  `status` enum('Pending','Completed') COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
   `created_by` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `admin_diaries_todo`
 --
 
 INSERT INTO `admin_diaries_todo` (`id`, `type`, `title`, `description`, `due_date`, `entry_date`, `status`, `created_by`, `created_at`) VALUES
-(1, 'Task', 'test', 'test', '2025-12-26', '2025-12-23', 'Pending', 7, '2025-12-23 12:58:05'),
-(2, 'Diary', 'Meeting with District DD', 'hi', NULL, '2025-12-23', 'Pending', 7, '2025-12-23 12:58:15');
+(1, 'Task', '1', '1', '2026-01-06', '0000-00-00', 'Completed', 7, '2026-01-05 13:10:33');
 
 -- --------------------------------------------------------
 
@@ -68,7 +67,8 @@ CREATE TABLE `diary_entries` (
 --
 
 INSERT INTO `diary_entries` (`id`, `user_id`, `entry_date`, `title`, `notes`, `status`, `created_at`) VALUES
-(14, 5, '2026-01-03', 'test 01', 'test description edited', 'Draft', '2026-01-03 12:14:40');
+(14, 5, '2026-01-03', 'test 01', 'test description edited', 'Draft', '2026-01-03 12:14:40'),
+(15, 18, '2026-01-05', 'Handing over autoclave', 'safely handed over the Autoclave to UOP\r\n\r\n\"ADD IMAGES\"', 'Draft', '2026-01-06 00:08:38');
 
 -- --------------------------------------------------------
 
@@ -97,7 +97,7 @@ INSERT INTO `leave_requests` (`id`, `staff_id`, `reg_id`, `name`, `reason`, `fro
 (1, 1, 'REG_2500001', 'User 01', 'Sick Leave', '2025-12-26', '2025-12-28', 'Farm', 'Pending', '2025-12-23 12:38:53'),
 (2, 2, 'REG_2500002', 'User 02', 'Annual Leave', '2025-12-30', '2026-01-05', 'Finance', 'Pending', '2025-12-23 12:38:53'),
 (3, 19, 'REG_2500003', 'User 05', 'Medical Leave', '2025-12-24', '2025-12-27', 'Training', 'Approved', '2025-12-23 12:38:53'),
-(4, 1, 'REG_2500001', 'User 01', 'Casual Leave', '2025-12-20', '2025-12-21', 'Farm', 'Pending', '2025-12-23 12:38:53'),
+(4, 1, 'REG_2500001', 'User 01', 'Casual Leave', '2025-12-20', '2025-12-21', 'Farm', 'Approved', '2025-12-23 12:38:53'),
 (5, 2, 'REG_2500002', 'User 02', 'Maternity Leave', '2026-01-01', '2026-03-31', 'Finance', 'Pending', '2025-12-23 12:38:53');
 
 -- --------------------------------------------------------
@@ -150,15 +150,16 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`, `office_id`, `district`, `status`, `last_login`, `created_at`) VALUES
-(5, 'yo', 'provinciald@gmail.com', '$2y$10$Y2H/a8CIg/6yrjaR3u4YAuNUSOmaHcpWu/TSJjYfLK8qLBbmN1FMa', 'Provincial Director', 'provincial_director', NULL, 'Provincial', 'active', '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
-(7, 'adminstrator', 'admins@gmail.com', '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, 'Provincial', 'active', '2025-12-23 16:39:33', '2025-12-15 11:32:14'),
-(10, 'finance_admin', 'finance@gmail.com', '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, 'Provincial', 'active', '2026-01-03 18:34:56', '2025-12-16 07:42:06'),
+(5, 'yo', 'provinciald2@gmail.com', 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', 'provincial_director', NULL, 'Provincial', 'active', '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
+(7, 'adminstrator', 'admins@gmail.com', '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, 'Provincial', 'active', '2026-01-05 18:30:00', '2025-12-15 11:32:14'),
+(10, 'finance_admin', 'finance@gmail.com', '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, 'Provincial', 'active', '2026-01-05 11:34:25', '2025-12-16 07:42:06'),
 (11, 'Planning officer', 'planning@gmail.com', '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, 'Provincial', 'active', '2026-01-03 16:13:10', '2025-12-16 09:34:59'),
 (12, 'Subject Matter Specialist', 'sms@gmail.com', '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, 'Provincial', 'active', '2025-12-16 17:00:21', '2025-12-16 11:30:03'),
-(13, 'Farms Officer', 'farms@gmail.com', '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', 'farms_dd', NULL, 'Provincial', 'active', '2025-12-23 18:30:27', '2025-12-17 08:46:28'),
+(13, 'Farms Officer', 'farms@gmail.com', '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', 'farms_dd', NULL, 'Provincial', 'active', '2026-01-05 11:43:58', '2025-12-17 08:46:28'),
 (15, 'Training Officer', 'training@gmail.com', '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', 'training_officer', NULL, 'Provincial', 'active', '2025-12-17 15:52:48', '2025-12-17 10:22:46'),
 (16, 'District Deputy Director', 'district_dd@gmail.com', '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', 'district_dd', NULL, 'Provincial', 'active', '2025-12-17 18:53:41', '2025-12-17 13:23:28'),
-(17, 'veterinary surgeon', 'veterinary@gmail.com', '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', 'veterinary_surgeon', NULL, 'Provincial', 'active', '2025-12-18 15:40:45', '2025-12-18 10:10:22');
+(17, 'veterinary surgeon', 'veterinary@gmail.com', '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', 'veterinary_surgeon', NULL, 'Provincial', 'active', '2026-01-10 19:28:47', '2025-12-18 10:10:22'),
+(18, 'Provincial director', 'provinciald@gmail.com', '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', 'provincial_director', NULL, 'Provincial', 'active', '2026-01-05 18:02:20', '2026-01-05 13:18:11');
 
 --
 -- Indexes for dumped tables
@@ -213,13 +214,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `admin_diaries_todo`
 --
 ALTER TABLE `admin_diaries_todo`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `diary_entries`
 --
 ALTER TABLE `diary_entries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `leave_requests`
@@ -237,7 +238,7 @@ ALTER TABLE `staff`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- Constraints for dumped tables
