@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
     $name = trim($_POST['name']);
     $address = trim($_POST['address']);
     $reg_date = $_POST['reg_date'];
-    $department = 'Veterinary'; // Fixed for this office/section
+    $department = 'Veterinary'; 
 
     if ($reg_id && $name && $address && $reg_date) {
         $stmt = $mysqli->prepare("INSERT INTO staff (reg_id, name, address, reg_date, department) VALUES (?, ?, ?, ?, ?)");
@@ -75,7 +75,6 @@ $stmt->close();
                                         <td><?= date('d M Y', strtotime($s['reg_date'])) ?></td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-primary me-1" >View</button>
-                                            <button class="btn btn-sm btn-outline-secondary" >Edit</button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

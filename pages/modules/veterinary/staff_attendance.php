@@ -87,7 +87,7 @@ $total = count($staff);
         <!-- Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5>Today's Staff Attendance</h5>
+                <h5 style="color: white;">Today's Staff Attendance</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

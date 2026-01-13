@@ -9,10 +9,10 @@ if ($_SESSION['role'] !== 'veterinary_surgeon') {
 $message = '';
 $user_id = $_SESSION['user_id'];
 
-// Handle POST actions
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_diary'])) {
-        $entry_date = date('Y-m-d'); // Today for diary
+        $entry_date = date('Y-m-d');
         $title = trim($_POST['title']);
         $notes = trim($_POST['notes']);
 
@@ -80,7 +80,6 @@ $stmt->close();
         <?= $message ?>
 
         <div class="row g-4 mb-5">
-            <!-- Add Diary Entry (Today) -->
             <div class="col-lg-6">
                 <div class="card shadow-sm">
                     <div style="background-color: #689ccf;" class="card-header text-white">
@@ -133,7 +132,7 @@ $stmt->close();
         <!-- Entries List -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">My Diary & Advance Programmes</h5>
+                <h5 style="color : white;" class="mb-0">My Diary & Advance Programmes</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

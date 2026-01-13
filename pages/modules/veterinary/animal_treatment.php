@@ -17,8 +17,6 @@ $unique_codes = count(array_unique(array_column($treatments, 'code')));
 
 <?php require_once '../../../includes/sidebar.php'; ?>
 
-<?php require_once '../../../includes/sidebar.php'; ?>
-
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
         <h2 class="mb-4">Animal Treatment Records</h2>
@@ -59,37 +57,30 @@ $unique_codes = count(array_unique(array_column($treatments, 'code')));
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <button class="btn btn-success w-100 py-3">
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#recordTreatmentModal">
                             <i class="bi bi-plus-circle"></i><br>
                             Record Treatment
                         </button>
                     </div>
                     <div class="col-md-4">
-                        <button class="btn btn-primary w-100 py-3">
+                        <a href="<?= $base_path ?>pages/modules/veterinary/treatment_records.php" class="btn btn-primary w-100 py-3">
                             <i class="bi bi-search"></i><br>
                             Search Records
-                        </button>
+                        </a>
                     </div>
                     <div class="col-md-4">
-                        <button class="btn btn-info w-100 py-3">
+                        <button class="btn btn-info w-100 py-3" disabled>
                             <i class="bi bi-graph-up"></i><br>
                             View Statistics
                         </button>
                     </div>
-                    <!-- <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3">
-                            <i class="bi bi-file-medical"></i><br>
-                            Prescriptions
-                        </button>
-                    </div> -->
                 </div>
             </div>
         </div>
 
-<!-- Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Recent Treatments</h5>
+                <h5 style="color: white;" class="mb-0">Recent Treatments</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -127,7 +118,6 @@ $unique_codes = count(array_unique(array_column($treatments, 'code')));
     </main>
 </div>
 
-<!-- Record Treatment Modal -->
 <div class="modal fade" id="recordTreatmentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -136,14 +126,12 @@ $unique_codes = count(array_unique(array_column($treatments, 'code')));
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-info text-center mb-4">
-                    <i class="bi bi-info-circle me-2"></i>Demo Mode - Real recording in Phase 2
-                </div>
+
                 <form>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Animal Code</label>
-                            <input type="text" class="form-control" placeholder="e.g., COW-045">
+                            <input type="text" class="form-control" placeholder="e.g., DAPH-045">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Animal Type</label>
