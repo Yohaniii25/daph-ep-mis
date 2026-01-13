@@ -238,6 +238,18 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/farmer_training.php">
                             Farmer Training & Registration
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/market_prices.php">
+                            Market Price Reporting
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/artificial_breeding.php">
+                            Artificial Breeding & Castration
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/animals_act_forensic.php">
+                            Animals Act & Forensic Reporting
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/project_progress.php">
+                            Project Progress Reporting
+                        </a>
                     <?php endif; ?>
 
                 </div>

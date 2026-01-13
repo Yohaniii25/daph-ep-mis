@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 10, 2026 at 03:05 PM
+-- Generation Time: Jan 12, 2026 at 01:42 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -68,7 +68,9 @@ CREATE TABLE `diary_entries` (
 
 INSERT INTO `diary_entries` (`id`, `user_id`, `entry_date`, `title`, `notes`, `status`, `created_at`) VALUES
 (14, 5, '2026-01-03', 'test 01', 'test description edited', 'Draft', '2026-01-03 12:14:40'),
-(15, 18, '2026-01-05', 'Handing over autoclave', 'safely handed over the Autoclave to UOP\r\n\r\n\"ADD IMAGES\"', 'Draft', '2026-01-06 00:08:38');
+(15, 18, '2026-01-05', 'Handing over autoclave', 'safely handed over the Autoclave to UOP\r\n\r\n\"ADD IMAGES\"', 'Draft', '2026-01-06 00:08:38'),
+(16, 17, '2026-01-20', 'h', 'h', 'Draft', '2026-01-12 07:32:23'),
+(17, 17, '2026-01-12', 'go', 'go', 'Submitted', '2026-01-12 07:32:37');
 
 -- --------------------------------------------------------
 
@@ -123,7 +125,11 @@ CREATE TABLE `staff` (
 INSERT INTO `staff` (`id`, `reg_id`, `name`, `address`, `reg_date`, `department`, `created_at`) VALUES
 (1, 'REG_2500001', 'User 01', 'home address', '2025-12-23', 'Farm', '2025-12-23 04:32:21'),
 (2, 'REG_2500002', 'User 02', 'home address', '2025-12-23', 'Finance', '2025-12-23 04:33:15'),
-(19, 'REG_2500003', 'User 05', 'Home Address', '2025-12-23', 'Training', '2025-12-23 05:08:25');
+(19, 'REG_2500003', 'User 05', 'Home Address', '2025-12-23', 'Training', '2025-12-23 05:08:25'),
+(22, 'REG_2500004', 'Dr. Ahmed Rizwan', 'User Address', '2026-01-01', 'Veterinary ', '2026-01-12 06:15:16'),
+(23, 'REG_2600001', 'Saman Perera', 'Home Address', '2026-01-01', 'Veterinary', '2026-01-12 06:45:18'),
+(24, 'REG_2600002', 'Fathima Hassan', 'Home Address', '2026-01-01', 'Veterinary', '2026-01-12 06:45:46'),
+(25, 'REG_2600003', 'Ravi Fernando', 'Home Address', '2026-01-01', 'Veterinary', '2026-01-12 06:46:16');
 
 -- --------------------------------------------------------
 
@@ -151,14 +157,14 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`, `office_id`, `district`, `status`, `last_login`, `created_at`) VALUES
 (5, 'yo', 'provinciald2@gmail.com', 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', 'provincial_director', NULL, 'Provincial', 'active', '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
-(7, 'adminstrator', 'admins@gmail.com', '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, 'Provincial', 'active', '2026-01-05 18:30:00', '2025-12-15 11:32:14'),
+(7, 'adminstrator', 'admins@gmail.com', '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, 'Provincial', 'active', '2026-01-12 12:12:44', '2025-12-15 11:32:14'),
 (10, 'finance_admin', 'finance@gmail.com', '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, 'Provincial', 'active', '2026-01-05 11:34:25', '2025-12-16 07:42:06'),
 (11, 'Planning officer', 'planning@gmail.com', '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, 'Provincial', 'active', '2026-01-03 16:13:10', '2025-12-16 09:34:59'),
 (12, 'Subject Matter Specialist', 'sms@gmail.com', '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, 'Provincial', 'active', '2025-12-16 17:00:21', '2025-12-16 11:30:03'),
 (13, 'Farms Officer', 'farms@gmail.com', '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', 'farms_dd', NULL, 'Provincial', 'active', '2026-01-05 11:43:58', '2025-12-17 08:46:28'),
 (15, 'Training Officer', 'training@gmail.com', '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', 'training_officer', NULL, 'Provincial', 'active', '2025-12-17 15:52:48', '2025-12-17 10:22:46'),
 (16, 'District Deputy Director', 'district_dd@gmail.com', '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', 'district_dd', NULL, 'Provincial', 'active', '2025-12-17 18:53:41', '2025-12-17 13:23:28'),
-(17, 'veterinary surgeon', 'veterinary@gmail.com', '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', 'veterinary_surgeon', NULL, 'Provincial', 'active', '2026-01-10 19:28:47', '2025-12-18 10:10:22'),
+(17, 'veterinary surgeon', 'veterinary@gmail.com', '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', 'veterinary_surgeon', NULL, 'Provincial', 'active', '2026-01-12 09:43:54', '2025-12-18 10:10:22'),
 (18, 'Provincial director', 'provinciald@gmail.com', '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', 'provincial_director', NULL, 'Provincial', 'active', '2026-01-05 18:02:20', '2026-01-05 13:18:11');
 
 --
@@ -220,7 +226,7 @@ ALTER TABLE `admin_diaries_todo`
 -- AUTO_INCREMENT for table `diary_entries`
 --
 ALTER TABLE `diary_entries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `leave_requests`
@@ -232,7 +238,7 @@ ALTER TABLE `leave_requests`
 -- AUTO_INCREMENT for table `staff`
 --
 ALTER TABLE `staff`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `users`

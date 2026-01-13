@@ -54,25 +54,25 @@ $reported = count($diseases);
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
+                        <button class="btn btn-success w-100 py-3">
                             <i class="bi bi-plus-circle"></i><br>
                             Report New Case
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                        <button class="btn btn-primary w-100 py-3">
                             <i class="bi bi-search"></i><br>
                             Search Reports
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
+                        <button class="btn btn-info w-100 py-3">
                             <i class="bi bi-graph-up"></i><br>
                             View Statistics
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
+                        <button class="btn btn-warning w-100 py-3">
                             <i class="bi bi-file-medical"></i><br>
                             Lab Results
                         </button>
@@ -84,7 +84,7 @@ $reported = count($diseases);
         <!-- Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5>Recent Disease Reports</h5>
+                <h5 style="color: white;">Recent Disease Reports</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

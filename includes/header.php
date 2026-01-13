@@ -63,7 +63,7 @@ require_once __DIR__ . '/../config/constants.php';
 
         #layoutSidenav_content {
             margin-left: 260px;
-            padding-top: 70px;
+            padding-top: 50px;
             background: #f8f9fa;
             transition: margin-left 0.3s ease;
         }
@@ -120,9 +120,9 @@ require_once __DIR__ . '/../config/constants.php';
 
     <!-- Top Bar -->
     <div class="top-bar d-flex align-items-center justify-content-between">
-        <button class="btn btn-link text-dark p-0 me-3" id="sidebarToggle" style="font-size: 1.8rem;">
+        <!-- <button class="btn btn-link text-dark p-0 me-3" id="sidebarToggle" style="font-size: 1.8rem;">
             <i class="bi bi-list"></i>
-        </button>
+        </button> -->
 
         <input type="text" class="search-bar border-0" placeholder="Search">
 
@@ -171,7 +171,7 @@ require_once __DIR__ . '/../config/constants.php';
         document.getElementById('sidebarToggle').addEventListener('click', function () {
             const sidebar = document.getElementById('layoutSidenav_nav');
             const topbar = document.querySelector('.top-bar');
-            const content = document.getElementById('layoutSidenav_content');
+            const content = document.getElementById('layoutSidbienav_content');
 
             if (window.innerWidth > 991) {
                 sidebar.classList.toggle('collapsed');

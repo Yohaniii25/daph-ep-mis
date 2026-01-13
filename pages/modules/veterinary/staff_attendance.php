@@ -2,12 +2,12 @@
 require_once '../../../includes/header.php';
 if ($_SESSION['role'] !== 'veterinary_surgeon') die("Access denied");
 
-// Demo data
+
 $staff = [
     ['name' => 'Dr. Ahmed Rizwan', 'position' => 'Veterinary Surgeon', 'today' => 'Present', 'leave' => 'None'],
-    ['name' => 'Mr. Saman Perera', 'position' => 'LDO', 'today' => 'Present', 'leave' => 'None'],
+    ['name' => 'Mr. Saman Perera', 'position' => 'Livestock Development Officer', 'today' => 'Present', 'leave' => 'None'],
     ['name' => 'Ms. Fathima Hassan', 'position' => 'Technical Officer', 'today' => 'On Leave', 'leave' => 'Annual'],
-    ['name' => 'Mr. Ravi Shankar', 'position' => 'Driver', 'today' => 'Present', 'leave' => 'None'],
+    ['name' => 'Mr. Ravi Fernando', 'position' => 'Driver', 'today' => 'Present', 'leave' => 'None'],
 ];
 
 $present = count(array_filter($staff, fn($s) => $s['today'] === 'Present'));
@@ -55,30 +55,31 @@ $total = count($staff);
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
+                    <div class="col-md-4">
+                        <a href="<?= $base_path ?>pages/modules/veterinary/veterinary-staff.php" class="btn w-100 py-3" style="background-color: #820100; color: white;">
+                            <i class="bi bi-people"></i><br>
+                            Staff List
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-success w-100 py-3">
                             <i class="bi bi-person-plus"></i><br>
-                            Mark Attendance
+                            Attendance
                         </button>
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100 py-3">
                             <i class="bi bi-calendar-check"></i><br>
-                            Apply Leave
+                            Leave Reporting
                         </button>
                     </div>
-                    <div class="col-md-3">
+                    <!-- <div class="col-md-3">
                         <button class="btn btn-info w-100 py-3" disabled>
                             <i class="bi bi-graph-up"></i><br>
                             View Reports
                         </button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
-                            <i class="bi bi-people"></i><br>
-                            Staff List
-                        </button>
-                    </div>
+                    </div> -->
+
                 </div>
             </div>
         </div>
@@ -101,16 +102,16 @@ $total = count($staff);
                         </thead>
                         <tbody>
                             <?php foreach ($staff as $s): ?>
-                            <tr>
-                                <td><strong><?= htmlspecialchars($s['name']) ?></strong></td>
-                                <td><?= $s['position'] ?></td>
-                                <td>
-                                    <span class="badge bg-<?= $s['today'] === 'Present' ? 'success' : 'danger' ?>">
-                                        <?= $s['today'] ?>
-                                    </span>
-                                </td>
-                                <td><?= $s['leave'] ?></td>
-                            </tr>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($s['name']) ?></strong></td>
+                                    <td><?= $s['position'] ?></td>
+                                    <td>
+                                        <span class="badge bg-<?= $s['today'] === 'Present' ? 'success' : 'danger' ?>">
+                                            <?= $s['today'] ?>
+                                        </span>
+                                    </td>
+                                    <td><?= $s['leave'] ?></td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>

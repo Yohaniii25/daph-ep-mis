@@ -4,9 +4,9 @@ if ($_SESSION['role'] !== 'veterinary_surgeon') die("Access denied");
 
 // Demo
 $immunizations = [
-    ['date' => '2026-01-05', 'vaccine' => 'FMD', 'animals' => 450, 'location' => 'Amparai Division'],
+    ['date' => '2026-01-05', 'vaccine' => 'Foot-and-Mouth Disease (FMD)', 'animals' => 450, 'location' => 'Amparai Division'],
     ['date' => '2026-01-03', 'vaccine' => 'Rabies', 'animals' => 120, 'location' => 'Karaitivu'],
-    ['date' => '2025-12-28', 'vaccine' => 'HS', 'animals' => 280, 'location' => 'Sainthamaruthu'],
+    ['date' => '2025-12-28', 'vaccine' => 'Brucellosis', 'animals' => 280, 'location' => 'Sainthamaruthu'],
 ];
 $total_animals = array_sum(array_column($immunizations, 'animals'));
 ?>
@@ -53,25 +53,25 @@ $total_animals = array_sum(array_column($immunizations, 'animals'));
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
+                        <button class="btn btn-success w-100 py-3">
                             <i class="bi bi-plus-circle"></i><br>
                             Record Campaign
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                        <button class="btn btn-primary w-100 py-3">
                             <i class="bi bi-calendar-event"></i><br>
                             Schedule Campaign
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
+                        <button class="btn btn-info w-100 py-3">
                             <i class="bi bi-graph-up"></i><br>
                             View Reports
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
+                        <button class="btn btn-warning w-100 py-3">
                             <i class="bi bi-list-check"></i><br>
                             Vaccine Stock
                         </button>
