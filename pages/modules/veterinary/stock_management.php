@@ -55,29 +55,19 @@ $low = count(array_filter($stock, fn($s) => $s['status'] === 'Low'));
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
-                            <i class="bi bi-plus-circle"></i><br>
+                        <a href="<?= $base_path ?>pages/modules/veterinary/vaccine_stock.php" style="background-color: #370709; color: white;" class="btn w-100 py-3">
+                            <i class="bi bi-calendar-event"></i><br>
                             Add Stock
-                        </button>
+                        </a>
                     </div>
+
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
-                            <i class="bi bi-box-arrow-out-right"></i><br>
-                            Issue Stock
-                        </button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
+                        <button class="btn btn-info w-100 py-3" >
                             <i class="bi bi-graph-up"></i><br>
                             Stock Reports
                         </button>
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
-                            <i class="bi bi-exclamation-triangle"></i><br>
-                            Low Stock Alert
-                        </button>
-                    </div>
+
                 </div>
             </div>
         </div>

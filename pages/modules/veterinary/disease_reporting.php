@@ -8,7 +8,6 @@ $diseases = [
     ['date' => '2026-01-06', 'disease' => 'Mastitis', 'animals' => 3, 'location' => 'Sainthamaruthu', 'status' => 'Under Investigation'],
     ['date' => '2025-12-30', 'disease' => 'Rabies Case', 'animals' => 1, 'location' => 'Karaitivu', 'status' => 'Confirmed'],
 ];
-
 $reported = count($diseases);
 ?>
 
@@ -17,30 +16,23 @@ $reported = count($diseases);
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
         <h2 class="mb-4">Disease Reporting</h2>
-
         <!-- Quick Stats -->
         <div class="row g-4 mb-5">
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center">
-                    <h6 class="text-muted">Reported Cases This Month</h6>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-4 text-center">
+                    <h6 class="text-muted">Reports This Month</h6>
                     <h2 class="text-primary"><?= $reported ?></h2>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-4 text-center">
                     <h6 class="text-muted">Under Investigation</h6>
                     <h2 class="text-warning">1</h2>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center">
-                    <h6 class="text-muted">Confirmed Cases</h6>
-                    <h2 class="text-danger">1</h2>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center">
-                    <h6 class="text-muted">Resolved</h6>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-4 text-center">
+                    <h6 class="text-muted">Completed</h6>
                     <h2 class="text-success">1</h2>
                 </div>
             </div>
@@ -54,7 +46,7 @@ $reported = count($diseases);
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3">
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#reportNewCaseModal">
                             <i class="bi bi-plus-circle"></i><br>
                             Report New Case
                         </button>
@@ -80,7 +72,6 @@ $reported = count($diseases);
                 </div>
             </div>
         </div>
-
         <!-- Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
@@ -118,6 +109,49 @@ $reported = count($diseases);
             </div>
         </div>
     </main>
+</div>
+
+<!-- Report New Case Modal -->
+<div class="modal fade" id="reportNewCaseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Report New Case</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Date Reported</label>
+                            <input type="date" class="form-control" value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Disease / Case Type</label>
+                            <input type="text" class="form-control" placeholder="e.g., FMD Suspected">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Affected Animals</label>
+                            <input type="number" class="form-control" placeholder="e.g., 5">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-control" placeholder="e.g., Amparai">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Details / Description</label>
+                            <textarea class="form-control" rows="4" placeholder="Describe the case, symptoms, etc."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" disabled>Submit Report</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>

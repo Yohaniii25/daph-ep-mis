@@ -53,19 +53,19 @@ $total_animals = array_sum(array_column($immunizations, 'animals'));
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <a href="<?= $base_path ?>pages/modules/veterinary/immunization_campaigns.php" class="btn btn-primary w-100 py-3">
+                        <a href="<?= $base_path ?>pages/modules/veterinary/immunization_campaigns.php" style="background-color: #370709; color: white;" class="btn w-100 py-3">
                             <i class="bi bi-calendar-event"></i><br>
                             Schedule Campaign
                         </a>
                     </div>
-                    <div class="col-md-4">
+                    <!-- <div class="col-md-4">
                         <a href="<?= $base_path ?>pages/modules/veterinary/vaccine_stock.php" class="btn btn-success w-100 py-3">
                             <i class="bi bi-list-check"></i><br>
                             Vaccine Stock
                         </a>
-                    </div>
+                    </div> -->
                     <div class="col-md-4">
-                        <a href="<?= $base_path ?>pages/modules/veterinary/immunization_reports.php" class="btn btn-info w-100 py-3">
+                        <a href="<?= $base_path ?>pages/modules/veterinary/immunization_reports.php" style="background-color: #689ccf; " class="btn w-100 py-3">
                             <i class="bi bi-graph-up"></i><br>
                             View Reports
                         </a>
