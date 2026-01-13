@@ -55,28 +55,28 @@ $total_farmers = array_sum(array_column($trainings, 'farmers'));
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#scheduleTrainingModal">
                             <i class="bi bi-plus-circle"></i><br>
                             Schedule Training
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                        <a href="<?= $base_path ?>pages/modules/veterinary/farmer_registration.php" class="btn btn-primary w-100 py-3">
                             <i class="bi bi-person-plus"></i><br>
                             Register Farmer
-                        </button>
+                        </a>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
+                        <a href="<?= $base_path ?>pages/modules/veterinary/training_reports.php" class="btn btn-info w-100 py-3">
                             <i class="bi bi-graph-up"></i><br>
                             Training Reports
-                        </button>
+                        </a>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
+                        <a href="<?= $base_path ?>pages/modules/veterinary/farmer_list.php" class="btn btn-warning w-100 py-3">
                             <i class="bi bi-people"></i><br>
                             Farmer List
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -113,6 +113,48 @@ $total_farmers = array_sum(array_column($trainings, 'farmers'));
             </div>
         </div>
     </main>
+</div>
+
+<!-- Schedule Training Modal -->
+<div class="modal fade" id="scheduleTrainingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Schedule New Training</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Training Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Topic</label>
+                            <input type="text" class="form-control" placeholder="e.g., Modern Dairy Farming">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Expected Farmers</label>
+                            <input type="number" class="form-control" placeholder="e.g., 35">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-control" placeholder="e.g., Amparai">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Details / Notes</label>
+                            <textarea class="form-control" rows="4" placeholder="Describe the training agenda, objectives, etc."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" disabled>Schedule Training</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>
