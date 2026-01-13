@@ -17,9 +17,8 @@ $low = count(array_filter($stock, fn($s) => $s['status'] === 'Low'));
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
-        <h2 class="mb-4">Stock & Supply Management</h2>
+        <h2  class="mb-4">Stock & Supply Management</h2>
 
-        <!-- Quick Stats -->
         <div class="row g-4 mb-5">
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 p-4 text-center">
@@ -75,7 +74,7 @@ $low = count(array_filter($stock, fn($s) => $s['status'] === 'Low'));
         <!-- Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5>Current Stock Levels</h5>
+                <h5 style="color: white;">Current Stock Levels</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
