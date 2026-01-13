@@ -52,64 +52,29 @@ $total_animals = array_sum(array_column($immunizations, 'animals'));
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3">
-                            <i class="bi bi-plus-circle"></i><br>
-                            Record Campaign
-                        </button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3">
+                    <div class="col-md-4">
+                        <a href="<?= $base_path ?>pages/modules/veterinary/immunization_campaigns.php" class="btn btn-primary w-100 py-3">
                             <i class="bi bi-calendar-event"></i><br>
                             Schedule Campaign
-                        </button>
+                        </a>
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3">
-                            <i class="bi bi-graph-up"></i><br>
-                            View Reports
-                        </button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3">
+                    <div class="col-md-4">
+                        <a href="<?= $base_path ?>pages/modules/veterinary/vaccine_stock.php" class="btn btn-success w-100 py-3">
                             <i class="bi bi-list-check"></i><br>
                             Vaccine Stock
-                        </button>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="<?= $base_path ?>pages/modules/veterinary/immunization_reports.php" class="btn btn-info w-100 py-3">
+                            <i class="bi bi-graph-up"></i><br>
+                            View Reports
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Table -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                <h5>Recent Immunization Campaigns</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>DATE</th>
-                                <th>VACCINE</th>
-                                <th>ANIMALS COVERED</th>
-                                <th>LOCATION</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($immunizations as $i): ?>
-                            <tr>
-                                <td><?= date('d M Y', strtotime($i['date'])) ?></td>
-                                <td><strong><?= $i['vaccine'] ?></strong></td>
-                                <td><?= number_format($i['animals']) ?></td>
-                                <td><?= htmlspecialchars($i['location']) ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+
     </main>
 </div>
 
