@@ -110,9 +110,6 @@ $total = array_sum(array_column($revenue, 'amount'));
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-info text-center mb-4">
-                    <i class="bi bi-info-circle me-2"></i>Demo Mode - Revenue recording in Phase 2
-                </div>
                 <form>
                     <div class="row g-3">
                         <div class="col-md-6">

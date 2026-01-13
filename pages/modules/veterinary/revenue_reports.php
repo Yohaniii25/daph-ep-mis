@@ -1,6 +1,6 @@
 <?php
 require_once '../../../includes/header.php';
-if ($_SESSION['role'] !== 'veterinary_surgeon') die("Access denied");
+if ($_SESSION['role'] !== 'veterinary_surgeon' && $_SESSION['role'] !== 'district_dd') die("Access denied");
 
 // Demo data
 $revenue = [
