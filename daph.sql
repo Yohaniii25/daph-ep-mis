@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 13, 2026 at 01:51 PM
+-- Generation Time: Jan 21, 2026 at 01:38 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -111,6 +111,26 @@ INSERT INTO `leave_requests` (`id`, `staff_id`, `reg_id`, `name`, `reason`, `fro
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `projects`
+--
+
+CREATE TABLE `projects` (
+  `id` int(11) NOT NULL,
+  `project_id` varchar(50) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `budget` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `spent` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `progress` int(11) DEFAULT 0,
+  `status` enum('Ongoing','Completed','Pending') DEFAULT 'Ongoing',
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `staff`
 --
 
@@ -165,10 +185,10 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `role`,
 (5, 'yo', 'provinciald2@gmail.com', 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', 'provincial_director', NULL, 'Provincial', 'active', '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
 (7, 'adminstrator', 'admins@gmail.com', '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, 'Provincial', 'active', '2026-01-13 17:58:11', '2025-12-15 11:32:14'),
 (10, 'finance_admin', 'finance@gmail.com', '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, 'Provincial', 'active', '2026-01-05 11:34:25', '2025-12-16 07:42:06'),
-(11, 'Planning officer', 'planning@gmail.com', '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, 'Provincial', 'active', '2026-01-03 16:13:10', '2025-12-16 09:34:59'),
-(12, 'Subject Matter Specialist', 'sms@gmail.com', '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, 'Provincial', 'active', '2025-12-16 17:00:21', '2025-12-16 11:30:03'),
+(11, 'Planning officer', 'planning@gmail.com', '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, 'Provincial', 'active', '2026-01-21 17:28:49', '2025-12-16 09:34:59'),
+(12, 'Subject Matter Specialist', 'sms@gmail.com', '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, 'Provincial', 'active', '2026-01-14 12:36:00', '2025-12-16 11:30:03'),
 (13, 'Farms Officer', 'farms@gmail.com', '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', 'farms_dd', NULL, 'Provincial', 'active', '2026-01-05 11:43:58', '2025-12-17 08:46:28'),
-(15, 'Training Officer', 'training@gmail.com', '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', 'training_officer', NULL, 'Provincial', 'active', '2025-12-17 15:52:48', '2025-12-17 10:22:46'),
+(15, 'Training Officer', 'training@gmail.com', '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', 'training_officer', NULL, 'Provincial', 'active', '2026-01-21 17:41:01', '2025-12-17 10:22:46'),
 (16, 'District Deputy Director', 'district_dd@gmail.com', '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', 'district_dd', NULL, 'Provincial', 'active', '2026-01-13 17:59:03', '2025-12-17 13:23:28'),
 (17, 'veterinary surgeon', 'veterinary@gmail.com', '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', 'veterinary_surgeon', NULL, 'Provincial', 'active', '2026-01-13 12:54:56', '2025-12-18 10:10:22'),
 (18, 'Provincial director', 'provinciald@gmail.com', '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', 'provincial_director', NULL, 'Provincial', 'active', '2026-01-05 18:02:20', '2026-01-05 13:18:11');
@@ -198,6 +218,14 @@ ALTER TABLE `diary_entries`
 ALTER TABLE `leave_requests`
   ADD PRIMARY KEY (`id`),
   ADD KEY `staff_id` (`staff_id`);
+
+--
+-- Indexes for table `projects`
+--
+ALTER TABLE `projects`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `project_id` (`project_id`),
+  ADD KEY `created_by` (`created_by`);
 
 --
 -- Indexes for table `staff`
@@ -241,6 +269,12 @@ ALTER TABLE `leave_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT for table `projects`
+--
+ALTER TABLE `projects`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `staff`
 --
 ALTER TABLE `staff`
@@ -267,6 +301,12 @@ ALTER TABLE `diary_entries`
 --
 ALTER TABLE `leave_requests`
   ADD CONSTRAINT `leave_requests_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`);
+
+--
+-- Constraints for table `projects`
+--
+ALTER TABLE `projects`
+  ADD CONSTRAINT `projects_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

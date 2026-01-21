@@ -56,25 +56,25 @@ $pending = count(array_filter($revenue, fn($r) => $r['status'] === 'Pending'));
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
+                        <button class="btn btn-success w-100 py-3" >
                             <i class="bi bi-plus-circle"></i><br>
                             Record New Revenue
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                        <button class="btn btn-primary w-100 py-3" >
                             <i class="bi bi-search"></i><br>
                             Search Records
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
+                        <button class="btn btn-info w-100 py-3" >
                             <i class="bi bi-graph-up"></i><br>
                             View Monthly Summary
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
+                        <button class="btn btn-warning w-100 py-3" >
                             <i class="bi bi-check2-all"></i><br>
                             Approve Pending
                         </button>

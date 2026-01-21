@@ -56,37 +56,27 @@ $present = count(array_filter($participation, fn($p) => $p['attendance'] === 'Pr
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#addParticipationModal">
                             <i class="bi bi-person-plus"></i><br>
                             Add Participation
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                        <button class="btn btn-primary w-100 py-3" >
                             <i class="bi bi-search"></i><br>
                             Search Farmers
                         </button>
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
-                            <i class="bi bi-graph-up"></i><br>
-                            View Attendance Rate
-                        </button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
-                            <i class="bi bi-file-earmark-text"></i><br>
-                            Export List
-                        </button>
-                    </div>
+
+
                 </div>
             </div>
         </div>
 
         <!-- Farmer Participation Table -->
         <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Farmer Participation Records</h5>
+            <div class="card-header bg-dark">
+                <h5 style="color: white;" class="mb-0">Farmer Participation Records</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -124,6 +114,60 @@ $present = count(array_filter($participation, fn($p) => $p['attendance'] === 'Pr
             </div>
         </div>
     </main>
+</div>
+
+<!-- Add Participation Modal (Demo) -->
+<div class="modal fade" id="addParticipationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add Farmer Participation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Training ID</label>
+                            <select class="form-select">
+                                <option>TR-001 - Modern Dairy Farming</option>
+                                <option>TR-002 - Animal Health Management</option>
+                                <option>TR-003 - Fodder Cultivation</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Farmer Name</label>
+                            <input type="text" class="form-control" placeholder="e.g., Mr. Silva">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">NIC</label>
+                            <input type="text" class="form-control" placeholder="e.g., 198512345678">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Number</label>
+                            <input type="text" class="form-control" placeholder="e.g., 071-2345678">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Attendance</label>
+                            <select class="form-select">
+                                <option>Present</option>
+                                <option>Absent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Feedback</label>
+                            <input type="text" class="form-control" placeholder="e.g., Very useful">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" >Save Participation</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>

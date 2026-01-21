@@ -4,10 +4,10 @@ if ($_SESSION['role'] !== 'planning_officer') die("Access denied");
 
 // Demo projects
 $projects = [
-    ['id' => 'PSDG-001', 'name' => 'Dairy Development Programme - Amparai', 'type' => 'PSDG', 'budget' => 8500000, 'spent' => 4200000, 'progress' => 49, 'status' => 'Ongoing'],
-    ['id' => 'CBG-002', 'name' => 'Fodder Cultivation & Distribution', 'type' => 'CBG', 'budget' => 3200000, 'spent' => 1800000, 'progress' => 56, 'status' => 'Ongoing'],
-    ['id' => 'NGO-003', 'name' => 'Goat Rearing Project - Batticaloa', 'type' => 'NGO', 'budget' => 2800000, 'spent' => 1200000, 'progress' => 43, 'status' => 'Ongoing'],
-    ['id' => 'INGO-004', 'name' => 'Poultry Health Improvement', 'type' => 'INGO', 'budget' => 4500000, 'spent' => 4500000, 'progress' => 100, 'status' => 'Completed'],
+    ['id' => 'PSDG-001', 'name' => 'Dairy Development Programme - Amparai', 'type' => 'PSDG', 'budget' => 8500000, 'spent' => 4200000, 'status' => 'Ongoing'],
+    ['id' => 'CBG-002', 'name' => 'Fodder Cultivation & Distribution', 'type' => 'CBG', 'budget' => 3200000, 'spent' => 1800000, 'status' => 'Ongoing'],
+    ['id' => 'NGO-003', 'name' => 'Goat Rearing Project - Batticaloa', 'type' => 'NGO', 'budget' => 2800000, 'spent' => 1200000, 'status' => 'Ongoing'],
+    ['id' => 'INGO-004', 'name' => 'Poultry Health Improvement', 'type' => 'INGO', 'budget' => 4500000, 'spent' => 4500000, 'status' => 'Completed'],
 ];
 
 $total_budget = array_sum(array_column($projects, 'budget'));
@@ -28,30 +28,25 @@ $avg_progress = round(array_sum(array_column($projects, 'progress')) / count($pr
 
         <!-- Quick Stats -->
         <div class="row g-4 mb-5">
-            <div class="col-xl-3 col-md-6">
+            <div class="col-xl-4 col-md-6">
                 <div class="card border-0 shadow-sm h-100 p-4 text-center">
                     <h6 class="text-muted">Total Projects</h6>
                     <h2 class="text-primary"><?= count($projects) ?></h2>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6">
+            <div class="col-xl-4 col-md-6">
                 <div class="card border-0 shadow-sm h-100 p-4 text-center">
                     <h6 class="text-muted">Total Budget (LKR)</h6>
                     <h2 class="text-success">Rs <?= number_format($total_budget) ?></h2>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6">
+            <div class="col-xl-4 col-md-6">
                 <div class="card border-0 shadow-sm h-100 p-4 text-center">
                     <h6 class="text-muted">Total Spent (LKR)</h6>
                     <h2 class="text-info">Rs <?= number_format($total_spent) ?></h2>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center">
-                    <h6 class="text-muted">Average Progress</h6>
-                    <h2 class="text-warning"><?= $avg_progress ?>%</h2>
-                </div>
-            </div>
+
         </div>
 
         <!-- Quick Actions -->
@@ -68,12 +63,6 @@ $avg_progress = round(array_sum(array_column($projects, 'progress')) / count($pr
                         </button>
                     </div>
 
-                    <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
-                            <i class="bi bi-graph-up"></i><br>
-                            View Progress
-                        </button>
-                    </div>
 
                 </div>
             </div>
@@ -94,7 +83,6 @@ $avg_progress = round(array_sum(array_column($projects, 'progress')) / count($pr
                                 <th>Type</th>
                                 <th>Budget (LKR)</th>
                                 <th>Spent (LKR)</th>
-                                <th>Progress</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -106,13 +94,6 @@ $avg_progress = round(array_sum(array_column($projects, 'progress')) / count($pr
                                 <td><?= $p['type'] ?></td>
                                 <td>Rs <?= number_format($p['budget']) ?></td>
                                 <td>Rs <?= number_format($p['spent']) ?></td>
-                                <td>
-                                    <div class="progress" style="height: 28px;">
-                                        <div class="progress-bar bg-<?= $p['progress'] >= 80 ? 'success' : 'warning' ?>" style="width: <?= $p['progress'] ?>%">
-                                            <?= $p['progress'] ?>%
-                                        </div>
-                                    </div>
-                                </td>
                                 <td>
                                     <span class="badge bg-<?= $p['status'] === 'Completed' ? 'success' : 'warning' ?>">
                                         <?= $p['status'] ?>
