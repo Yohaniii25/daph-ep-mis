@@ -120,6 +120,29 @@ $approved_count = count(array_filter($vehicle_requests, fn($r) => $r['status'] =
             </div>
         </div>
 
+        <!-- Quick Actions -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#addMovementModal">
+                            <i class="bi bi-plus-circle"></i><br>
+                            Add New Movement
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-warning w-100 py-3">
+                            <i class="bi bi-file-earmark-text"></i><br>
+                            Export Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Filter Section -->
         <div class="filter-section no-print">
             <div class="row g-3">
@@ -263,6 +286,50 @@ $approved_count = count(array_filter($vehicle_requests, fn($r) => $r['status'] =
         </div>
 
     </main>
+</div>
+
+
+<!-- Add New Movement Modal -->
+<div class="modal fade" id="addMovementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Vehicle Movement</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Requesting Officer</label>
+                            <input type="text" class="form-control" placeholder="e.g., District DD - Batticaloa">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Vehicle</label>
+                            <input type="text" class="form-control" placeholder="e.g., Double Cab DC-1234">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Purpose</label>
+                            <input type="text" class="form-control" placeholder="e.g., Field visit to dairy farms">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Travel Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Additional Notes</label>
+                            <textarea class="form-control" rows="3" placeholder="Any special requirements..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" disabled>Submit Request</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
