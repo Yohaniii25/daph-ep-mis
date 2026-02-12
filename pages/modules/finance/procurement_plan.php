@@ -17,97 +17,106 @@ $in_progress_count = $status_counts['In Progress'] ?? 0;
 ?>
 
 <style>
-.stat-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-}
-.procurement-table-wrapper {
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-}
-.badge-custom {
-    padding: 6px 14px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    border-radius: 6px;
-}
-.table-header-custom {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: white;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-}
-.action-btn {
-    padding: 5px 12px;
-    font-size: 0.85rem;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-.action-btn:hover {
-    transform: scale(1.05);
-}
-.priority-badge-high {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-    color: white;
-}
-.priority-badge-medium {
-    background: linear-gradient(135deg, #ffa502 0%, #ff7f50 100%);
-    color: white;
-}
-.priority-badge-low {
-    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-    color: white;
-}
-.timeline-badge {
-    position: relative;
-    padding-left: 25px;
-}
-.timeline-badge::before {
-    content: '';
-    position: absolute;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: currentColor;
-}
+    .stat-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .procurement-table-wrapper {
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .badge-custom {
+        padding: 6px 14px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        border-radius: 6px;
+    }
+
+    .table-header-custom {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .action-btn {
+        padding: 5px 12px;
+        font-size: 0.85rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .priority-badge-high {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+    }
+
+    .priority-badge-medium {
+        background: linear-gradient(135deg, #ffa502 0%, #ff7f50 100%);
+        color: white;
+    }
+
+    .priority-badge-low {
+        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        color: white;
+    }
+
+    .timeline-badge {
+        position: relative;
+        padding-left: 25px;
+    }
+
+    .timeline-badge::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+    }
 </style>
 
 <?php require_once '../../../includes/sidebar.php'; ?>
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4" style="background-color: #f8f9fa;">
-        
+
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="mb-2 text-dark fw-bold">
                     </i>Procurement Planning & Management
-                </h1>
-                <p class="text-muted mb-0">Strategic procurement planning for 2026</p>
+                    </h1>
+                    <p class="text-muted mb-0">Strategic procurement planning for 2026</p>
             </div>
 
         </div>
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <div>
-                <button class="btn btn-primary me-2">
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addProcurementModal">
                     <i class="bi bi-plus-circle me-2"></i>New Procurement
                 </button>
                 <button class="btn btn-outline-secondary me-2">
                     <i class="bi bi-file-earmark-excel me-2"></i>Export
                 </button>
-                <button class="btn btn-outline-info">
-                    <i class="bi bi-calendar-check me-2"></i>View Calendar
-                </button>
+
             </div>
         </div>
 
@@ -230,45 +239,45 @@ $in_progress_count = $status_counts['In Progress'] ?? 0;
                         </thead>
                         <tbody>
                             <?php foreach ($procurements as $item): ?>
-                            <tr style="border-bottom: 1px solid #e9ecef;">
-                                <td class="px-4">
-                                    <div class="fw-semibold text-dark">
-                                        <?= htmlspecialchars($item['item']) ?>
-                                    </div>
-                                </td>
+                                <tr style="border-bottom: 1px solid #e9ecef;">
+                                    <td class="px-4">
+                                        <div class="fw-semibold text-dark">
+                                            <?= htmlspecialchars($item['item']) ?>
+                                        </div>
+                                    </td>
 
-                                <td class="text-end">
-                                    <span class="fw-bold" style="color: #2c3e50;">Rs. <?= number_format($item['estimated_cost']) ?></span>
-                                </td>
-                                <td>
-                                    <span class="text-muted small">
-                                        <i class="bi bi-building me-1"></i><?= $item['supplier'] ?>
-                                    </span>
-                                </td>
+                                    <td class="text-end">
+                                        <span class="fw-bold" style="color: #2c3e50;">Rs. <?= number_format($item['estimated_cost']) ?></span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted small">
+                                            <i class="bi bi-building me-1"></i><?= $item['supplier'] ?>
+                                        </span>
+                                    </td>
 
-                                <td>
-                                    <span class="badge badge-custom priority-badge-<?= strtolower($item['priority']) ?>">
-                                        <?= $item['priority'] ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge badge-custom <?= $item['status'] === 'Approved' ? 'bg-success' : ($item['status'] === 'In Progress' ? 'bg-warning text-dark' : 'bg-secondary') ?>">
-                                        <i class="bi bi-<?= $item['status'] === 'Approved' ? 'check-circle' : ($item['status'] === 'In Progress' ? 'hourglass-split' : 'clock') ?>-fill me-1"></i>
-                                        <?= $item['status'] ?>
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-primary action-btn me-1" title="View Details">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-secondary action-btn me-1" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success action-btn" title="Approve">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                                    <td>
+                                        <span class="badge badge-custom priority-badge-<?= strtolower($item['priority']) ?>">
+                                            <?= $item['priority'] ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-custom <?= $item['status'] === 'Approved' ? 'bg-success' : ($item['status'] === 'In Progress' ? 'bg-warning text-dark' : 'bg-secondary') ?>">
+                                            <i class="bi bi-<?= $item['status'] === 'Approved' ? 'check-circle' : ($item['status'] === 'In Progress' ? 'hourglass-split' : 'clock') ?>-fill me-1"></i>
+                                            <?= $item['status'] ?>
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary action-btn me-1" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary action-btn me-1" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success action-btn" title="Approve">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot style="background-color: #f8f9fa;">
@@ -300,6 +309,63 @@ $in_progress_count = $status_counts['In Progress'] ?? 0;
         </div>
 
     </main>
+</div>
+
+<!-- Add New Procurement Modal -->
+<div class="modal fade" id="addProcurementModal" tabindex="-1" aria-labelledby="addProcurementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="addProcurementModalLabel" style="font-size: 17px;">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Procurement Item
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Item Description</label>
+                            <input type="text" class="form-control" placeholder="e.g., Foot-and-Mouth Disease Vaccine">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Quantity</label>
+                            <input type="text" class="form-control" placeholder="e.g., 10,000 doses">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Estimated Cost (LKR)</label>
+                            <input type="number" class="form-control" placeholder="e.g., 8500000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Supplier</label>
+                            <input type="text" class="form-control" placeholder="e.g., MedVet Suppliers">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Priority</label>
+                            <select class="form-select">
+                                <option value="High">High</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Expected Delivery Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Notes / Remarks</label>
+                            <textarea class="form-control" rows="3" placeholder="Any special requirements or notes..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" disabled>Save Procurement</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>

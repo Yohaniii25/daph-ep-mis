@@ -112,14 +112,11 @@ $total_value = 15750000; // Demo value in LKR
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <button class="btn btn-primary me-2">
-                    <i class="bi bi-plus-circle me-2"></i>Add New Item
-                </button>
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addItemModal">
+    <i class="bi bi-plus-circle me-2"></i>Add New Item
+</button>
                 <button class="btn btn-outline-secondary me-2">
                     <i class="bi bi-file-earmark-pdf me-2"></i>Generate Report
-                </button>
-                <button class="btn btn-outline-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>View Alerts
                 </button>
             </div>
         </div>
@@ -324,6 +321,71 @@ $total_value = 15750000; // Demo value in LKR
         </div>
 
     </main>
+</div>
+
+<!-- Add New Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="addItemModalLabel" style="font-size: 17px;">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Stock Item
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Item Name</label>
+                            <input type="text" class="form-control" placeholder="e.g., FMD Vaccine">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select class="form-select">
+                                <option>Vaccines</option>
+                                <option>Medicines</option>
+                                <option>Equipment</option>
+                                <option>Supplies</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Quantity</label>
+                            <input type="number" class="form-control" placeholder="e.g., 5000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Unit</label>
+                            <select class="form-select">
+                                <option>Doses</option>
+                                <option>Vials</option>
+                                <option>Bottles</option>
+                                <option>Pieces</option>
+                                <option>Kg</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Minimum Stock Level</label>
+                            <input type="number" class="form-control" placeholder="e.g., 1000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Expiry Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Notes / Remarks</label>
+                            <textarea class="form-control" rows="3" placeholder="Batch number, supplier, special instructions..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" disabled>Save Item</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>

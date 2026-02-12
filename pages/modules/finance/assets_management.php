@@ -65,6 +65,10 @@ $categories = array_unique(array_column($assets, 'category'));
         display: inline-block;
         margin-bottom: 20px;
     }
+
+    input.form-control.form-control-lg.bg-light {
+        font-size: 18px !important;
+    }
 </style>
 
 <?php require_once '../../../includes/sidebar.php'; ?>
@@ -274,30 +278,30 @@ $categories = array_unique(array_column($assets, 'category'));
     <div class="modal-dialog modal-lg">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <h5 class="modal-title" id="addAssetModalLabel">
+                <h5 class="modal-title" id="addAssetModalLabel" style="font-size: 17px;">
                     <i class="bi bi-plus-circle me-2"></i>Add New Asset
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-5">
+            <div class="modal-body p-4">
 
                 <form>
-                    <div class="row g-4">
+                    <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Asset ID</label>
-                            <input type="text" class="form-control form-control-lg bg-light" value="Auto-generated" readonly>
+                            <label class="form-label">Asset ID</label>
+                            <input type="text" class="form-control" value="Auto-generated" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Purchase Date</label>
-                            <input type="date" class="form-control form-control-lg" value="<?= date('Y-m-d') ?>">
+                            <label class="form-label">Purchase Date</label>
+                            <input type="date" class="form-control" value="<?= date('Y-m-d') ?>">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold">Description</label>
-                            <input type="text" class="form-control form-control-lg" placeholder="e.g., Toyota Hilux Double Cab">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" placeholder="e.g., Toyota Hilux Double Cab">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Category</label>
-                            <select class="form-select form-select-lg">
+                            <label class="form-label">Category</label>
+                            <select class="form-select">
                                 <option selected>Select category</option>
                                 <option>Vehicle</option>
                                 <option>IT Equipment</option>
@@ -307,12 +311,12 @@ $categories = array_unique(array_column($assets, 'category'));
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Value (LKR)</label>
-                            <input type="number" class="form-control form-control-lg" placeholder="8500000">
+                            <label class="form-label">Value (LKR)</label>
+                            <input type="number" class="form-control" placeholder="8500000">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold">Status</label>
-                            <select class="form-select form-select-lg">
+                            <label class="form-label">Status</label>
+                            <select class="form-select">
                                 <option selected>Active</option>
                                 <option>Inactive</option>
                                 <option>Under Maintenance</option>
@@ -322,8 +326,8 @@ $categories = array_unique(array_column($assets, 'category'));
                 </form>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary btn-lg px-5" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success btn-lg px-5" disabled>Save Asset</button>
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" disabled>Save Asset</button>
             </div>
         </div>
     </div>

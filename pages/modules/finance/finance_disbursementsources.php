@@ -191,7 +191,7 @@ $completed_projects = count(array_filter($projects, function ($p) {
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <div>
-                <button class="btn btn-primary me-2">
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addProjectModal">
                     <i class="bi bi-plus-circle me-2"></i>New Project
                 </button>
                 <button class="btn btn-outline-secondary me-2">
@@ -430,6 +430,67 @@ $completed_projects = count(array_filter($projects, function ($p) {
         </div>
 
     </main>
+</div>
+
+
+<!-- Add New Project Modal -->
+<div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="addProjectModalLabel" style="font-size: 17px;">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Development Project
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Project ID</label>
+                            <input type="text" class="form-control" placeholder="e.g., PSDG-2026-005" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Project Name</label>
+                            <input type="text" class="form-control" placeholder="e.g., Provincial Dairy Development Programme" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Funding Type</label>
+                            <select class="form-select">
+                                <option>PSDG</option>
+                                <option>CBG</option>
+                                <option>Line Ministry</option>
+                                <option>NGO</option>
+                                <option>INGO/IGO</option>
+                                <option>Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Total Allocation (LKR)</label>
+                            <input type="number" class="form-control" placeholder="e.g., 8500000" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Start Date</label>
+                            <input type="date" class="form-control" value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Expected End Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Project Description / Objectives</label>
+                            <textarea class="form-control" rows="4" placeholder="Brief description of the project..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" disabled>Save Project</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>
