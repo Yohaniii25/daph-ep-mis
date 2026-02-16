@@ -5,7 +5,6 @@ if ($_SESSION['role'] !== 'farms_dd') {
     die("Access denied");
 }
 
-// Demo data only
 $message = '<div class="alert alert-info text-center">Demo mode - Real hatchery operations will be implemented in Phase 2</div>';
 
 $demo_hatcheries = [
@@ -66,7 +65,7 @@ $daily_production = [
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                        <button class="btn btn-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#eggSettingModal">
                             <i class="bi bi-egg"></i><br>
                             Record Egg Setting
                         </button>
@@ -137,6 +136,56 @@ $daily_production = [
         </div>
 
     </main>
+</div>
+
+<!-- Record Egg Setting Modal -->
+<div class="modal fade" id="eggSettingModal" tabindex="-1" aria-labelledby="eggSettingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white"">
+                <h5 class="modal-title" id="eggSettingModalLabel" style="font-size: 17px;">
+                    <i class="bi bi-plus"></i>Record Egg Setting
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Hatchery Location</label>
+                            <select class="form-select" required>
+                                <option value="">Select Hatchery</option>
+                                <option value="Amparai Hatchery">Amparai Hatchery</option>
+                                <option value="Batticaloa Hatchery">Batticaloa Hatchery</option>
+                                <option value="Trincomalee Hatchery">Trincomalee Hatchery</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Date</label>
+                            <input type="date" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Number of Eggs Set</label>
+                            <input type="number" class="form-control" placeholder="e.g., 45000" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Expected Hatch Rate (%)</label>
+                            <input type="number" class="form-control" value="90" min="0" max="100" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Notes / Remarks</label>
+                            <textarea class="form-control" rows="3" placeholder="Any special observations, batch number, etc..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" disabled>Record Egg Setting</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>

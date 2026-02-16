@@ -5,9 +5,7 @@ if ($_SESSION['role'] !== 'farms_dd') {
     die("Access denied");
 }
 
-// Demo data only
-$message = '';
-
+// Demo data
 $demo_farms = [
     ['reg_no' => 'LF-2025-001', 'farmer' => 'Ahmed Rizwan', 'type' => 'Dairy', 'animals' => 45, 'daily_milk' => 480, 'status' => 'Active'],
     ['reg_no' => 'LF-2025-002', 'farmer' => 'Priya Kumari', 'type' => 'Beef', 'animals' => 32, 'daily_milk' => 0, 'status' => 'Active'],
@@ -27,8 +25,6 @@ $daily_production = [
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
         <h2 class="mb-4">Livestock & Dairy Farm Operations</h2>
-
-        <?= $message ?>
 
         <!-- Quick Stats -->
         <div class="row g-4 mb-5">
@@ -58,7 +54,7 @@ $daily_production = [
             </div>
         </div>
 
-        <!-- Action Buttons -->
+        <!-- Quick Actions -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light">
                 <h5>Quick Actions</h5>
@@ -66,25 +62,25 @@ $daily_production = [
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <a href="livestock_farms_certificate_reg.php" class="btn btn-primary w-100 py-3">
+                        <button class="btn btn-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#registerFarmModal">
                             <i class="bi bi-file-earmark-plus"></i><br>
                             Register New Livestock Farm
-                        </a>
+                        </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
+                        <button class="btn btn-success w-100 py-3" >
                             <i class="bi bi-droplet"></i><br>
                             Record Daily Milk Production
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
+                        <button class="btn btn-info w-100 py-3" >
                             <i class="bi bi-graph-up"></i><br>
                             View Production Reports
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
+                        <button class="btn btn-warning w-100 py-3" >
                             <i class="bi bi-truck"></i><br>
                             Milk Sales & Distribution
                         </button>
@@ -126,9 +122,7 @@ $daily_production = [
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="../veterinary/print_certificate.php?id=1" target="_blank" class="btn btn-sm btn-outline-primary">
-                                        View Certificate
-                                    </a>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">View Certificate</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -137,9 +131,63 @@ $daily_production = [
                 </div>
             </div>
         </div>
-
-
     </main>
+</div>
+
+<!-- Register New Livestock Farm Modal -->
+<div class="modal fade" id="registerFarmModal" tabindex="-1" aria-labelledby="registerFarmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
+                <h5 class="modal-title" id="registerFarmModalLabel" style="font-size: 17px;">
+                    <i class="bi bi-file-earmark-plus me-2"></i>Register New Livestock Farm
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Registration No.</label>
+                            <input type="text" class="form-control" placeholder="Auto-generated on save" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Veterinary Range</label>
+                            <input type="text" class="form-control" placeholder="e.g., Amparai" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Divisional Secretariat Division</label>
+                            <input type="text" class="form-control" placeholder="e.g., Amparai" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Grama Niladhari Division</label>
+                            <input type="text" class="form-control" placeholder="e.g., Karaitivu" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Name of Farmer</label>
+                            <input type="number" class="form-control" placeholder="e.g., Ahmed Rizwan" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Registration Date</label>
+                            <input type="date" class="form-control" value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">NIC No.</label>
+                            <input type="date" class="form-control" placeholder="e.g., 199970704599" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Address</label>
+                            <textarea class="form-control" rows="3" placeholder="Full address of the farm..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" disabled>Register Farm</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>

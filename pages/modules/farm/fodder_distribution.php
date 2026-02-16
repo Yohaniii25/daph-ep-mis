@@ -66,26 +66,27 @@ $stats = [
             </div>
             <div class="card-body">
                 <div class="row g-3">
+
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#planDistributionModal">
                             <i class="bi bi-plus-circle"></i><br>
                             Plan New Distribution
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                        <button class="btn btn-primary w-100 py-3">
                             <i class="bi bi-truck"></i><br>
                             Record Distribution
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
+                        <button class="btn btn-info w-100 py-3">
                             <i class="bi bi-graph-up"></i><br>
                             View Reports
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
+                        <button class="btn btn-warning w-100 py-3">
                             <i class="bi bi-people"></i><br>
                             Farmer Training Schedule
                         </button>
@@ -114,18 +115,18 @@ $stats = [
                         </thead>
                         <tbody>
                             <?php foreach ($demo_distributions as $dist): ?>
-                            <tr>
-                                <td><?= date('d M Y', strtotime($dist['date'])) ?></td>
-                                <td><strong><?= htmlspecialchars($dist['district']) ?></strong></td>
-                                <td><?= htmlspecialchars($dist['material']) ?></td>
-                                <td><?= $dist['quantity'] ?></td>
-                                <td><?= $dist['farmers'] ?></td>
-                                <td>
-                                    <span class="badge bg-<?= $dist['status'] === 'Distributed' ? 'success' : 'warning' ?>">
-                                        <?= $dist['status'] ?>
-                                    </span>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td><?= date('d M Y', strtotime($dist['date'])) ?></td>
+                                    <td><strong><?= htmlspecialchars($dist['district']) ?></strong></td>
+                                    <td><?= htmlspecialchars($dist['material']) ?></td>
+                                    <td><?= $dist['quantity'] ?></td>
+                                    <td><?= $dist['farmers'] ?></td>
+                                    <td>
+                                        <span class="badge bg-<?= $dist['status'] === 'Distributed' ? 'success' : 'warning' ?>">
+                                            <?= $dist['status'] ?>
+                                        </span>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -135,5 +136,65 @@ $stats = [
 
     </main>
 </div>
+
+<!-- Plan New Distribution Modal -->
+<div class="modal fade" id="planDistributionModal" tabindex="-1" aria-labelledby="planDistributionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);">
+                <h5 class="modal-title" id="planDistributionModalLabel" style="font-size: 17px;">
+                    <i class="bi bi-plus-circle me-2"></i>Plan New Fodder Distribution
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Distribution Date</label>
+                            <input type="date" class="form-control" value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">District</label>
+                            <select class="form-select">
+                                <option>Amparai</option>
+                                <option>Batticaloa</option>
+                                <option>Trincomalee</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Material Type</label>
+                            <select class="form-select">
+                                <option>Napier Grass Cuttings</option>
+                                <option>CO-3 Fodder Seeds</option>
+                                <option>Guinea Grass Slips</option>
+                                <option>Maize Silage</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Quantity</label>
+                            <input type="text" class="form-control" placeholder="e.g., 500 kg">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Number of Farmers</label>
+                            <input type="number" class="form-control" placeholder="e.g., 25">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Remarks / Notes</label>
+                            <textarea class="form-control" rows="3" placeholder="Any special instructions..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" disabled>Plan Distribution</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <?php require_once '../../../includes/footer.php'; ?>
