@@ -55,8 +55,8 @@ $low_stock = count(array_filter($supplies, fn($s) => $s['stock_level'] === 'Low'
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
-                            <i class="bi bi-plus-circle"></i><br>
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#addSupplyModal">
+                            <i class="bi bi-journal-text"></i><br>
                             Add New Supply
                         </button>
                     </div>
@@ -85,7 +85,7 @@ $low_stock = count(array_filter($supplies, fn($s) => $s['stock_level'] === 'Low'
         <!-- Supply Chain Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Current Veterinary Supplies</h5>
+                <h5 style="color: white;" class="mb-0">Current Veterinary Supplies</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -119,6 +119,56 @@ $low_stock = count(array_filter($supplies, fn($s) => $s['stock_level'] === 'Low'
             </div>
         </div>
     </main>
+</div>
+
+<!-- Add New Supply Modal -->
+<div class="modal fade" id="addSupplyModal" tabindex="-1" aria-labelledby="addSupplyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="addSupplyModalLabel" style="font-size: 17px;">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Veterinary Supply
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Item Name</label>
+                            <input type="text" class="form-control" placeholder="e.g., Vaccines, Antimicrobials">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Quantity</label>
+                            <input type="number" class="form-control" placeholder="e.g., 1000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Unit of Measure</label>
+                            <select class="form-select">
+                                <option>Units</option>
+                                <option>Kilograms</option>
+                                <option>Liters</option>
+                                <option>Packets</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Expiry Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="mt-4 d-flex justify-content-end gap-2">
+                        <button type= "button"  data-bs-dismiss= "modal"  class= "btn btn-secondary">Cancel</button>
+                        <button type= "submit"  class= "btn btn-primary">Add Supply</button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>

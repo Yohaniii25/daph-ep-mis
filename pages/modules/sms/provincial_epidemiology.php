@@ -55,25 +55,25 @@ $total_cases = array_sum(array_column($cases, 'cases'));
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" disabled>
-                            <i class="bi bi-plus-circle"></i><br>
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#reportCaseModal">
+                            <i class="bi bi-journal-text"></i><br>
                             Report New Case
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary w-100 py-3" disabled>
+                        <button class="btn btn-primary w-100 py-3">
                             <i class="bi bi-search"></i><br>
                             Search Cases
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-info w-100 py-3" disabled>
+                        <button class="btn btn-info w-100 py-3">
                             <i class="bi bi-graph-up"></i><br>
                             View Trends
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-warning w-100 py-3" disabled>
+                        <button class="btn btn-warning w-100 py-3">
                             <i class="bi bi-file-earmark-text"></i><br>
                             Export Report
                         </button>
@@ -85,7 +85,7 @@ $total_cases = array_sum(array_column($cases, 'cases'));
         <!-- Epidemiology Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Recent Disease Cases</h5>
+                <h5 style="color: white;" class="mb-0">Recent Disease Cases</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -101,17 +101,17 @@ $total_cases = array_sum(array_column($cases, 'cases'));
                         </thead>
                         <tbody>
                             <?php foreach ($cases as $c): ?>
-                            <tr>
-                                <td><?= date('d M Y', strtotime($c['date'])) ?></td>
-                                <td><strong><?= htmlspecialchars($c['disease']) ?></strong></td>
-                                <td><?= $c['cases'] ?></td>
-                                <td><?= htmlspecialchars($c['district']) ?></td>
-                                <td>
-                                    <span class="badge bg-<?= $c['status'] === 'Contained' ? 'success' : 'warning' ?>">
-                                        <?= $c['status'] ?>
-                                    </span>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td><?= date('d M Y', strtotime($c['date'])) ?></td>
+                                    <td><strong><?= htmlspecialchars($c['disease']) ?></strong></td>
+                                    <td><?= $c['cases'] ?></td>
+                                    <td><?= htmlspecialchars($c['district']) ?></td>
+                                    <td>
+                                        <span class="badge bg-<?= $c['status'] === 'Contained' ? 'success' : 'warning' ?>">
+                                            <?= $c['status'] ?>
+                                        </span>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -119,6 +119,64 @@ $total_cases = array_sum(array_column($cases, 'cases'));
             </div>
         </div>
     </main>
+</div>
+
+<!-- Report New Case Modal -->
+<div class="modal fade" id="reportCaseModal" tabindex="-1" aria-labelledby="reportCaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="reportCaseModalLabel" style="font-size: 17px;">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Report New Disease Case
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Date of Report</label>
+                            <input type="date" class="form-control" value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Disease / Condition</label>
+                            <input type="text" class="form-control" placeholder="e.g., Foot-and-Mouth Disease">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Number of Cases</label>
+                            <input type="number" class="form-control" placeholder="e.g., 12">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">District / Location</label>
+                            <select class="form-select">
+                                <option>Amparai</option>
+                                <option>Batticaloa</option>
+                                <option>Trincomalee</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Description / Symptoms</label>
+                            <textarea class="form-control" rows="4" placeholder="Describe symptoms, affected animals, observations..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Initial Status</label>
+                            <select class="form-select">
+                                <option>Reported</option>
+                                <option>Under Investigation</option>
+                                <option>Confirmed</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger px-4" disabled>Submit Report</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>
