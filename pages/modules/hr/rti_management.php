@@ -130,9 +130,6 @@ $rti_requests = [
             </div>
         </div>
 
-        <div class="mt-4 text-center text-muted">
-            <small>* Demo mode - Real RTI logging and response tracking will be implemented in Phase 2</small>
-        </div>
     </main>
 </div>
 

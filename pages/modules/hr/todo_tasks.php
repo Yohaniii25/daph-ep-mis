@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 require_once '../../../config/db_connect.php';
@@ -65,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = trim($_POST['edit_title']);
         $notes = trim($_POST['edit_notes']);
         $due_date = isset($_POST['edit_due_date']) ? $_POST['edit_due_date'] : null;
-        // Get type
+
         $stmt = $mysqli->prepare("SELECT type FROM admin_diaries_todo WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -96,7 +95,7 @@ if ($_SESSION['role'] !== 'administrator') {
     die("Access denied");
 }
 
-// Show flash message
+// Show alert message
 $message = '';
 if (isset($_SESSION['success'])) {
     $message = '<div class="alert alert-success">' . $_SESSION['success'] . '</div>';
@@ -111,8 +110,16 @@ if (isset($_SESSION['error'])) {
 $stmt = $mysqli->prepare("SELECT * FROM admin_diaries_todo ORDER BY entry_date DESC, due_date ASC");
 $stmt->execute();
 $result = $stmt->get_result();
-$entries = $result->fetch_all(MYSQLI_ASSOC);
+$allEntries = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
+
+$diaries = array_filter($allEntries, function ($entry) {
+
+    return $entry['type'] === 'Diary';
+});
+$tasks = array_filter($allEntries, function ($entry) {
+    return $entry['type'] === 'Task';
+});
 ?>
 
 <?php require_once '../../../includes/sidebar.php'; ?>
@@ -146,17 +153,16 @@ $stmt->close();
             </div>
         </div>
 
-        <!-- Table -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                <h5>All Entries (Tasks & Diary)</h5>
+        <!-- Daily Diary Table -->
+        <div class="card shadow-sm mb-4">
+            <div style="background-color: #370709;" class="card-header text-white">
+                <h5 style="color: white;">Daily Diaries</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Type</th>
                                 <th>Title</th>
                                 <th>Description</th>
                                 <th>Date</th>
@@ -165,86 +171,180 @@ $stmt->close();
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($entries as $entry): ?>
-                            <tr>
-                                <td>
-                                    <span class="badge bg-<?= $entry['type'] === 'Task' ? 'warning' : 'info' ?>">
-                                        <?= $entry['type'] ?>
-                                    </span>
-                                </td>
-                                <td><strong><?= htmlspecialchars($entry['title']) ?></strong></td>
-                                <td><?= htmlspecialchars($entry['description']) ?: '<em>No description</em>' ?></td>
-                                <td>
-                                    <?php if ($entry['type'] === 'Task' && $entry['due_date']): ?>
-                                        Due: <?= date('d M Y', strtotime($entry['due_date'])) ?>
-                                    <?php else: ?>
-                                        <?= isset($entry['entry_date']) && $entry['entry_date'] ? date('d M Y', strtotime($entry['entry_date'])) : '<em>No date</em>' ?>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-column gap-2">
-                                        <span class="badge bg-<?= $entry['status'] === 'Completed' ? 'success' : 'secondary' ?>" style="width: fit-content;">
-                                            <?= $entry['status'] ?>
-                                        </span>
-                                        <?php if ($entry['type'] === 'Task' && $entry['status'] === 'Pending'): ?>
-                                            <form method="POST" style="display:inline;">
-                                                <input type="hidden" name="task_id" value="<?= $entry['id'] ?>">
-                                                <button type="submit" name="complete_task" class="btn btn-sm btn-success" style="white-space: nowrap;">
-                                                    <i class="bi bi-check2-circle"></i> Mark as Completed
+                            <?php if (count($diaries) > 0): ?>
+                                <?php foreach ($diaries as $entry): ?>
+                                    <tr>
+                                        <td><strong><?= htmlspecialchars($entry['title']) ?></strong></td>
+                                        <td><?= htmlspecialchars($entry['description']) ?: '<em>No description</em>' ?></td>
+                                        <td>
+                                            <?= isset($entry['entry_date']) && $entry['entry_date'] ? date('d M Y', strtotime($entry['entry_date'])) : '<em>No date</em>' ?>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-column gap-2">
+                                                <span class="badge bg-<?= $entry['status'] === 'Completed' ? 'success' : 'secondary' ?>" style="width: fit-content;">
+                                                    <?= $entry['status'] ?>
+                                                </span>
+                                                <?php if ($entry['status'] === 'Pending'): ?>
+                                                    <form method="POST" style="display:inline;">
+                                                        <input type="hidden" name="task_id" value="<?= $entry['id'] ?>">
+                                                        <button type="submit" name="complete_task" class="btn btn-sm btn-success" style="white-space: nowrap;">
+                                                            <i class="bi bi-check2-circle"></i> Mark as Completed
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <!-- Edit Button -->
+                                            <button class="btn btn-sm btn-warning" title="Edit" data-bs-toggle="modal" data-bs-target="#editModal<?= $entry['id'] ?>">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </button>
+                                            <!-- Delete Button -->
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                                                <input type="hidden" name="delete_id" value="<?= $entry['id'] ?>">
+                                                <button type="submit" name="delete_entry" class="btn btn-sm btn-danger" title="Delete">
+                                                    <i class="bi bi-trash"></i> Delete
                                                 </button>
                                             </form>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <!-- Edit Button -->
-                                    <button class="btn btn-sm btn-warning" title="Edit" data-bs-toggle="modal" data-bs-target="#editModal<?= $entry['id'] ?>">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </button>
-                                    <!-- Delete Button -->
-                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this entry?');">
-                                        <input type="hidden" name="delete_id" value="<?= $entry['id'] ?>">
-                                        <button type="submit" name="delete_entry" class="btn btn-sm btn-danger" title="Delete">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    </form>
-                                    <!-- Edit Modal -->
-                                    <div class="modal fade" id="editModal<?= $entry['id'] ?>" tabindex="-1">
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-warning text-dark">
-                                                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Entry</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            <!-- Edit Modal -->
+                                            <div class="modal fade" id="editModal<?= $entry['id'] ?>" tabindex="-1">
+                                                <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning text-dark">
+                                                            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Diary Entry</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <form method="POST">
+                                                            <div class="modal-body">
+                                                                <input type="hidden" name="edit_id" value="<?= $entry['id'] ?>">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Title</label>
+                                                                    <input type="text" name="edit_title" class="form-control" value="<?= htmlspecialchars($entry['title']) ?>" required>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Details / Notes</label>
+                                                                    <textarea name="edit_notes" class="form-control" rows="4" required><?= htmlspecialchars($entry['description']) ?></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" name="edit_entry" class="btn btn-warning">Save Changes</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
                                                 </div>
-                                                <form method="POST">
-                                                    <div class="modal-body">
-                                                        <input type="hidden" name="edit_id" value="<?= $entry['id'] ?>">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Title</label>
-                                                            <input type="text" name="edit_title" class="form-control" value="<?= htmlspecialchars($entry['title']) ?>" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Details / Notes</label>
-                                                            <textarea name="edit_notes" class="form-control" rows="4" required><?= htmlspecialchars($entry['description']) ?></textarea>
-                                                        </div>
-                                                        <?php if ($entry['type'] === 'Task'): ?>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Due Date</label>
-                                                            <input type="date" name="edit_due_date" class="form-control" value="<?= $entry['due_date'] ?>">
-                                                        </div>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" name="edit_entry" class="btn btn-warning">Save Changes</button>
-                                                    </div>
-                                                </form>
                                             </div>
-                                        </div>
-                                    </div>
-                                </td>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-3">No daily diary entries yet.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advance Programs Table -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h5>Advance Programmes</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
                             </tr>
-                            <?php endforeach; ?>
+                        </thead>
+                        <tbody>
+                            <?php if (count($tasks) > 0): ?>
+                                <?php foreach ($tasks as $entry): ?>
+                                    <tr>
+                                        <td><strong><?= htmlspecialchars($entry['title']) ?></strong></td>
+                                        <td><?= htmlspecialchars($entry['description']) ?: '<em>No description</em>' ?></td>
+                                        <td>
+                                            <?php if ($entry['due_date']): ?>
+                                                <?= date('d M Y', strtotime($entry['due_date'])) ?>
+                                            <?php else: ?>
+                                                <em>Not set</em>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-column gap-2">
+                                                <span class="badge bg-<?= $entry['status'] === 'Completed' ? 'success' : 'secondary' ?>" style="width: fit-content;">
+                                                    <?= $entry['status'] ?>
+                                                </span>
+                                                <?php if ($entry['status'] === 'Pending'): ?>
+                                                    <form method="POST" style="display:inline;">
+                                                        <input type="hidden" name="task_id" value="<?= $entry['id'] ?>">
+                                                        <button type="submit" name="complete_task" class="btn btn-sm btn-success" style="white-space: nowrap;">
+                                                            <i class="bi bi-check2-circle"></i> Mark as Completed
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <!-- Edit Button -->
+                                            <button class="btn btn-sm btn-warning" title="Edit" data-bs-toggle="modal" data-bs-target="#editModal<?= $entry['id'] ?>">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </button>
+                                            <!-- Delete Button -->
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                                                <input type="hidden" name="delete_id" value="<?= $entry['id'] ?>">
+                                                <button type="submit" name="delete_entry" class="btn btn-sm btn-danger" title="Delete">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                            <!-- Edit Modal -->
+                                            <div class="modal fade" id="editModal<?= $entry['id'] ?>" tabindex="-1">
+                                                <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning text-dark">
+                                                            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Programme</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <form method="POST">
+                                                            <div class="modal-body">
+                                                                <input type="hidden" name="edit_id" value="<?= $entry['id'] ?>">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Title</label>
+                                                                    <input type="text" name="edit_title" class="form-control" value="<?= htmlspecialchars($entry['title']) ?>" required>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Details / Notes</label>
+                                                                    <textarea name="edit_notes" class="form-control" rows="4" required><?= htmlspecialchars($entry['description']) ?></textarea>
+                                                                </div>
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Due Date</label>
+                                                                    <input type="date" name="edit_due_date" class="form-control" value="<?= $entry['due_date'] ?>">
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" name="edit_entry" class="btn btn-warning">Save Changes</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-3">No advance programmes yet.</td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
