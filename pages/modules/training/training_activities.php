@@ -21,9 +21,7 @@ $scheduled = count(array_filter($activities, fn($a) => $a['status'] === 'Schedul
     <main class="container-fluid px-4 pt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Training Activities</h2>
-            <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addActivityModal">
-                <i class="bi bi-plus-circle me-2"></i>Schedule New Training
-            </button>
+
         </div>
 
         <!-- Quick Stats -->
@@ -84,7 +82,7 @@ $scheduled = count(array_filter($activities, fn($a) => $a['status'] === 'Schedul
         <!-- Training Activities Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Recent Training Activities</h5>
+                <h5 style="color: white;" class="mb-0">Recent Training Activities</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

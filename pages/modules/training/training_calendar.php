@@ -17,15 +17,11 @@ $activities = [
     <main class="container-fluid px-4 pt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Training Calendar</h2>
-            <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addActivityModal">
-                <i class="bi bi-plus-circle me-2"></i>Add Activity
-            </button>
         </div>
 
-        <!-- Calendar View (Demo as Table) -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark">
-                <h5 style="color: white;" class="mb-0">Training Programmes Calendar (Demo View)</h5>
+                <h5 style="color: white;" class="mb-0">Training Programmes Calendar</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
