@@ -206,9 +206,9 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/diary_management.php">
                             Diary Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/approval_diaries.php">
+                        <!-- <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/approval_diaries.php">
                             Approval of Diaries & Programmes
-                        </a>
+                        </a> -->
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/revenue_management.php">
                             Revenue Management
                         </a>
