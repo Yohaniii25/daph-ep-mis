@@ -1,189 +1,142 @@
 <?php
 require_once '../../../includes/header.php';
-require_once '../../../config/db_connect.php';
-
-if ($_SESSION['role'] !== 'veterinary_surgeon') {
-    die("Access denied");
-}
-
-$message = '';
-$user_id = $_SESSION['user_id'];
-
+if ($_SESSION['role'] !== 'veterinary_surgeon') die("Access denied");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['add_diary'])) {
-        $entry_date = date('Y-m-d');
-        $title = trim($_POST['title']);
-        $notes = trim($_POST['notes']);
 
-        if ($title && $notes) {
-            $stmt = $mysqli->prepare("INSERT INTO diary_entries (user_id, entry_date, title, notes, status) VALUES (?, ?, ?, ?, 'Draft')");
-            $stmt->bind_param("isss", $user_id, $entry_date, $title, $notes);
-            if ($stmt->execute()) {
-                $message = '<div class="alert alert-success">Diary entry added successfully!</div>';
-            } else {
-                $message = '<div class="alert alert-danger">Error adding diary entry.</div>';
-            }
-            $stmt->close();
-        } else {
-            $message = '<div class="alert alert-warning">Please fill title and notes.</div>';
-        }
-    }
-
-    if (isset($_POST['add_programme'])) {
-        $entry_date = $_POST['entry_date'];
-        $title = trim($_POST['title']);
-        $notes = trim($_POST['notes']);
-
-        if ($title && $notes && $entry_date) {
-            $stmt = $mysqli->prepare("INSERT INTO diary_entries (user_id, entry_date, title, notes, status) VALUES (?, ?, ?, ?, 'Draft')");
-            $stmt->bind_param("isss", $user_id, $entry_date, $title, $notes);
-            if ($stmt->execute()) {
-                $message = '<div class="alert alert-success">Advance programme added successfully!</div>';
-            } else {
-                $message = '<div class="alert alert-danger">Error adding programme.</div>';
-            }
-            $stmt->close();
-        } else {
-            $message = '<div class="alert alert-warning">Please fill all fields.</div>';
-        }
-    }
-
-    if (isset($_POST['submit_entry'])) {
-        $id = (int)$_POST['entry_id'];
-        $stmt = $mysqli->prepare("UPDATE diary_entries SET status = 'Submitted' WHERE id = ? AND user_id = ?");
-        $stmt->bind_param("ii", $id, $user_id);
-        if ($stmt->execute()) {
-            $message = '<div class="alert alert-success">Entry submitted for approval!</div>';
-        } else {
-            $message = '<div class="alert alert-danger">Error submitting entry.</div>';
-        }
-        $stmt->close();
-    }
+    header("Location: " . $_SERVER['PHP_SELF'] . (isset($_GET['type']) ? "?type=" . urlencode($_GET['type']) : ""));
+    exit;
 }
 
-// Fetch user's entries
-$stmt = $mysqli->prepare("SELECT * FROM diary_entries WHERE user_id = ? ORDER BY entry_date DESC");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$entries = $result->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+// Demo entries
+$entries = [
+    ['type' => 'Diary', 'title' => 'Meeting with Provincial Director', 'notes' => 'Attended meeting with Provincial Director at DAPH Head Office. Submitted district revenue report and discussed pending vehicle repairs.', 'date' => '2026-01-12', 'status' => 'Completed'],
+    ['type' => 'Programme', 'title' => 'Inspection of Veterinary', 'notes' => 'Inspected Sainthamaruthu Veterinary Office. Checked drug stock level.', 'date' => '2026-01-07', 'status' => 'Completed'],
+    ['type' => 'Programme', 'title' => 'Inspect VS Office', 'notes' => 'Check stock levels...', 'date' => '2026-01-15', 'status' => 'Pending'],
+    ['type' => 'Diary', 'title' => 'Field Visit Report', 'notes' => 'Inspected farms in Amparai...', 'date' => '2026-01-10', 'status' => 'Completed'],
+    ['type' => 'Programme', 'title' => 'Prepare Monthly Report', 'notes' => 'Compile revenue data...', 'date' => '2026-01-20', 'status' => 'Pending'],
+];
+
+// Filter logic
+$filtered_entries = $entries;
+if (isset($_GET['type']) && $_GET['type'] !== 'All') {
+    $filter_type = $_GET['type'];
+    $filtered_entries = array_filter($entries, fn($e) => $e['type'] === $filter_type);
+}
 ?>
 
 <?php require_once '../../../includes/sidebar.php'; ?>
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
-        <h2 class="mb-4">My Diary & Advance Programme</h2>
+        <h2 class="mb-4">Advance Programmes & Diaries</h2>
 
-        <?= $message ?>
-
-        <div class="row g-4 mb-5">
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div style="background-color: #689ccf;" class="card-header text-white">
-                        <h5 class="mb-0">Add Today's Diary Entry</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label class="form-label">Title</label>
-                                <input type="text" name="title" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Notes / Details</label>
-                                <textarea name="notes" class="form-control" rows="4" required></textarea>
-                            </div>
-                            <p class="text-muted small">Entry Date: <strong><?= date('d M Y') ?></strong> (Today)</p>
-                            <button style="background-color: #689ccf;" type="submit" name="add_diary" class="btn">Save Diary Entry</button>
-                        </form>
-                    </div>
-                </div>
+        <!-- Quick Actions -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5>Quick Actions</h5>
             </div>
-
-            <!-- Add Advance Programme -->
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div style="background-color: #370709;" class="card-header text-white">
-                        <h5 style="color: white;" class="mb-0">Add Advance Programme / Task</h5>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#addDiaryModal">
+                            <i class="bi bi-journal-text"></i><br>
+                            Add Daily Entry
+                        </button>
                     </div>
-                    <div class="card-body">
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label class="form-label">Programme Date</label>
-                                <input type="date" name="entry_date" class="form-control" min="<?= date('Y-m-d') ?>" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Title</label>
-                                <input type="text" name="title" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Details</label>
-                                <textarea name="notes" class="form-control" rows="4" required></textarea>
-                            </div>
-                            <button style="background-color: #370709; color: white;" type="submit" name="add_programme" class="btn">Add Programme</button>
-                        </form>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#addProgrammeModal">
+                            <i class="bi bi-list-task"></i><br>
+                            Add Advance Programme
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Entries List -->
+        <!-- Filter -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5>Filter Entries</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Type</label>
+                        <select name="type" class="form-select">
+                            <option value="All" <?= !isset($_GET['type']) || $_GET['type'] === 'All' ? 'selected' : '' ?>>All</option>
+                            <option value="Diary" <?= isset($_GET['type']) && $_GET['type'] === 'Diary' ? 'selected' : '' ?>>Diary</option>
+                            <option value="Programme" <?= isset($_GET['type']) && $_GET['type'] === 'Programme' ? 'selected' : '' ?>>Advance Programme</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary">Apply Filter</button>
+                        <a href="<?= $_SERVER['PHP_SELF'] ?>" class="btn btn-outline-secondary">Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Table -->
         <div class="card shadow-sm">
             <div class="card-header bg-dark text-white">
-                <h5 style="color : white;" class="mb-0">My Diary & Advance Programmes</h5>
+                <h5 style="color: white;">All Entries</h5>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light">
+                        <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
                             <tr>
-                                <th>Date</th>
                                 <th>Type</th>
                                 <th>Title</th>
-                                <th>Notes</th>
+                                <th>Description</th>
+                                <th>Date</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th style="min-width: 200px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($entries)): ?>
+                            <?php if (empty($filtered_entries)): ?>
                                 <tr>
                                     <td colspan="6" class="text-center py-4 text-muted">No entries found</td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($entries as $entry): ?>
-                                    <?php
-                                    $is_today = date('Y-m-d', strtotime($entry['entry_date'])) === date('Y-m-d');
-                                    $type = $is_today ? 'Diary' : 'Programme/Task';
-                                    ?>
+                                <?php foreach ($filtered_entries as $entry): ?>
                                     <tr>
-                                        <td><?= date('d M Y', strtotime($entry['entry_date'])) ?></td>
-                                        <td>
-                                            <span class="badge <?= $type === 'Diary' ? 'bg-info' : '' ?>"
-                                                style="<?= $type !== 'Diary' ? 'background-color: #370709; color: white;' : '' ?>">
-                                                <?= $type ?>
+                                        <td style="white-space: nowrap;">
+                                            <?php
+                                            $color = '';
+                                            if ($entry['type'] === 'Diary') {
+                                                $color = '#820100';
+                                            } elseif ($entry['type'] === 'Programme') {
+                                                $color = '#370709';
+                                            }
+                                            ?>
+                                            <span class="badge" style="background-color: <?= $color ?>; color: #fff;">
+                                                <?= htmlspecialchars($entry['type']) ?>
                                             </span>
                                         </td>
-                                        <td><strong><?= htmlspecialchars($entry['title']) ?></strong></td>
-                                        <td><?= nl2br(htmlspecialchars($entry['notes'])) ?></td>
-                                        <td>
-                                            <span class="badge 
-                                                <?= $entry['status'] === 'Approved' ? 'bg-success' : ($entry['status'] === 'Submitted' ? '' : 'bg-secondary') ?>"
-                                                style="<?= $entry['status'] === 'Submitted' ? 'background-color: #370709; color: white;' : '' ?>">
+                                        <td style="white-space: nowrap;"><strong><?= htmlspecialchars($entry['title']) ?></strong></td>
+                                        <td><?= htmlspecialchars($entry['notes']) ?></td>
+                                        <td style="white-space: nowrap;"><?= $entry['date'] ?></td>
+                                        <td style="white-space: nowrap;">
+                                            <span class="badge bg-<?= $entry['status'] === 'Completed' ? 'success' : 'secondary' ?>">
                                                 <?= $entry['status'] ?>
                                             </span>
-                                        </td>
-                                        <td>
-                                            <?php if ($entry['status'] === 'Draft'): ?>
-                                                <form method="POST" style="display:inline;">
-                                                    <input type="hidden" name="entry_id" value="<?= $entry['id'] ?>">
-                                                    <button type="submit" name="submit_entry" class="btn btn-sm btn-primary">
-                                                        Submit for Approval
+                                            <?php if ($entry['type'] === 'Programme' && $entry['status'] === 'Pending'): ?>
+                                                <div style="margin-top: 8px;">
+
+                                                    <button type="submit" name="complete_task" class="btn btn-sm btn-success" style="white-space: nowrap;">
+                                                        <i class="bi bi-check2-circle"></i> Mark as Completed
                                                     </button>
-                                                </form>
+                                                </div>
+
                                             <?php endif; ?>
+                                        </td>
+                                        <td style="white-space: nowrap;">
+                                            <button class="btn btn-sm btn-outline-primary me-1">View</button>
+                                            <button class="btn btn-sm btn-warning me-1">Edit</button>
+                                            <button class="btn btn-sm btn-danger">Delete</button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -194,6 +147,66 @@ $stmt->close();
             </div>
         </div>
     </main>
+</div>
+
+<!-- Add Daily Diary Modal -->
+<div class="modal fade" id="addDiaryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-journal-text me-2"></i>Add Daily Diary Entry</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Details / Notes</label>
+                        <textarea class="form-control" rows="5" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" disabled>Save Diary Entry</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Advance Programme Modal -->
+<div class="modal fade" id="addProgrammeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-list-task me-2"></i>Add Advance Programme / Task</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Details / Notes</label>
+                        <textarea class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" disabled>Save Programme</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php require_once '../../../includes/footer.php'; ?>
