@@ -1,26 +1,30 @@
 <?php
-// add_user.php  →  Keep this file forever (protect it later)
+// add_user.php  →  Keep this file forever (protect it later with .htaccess)
 require_once 'config/db_connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username  = trim($_POST['username']);
-    $email     = trim($_POST['email']);
-    $password  = $_POST['password'];                    // plain text
-    $full_name = trim($_POST['full_name']);
-    $role      = $_POST['role'];
-    $district  = $_POST['district'];
+    $username   = trim($_POST['username']);
+    $email      = trim($_POST['email']);
+    $password   = $_POST['password'];                    // plain text
+    $full_name  = trim($_POST['full_name']);
+    $role       = $_POST['role'];
+    $district   = $_POST['district'];
 
     // Auto hash the password
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $stmt = $mysqli->prepare("INSERT INTO users 
-        (username, email, password, full_name, role, district, status) 
-        VALUES (?, ?, ?, ?, ?, ?, 'active')");
+    // FIXED - declare variable first
+    $is_active = 1;
 
-    $stmt->bind_param("ssssss", $username, $email, $hash, $full_name, $role, $district);
+    // === FIXED INSERT (matches your actual users table) ===
+    $stmt = $mysqli->prepare("INSERT INTO users 
+        (username, email, password, full_name, role, district, is_active) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+    $stmt->bind_param("ssssssi", $username, $email, $hash, $full_name, $role, $district, $is_active);
 
     if ($stmt->execute()) {
-        echo '<div class="alert alert-success">User <b>' . htmlspecialchars($username) . 
+        echo '<div class="alert alert-success">✅ User <b>' . htmlspecialchars($username) . 
              '</b> created successfully!<br>Password: <b>' . htmlspecialchars($password) . '</b></div>';
     } else {
         echo '<div class="alert alert-danger">Error: ' . $stmt->error . '</div>';
@@ -60,12 +64,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-6">
                         <label>Role</label>
                         <select name="role" class="form-select" required>
-                            <option value="provincial_director">Provincial Director</option>
-                            <option value="district_dd">District Deputy Director</option>
                             <option value="veterinary_surgeon">Veterinary Surgeon</option>
+                            <option value="district_dd">District Deputy Director</option>
+                            <option value="provincial_director">Provincial Director</option>
                             <option value="training_officer">Training Officer</option>
                             <option value="sms">Subject Matter Specialist</option>
-                            <option value="administrator">administrator</option>
+                            <option value="administrator">Administrator</option>
                             <option value="finance_admin">Finance Admin</option>
                             <option value="planning_officer">Planning Officer</option>
                             <option value="farms_dd">Deputy Director (Farms Operation)</option>
@@ -74,10 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-6">
                         <label>District</label>
                         <select name="district" class="form-select" required>
-                            <option>Provincial</option>
-                            <option>Amparai</option>
-                            <option>Batticaloa</option>
-                            <option>Trincomalee</option>
+                            <option value="Amparai">Amparai</option>
+                            <option value="Batticaloa">Batticaloa</option>
+                            <option value="Trincomalee">Trincomalee</option>
+                            <option value="Provincial">Provincial</option>
                         </select>
                     </div>
                 </div>

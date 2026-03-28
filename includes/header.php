@@ -64,7 +64,7 @@ require_once __DIR__ . '/../config/constants.php';
 
         #layoutSidenav_content {
             margin-left: 260px;
-            padding-top: 50px;
+            padding-top: 70px;
             background: #f8f9fa;
             transition: margin-left 0.3s ease;
         }
@@ -79,6 +79,17 @@ require_once __DIR__ . '/../config/constants.php';
             border: 1px solid #ddd;
             padding: 10px 20px;
             font-size: 16px;
+        }
+
+        .content-wrapper {
+            margin-left: 260px;
+            /* padding-top: 70px; */
+            background: #f8f9fa;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content-wrapper.collapsed {
+            margin-left: 70px;
         }
 
         /* Mobile */
@@ -147,7 +158,7 @@ require_once __DIR__ . '/../config/constants.php';
                 <a class="d-flex align-items-center text-dark text-decoration-none" data-bs-toggle="dropdown">
                     <img src="../assets/img/user.jpg" class="rounded-circle me-2" width="40" height="40">
                     <div>
-                        <div class="fw-bold"><?= htmlspecialchars($_SESSION['full_name']) ?></div>
+                        <div class="fw-bold"><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User') ?></div>
                         <small><?= ucwords(str_replace('_', ' ', $_SESSION['role'])) ?></small>
                     </div>
                 </a>

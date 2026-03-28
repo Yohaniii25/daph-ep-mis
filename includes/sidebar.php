@@ -88,7 +88,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 </style>
 
 <div id="layoutSidenav_nav">
-    <nav class="sb-sidenav accordion" style="background:#fff; height:100vh; width:260px; position:fixed; top:0; left:0; z-index:1030;">
+    <nav class="sb-sidenav accordion" style="background:#fff; height:100%;">
         <div class="sb-sidenav-menu h-100 d-flex flex-column justify-content-between">
             <div style="flex: 1; overflow-y: auto; overflow-x: hidden;">
 
@@ -271,7 +271,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                 <div class="user-info mt-4 px-4 pb-4">
                     <div style="color:#555;">Logged in as:</div>
-                    <strong style="color:#000;"><?= htmlspecialchars($_SESSION['full_name']) ?></strong><br>
+                    <strong style="color:#000;"><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User') ?></strong><br>
                     <small style="color:#777;"><?= ucwords(str_replace('_', ' ', $role)) ?></small>
                 </div>
             </div>
