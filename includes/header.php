@@ -64,7 +64,7 @@ require_once __DIR__ . '/../config/constants.php';
 
         #layoutSidenav_content {
             margin-left: 260px;
-            padding-top: 70px;
+            padding-top: 50px;
             background: #f8f9fa;
             transition: margin-left 0.3s ease;
         }

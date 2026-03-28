@@ -93,7 +93,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
             <div style="flex: 1; overflow-y: auto; overflow-x: hidden;">
 
                 <div class="text-center py-4 border-bottom">
-                    <img src="<?= $base_path ?>assets/img/logo.png" height="60" class="mb-2">
+                    <img src="<?= $base_path ?>assets/img/animal_health_logo.png" height="30" class="mb-2">
                 </div>
 
                 <!-- Main Menu Items -->
@@ -218,41 +218,41 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     <?php endif; ?>
                     <?php if ($is_veterinary_surgeon): ?>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/staff_attendance.php">
-                            Staff Attendance & Leave
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/animal_health.php">
+                            Animal Health
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/diary_advance_programme.php">
-                            My Diary & Programme
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/animal_breeding.php">
+                            Animal Breeding
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/animal_treatment.php">
-                            Animal Treatment
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/regulatory_functions.php">
+                            Regulatory Functions 
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/immunization.php">
-                            Immunization Activities
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
+                            Office details 
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/disease_reporting.php">
-                            Disease Reporting
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/range_statistics.php">
+                            Range statistics 
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/stock_management.php">
-                            Stock & Supply Management
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/dairy_hub.php">
+                            Dairy Hub
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/revenue_reporting.php">
-                            Revenue Reporting
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/projects_progress.php">
+                            Projects & Progress
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/farmer_training.php">
-                            Farmer Training & Registration
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/monitoring.php">
+                            Monitoring 
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/market_prices.php">
-                            Market Price Reporting
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/accounts.php">
+                            Accounts
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/artificial_breeding.php">
-                            Artificial Breeding & Castration
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/clean_sri_lanka.php">
+                           Clean Sri Lanka
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/animals_act_forensic.php">
                             Animals Act & Forensic Reporting
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/project_progress.php">
-                            Project Progress Reporting
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/training.php">
+                            Trainings 
                         </a>
                     <?php endif; ?>
 
