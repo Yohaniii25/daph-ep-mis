@@ -69,6 +69,8 @@ $stats = [
     'regulatory' => 4,
     'office'     => 12
 ];
+
+require_once __DIR__ . '/../../config/constants.php';
 ?>
 
 <div class="content-wrapper">
@@ -126,39 +128,39 @@ $stats = [
         </div>
 
         <!-- Quick Actions -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h5>Quick Actions</h5>
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-bold text-muted small text-uppercase"><i class="bi bi-lightning-charge me-2 text-warning"></i>Quick Actions</h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <a href="<?= BASE_PATH ?>pages/modules/veterinary/animal_health.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-white d-block">
+                    <i class="bi bi-journal-medical fs-4"></i><br>
+                    <span style="color:white" >Health Records</span>
+                </a>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <a style="color: white !important;" href="../modules/veterinary/animal_treatment.php" class="btn btn-success w-100 py-3 text-white">
-                            <i class="bi bi-journal-medical fs-3"></i><br>
-                            Health Records
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a style="color: white !important;" href="../modules/veterinary/ai_castration.php" class="btn btn-primary w-100 py-3 text-white">
-                            <i class="bi bi-egg fs-3"></i><br>
-                            Animal Breeding
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a style="color: white !important;" href="../modules/veterinary/disease_reporting.php" class="btn btn-info w-100 py-3 text-white">
-                            <i class="bi bi-file-earmark-medical fs-3"></i><br>
-                            Regulatory Functions
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a style="color: white !important;" href="../modules/hr/office_details.php?range_id=<?= $_SESSION['range_id'] ?? '' ?>" class="btn btn-warning w-100 py-3 text-white">
-                            <i class="bi bi-building fs-3"></i><br>
-                            Office Details
-                        </a>
-                    </div>
-                </div>
+            <div class="col-md-3">
+                <a href="<?= BASE_PATH ?>pages/modules/veterinary/animal_breeding.php" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-white d-block">
+                    <i class="bi bi-egg fs-4"></i><br>
+                    <span style="color:white" >Animal Breeding</span>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="<?= BASE_PATH ?>pages/modules/veterinary/regulatory_functions.php" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
+                    <i class="bi bi-file-earmark-medical fs-4"></i><br>
+                    <span style="color:white" >Regulatory</span>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="<?= BASE_PATH ?>pages/modules/veterinary/office_details_view.php" class="btn btn-warning w-100 py-3 shadow-sm border-0 text-white d-block">
+                    <i class="bi bi-building fs-4"></i><br>
+                    <span style="color:white" >Office Inventory</span>
+                </a>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Live stock statistics -->
         <div class="card shadow-sm mb-4">
