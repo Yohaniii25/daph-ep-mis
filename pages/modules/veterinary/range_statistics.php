@@ -91,8 +91,8 @@ $total_slaughtered = $slaughter_stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
 // 4. Total Semen Used 
 $semen_stmt = $mysqli->prepare("
-    SELECT SUM(semen_used) as total 
-    FROM breeding_semen_logs 
+    SELECT SUM(used_qty) as total 
+    FROM semen_logs 
     WHERE range_id = ? 
     AND report_month = MONTH(CURRENT_DATE()) 
     AND report_year = YEAR(CURRENT_DATE())
@@ -114,10 +114,7 @@ require_once '../../../includes/sidebar.php';
                 <h2 class="h4 mb-0 fw-bold">Record disease occurrence</h2>
                 <small class="text-muted"><?= htmlspecialchars($range_name) ?> | DAPH Eastern Province</small>
             </div>
-
         </div>
-
-
 
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
