@@ -21,7 +21,6 @@ $res = $stmt->get_result()->fetch_assoc();
 if ($res) $range_name = $res['name'];
 $stmt->close();
 
-// Initialize counts to zero
 $counts = [
     'PSDG' => 0,
     'LMP' => 0,
@@ -45,7 +44,6 @@ while ($row = $count_result->fetch_assoc()) {
 }
 $c_stmt->close();
 
-// Mapping to your specific variables
 $psdg_count    = $counts['PSDG'];
 $lmp_count     = $counts['LMP'];
 $cbg_count     = $counts['CBG'];
@@ -60,6 +58,9 @@ $projects = $list_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
 ?>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
@@ -126,21 +127,46 @@ require_once '../../../includes/sidebar.php';
 
 
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>Project Progress Records</h5>
+                <div id="exportButtons"></div>
             </div>
+
             <div class="card-body">
+                <div class="row g-3 mb-4 bg-light p-3 rounded border">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-uppercase">Filter by Type</label>
+                        <select id="filterType" class="form-select form-select-sm">
+                            <option value="">All Types</option>
+                            <option value="PSDG">PSDG</option>
+                            <option value="LMP">LMP</option>
+                            <option value="CBG">CBG</option>
+                            <option value="Special">Special Project</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-uppercase">From Date</label>
+                        <input type="date" id="minDate" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-uppercase">To Date</label>
+                        <input type="date" id="maxDate" class="form-control form-control-sm">
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-hover align-middle" id="projectsTable">
                         <thead class="table-light small text-uppercase">
                             <tr>
                                 <th>Project Name & Type</th>
                                 <th>Location</th>
-                                <th>Duration</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
                                 <th>Priority</th>
-                                <th style="width: 200px;">Progress</th>
+                                <th style="width: 150px;">Progress</th>
                                 <th>Status</th>
-                                <th class="text-end">Actions</th>
+                                <th class="text-end no-export">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -148,24 +174,22 @@ require_once '../../../includes/sidebar.php';
                                 <tr>
                                     <td>
                                         <div class="fw-bold text-primary"><?= htmlspecialchars($proj['project_name']) ?></div>
-                                        <small class="badge bg-light text-dark border"><?= $proj['project_type'] ?></small>
+                                        <span class="type-label small text-muted"><?= $proj['project_type'] ?></span>
                                     </td>
-                                    <td><i class="bi bi-geo-alt me-1 text-danger"></i><?= htmlspecialchars($proj['location']) ?></td>
-                                    <td class="small">
-                                        <?= date('M d', strtotime($proj['start_date'])) ?> - <?= date('M d, Y', strtotime($proj['end_date'])) ?>
-                                    </td>
+                                    <td><?= htmlspecialchars($proj['location']) ?></td>
+                                    <td class="date-col"><?= $proj['start_date'] ?></td>
+                                    <td><?= $proj['end_date'] ?></td>
                                     <td>
-                                        <?php
-                                        $pClass = ($proj['priority'] == 'Urgent' || $proj['priority'] == 'High') ? 'text-danger' : 'text-dark';
-                                        ?>
-                                        <span class="fw-bold <?= $pClass ?>"><?= $proj['priority'] ?></span>
+                                        <span class="fw-bold <?= ($proj['priority'] == 'Urgent' || $proj['priority'] == 'High') ? 'text-danger' : '' ?>">
+                                            <?= $proj['priority'] ?>
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="progress flex-grow-1 me-2" style="height: 6px;">
                                                 <div class="progress-bar bg-success" style="width: <?= $proj['progress_percent'] ?>%"></div>
                                             </div>
-                                            <small class="fw-bold"><?= $proj['progress_percent'] ?>%</small>
+                                            <small><?= $proj['progress_percent'] ?>%</small>
                                         </div>
                                     </td>
                                     <td>
@@ -173,9 +197,9 @@ require_once '../../../includes/sidebar.php';
                                             <?= $proj['status'] ?>
                                         </span>
                                     </td>
-                                    <td class="text-end">
-                                        <button class="btn btn-sm btn-secondary border"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-primary border"><i class="bi bi-eye"></i></button>
+                                    <td class="text-end no-export">
+                                        <button class="btn btn-sm btn-light border" title="Edit"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-primary border" title="View"><i class="bi bi-eye"></i></button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -188,15 +212,74 @@ require_once '../../../includes/sidebar.php';
     </main>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
 <?php include 'models/add_project_modal.php'; ?>
 
 <script>
     $(document).ready(function() {
-        $('#projectsTable').DataTable({
-            "pageLength": 10,
-            "order": [
-                [3, "desc"]
-            ] // Priority
+  
+        var table = $('#projectsTable').DataTable({
+            dom: 'rtip', // Hide default search, we use custom filters
+            pageLength: 15,
+            buttons: [{
+                    extend: 'print',
+                    className: 'btn btn-sm btn-success shadow-sm',
+                    exportOptions: {
+                        columns: ':not(.no-export)'
+                    }
+                },
+                {
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-danger shadow-sm',
+                    exportOptions: {
+                        columns: ':not(.no-export)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-sm btn-warning shadow-sm',
+                    exportOptions: {
+                        columns: ':not(.no-export)'
+                    }
+                }
+            ]
+        });
+
+        // Move Export Buttons to the Card Header
+        table.buttons().container().appendTo('#exportButtons');
+
+        // Custom Type Filter Logic
+        $('#filterType').on('change', function() {
+            table.column(0).search(this.value).draw();
+        });
+
+        // Custom Date Range Filter Logic
+        $.fn.dataTable.ext.search.push(
+            function(settings, data, dataIndex) {
+                var min = $('#minDate').val();
+                var max = $('#maxDate').val();
+                var startDate = data[2]; 
+
+                if (min === "" && max === "") return true;
+                if (min === "" && startDate <= max) return true;
+                if (max === "" && startDate >= min) return true;
+                if (startDate >= min && startDate <= max) return true;
+                return false;
+            }
+        );
+
+        $('#minDate, #maxDate').on('change', function() {
+            table.draw();
         });
     });
 </script>

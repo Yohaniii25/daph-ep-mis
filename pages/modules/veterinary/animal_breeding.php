@@ -73,28 +73,28 @@ $stmt = $mysqli->prepare("
         od.id as officer_id,
         od.officer_name, 
         od.designation,
-        -- We use 0 as month_number because this is an annual summary row
         0 as month_number,
-        -- Combine targets into one 'target_year' for your progress bar logic
         (COALESCE(tt.target_ai, 0) + COALESCE(tt.target_pd, 0) + COALESCE(tt.target_calving, 0)) as target_year,
-        -- Match the names your HTML is looking for
-        COALESCE(SUM(bp.ai_count), 0) as ai_count, 
-        COALESCE(SUM(bp.pd_count), 0) as pd_count, 
-        COALESCE(SUM(bp.calving_count), 0) as calving_count
+        SUM(bp.ai_count) as ai_count, 
+        SUM(bp.pd_count) as pd_count, 
+        SUM(bp.calving_count) as calving_count
     FROM office_details od
+    INNER JOIN breeding_progress bp 
+        ON od.id = bp.officer_id 
     LEFT JOIN breeding_target_templates tt 
         ON od.designation = tt.designation 
         AND od.range_id = tt.range_id 
         AND tt.year = ?
-    LEFT JOIN breeding_progress bp 
-        ON od.id = bp.officer_id 
-        AND bp.year = ?
-    WHERE od.range_id = ? AND od.status = 'Active'
+    WHERE od.range_id = ? 
+      AND od.status = 'Active' 
+      AND bp.year = ?
     GROUP BY od.id, od.officer_name, od.designation, tt.target_ai, tt.target_pd, tt.target_calving
+    HAVING (ai_count > 0 OR pd_count > 0 OR calving_count > 0)
     ORDER BY od.officer_name ASC
 ");
 
-$stmt->bind_param("iii", $current_year, $current_year, $range_id);
+// Note: Ensure the order of parameters matches: year, range_id, year
+$stmt->bind_param("iii", $current_year, $range_id, $current_year);
 $stmt->execute();
 $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
