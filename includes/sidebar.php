@@ -129,6 +129,9 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/leave_management.php">
                             Leave Management
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/inquiry_management.php">
+                            Inquiry Management
+                        </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/todo_tasks.php">
                             To-Do Tasks
