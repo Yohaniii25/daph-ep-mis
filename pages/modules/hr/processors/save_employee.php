@@ -26,6 +26,6 @@ if (isset($_POST['save_employee'])) {
     }
 
     $stmt->close();
-    header("Location: ../employee_management.php");
+    header("Location: ../employee_managment.php");
     exit();
 }
