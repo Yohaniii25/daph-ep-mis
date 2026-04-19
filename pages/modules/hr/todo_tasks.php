@@ -15,25 +15,51 @@ require_once '../../../includes/sidebar.php';
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
-        
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="fw-bold">Diaries & Programme Management</h3>
                 <p class="text-muted small">Daily Tasks, Advanced Programmes, and Annual Planning</p>
             </div>
-            <div>
-                <button class="btn btn-outline-primary shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#advancePlanModal">
-                    <i class="bi bi-file-earmark-plus me-2"></i>New Advanced Programme
-                </button>
-                <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                    <i class="bi bi-plus-lg me-2"></i>Add Daily Task
-                </button>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-lightning-charge me-2 text-primary"></i>Management Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a style="background-color: #efbe2c; color: black;" class="btn w-100 py-3 border-2" href="daily_diary.php">
+                            <i class="bi bi-journal-check fs-3"></i><br>
+                            <span class="small fw-bold text-uppercase">Daily Diary Task</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a style="background-color: #370709; color: white;" href="advanced_programme.php" class="btn w-100 py-3 border-2">
+                            <i class="bi bi-calendar-event fs-3"></i><br>
+                            <span class="small fw-bold text-uppercase">Advanced Programme</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a style="background-color: #ef4016; color: white;" class="btn w-100 py-3 border-2" href="amend_programme.php">
+                            <i class="bi bi-pencil-square fs-3"></i><br>
+                            <span class="small fw-bold text-uppercase">Amendments Programme</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="annual_plan_editor.php" class="btn btn-dark w-100 py-3 border-2">
+                            <i class="bi bi-file-earmark-bar-graph fs-3"></i><br>
+                            <span class="small fw-bold text-uppercase">Annual Perf. Plan</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="row g-4">
             <div class="col-xl-5">
-                <div class="card shadow-sm border-0 mb-4">
+                <div style="background-color: #b08723;"  class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-bold"><i class="bi bi-list-stars me-2 text-warning"></i>Daily Tasks (To-Do)</h6>
                     </div>
@@ -70,7 +96,7 @@ require_once '../../../includes/sidebar.php';
                     </div>
                 </div>
 
-                <div class="card shadow-sm border-0 bg-dark text-white">
+                <div style="background-color: #370709; color: white;" class="card shadow-sm border-0">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3"><i class="bi bi-calendar-check me-2"></i>Annual Performance Plan (2027)</h6>
                         <div class="mb-3">
@@ -85,7 +111,7 @@ require_once '../../../includes/sidebar.php';
                         <ul class="list-unstyled small">
                             <li class="mb-2"><i class="bi bi-check-circle-fill text-info me-2"></i> Submit Unit Goals</li>
                             <li class="mb-2"><i class="bi bi-check-circle-fill text-info me-2"></i> Budget Estimation 2027</li>
-                            <li class="mb-0 text-muted"><i class="bi bi-circle me-2"></i> Final Approval from Provincial Director</li>
+                            <li class="mb-2"><i class="bi bi-circle me-2"></i> Final Approval from Provincial Director</li>
                         </ul>
                     </div>
                 </div>
@@ -121,8 +147,7 @@ require_once '../../../includes/sidebar.php';
                 right: ''
             },
             themeSystem: 'bootstrap5',
-            events: [
-                {
+            events: [{
                     title: 'Field Inspection - Mutur',
                     start: '2026-04-12',
                     backgroundColor: '#0d6efd',

@@ -5,7 +5,7 @@ require_once '../../../../config/db_connect.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $inquiry_id = $_POST['inquiry_id'];
     $action = $_POST['action_type'];
-    $admin_id = $_SESSION['user_id'] ?? 1; // ID of the logged-in admin
+    $admin_id = $_SESSION['user_id'] ?? 1; 
 
     if ($action == 'minute') {
         $officer_id = $_POST['officer_id'];
