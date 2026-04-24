@@ -9,6 +9,7 @@ $is_farms_dd = ($role === 'farms_dd');
 $is_training_officer = ($role === 'training_officer');
 $is_district_dd = ($role === 'district_dd');
 $is_veterinary_surgeon = ($role === 'veterinary_surgeon');
+$is_employee = ($role === 'employee');
 
 $base_path = '/daph-ep-mis/';
 $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
@@ -130,7 +131,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             Leave Management
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/inquiry_management.php">
-                            Inquiry Management
+                            Documents
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/todo_tasks.php">
@@ -256,6 +257,18 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/training.php">
                             Trainings 
+                        </a>
+                    <?php endif; ?>
+                    <!-- employee sidebar -->
+                    <?php if ($is_employee): ?>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/my_diary.php">
+                            My Diary
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/leave_requests.php">
+                            Leave Requests
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/my_diary.php">
+                            My Diary
                         </a>
                     <?php endif; ?>
 

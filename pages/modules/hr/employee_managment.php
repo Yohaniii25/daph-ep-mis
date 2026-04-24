@@ -12,11 +12,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'administrator') {
 $query = "
     SELECT 
         od.*, 
+        u.unit_name,
         vr.name as range_name, 
         d.name as district_name 
     FROM office_details od
-    JOIN veterinary_ranges vr ON od.range_id = vr.id
-    JOIN districts d ON vr.district_id = d.id
+    LEFT JOIN master_units u ON od.unit_id = u.id
+    LEFT JOIN veterinary_ranges vr ON od.range_id = vr.id
+    LEFT JOIN districts d ON vr.district_id = d.id
     ORDER BY od.id DESC
 ";
 $result = $mysqli->query($query);
@@ -44,50 +46,55 @@ require_once '../../../includes/sidebar.php';
                 <div class="table-responsive">
                     <table id="employeeTable" class="table table-hover align-middle w-100">
                         <thead class="bg-light">
-                            <tr class="small text-uppercase">
-                                <th>Emp ID</th>
-                                <th>Officer Name</th>
-                                <th>Designation</th>
-                                <th>District</th>
-                                <th>Range</th>
-                                <th>Contact</th>
-                                <th>Status</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
+    <tr class="small text-uppercase">
+        <th>Emp ID</th>
+        <th>Officer Name</th>
+        <th>Unit/Section</th> <th>Designation</th>
+        <th>District</th>
+        <th>Range</th>
+        <th>Contact</th>
+        <th>Status</th>
+        <th class="text-center">Actions</th>
+    </tr>
+</thead>
                         <tbody>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td><span class="fw-bold text-primary">#<?= $row['emp_id'] ?></span></td>
-                                <td>
-                                    <div class="fw-bold"><?= htmlspecialchars($row['officer_name']) ?></div>
-                                    <small class="text-muted"><?= htmlspecialchars($row['email'] ?? 'No Email') ?></small>
-                                </td>
-                                <td><span class="badge bg-light text-dark border"><?= $row['designation'] ?></span></td>
-                                <td><?= $row['district_name'] ?></td>
-                                <td><?= $row['range_name'] ?></td>
-                                <td class="small"><?= $row['contact_number'] ?? 'N/A' ?></td>
-                                <td>
-                                    <?php if ($row['status'] == 'Active'): ?>
-                                        <span class="badge bg-success-soft text-success"><i class="bi bi-check-circle me-1"></i>Active</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger-soft text-danger"><i class="bi bi-x-circle me-1"></i>Inactive</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-info me-1" title="View">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="confirmDelete(<?= $row['id'] ?>)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+    <?php while ($row = $result->fetch_assoc()): ?>
+        <tr>
+            <td><span class="fw-bold text-primary">#<?= $row['emp_id'] ?></span></td>
+            <td>
+                <div class="fw-bold"><?= htmlspecialchars($row['officer_name']) ?></div>
+                <small class="text-muted"><?= htmlspecialchars($row['email'] ?? 'No Email') ?></small>
+            </td>
+            <td>
+                <span class="badge bg-info-soft text-info">
+                    <?= htmlspecialchars($row['unit_name'] ?? 'Unassigned') ?>
+                </span>
+            </td>
+            <td><span class="badge bg-light text-dark border"><?= $row['designation'] ?></span></td>
+            <td><?= $row['district_name'] ?? '<span class="text-muted small">N/A</span>' ?></td>
+            <td><?= $row['range_name'] ?? '<span class="text-muted small">N/A</span>' ?></td>
+            <td class="small"><?= $row['contact_number'] ?? 'N/A' ?></td>
+                                    <td>
+                                        <?php if ($row['status'] == 'Active'): ?>
+                                            <span class="badge bg-success-soft text-success"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger-soft text-danger"><i class="bi bi-x-circle me-1"></i>Inactive</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-info me-1" title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="confirmDelete(<?= $row['id'] ?>)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
                             <?php endwhile; ?>
                         </tbody>
                     </table>
@@ -97,55 +104,59 @@ require_once '../../../includes/sidebar.php';
     </main>
 </div>
 
-        <?php
-        include 'models/add_employee.php';
-        ?>
+<?php
+include 'models/add_employee.php';
+?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-$(document).ready(function() {
-    // Handle district change to load ranges
-    $('#modal_district').on('change', function() {
-        var districtId = $(this).val();
-        console.log("District selected:", districtId);
+    $(document).ready(function() {
+        // Handle district change to load ranges
+        $('#modal_district').on('change', function() {
+            var districtId = $(this).val();
+            console.log("District selected:", districtId);
 
-        if (districtId) {
-            $.ajax({
-                url: 'processors/get_ranges.php',
-                type: 'GET',
-                data: { district_id: districtId },
-                dataType: 'html',
-                success: function(response) {
-                    console.log("Response received:", response);
-                    $('#modal_range').html(response);
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    console.error("Response:", xhr.responseText);
-                    alert("Failed to load ranges. Check console (F12) for details.");
-                }
-            });
-        } else {
-            $('#modal_range').html('<option value="">Select Range Office</option>');
-        }
-    });
+            if (districtId) {
+                $.ajax({
+                    url: 'processors/get_ranges.php',
+                    type: 'GET',
+                    data: {
+                        district_id: districtId
+                    },
+                    dataType: 'html',
+                    success: function(response) {
+                        console.log("Response received:", response);
+                        $('#modal_range').html(response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error:", status, error);
+                        console.error("Response:", xhr.responseText);
+                        alert("Failed to load ranges. Check console (F12) for details.");
+                    }
+                });
+            } else {
+                $('#modal_range').html('<option value="">Select Range Office</option>');
+            }
+        });
 
-    // Handle main DataTable initialization
-    $('#employeeTable').DataTable({
-        "pageLength": 10,
-        "order": [[0, "desc"]],
-        "language": {
-            "searchPlaceholder": "Search by name or ID...",
-            "search": ""
-        }
+        // Handle main DataTable initialization
+        $('#employeeTable').DataTable({
+            "pageLength": 10,
+            "order": [
+                [0, "desc"]
+            ],
+            "language": {
+                "searchPlaceholder": "Search by name or ID...",
+                "search": ""
+            }
+        });
     });
-});
 
     function confirmDelete(id) {
-        if(confirm("Are you sure you want to delete this officer? This action cannot be undone.")) {
+        if (confirm("Are you sure you want to delete this officer? This action cannot be undone.")) {
             // Add your AJAX or Redirect logic here
             console.log("Deleting officer ID: " + id);
         }
@@ -154,8 +165,16 @@ $(document).ready(function() {
 
 <style>
     /* Styling for a modern soft-badge look */
-    .bg-success-soft { background-color: #e8fadf; color: #198754; }
-    .bg-danger-soft { background-color: #fbe9eb; color: #dc3545; }
+    .bg-success-soft {
+        background-color: #e8fadf;
+        color: #198754;
+    }
+
+    .bg-danger-soft {
+        background-color: #fbe9eb;
+        color: #dc3545;
+    }
+
     .dataTables_filter input {
         border-radius: 20px;
         padding-left: 15px;

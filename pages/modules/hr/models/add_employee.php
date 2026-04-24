@@ -8,18 +8,32 @@
             <form action="processors/save_employee.php" method="POST">
                 <div class="modal-body p-4">
                     <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-primary">Relevant Unit / Section</label>
+                            <select name="unit_id" class="form-select border-primary shadow-sm">
+                                <option value="">Select Unit</option>
+                                <?php
+                                // Fetching from the new master_units table
+                                $unit_res = $mysqli->query("SELECT * FROM master_units ORDER BY unit_name");
+                                while($u = $unit_res->fetch_assoc()) {
+                                    echo "<option value='{$u['id']}'>{$u['unit_name']}</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Officer Name</label>
-                            <input type="text" name="officer_name" class="form-control" placeholder="e.g. Mr. A. Perera" required>
+                            <input type="text" name="officer_name" class="form-control" placeholder="e.g. Mr. A. Perera">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Employee ID (Emp No)</label>
-                            <input type="text" name="emp_id" class="form-control" placeholder="e.g. 025" required>
+                            <input type="text" name="emp_id" class="form-control" placeholder="e.g. 025">
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Designation</label>
-                            <select name="designation" class="form-select" required>
+                            <select name="designation" class="form-select">
                                 <option value="">Select Designation</option>
                                 <option value="GVS">GVS (Government Veterinary Surgeon)</option>
                                 <option value="LDO">LDO (Livestock Development Officer)</option>
@@ -36,7 +50,7 @@
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">District</label>
-                            <select id="modal_district" class="form-select" required>
+                            <select id="modal_district" class="form-select">
                                 <option value="">Select District</option>
                                 <?php
                                 $dist_res = $mysqli->query("SELECT * FROM districts ORDER BY name");
@@ -48,7 +62,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Veterinary Range Office</label>
-                            <select name="range_id" id="modal_range" class="form-select" required>
+                            <select name="range_id" id="modal_range" class="form-select">
                                 <option value="">Select Range Office</option>
                             </select>
                         </div>

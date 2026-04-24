@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.1.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 19, 2026 at 08:27 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Generation Time: Apr 21, 2026 at 03:48 PM
+-- Server version: 10.4.18-MariaDB
+-- PHP Version: 8.0.3
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -33,14 +33,48 @@ CREATE TABLE `advanced_programmes` (
   `type_id` int(11) NOT NULL,
   `programme_year` year(4) NOT NULL,
   `place` varchar(255) NOT NULL,
+  `activity_description` text DEFAULT NULL,
   `mid_term_status` enum('Pending','Submitted','Approved','Rejected') DEFAULT 'Pending',
   `mid_term_remarks` text DEFAULT NULL,
   `mid_term_approved_at` datetime DEFAULT NULL,
   `final_status` enum('Pending','Submitted','Approved','Rejected') DEFAULT 'Pending',
   `final_remarks` text DEFAULT NULL,
   `final_approved_at` datetime DEFAULT NULL,
-  `current_stage` enum('Admin_Draft','PD_MidTerm_Review','Admin_Implementation','PD_Final_Review','Completed') DEFAULT 'Admin_Draft'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `current_stage` enum('Admin_Draft','PD_MidTerm_Review','Admin_Implementation','PD_Final_Review','Completed') DEFAULT 'Admin_Draft',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `advanced_programmes`
+--
+
+INSERT INTO `advanced_programmes` (`id`, `user_id`, `type_id`, `programme_year`, `place`, `activity_description`, `mid_term_status`, `mid_term_remarks`, `mid_term_approved_at`, `final_status`, `final_remarks`, `final_approved_at`, `current_stage`, `created_at`) VALUES
+(1, 7, 2, 2026, 'Uppuveli', 'meeting on uppuweli', 'Pending', NULL, NULL, 'Pending', NULL, NULL, 'Admin_Draft', '2026-01-20 11:47:40');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `amended_programmes`
+--
+
+CREATE TABLE `amended_programmes` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `original_id` int(11) DEFAULT NULL,
+  `programme_year` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type_id` int(11) NOT NULL,
+  `place` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `activity_description` mediumtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amendment_reason` mediumtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `amended_programmes`
+--
+
+INSERT INTO `amended_programmes` (`id`, `user_id`, `original_id`, `programme_year`, `type_id`, `place`, `activity_description`, `amendment_reason`, `created_at`) VALUES
+(2, 7, 1, '2026', 2, 'Uppuveli', 'meeting on uppuweli', 'increase', '2026-04-21 13:32:28');
 
 -- --------------------------------------------------------
 
@@ -63,7 +97,7 @@ CREATE TABLE `animal_health_records` (
   `created_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `animal_health_records`
@@ -87,7 +121,7 @@ CREATE TABLE `assets_immovable` (
   `description` text DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,
   `extent` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `assets_immovable`
@@ -110,7 +144,7 @@ CREATE TABLE `assets_movable` (
   `item_name` varchar(255) NOT NULL,
   `serial_no` varchar(100) DEFAULT NULL,
   `condition` enum('Good','Fair','Needs Repair','Discarded') DEFAULT 'Good'
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `assets_movable`
@@ -140,7 +174,7 @@ CREATE TABLE `audit_logs` (
   `ip_address` varchar(45) DEFAULT NULL,
   `device_info` text DEFAULT NULL,
   `remarks` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `audit_logs`
@@ -176,7 +210,9 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (27, '2026-04-15 07:40:56', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
 (28, '2026-04-16 06:16:56', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
 (29, '2026-04-16 18:29:35', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(30, '2026-04-17 17:41:14', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web');
+(30, '2026-04-17 17:41:14', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(31, '2026-04-21 04:57:00', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(32, '2026-04-21 13:46:49', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web');
 
 -- --------------------------------------------------------
 
@@ -194,16 +230,16 @@ CREATE TABLE `breeding_progress` (
   `pd_count` int(11) DEFAULT 0,
   `calving_count` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `breeding_progress`
 --
 
 INSERT INTO `breeding_progress` (`id`, `range_id`, `officer_id`, `year`, `month_number`, `ai_count`, `pd_count`, `calving_count`, `created_at`) VALUES
-(1, 1, 1, '2026', 1, 5, 8, 6, '2026-03-28 14:08:34'),
-(2, 1, 2, '2025', 5, 5, 7, 7, '2026-03-28 14:31:54'),
-(3, 1, 1, '2026', 1, 7, 9, 0, '2026-03-28 14:31:54');
+(1, 1, 1, 2026, 1, 5, 8, 6, '2026-03-28 14:08:34'),
+(2, 1, 2, 2025, 5, 5, 7, 7, '2026-03-28 14:31:54'),
+(3, 1, 1, 2026, 1, 7, 9, 0, '2026-03-28 14:31:54');
 
 -- --------------------------------------------------------
 
@@ -219,14 +255,14 @@ CREATE TABLE `breeding_target_templates` (
   `target_ai` int(11) DEFAULT 0,
   `target_pd` int(11) DEFAULT 0,
   `target_calving` int(11) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `breeding_target_templates`
 --
 
 INSERT INTO `breeding_target_templates` (`id`, `range_id`, `year`, `designation`, `target_ai`, `target_pd`, `target_calving`) VALUES
-(1, 1, '2026', 'Veterinary Surgeon', 300, 100, 500);
+(1, 1, 2026, 'Veterinary Surgeon', 300, 100, 500);
 
 -- --------------------------------------------------------
 
@@ -246,14 +282,14 @@ CREATE TABLE `dairy_hub_records` (
   `total_amount` decimal(15,2) GENERATED ALWAYS AS (`milk_quantity_liters` * `price_per_liter`) STORED,
   `created_by` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `dairy_hub_records`
 --
 
 INSERT INTO `dairy_hub_records` (`id`, `range_id`, `collection_date`, `farmer_reg_no`, `milk_quantity_liters`, `fat_percentage`, `snf_percentage`, `price_per_liter`, `created_by`, `created_at`) VALUES
-(1, 1, '2026-04-03', '001', 4000.00, 10.00, 2.00, 200.00, 19, '2026-04-03 13:13:30');
+(1, 1, '2026-04-03', '001', '4000.00', '10.00', '2.00', '200.00', 19, '2026-04-03 13:13:30');
 
 -- --------------------------------------------------------
 
@@ -270,7 +306,7 @@ CREATE TABLE `diary_tasks` (
   `status` enum('Not Started','Ongoing','Completed') DEFAULT 'Not Started',
   `task_type` enum('Daily','Advanced','Amendment','Annual') DEFAULT 'Daily',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `diary_tasks`
@@ -288,7 +324,7 @@ INSERT INTO `diary_tasks` (`id`, `user_id`, `task_date`, `place`, `activity`, `s
 CREATE TABLE `districts` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `districts`
@@ -313,7 +349,7 @@ CREATE TABLE `inquiries` (
   `message_body` text NOT NULL,
   `received_at` datetime DEFAULT current_timestamp(),
   `status` enum('Pending','Minuted','Replied','Closed') DEFAULT 'Pending'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `inquiries`
@@ -337,7 +373,7 @@ CREATE TABLE `inquiry_logs` (
   `assigned_to` int(11) DEFAULT NULL,
   `content` text NOT NULL,
   `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -351,44 +387,44 @@ CREATE TABLE `livestock_targets` (
   `item_id` int(11) NOT NULL,
   `target_year` int(11) NOT NULL,
   `annual_target_value` decimal(15,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `livestock_targets`
 --
 
 INSERT INTO `livestock_targets` (`id`, `range_id`, `item_id`, `target_year`, `annual_target_value`) VALUES
-(1, 1, 1, 2026, 5000.00),
-(2, 1, 1, 2026, 50000.00),
-(3, 1, 2, 2026, 15000.00),
-(4, 1, 3, 2026, 2000.00),
-(5, 1, 4, 2026, 12000.00),
-(6, 1, 5, 2026, 10000.00),
-(7, 1, 6, 2026, 5000.00),
-(8, 1, 7, 2026, 8000.00),
-(9, 1, 8, 2026, 4000.00),
-(10, 1, 9, 2026, 4000.00),
-(11, 1, 10, 2026, 6000.00),
-(12, 1, 11, 2026, 15000.00),
-(13, 1, 12, 2026, 500.00),
-(14, 1, 13, 2026, 1000.00),
-(15, 1, 14, 2026, 250.00),
-(16, 1, 15, 2026, 100.00),
-(17, 1, 16, 2026, 3000.00),
-(18, 1, 17, 2026, 100000.00),
-(19, 1, 18, 2026, 25000.00),
-(20, 1, 19, 2026, 8000.00),
-(21, 1, 20, 2026, 500.00),
-(22, 1, 21, 2026, 300.00),
-(23, 1, 22, 2026, 10000.00),
-(24, 1, 23, 2026, 50.00),
-(25, 1, 24, 2026, 5000.00),
-(26, 1, 25, 2026, 100.00),
-(27, 1, 26, 2026, 150.00),
-(28, 1, 27, 2026, 200.00),
-(29, 1, 28, 2026, 15000.00),
-(30, 1, 29, 2026, 20000.00),
-(31, 1, 30, 2026, 35000.00);
+(1, 1, 1, 2026, '5000.00'),
+(2, 1, 1, 2026, '50000.00'),
+(3, 1, 2, 2026, '15000.00'),
+(4, 1, 3, 2026, '2000.00'),
+(5, 1, 4, 2026, '12000.00'),
+(6, 1, 5, 2026, '10000.00'),
+(7, 1, 6, 2026, '5000.00'),
+(8, 1, 7, 2026, '8000.00'),
+(9, 1, 8, 2026, '4000.00'),
+(10, 1, 9, 2026, '4000.00'),
+(11, 1, 10, 2026, '6000.00'),
+(12, 1, 11, 2026, '15000.00'),
+(13, 1, 12, 2026, '500.00'),
+(14, 1, 13, 2026, '1000.00'),
+(15, 1, 14, 2026, '250.00'),
+(16, 1, 15, 2026, '100.00'),
+(17, 1, 16, 2026, '3000.00'),
+(18, 1, 17, 2026, '100000.00'),
+(19, 1, 18, 2026, '25000.00'),
+(20, 1, 19, 2026, '8000.00'),
+(21, 1, 20, 2026, '500.00'),
+(22, 1, 21, 2026, '300.00'),
+(23, 1, 22, 2026, '10000.00'),
+(24, 1, 23, 2026, '50.00'),
+(25, 1, 24, 2026, '5000.00'),
+(26, 1, 25, 2026, '100.00'),
+(27, 1, 26, 2026, '150.00'),
+(28, 1, 27, 2026, '200.00'),
+(29, 1, 28, 2026, '15000.00'),
+(30, 1, 29, 2026, '20000.00'),
+(31, 1, 30, 2026, '35000.00');
 
 -- --------------------------------------------------------
 
@@ -401,7 +437,33 @@ CREATE TABLE `master_programme_types` (
   `programme_name` varchar(255) NOT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `master_programme_types`
+--
+
+INSERT INTO `master_programme_types` (`id`, `programme_name`, `is_active`, `created_at`) VALUES
+(1, 'Veterinary Office Correspondence', 1, '2026-04-20 06:48:51'),
+(2, 'Cattle Farm Visit', 1, '2026-04-20 07:09:26'),
+(3, 'Poultry From Visit', 1, '2026-04-20 07:10:07'),
+(4, 'Buffalo Farm Visit', 1, '2026-04-20 07:11:11'),
+(5, 'Others (goat, Rabbit, Swine, etc)', 1, '2026-04-20 07:13:59'),
+(6, 'Pregnancy Diagnosis', 1, '2026-04-21 12:53:07'),
+(7, 'Disease Investigation', 1, '2026-04-21 12:53:07'),
+(8, 'Project Follow-up', 1, '2026-04-21 12:53:07'),
+(9, 'Meetings', 1, '2026-04-21 12:53:07'),
+(10, 'Training Programs', 1, '2026-04-21 12:53:07'),
+(11, 'Mobile Clinic', 1, '2026-04-21 12:53:07'),
+(12, 'Field Days', 1, '2026-04-21 12:53:07'),
+(13, 'Dairy Hub', 1, '2026-04-21 12:53:07'),
+(14, 'Special Vaccination Program', 1, '2026-04-21 12:53:07'),
+(15, 'Animal Identification Program', 1, '2026-04-21 12:53:07'),
+(16, 'Farm Registration Program', 1, '2026-04-21 12:53:07'),
+(17, 'Project Implementation', 1, '2026-04-21 12:53:07'),
+(18, 'Disaster Management', 1, '2026-04-21 12:53:07'),
+(19, 'Infertility Investigation Program', 1, '2026-04-21 12:53:07'),
+(20, 'Specified Tasks', 1, '2026-04-21 12:53:07');
 
 -- --------------------------------------------------------
 
@@ -416,16 +478,16 @@ CREATE TABLE `monthly_production_records` (
   `amount` decimal(15,2) NOT NULL,
   `report_date` date NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `monthly_production_records`
 --
 
 INSERT INTO `monthly_production_records` (`id`, `range_id`, `item_id`, `amount`, `report_date`, `created_at`) VALUES
-(1, 1, 1, 300.00, '2026-03-01', '2026-03-31 15:05:48'),
-(2, 1, 4, 2000.00, '2026-04-01', '2026-04-01 17:23:04'),
-(3, 1, 3, 300.00, '2026-04-01', '2026-04-02 13:20:45');
+(1, 1, 1, '300.00', '2026-03-01', '2026-03-31 15:05:48'),
+(2, 1, 4, '2000.00', '2026-04-01', '2026-04-01 17:23:04'),
+(3, 1, 3, '300.00', '2026-04-01', '2026-04-02 13:20:45');
 
 -- --------------------------------------------------------
 
@@ -443,7 +505,7 @@ CREATE TABLE `office_details` (
   `registered_date` date DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `status` enum('Active','Inactive') DEFAULT 'Active'
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `office_details`
@@ -476,7 +538,7 @@ CREATE TABLE `production_categories` (
   `id` int(11) NOT NULL,
   `category_name` varchar(100) NOT NULL,
   `sort_order` int(11) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `production_categories`
@@ -502,7 +564,7 @@ CREATE TABLE `production_items` (
   `category_id` int(11) NOT NULL,
   `item_name` varchar(100) NOT NULL,
   `unit` varchar(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `production_items`
@@ -559,7 +621,7 @@ CREATE TABLE `projects_progress` (
   `progress_percent` int(3) DEFAULT 0,
   `status` enum('Planned','In Progress','On Hold','Completed') DEFAULT 'Planned',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `projects_progress`
@@ -581,7 +643,7 @@ CREATE TABLE `project_assignments` (
   `id` int(11) NOT NULL,
   `project_id` int(11) NOT NULL,
   `officer_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `project_assignments`
@@ -610,7 +672,7 @@ CREATE TABLE `regulatory_records` (
   `created_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -631,16 +693,16 @@ CREATE TABLE `semen_logs` (
   `spoiled_qty` int(11) DEFAULT 0,
   `paid_amount` decimal(15,2) DEFAULT 0.00,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `semen_logs`
 --
 
 INSERT INTO `semen_logs` (`id`, `range_id`, `report_month`, `report_year`, `species`, `opening_balance`, `received_qty`, `used_qty`, `issued_qty`, `spoiled_qty`, `paid_amount`, `created_at`) VALUES
-(1, 1, 1, 2026, 'Buffalo', 50, 30, 10, 0, 0, 1000.00, '2026-04-03 11:33:01'),
-(3, 1, 2, 2026, 'Poultry', 60, 10, 20, 10, 0, 2000.00, '2026-04-03 12:03:42'),
-(4, 1, 3, 2026, 'Cock', 50, 10, 10, 0, 0, 2000.00, '2026-04-03 12:04:22');
+(1, 1, 1, 2026, 'Buffalo', 50, 30, 10, 0, 0, '1000.00', '2026-04-03 11:33:01'),
+(3, 1, 2, 2026, 'Poultry', 60, 10, 20, 10, 0, '2000.00', '2026-04-03 12:03:42'),
+(4, 1, 3, 2026, 'Cock', 50, 10, 10, 0, 0, '2000.00', '2026-04-03 12:04:22');
 
 -- --------------------------------------------------------
 
@@ -659,15 +721,15 @@ CREATE TABLE `slaughter_statistics` (
   `total_weight_kg` decimal(12,2) NOT NULL DEFAULT 0.00,
   `created_by` int(11) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `slaughter_statistics`
 --
 
 INSERT INTO `slaughter_statistics` (`id`, `range_id`, `report_month`, `report_year`, `species`, `location_type`, `animal_count`, `total_weight_kg`, `created_by`, `created_at`) VALUES
-(1, 1, 4, 2026, 'Cattle', 'Slaughter House', 30, 3000.00, 19, '2026-04-03 10:06:53'),
-(2, 1, 4, 2026, 'Goat', 'In-Farm', 29, 5000.00, 19, '2026-04-03 10:08:03');
+(1, 1, 4, 2026, 'Cattle', 'Slaughter House', 30, '3000.00', 19, '2026-04-03 10:06:53'),
+(2, 1, 4, 2026, 'Goat', 'In-Farm', 29, '5000.00', 19, '2026-04-03 10:08:03');
 
 -- --------------------------------------------------------
 
@@ -690,7 +752,7 @@ CREATE TABLE `users` (
   `is_active` tinyint(1) DEFAULT 1,
   `last_login` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `users`
@@ -698,7 +760,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`, `role`, `district_id`, `range_id`, `office_id`, `district`, `is_active`, `last_login`, `created_at`) VALUES
 (5, 'yo', 'provinciald2@gmail.com', NULL, 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', 'provincial_director', NULL, NULL, NULL, 'Provincial', 1, '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
-(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, NULL, NULL, 'Provincial', 1, '2026-04-17 23:11:14', '2025-12-15 11:32:14'),
+(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, NULL, NULL, 'Provincial', 1, '2026-04-21 19:16:49', '2025-12-15 11:32:14'),
 (10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 10:40:11', '2025-12-16 07:42:06'),
 (11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, NULL, NULL, 'Provincial', 1, '2026-02-17 13:11:58', '2025-12-16 09:34:59'),
 (12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 11:03:05', '2025-12-16 11:30:03'),
@@ -721,7 +783,7 @@ CREATE TABLE `veterinary_ranges` (
   `district_id` int(11) DEFAULT NULL,
   `code` varchar(20) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `veterinary_ranges`
@@ -782,6 +844,12 @@ INSERT INTO `veterinary_ranges` (`id`, `name`, `district_id`, `code`, `is_active
 -- Indexes for table `advanced_programmes`
 --
 ALTER TABLE `advanced_programmes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `amended_programmes`
+--
+ALTER TABLE `amended_programmes`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -966,7 +1034,13 @@ ALTER TABLE `veterinary_ranges`
 -- AUTO_INCREMENT for table `advanced_programmes`
 --
 ALTER TABLE `advanced_programmes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `amended_programmes`
+--
+ALTER TABLE `amended_programmes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `animal_health_records`
@@ -990,7 +1064,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `breeding_progress`
@@ -1044,7 +1118,7 @@ ALTER TABLE `livestock_targets`
 -- AUTO_INCREMENT for table `master_programme_types`
 --
 ALTER TABLE `master_programme_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `monthly_production_records`

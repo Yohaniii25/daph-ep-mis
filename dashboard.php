@@ -13,7 +13,8 @@ $dashboard_map = [
     'farms_dd'            => 'pages/dashboard/farms.php',
     'finance_admin'       => 'pages/dashboard/finance.php',
     'administrator'       => 'pages/dashboard/adminstrator.php',
-    'planning_officer'    => 'pages/dashboard/planning_officer.php'
+    'planning_officer'    => 'pages/dashboard/planning_officer.php',
+    'employee'            => 'pages/dashboard/employee.php'
 ];
 
 $target = $dashboard_map[$role] ?? 'pages/dashboard/provincial_director.php';
