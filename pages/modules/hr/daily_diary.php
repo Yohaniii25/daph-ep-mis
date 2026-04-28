@@ -2,7 +2,7 @@
 session_start();
 require_once '../../../config/db_connect.php';
 
-// Check if admin
+
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'administrator') {
     header("Location: ../../../index.php");
     exit();
@@ -10,7 +10,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'administrator') {
 
 $current_user = $_SESSION['user_id'];
 
-// ====================== STATISTICS ======================
+
 $stats = $mysqli->query("
     SELECT 
         COUNT(*) as total,
@@ -27,7 +27,7 @@ $completed  = $stats['completed'] ?? 0;
 $overdue    = $stats['overdue'] ?? 0;
 $rate       = $total > 0 ? round(($completed / $total) * 100, 1) : 0;
 
-// ====================== ALL TASKS ======================
+
 $query = "SELECT * FROM diary_tasks WHERE user_id = '$current_user' ORDER BY task_date DESC";
 $result = $mysqli->query($query);
 

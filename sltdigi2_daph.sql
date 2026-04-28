@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 21, 2026 at 08:48 AM
+-- Generation Time: Apr 28, 2026 at 07:08 AM
 -- Server version: 5.7.44-48
 -- PHP Version: 8.3.26
 
@@ -20,6 +20,61 @@ SET time_zone = "+00:00";
 --
 -- Database: `sltdigi2_daph`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `advanced_programmes`
+--
+
+CREATE TABLE `advanced_programmes` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `type_id` int(11) NOT NULL,
+  `programme_year` year(4) NOT NULL,
+  `place` varchar(255) NOT NULL,
+  `activity_description` text,
+  `mid_term_status` enum('Pending','Submitted','Approved','Rejected') DEFAULT 'Pending',
+  `mid_term_remarks` text,
+  `mid_term_approved_at` datetime DEFAULT NULL,
+  `final_status` enum('Pending','Submitted','Approved','Rejected') DEFAULT 'Pending',
+  `final_remarks` text,
+  `final_approved_at` datetime DEFAULT NULL,
+  `current_stage` enum('Admin_Draft','PD_MidTerm_Review','Admin_Implementation','PD_Final_Review','Completed') DEFAULT 'Admin_Draft',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `advanced_programmes`
+--
+
+INSERT INTO `advanced_programmes` (`id`, `user_id`, `type_id`, `programme_year`, `place`, `activity_description`, `mid_term_status`, `mid_term_remarks`, `mid_term_approved_at`, `final_status`, `final_remarks`, `final_approved_at`, `current_stage`, `created_at`) VALUES
+(1, 7, 2, '2026', 'Uppuveli', 'meeting on uppuweli', 'Pending', NULL, NULL, 'Pending', NULL, NULL, 'Admin_Draft', '2026-01-20 11:47:40');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `amended_programmes`
+--
+
+CREATE TABLE `amended_programmes` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `original_id` int(11) DEFAULT NULL,
+  `programme_year` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type_id` int(11) NOT NULL,
+  `place` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `activity_description` mediumtext COLLATE utf8mb4_unicode_ci,
+  `amendment_reason` mediumtext COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `amended_programmes`
+--
+
+INSERT INTO `amended_programmes` (`id`, `user_id`, `original_id`, `programme_year`, `type_id`, `place`, `activity_description`, `amendment_reason`, `created_at`) VALUES
+(2, 7, 1, '2026', 2, 'Uppuveli', 'meeting on uppuweli', 'increase', '2026-04-21 13:32:28');
 
 -- --------------------------------------------------------
 
@@ -148,8 +203,16 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (20, '2026-04-08 04:16:22', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
 (21, '2026-04-10 07:06:44', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
 (22, '2026-04-10 07:29:59', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(23, '2026-04-16 18:27:22', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '175.157.184.2', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(24, '2026-04-21 13:46:21', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web');
+(23, '2026-04-11 18:21:10', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(24, '2026-04-12 18:10:08', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(25, '2026-04-12 19:32:13', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(26, '2026-04-13 06:05:33', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(27, '2026-04-15 07:40:56', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(28, '2026-04-16 06:16:56', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(29, '2026-04-16 18:29:35', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(30, '2026-04-17 17:41:14', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(31, '2026-04-21 04:57:00', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(32, '2026-04-21 13:46:49', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web');
 
 -- --------------------------------------------------------
 
@@ -231,6 +294,30 @@ INSERT INTO `dairy_hub_records` (`id`, `range_id`, `collection_date`, `farmer_re
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `diary_tasks`
+--
+
+CREATE TABLE `diary_tasks` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `task_date` date NOT NULL,
+  `place` varchar(255) NOT NULL,
+  `activity` text NOT NULL,
+  `status` enum('Not Started','Ongoing','Completed') DEFAULT 'Not Started',
+  `task_type` enum('Daily','Advanced','Amendment','Annual') DEFAULT 'Daily',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `diary_tasks`
+--
+
+INSERT INTO `diary_tasks` (`id`, `user_id`, `task_date`, `place`, `activity`, `status`, `task_type`, `created_at`) VALUES
+(1, 7, '2026-04-18', 'Uppuweli', 'meeting on head office', 'Ongoing', 'Daily', '2026-04-16 09:08:55');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `districts`
 --
 
@@ -247,6 +334,46 @@ INSERT INTO `districts` (`id`, `name`) VALUES
 (1, 'Ampara'),
 (2, 'Batticaloa'),
 (3, 'Trincomalee');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inquiries`
+--
+
+CREATE TABLE `inquiries` (
+  `id` int(11) NOT NULL,
+  `sender_name` varchar(255) NOT NULL,
+  `sender_email` varchar(150) NOT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `message_body` text NOT NULL,
+  `received_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('Pending','Minuted','Replied','Closed') DEFAULT 'Pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `inquiries`
+--
+
+INSERT INTO `inquiries` (`id`, `sender_name`, `sender_email`, `subject`, `message_body`, `received_at`, `status`) VALUES
+(1, 'Yohani Abeykoon', 'yohanii725@gmail.com', 'need fresh milk', 'need fresh milk for market', '2026-04-13 00:23:17', 'Pending'),
+(2, 'Uvindu Anurdha', 'danushka@sltds.lk', 'go to the trinco municipal ', 'go and ask about the vaccination programme', '2026-04-13 11:37:47', 'Pending');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inquiry_logs`
+--
+
+CREATE TABLE `inquiry_logs` (
+  `id` int(11) NOT NULL,
+  `inquiry_id` int(11) NOT NULL,
+  `action_type` enum('MINUTE','REPLY') NOT NULL,
+  `processed_by` int(11) NOT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `content` text NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -298,6 +425,45 @@ INSERT INTO `livestock_targets` (`id`, `range_id`, `item_id`, `target_year`, `an
 (29, 1, 28, 2026, 15000.00),
 (30, 1, 29, 2026, 20000.00),
 (31, 1, 30, 2026, 35000.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `master_programme_types`
+--
+
+CREATE TABLE `master_programme_types` (
+  `id` int(11) NOT NULL,
+  `programme_name` varchar(255) NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `master_programme_types`
+--
+
+INSERT INTO `master_programme_types` (`id`, `programme_name`, `is_active`, `created_at`) VALUES
+(1, 'Veterinary Office Correspondence', 1, '2026-04-20 06:48:51'),
+(2, 'Cattle Farm Visit', 1, '2026-04-20 07:09:26'),
+(3, 'Poultry From Visit', 1, '2026-04-20 07:10:07'),
+(4, 'Buffalo Farm Visit', 1, '2026-04-20 07:11:11'),
+(5, 'Others (goat, Rabbit, Swine, etc)', 1, '2026-04-20 07:13:59'),
+(6, 'Pregnancy Diagnosis', 1, '2026-04-21 12:53:07'),
+(7, 'Disease Investigation', 1, '2026-04-21 12:53:07'),
+(8, 'Project Follow-up', 1, '2026-04-21 12:53:07'),
+(9, 'Meetings', 1, '2026-04-21 12:53:07'),
+(10, 'Training Programs', 1, '2026-04-21 12:53:07'),
+(11, 'Mobile Clinic', 1, '2026-04-21 12:53:07'),
+(12, 'Field Days', 1, '2026-04-21 12:53:07'),
+(13, 'Dairy Hub', 1, '2026-04-21 12:53:07'),
+(14, 'Special Vaccination Program', 1, '2026-04-21 12:53:07'),
+(15, 'Animal Identification Program', 1, '2026-04-21 12:53:07'),
+(16, 'Farm Registration Program', 1, '2026-04-21 12:53:07'),
+(17, 'Project Implementation', 1, '2026-04-21 12:53:07'),
+(18, 'Disaster Management', 1, '2026-04-21 12:53:07'),
+(19, 'Infertility Investigation Program', 1, '2026-04-21 12:53:07'),
+(20, 'Specified Tasks', 1, '2026-04-21 12:53:07');
 
 -- --------------------------------------------------------
 
@@ -360,8 +526,7 @@ INSERT INTO `office_details` (`id`, `range_id`, `officer_name`, `designation`, `
 (12, 1, 'Mrs J. Logitharajah', 'Clerk', '012', '0771234569', '2026-02-12', 'logi.j@daph.gov.lk', 'Active'),
 (13, 1, 'Mr R. Rajeshwaran', 'LDO', '013', '0771234570', '2026-02-15', 'rajesh.r@daph.gov.lk', 'Active'),
 (14, 1, 'Mrs H. Silva', 'PDO', '022', '0771234579', '2026-03-12', 'silva.h@daph.gov.lk', 'Active'),
-(15, 1, 'test ', 'GVS', '045', '0778439871', '2026-04-10', 'dept@pannalaps.lk', 'Active'),
-(16, 1, 'test ', 'GVS', '045', '0778439871', '2026-04-10', 'dept@pannalaps.lk', 'Active');
+(18, 1, 'Yohani Abeykoon', 'GVS', '025', '+94778439871', '2026-04-11', 'yohanii725@gmail.com', 'Active');
 
 -- --------------------------------------------------------
 
@@ -595,7 +760,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`, `role`, `district_id`, `range_id`, `office_id`, `district`, `is_active`, `last_login`, `created_at`) VALUES
 (5, 'yo', 'provinciald2@gmail.com', NULL, 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', 'provincial_director', NULL, NULL, NULL, 'Provincial', 1, '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
-(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, NULL, NULL, 'Provincial', 1, '2026-04-21 08:46:21', '2025-12-15 11:32:14'),
+(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, NULL, NULL, 'Provincial', 1, '2026-04-21 19:16:49', '2025-12-15 11:32:14'),
 (10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 10:40:11', '2025-12-16 07:42:06'),
 (11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, NULL, NULL, 'Provincial', 1, '2026-02-17 13:11:58', '2025-12-16 09:34:59'),
 (12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 11:03:05', '2025-12-16 11:30:03'),
@@ -676,6 +841,18 @@ INSERT INTO `veterinary_ranges` (`id`, `name`, `district_id`, `code`, `is_active
 --
 
 --
+-- Indexes for table `advanced_programmes`
+--
+ALTER TABLE `advanced_programmes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `amended_programmes`
+--
+ALTER TABLE `amended_programmes`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `animal_health_records`
 --
 ALTER TABLE `animal_health_records`
@@ -726,11 +903,31 @@ ALTER TABLE `dairy_hub_records`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `diary_tasks`
+--
+ALTER TABLE `diary_tasks`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `districts`
 --
 ALTER TABLE `districts`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `inquiries`
+--
+ALTER TABLE `inquiries`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `inquiry_logs`
+--
+ALTER TABLE `inquiry_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `inquiry_id` (`inquiry_id`),
+  ADD KEY `assigned_to` (`assigned_to`);
 
 --
 -- Indexes for table `livestock_targets`
@@ -739,6 +936,13 @@ ALTER TABLE `livestock_targets`
   ADD PRIMARY KEY (`id`),
   ADD KEY `item_id` (`item_id`),
   ADD KEY `range_id` (`range_id`);
+
+--
+-- Indexes for table `master_programme_types`
+--
+ALTER TABLE `master_programme_types`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `programme_name` (`programme_name`);
 
 --
 -- Indexes for table `monthly_production_records`
@@ -827,6 +1031,18 @@ ALTER TABLE `veterinary_ranges`
 --
 
 --
+-- AUTO_INCREMENT for table `advanced_programmes`
+--
+ALTER TABLE `advanced_programmes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `amended_programmes`
+--
+ALTER TABLE `amended_programmes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `animal_health_records`
 --
 ALTER TABLE `animal_health_records`
@@ -848,7 +1064,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `breeding_progress`
@@ -869,16 +1085,40 @@ ALTER TABLE `dairy_hub_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `diary_tasks`
+--
+ALTER TABLE `diary_tasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `districts`
 --
 ALTER TABLE `districts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `inquiries`
+--
+ALTER TABLE `inquiries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `inquiry_logs`
+--
+ALTER TABLE `inquiry_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `livestock_targets`
 --
 ALTER TABLE `livestock_targets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+
+--
+-- AUTO_INCREMENT for table `master_programme_types`
+--
+ALTER TABLE `master_programme_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `monthly_production_records`
@@ -890,7 +1130,7 @@ ALTER TABLE `monthly_production_records`
 -- AUTO_INCREMENT for table `office_details`
 --
 ALTER TABLE `office_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `production_categories`
@@ -980,6 +1220,13 @@ ALTER TABLE `breeding_progress`
 --
 ALTER TABLE `breeding_target_templates`
   ADD CONSTRAINT `fk_target_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`);
+
+--
+-- Constraints for table `inquiry_logs`
+--
+ALTER TABLE `inquiry_logs`
+  ADD CONSTRAINT `inquiry_logs_ibfk_1` FOREIGN KEY (`inquiry_id`) REFERENCES `inquiries` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `inquiry_logs_ibfk_2` FOREIGN KEY (`assigned_to`) REFERENCES `office_details` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `livestock_targets`

@@ -267,9 +267,11 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/leave_requests.php">
                             Leave Requests
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/my_diary.php">
-                            My Diary
+                        <!-- profile -->
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/profile.php">
+                            Profile
                         </a>
+
                     <?php endif; ?>
 
                 </div>
