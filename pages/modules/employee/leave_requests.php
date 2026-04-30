@@ -7,6 +7,56 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'employee') {
     exit();
 }
 
+$user_id = $_SESSION['user_id'];
+
+// Fetch current user designation
+$user_query = "SELECT full_name, designation FROM users WHERE id = '$user_id'";
+$user_result = $mysqli->query($user_query);
+$user_info = $user_result->fetch_assoc();
+$user_designation = $user_info['designation'] ?? 'Other';
+$user_name = $user_info['full_name'] ?? $_SESSION['username'];
+
+// Fetch user's leave requests
+$leave_requests_query = "SELECT * FROM leave_requests WHERE user_id = '$user_id' ORDER BY created_at DESC";
+$leave_requests_result = $mysqli->query($leave_requests_query);
+
+// Leave statistics from DB
+$stats_query = "SELECT 
+    COUNT(*) as total,
+    SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) as approved,
+    SUM(CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END) as rejected,
+    SUM(CASE WHEN status = 'Approved' THEN no_of_days ELSE 0 END) as total_approved_days
+    FROM leave_requests WHERE user_id = '$user_id'";
+$stats_result = $mysqli->query($stats_query);
+$stats = $stats_result->fetch_assoc();
+$total_leaves   = $stats['total'] ?? 0;
+$pending_leaves = $stats['pending'] ?? 0;
+$approved_leaves= $stats['approved'] ?? 0;
+$rejected_leaves= $stats['rejected'] ?? 0;
+
+// Fetch potential acting officers
+$acting_query = "SELECT id, full_name, designation FROM users WHERE id != '$user_id' AND is_active = 1 ORDER BY full_name ASC";
+$acting_result = $mysqli->query($acting_query);
+
+// Determine Working Hours Group
+$work_group = 'B'; // Default
+$group_a = ['Veterinary surgeon', 'Veterinary surgeoon', 'LDO', 'DO', 'GVS'];
+if (in_array($user_designation, $group_a)) {
+    $work_group = 'A';
+}
+
+$work_hours = [
+    'A' => [
+        'mon_fri' => '8.30 AM - 3.30 PM',
+        'sat' => '8.30 AM - 12.15 PM'
+    ],
+    'B' => [
+        'mon_fri' => '8.00 AM - 4.00 PM',
+        'sat' => '8.00 AM - 12.30 PM'
+    ]
+];
+
 require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
 ?>
@@ -16,6 +66,7 @@ require_once '../../../includes/sidebar.php';
 <!-- DataTables CSS -->
 <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet">
 
 <style>
     .modal-backdrop {
@@ -130,7 +181,7 @@ require_once '../../../includes/sidebar.php';
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="fw-bold text-dark mb-1">Employee Workspace</h2>
-                <p class="text-muted mb-0">Welcome back, <?= htmlspecialchars($_SESSION['username']) ?>! Here's a quick overview of your daily activities and tasks.</p>
+                <p class="text-muted mb-0">Welcome back, <?= htmlspecialchars($user_name) ?>! Here's a quick overview of your leave status and requests.</p>
             </div>
             <div class="text-end d-none d-md-block">
                 <div class="p-2 bg-white shadow-sm rounded border">
@@ -140,90 +191,125 @@ require_once '../../../includes/sidebar.php';
             </div>
         </div>
 
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <i class="bi bi-check-circle me-2"></i>
+                <?= $_SESSION['success']; unset($_SESSION['success']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="show" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <?= $_SESSION['error']; unset($_SESSION['error']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
         <!-- Statistics Cards -->
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">My Daily Tasks</h6>
-                        <h2 class="text-primary mb-0">6</h2>
-                        <small class="text-muted">Activities recorded today</small>
+                        <h6 class="text-muted small text-uppercase fw-bold">Total Requests</h6>
+                        <h2 class="text-primary mb-0"><?= $total_leaves ?></h2>
+                        <small class="text-muted">All leave requests</small>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Completed Activities</h6>
-                        <h2 class="text-success mb-0">14</h2>
-                        <small class="text-muted">Activities completed today</small>
+                        <h6 class="text-muted small text-uppercase fw-bold">Approved</h6>
+                        <h2 class="text-success mb-0"><?= $approved_leaves ?></h2>
+                        <small class="text-muted">Requests approved</small>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Pending Activities</h6>
-                        <h2 class="text-warning mb-0">6</h2>
-                        <small class="text-muted">Activities awaiting approval</small>
+                        <h6 class="text-muted small text-uppercase fw-bold">Pending</h6>
+                        <h2 class="text-warning mb-0"><?= $pending_leaves ?></h2>
+                        <small class="text-muted">Awaiting approval</small>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 border-start border-info border-4">
+                <div class="card border-0 shadow-sm h-100 border-start border-danger border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Account Status</h6>
-                        <h2 class="text-info mb-0">Active</h2>
-                        <small class="text-muted">System Verified</small>
+                        <h6 class="text-muted small text-uppercase fw-bold">Rejected</h6>
+                        <h2 class="text-danger mb-0"><?= $rejected_leaves ?></h2>
+                        <small class="text-muted">Requests rejected</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Leave Balance Cards -->
+        <!-- Leave Balance Summary Table -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-0 py-3">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0"><i class="bi bi-calendar-check me-2 text-primary"></i>My Leave Balance</h5>
+                        <small class="text-muted">Casual &amp; Sick leave entitlement: 24 days/year each</small>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-2">
-                                <div class="alert alert-info text-center mb-0 leave-card">
-                                    <i class="bi bi-umbrella fs-2 d-block"></i>
-                                    <h5 class="fw-bold mt-2 mb-0">Casual</h5>
-                                    <span class="badge bg-primary fs-6">24 days</span>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="alert alert-success text-center mb-0 leave-card">
-                                    <i class="bi bi-heart-pulse fs-2 d-block"></i>
-                                    <h5 class="fw-bold mt-2 mb-0">Sick</h5>
-                                    <span class="badge bg-success fs-6">24 days</span>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="alert alert-warning text-center mb-0 leave-card">
-                                    <i class="bi bi-airplane fs-2 d-block"></i>
-                                    <h5 class="fw-bold mt-2 mb-0">Foreign</h5>
-                                    <span class="badge bg-warning fs-6">Unlimited</span>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="alert alert-danger text-center mb-0 leave-card">
-                                    <i class="bi bi-briefcase fs-2 d-block"></i>
-                                    <h5 class="fw-bold mt-2 mb-0">Duty</h5>
-                                    <span class="badge bg-danger fs-6">Unlimited</span>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="alert alert-secondary text-center mb-0 leave-card">
-                                    <i class="bi bi-gender-female fs-2 d-block"></i>
-                                    <h5 class="fw-bold mt-2 mb-0">Maternity</h5>
-                                    <span class="badge bg-secondary fs-6">Unlimited</span>
-                                </div>
-                            </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Leave Type</th>
+                                        <th class="text-center">Entitlement</th>
+                                        <th class="text-center">Approved Days</th>
+                                        <th class="text-center">Pending Days</th>
+                                        <th class="text-center">Remaining</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $leave_types = [
+                                        'Casual'   => ['entitlement' => 24,  'unlimited' => false, 'icon' => 'bi-umbrella',     'color' => 'primary'],
+                                        'Sick'     => ['entitlement' => 24,  'unlimited' => false, 'icon' => 'bi-heart-pulse',  'color' => 'success'],
+                                        'Foreign'  => ['entitlement' => null,'unlimited' => true,  'icon' => 'bi-airplane',     'color' => 'warning'],
+                                        'Duty'     => ['entitlement' => null,'unlimited' => true,  'icon' => 'bi-briefcase',    'color' => 'danger'],
+                                        'Maternity'=> ['entitlement' => null,'unlimited' => true,  'icon' => 'bi-gender-female','color' => 'secondary'],
+                                    ];
+                                    foreach ($leave_types as $type => $info):
+                                        $type_query = "SELECT 
+                                            SUM(CASE WHEN status='Approved' THEN no_of_days ELSE 0 END) as approved_days,
+                                            SUM(CASE WHEN status='Pending' THEN no_of_days ELSE 0 END) as pending_days
+                                            FROM leave_requests WHERE user_id='$user_id' AND leave_type='$type'";
+                                        $type_result = $mysqli->query($type_query);
+                                        $type_data = $type_result->fetch_assoc();
+                                        $approved_days = $type_data['approved_days'] ?? 0;
+                                        $pending_days  = $type_data['pending_days'] ?? 0;
+                                        if (!$info['unlimited']) {
+                                            $remaining = max(0, $info['entitlement'] - $approved_days);
+                                            $remaining_text = $remaining . ' days';
+                                            $remaining_class = $remaining < 5 ? 'text-danger fw-bold' : 'text-success fw-bold';
+                                        }
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <i class="bi <?= $info['icon'] ?> me-2 text-<?= $info['color'] ?>"></i>
+                                            <strong><?= $type ?></strong>
+                                        </td>
+                                        <td class="text-center"><?= $info['unlimited'] ? '<span class="badge bg-secondary">Unlimited</span>' : $info['entitlement'].' days' ?></td>
+                                        <td class="text-center"><span class="badge bg-success"><?= number_format($approved_days, 1) ?></span></td>
+                                        <td class="text-center"><span class="badge bg-warning text-dark"><?= number_format($pending_days, 1) ?></span></td>
+                                        <td class="text-center">
+                                            <?php if ($info['unlimited']): ?>
+                                                <span class="text-muted">—</span>
+                                            <?php else: ?>
+                                                <span class="<?= $remaining_class ?>"><?= $remaining_text ?></span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -241,9 +327,9 @@ require_once '../../../includes/sidebar.php';
                         <div class="row g-3">
 
                             <div class="col-md-3">
-                                <button class="btn w-100 py-3 shadow-sm" style="background-color: #0d6efd; color: white;" data-bs-toggle="modal" data-bs-target="#leaveRequestModal">
+                                <button class="btn w-100 py-5 shadow-sm" style="background-color: #370709; color: white;" data-bs-toggle="modal" data-bs-target="#leaveRequestModal">
                                     <i class="bi bi-calendar-plus fs-4 me-2"></i>
-                                    <span class="fw-bold">Request Leave</span>
+                                    <span style="font-size: 1.2rem;">Request Leave</span>
                                 </button>
                             </div>
 
@@ -275,84 +361,38 @@ require_once '../../../includes/sidebar.php';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>2026-05-10</td>
-                                        <td>2026-05-12</td>
-                                        <td>Casual</td>
-                                        <td>3</td>
-                                        <td>Personal work</td>
-                                        <td><span class="status-pending">Pending</span></td>
-                                        <td class="text-center">
-                                            <i class="bi bi-eye action-icon icon-view" onclick="viewLeave(this)" title="View"></i>
-                                            <i class="bi bi-pencil action-icon icon-edit" onclick="editLeave(this)" title="Edit"></i>
-                                            <i class="bi bi-trash action-icon icon-delete" onclick="deleteLeave(this)" title="Delete"></i>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2026-04-20</td>
-                                        <td>2026-04-22</td>
-                                        <td>Sick</td>
-                                        <td>3</td>
-                                        <td>Fever</td>
-                                        <td><span class="status-approved">Approved</span></td>
-                                        <td class="text-center">
-                                            <i class="bi bi-eye action-icon icon-view" onclick="viewLeave(this)" title="View"></i>
-                                            <i class="bi bi-pencil action-icon icon-edit" onclick="editLeave(this)" title="Edit"></i>
-                                            <i class="bi bi-trash action-icon icon-delete" onclick="deleteLeave(this)" title="Delete"></i>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2026-06-01</td>
-                                        <td>2026-06-05</td>
-                                        <td>Duty</td>
-                                        <td>5</td>
-                                        <td>Official training</td>
-                                        <td><span class="status-pending">Pending</span></td>
-                                        <td class="text-center">
-                                            <i class="bi bi-eye action-icon icon-view" onclick="viewLeave(this)" title="View"></i>
-                                            <i class="bi bi-pencil action-icon icon-edit" onclick="editLeave(this)" title="Edit"></i>
-                                            <i class="bi bi-trash action-icon icon-delete" onclick="deleteLeave(this)" title="Delete"></i>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2026-03-15</td>
-                                        <td>2026-03-20</td>
-                                        <td>Maternity</td>
-                                        <td>6</td>
-                                        <td>Medical leave</td>
-                                        <td><span class="status-approved">Approved</span></td>
-                                        <td class="text-center">
-                                            <i class="bi bi-eye action-icon icon-view" onclick="viewLeave(this)" title="View"></i>
-                                            <i class="bi bi-pencil action-icon icon-edit" onclick="editLeave(this)" title="Edit"></i>
-                                            <i class="bi bi-trash action-icon icon-delete" onclick="deleteLeave(this)" title="Delete"></i>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2026-07-10</td>
-                                        <td>2026-07-15</td>
-                                        <td>Foreign</td>
-                                        <td>6</td>
-                                        <td>Family vacation</td>
-                                        <td><span class="status-pending">Pending</span></td>
-                                        <td class="text-center">
-                                            <i class="bi bi-eye action-icon icon-view" onclick="viewLeave(this)" title="View"></i>
-                                            <i class="bi bi-pencil action-icon icon-edit" onclick="editLeave(this)" title="Edit"></i>
-                                            <i class="bi bi-trash action-icon icon-delete" onclick="deleteLeave(this)" title="Delete"></i>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2026-04-28</td>
-                                        <td>2026-04-29</td>
-                                        <td>Casual</td>
-                                        <td>2</td>
-                                        <td>Family function</td>
-                                        <td><span class="status-rejected">Rejected</span></td>
-                                        <td class="text-center">
-                                            <i class="bi bi-eye action-icon icon-view" onclick="viewLeave(this)" title="View"></i>
-                                            <i class="bi bi-pencil action-icon icon-edit" onclick="editLeave(this)" title="Edit"></i>
-                                            <i class="bi bi-trash action-icon icon-delete" onclick="deleteLeave(this)" title="Delete"></i>
-                                        </td>
-                                    </tr>
+                                    <?php if ($leave_requests_result && $leave_requests_result->num_rows > 0): ?>
+                                        <?php while ($row = $leave_requests_result->fetch_assoc()): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($row['start_date']) ?></td>
+                                                <td><?= htmlspecialchars($row['resume_date']) ?></td>
+                                                <td>
+                                                    <?= htmlspecialchars($row['leave_type']) ?>
+                                                    <?php if ($row['is_half_day']): ?>
+                                                        <span class="badge bg-info ms-1" style="font-size: 0.65rem;">Half Day</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?= htmlspecialchars($row['no_of_days']) ?></td>
+                                                <td><?= htmlspecialchars($row['reason']) ?></td>
+                                                <td>
+                                                    <span class="status-<?= strtolower($row['status']) ?>">
+                                                        <?= htmlspecialchars($row['status']) ?>
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <i class="bi bi-eye action-icon icon-view" onclick="viewLeaveDetails(<?= htmlspecialchars(json_encode($row)) ?>)" title="View"></i>
+                                                    <?php if ($row['status'] == 'Pending'): ?>
+                                                        <i class="bi bi-pencil action-icon icon-edit" onclick="openEditModal(<?= htmlspecialchars(json_encode($row)) ?>)" title="Edit"></i>
+                                                        <i class="bi bi-trash action-icon icon-delete" onclick="confirmDelete(<?= $row['id'] ?>)" title="Delete"></i>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endwhile; ?>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-4">No leave requests found.</td>
+                                        </tr>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -364,84 +404,24 @@ require_once '../../../includes/sidebar.php';
 </div>
 
 
-<!-- Leave Request Modal -->
-<div class="modal fade" id="leaveRequestModal" tabindex="-1" aria-labelledby="leaveRequestModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title fw-bold" id="leaveRequestModalLabel">
-                    <i class="bi bi-calendar-plus me-2"></i>Request New Leave
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="leaveRequestForm" onsubmit="saveLeaveRequest(event)">
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">From Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="from_date" id="from_date" required onchange="calculateDays()">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">To Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="to_date" id="to_date" required onchange="calculateDays()">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Leave Type <span class="text-danger">*</span></label>
-                            <select class="form-select" name="leave_type" id="leave_type" required>
-                                <option value="">Select Leave Type</option>
-                                <option value="Casual">Casual Leave (24 days available)</option>
-                                <option value="Sick">Sick Leave (24 days available)</option>
-                                <option value="Foreign">Foreign Leave (Unlimited)</option>
-                                <option value="Duty">Duty Leave (Unlimited)</option>
-                                <option value="Maternity">Maternity Leave (Unlimited)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">No of Days</label>
-                            <input type="text" class="form-control" name="no_of_days" id="no_of_days" readonly>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Reason <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="reason" rows="3" placeholder="Enter reason for leave" required></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-send me-2"></i>Submit Request
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<?php require_once 'models/leave_request.php'; ?>
 
-<!-- View Leave Modal -->
-<div class="modal fade" id="viewLeaveModal" tabindex="-1" aria-labelledby="viewLeaveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title fw-bold" id="viewLeaveModalLabel">
-                    <i class="bi bi-eye me-2"></i>Leave Request Details
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="viewLeaveContent">
-                <!-- Dynamic content -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<?php require_once 'models/view_leave.php'; ?>
+
+<?php require_once 'models/edit_leave.php'; ?>
+
+<?php require_once 'models/delete_leave.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
 
 <script>
     let leaveDataTable;
@@ -450,6 +430,14 @@ require_once '../../../includes/sidebar.php';
         // Initialize Leave DataTable
         leaveDataTable = $('#leaveTable').DataTable({
             responsive: true,
+            dom: "<'row mb-2'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-8 d-flex justify-content-md-end align-items-center flex-wrap gap-2'Bf>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5 mt-3'i><'col-sm-12 col-md-7 mt-3'p>>",
+            buttons: [
+                { extend: 'csv', className: 'btn btn-sm btn-info text-white', exportOptions: { columns: [0, 1, 2, 3, 4, 5] } },
+                { extend: 'excel', className: 'btn btn-sm btn-success', exportOptions: { columns: [0, 1, 2, 3, 4, 5] } },
+                { extend: 'print', className: 'btn btn-sm btn-danger', exportOptions: { columns: [0, 1, 2, 3, 4, 5] } }
+            ],
             language: {
                 search: "Search:",
                 lengthMenu: "Show _MENU_ entries",
@@ -471,16 +459,53 @@ require_once '../../../includes/sidebar.php';
 
     // Calculate number of days between two dates
     function calculateDays() {
-        const fromDate = document.getElementById('from_date').value;
-        const toDate = document.getElementById('to_date').value;
+        const fromDateInput = document.getElementById('from_date');
+        const toDateInput = document.getElementById('to_date');
+        const halfDayCheckbox = document.getElementById('is_half_day');
         
-        if (fromDate && toDate) {
-            const start = new Date(fromDate);
-            const end = new Date(toDate);
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            document.getElementById('no_of_days').value = diffDays + ' days';
+        const fromDateVal = fromDateInput.value;
+        const toDateVal = toDateInput.value;
+        
+        if (fromDateVal && toDateVal) {
+            const start = new Date(fromDateVal);
+            const end = new Date(toDateVal);
+            
+            if (halfDayCheckbox.checked) {
+                // If half day is checked, we only allow same day leave
+                if (fromDateVal !== toDateVal) {
+                    alert("Half-day leave can only be applied for a single day.");
+                    toDateInput.value = fromDateVal;
+                    document.getElementById('no_of_days').value = '0.5';
+                    return;
+                }
+                
+                // Check if it's Saturday
+                if (start.getDay() === 6) { // 6 is Saturday
+                    alert("Saturday half-days are not allowed as per working hours.");
+                    halfDayCheckbox.checked = false;
+                    document.getElementById('no_of_days').value = '1';
+                } else {
+                    document.getElementById('no_of_days').value = '0.5';
+                }
+            } else {
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                document.getElementById('no_of_days').value = diffDays;
+            }
         }
+    }
+
+    function toggleHalfDay() {
+        const fromDateInput = document.getElementById('from_date');
+        const toDateInput = document.getElementById('to_date');
+        const halfDayCheckbox = document.getElementById('is_half_day');
+
+        if (halfDayCheckbox.checked) {
+            if (fromDateInput.value) {
+                toDateInput.value = fromDateInput.value;
+            }
+        }
+        calculateDays();
     }
 
     // Save Leave Request
@@ -520,84 +545,68 @@ require_once '../../../includes/sidebar.php';
     }
     
     // View Leave Details
-    function viewLeave(element) {
-        const row = $(element).closest('tr');
-        const cells = row.find('td');
-        
+    function viewLeaveDetails(data) {
         const content = `
-            <div class="mb-3">
-                <label class="fw-bold text-muted small">From Date</label>
-                <p class="mb-0">${cells.eq(0).text()}</p>
-            </div>
-            <div class="mb-3">
-                <label class="fw-bold text-muted small">To Date</label>
-                <p class="mb-0">${cells.eq(1).text()}</p>
-            </div>
-            <div class="mb-3">
-                <label class="fw-bold text-muted small">Leave Type</label>
-                <p class="mb-0">${cells.eq(2).text()}</p>
-            </div>
-            <div class="mb-3">
-                <label class="fw-bold text-muted small">No of Days</label>
-                <p class="mb-0">${cells.eq(3).text()}</p>
-            </div>
-            <div class="mb-3">
-                <label class="fw-bold text-muted small">Reason</label>
-                <p class="mb-0">${cells.eq(4).text()}</p>
-            </div>
-            <div class="mb-3">
-                <label class="fw-bold text-muted small">Status</label>
-                <p class="mb-0">${cells.eq(5).text()}</p>
-            </div>
+            <table class="table table-borderless mb-0">
+                <tr><th class="text-muted small" style="width:40%">From Date</th><td>${data.start_date}</td></tr>
+                <tr><th class="text-muted small">To Date</th><td>${data.resume_date}</td></tr>
+                <tr><th class="text-muted small">Leave Type</th><td>${data.leave_type} ${data.is_half_day == 1 ? '<span class="badge bg-info">Half Day</span>' : ''}</td></tr>
+                <tr><th class="text-muted small">No of Days</th><td>${data.no_of_days}</td></tr>
+                <tr><th class="text-muted small">Reason</th><td>${data.reason}</td></tr>
+                <tr><th class="text-muted small">Status</th><td><span class="status-${data.status.toLowerCase()}">${data.status}</span></td></tr>
+                <tr><th class="text-muted small">Requested On</th><td>${data.request_date}</td></tr>
+            </table>
         `;
-        
         $('#viewLeaveContent').html(content);
         $('#viewLeaveModal').modal('show');
     }
-    
-    // Edit Leave Request
-    function editLeave(element) {
-        const row = $(element).closest('tr');
-        const cells = row.find('td');
-        
-        const newFrom = prompt('Edit From Date (YYYY-MM-DD):', cells.eq(0).text());
-        const newTo = prompt('Edit To Date (YYYY-MM-DD):', cells.eq(1).text());
-        const newType = prompt('Edit Leave Type (Casual/Sick/Foreign/Duty/Maternity):', cells.eq(2).text());
-        const newReason = prompt('Edit Reason:', cells.eq(4).text());
-        
-        if (newFrom && newTo && newType && newReason) {
-            // Calculate days
-            const start = new Date(newFrom);
-            const end = new Date(newTo);
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            
-            cells.eq(0).text(newFrom);
-            cells.eq(1).text(newTo);
-            cells.eq(2).text(newType);
-            cells.eq(3).text(diffDays + ' days');
-            cells.eq(4).text(newReason);
-            
-            alert('Leave request updated successfully!');
+
+    // Open Edit Modal and pre-fill data
+    function openEditModal(data) {
+        $('#edit_leave_id').val(data.id);
+        $('#edit_from_date').val(data.start_date);
+        $('#edit_to_date').val(data.resume_date);
+        $('#edit_leave_type').val(data.leave_type);
+        $('#edit_reason').val(data.reason);
+        $('#edit_no_of_days').val(data.no_of_days);
+        if (data.is_half_day == 1) {
+            $('#edit_is_half_day').prop('checked', true);
+        } else {
+            $('#edit_is_half_day').prop('checked', false);
+        }
+        $('#editLeaveModal').modal('show');
+    }
+
+    // Calculate days for edit form
+    function calculateEditDays() {
+        const from = document.getElementById('edit_from_date').value;
+        const to   = document.getElementById('edit_to_date').value;
+        const half = document.getElementById('edit_is_half_day').checked;
+        if (from && to) {
+            if (half) {
+                const d = new Date(from);
+                if (d.getDay() === 6) {
+                    alert('Saturday half-days are not allowed.');
+                    document.getElementById('edit_is_half_day').checked = false;
+                    return;
+                }
+                document.getElementById('edit_no_of_days').value = '0.5';
+            } else {
+                const start = new Date(from), end = new Date(to);
+                const days = Math.ceil(Math.abs(end - start) / (1000*60*60*24)) + 1;
+                document.getElementById('edit_no_of_days').value = days;
+            }
         }
     }
-    
-    // Delete Leave Request
-    function deleteLeave(element) {
-        if (confirm('Are you sure you want to delete this leave request?')) {
-            const row = $(element).closest('tr');
-            leaveDataTable.row(row).remove().draw();
-            alert('Leave request deleted successfully!');
+
+    function toggleEditHalfDay() {
+        const from = document.getElementById('edit_from_date').value;
+        if (document.getElementById('edit_is_half_day').checked && from) {
+            document.getElementById('edit_to_date').value = from;
         }
+        calculateEditDays();
     }
-    
-    // Save Daily Task
-    function saveTask(event) {
-        event.preventDefault();
-        alert('Daily task added successfully!');
-        $('#addTaskModal').modal('hide');
-        document.getElementById('addTaskForm').reset();
-    }
+
 </script>
 
 <?php require_once '../../../includes/footer.php'; ?>

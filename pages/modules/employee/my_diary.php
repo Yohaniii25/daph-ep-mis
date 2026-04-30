@@ -163,7 +163,7 @@ require_once '../../../includes/sidebar.php';
 </div>
 
 <!-- Add Task Modal -->
-<?php include '../hr/models/add_daily_diary.php'; ?>
+<?php include './models/add_daily_diary_task.php'; ?>
 
 <!-- DataTables Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
