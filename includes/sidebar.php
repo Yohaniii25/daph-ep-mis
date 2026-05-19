@@ -181,11 +181,14 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                     <?php if ($is_farms_dd): ?>
                         <!-- Farms Operations Menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/parent_stock_operations.php">
-                            Parent Stock Operations
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/poultry_hatchery.php">
+                            Poultry Operations
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/hatchery_operations.php">
-                            Hatchery Operations
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/livestock_operations.php">
+                            Livestock Operations
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/fodder_distribution.php">
+                            Fodder Management
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/inputs_revenue.php">
                             Additional Sales Outlet
