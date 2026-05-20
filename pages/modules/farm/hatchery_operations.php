@@ -9,18 +9,20 @@ if ($_SESSION['role'] !== 'farms_dd') {
 
 $user_id = $_SESSION['user_id'] ?? 1; // Fallback to 1 if session key differs
 
-// 1. Fetch KPI Summary Metrics (Today's Totals)
+// 1. Fetch KPI Summary Metrics (Overall Totals)
 $kpi_query = "SELECT 
     IFNULL(SUM(total_collected), 0) AS total_eggs,
     IFNULL(SUM(hatchable_count), 0) AS total_hatchable,
     IFNULL(SUM(chicks_hatched), 0) AS total_chicks,
+    IFNULL(SUM(table_count) + SUM(cracked_count), 0) AS total_commercial_waste,
     IFNULL(SUM(CASE WHEN chicks_hatched IS NOT NULL THEN hatchable_count ELSE 0 END), 0) AS completed_hatchable
-FROM hatchery_batches WHERE batch_date = CURDATE()";
+FROM hatchery_batches";
 
 $kpi_res = $mysqli->query($kpi_query)->fetch_assoc();
 
 $today_eggs = $kpi_res['total_eggs'];
 $today_hatchable = $kpi_res['total_hatchable'];
+$total_commercial_waste = $kpi_res['total_commercial_waste'];
 $hatch_rate = ($kpi_res['completed_hatchable'] > 0)
     ? round(($kpi_res['total_chicks'] / $kpi_res['completed_hatchable']) * 100, 1)
     : 0.0;
@@ -51,7 +53,7 @@ require_once '../../../includes/sidebar.php';
                     <div class="card-body p-4">
                         <h6 class="text-muted small text-uppercase fw-bold">Total Eggs Collected</h6>
                         <h2 class="text-primary mb-0 fw-bold"><?= number_format($today_eggs) ?></h2>
-                        <small class="text-muted">Total Intake Today</small>
+                        <small class="text-muted">Total Intake Overall</small>
                     </div>
                 </div>
             </div>
@@ -60,7 +62,7 @@ require_once '../../../includes/sidebar.php';
                     <div class="card-body p-4">
                         <h6 class="text-muted small text-uppercase fw-bold">Hatchable Inventory</h6>
                         <h2 class="text-warning mb-0 fw-bold"><?= number_format($today_hatchable) ?></h2>
-                        <small class="text-muted">Set for Incubation Today</small>
+                        <small class="text-muted">Set for Incubation Overall</small>
                     </div>
                 </div>
             </div>
@@ -76,8 +78,8 @@ require_once '../../../includes/sidebar.php';
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 border-start border-info border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Commercial Waste/Sales</h6>
-                        <h2 class="text-info mb-0 fw-bold">LKR 185,000</h2>
+                        <h6 class="text-muted small text-uppercase fw-bold">Commercial / Waste</h6>
+                        <h2 class="text-info mb-0 fw-bold"><?= number_format($total_commercial_waste) ?></h2>
                         <small class="text-muted">Table & Cracked Disposals</small>
                     </div>
                 </div>
@@ -106,7 +108,7 @@ require_once '../../../includes/sidebar.php';
         <!-- Registered Farms Table -->
 <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-journal-text me-2"></i>Hatchery Batches & Grading Ledger</h5>
+                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-journal-text me-2"></i>Hatchery Batches</h5>
             </div>
             <div class="card-body">
                 <table id="hatcheryTable" class="table table-striped align-middle row-border" style="width:100%">

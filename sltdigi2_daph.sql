@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 28, 2026 at 07:08 AM
+-- Generation Time: May 19, 2026 at 03:49 AM
 -- Server version: 5.7.44-48
--- PHP Version: 8.3.26
+-- PHP Version: 8.3.31
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -212,7 +212,29 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (29, '2026-04-16 18:29:35', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
 (30, '2026-04-17 17:41:14', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
 (31, '2026-04-21 04:57:00', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(32, '2026-04-21 13:46:49', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web');
+(32, '2026-04-21 13:46:49', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(33, '2026-04-22 06:10:50', 20, 'employee', '', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(34, '2026-04-22 06:39:35', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(35, '2026-04-22 06:59:04', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(36, '2026-04-22 10:17:49', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(37, '2026-04-22 12:17:33', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(38, '2026-04-22 12:54:39', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(39, '2026-04-27 07:18:17', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(40, '2026-04-27 07:18:55', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(41, '2026-04-28 05:50:56', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(42, '2026-04-28 06:57:23', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(43, '2026-04-28 06:57:42', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(44, '2026-04-29 05:50:22', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(45, '2026-04-29 06:03:51', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(46, '2026-04-29 06:36:21', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36', 'User logged in via Web'),
+(47, '2026-04-29 10:00:49', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(48, '2026-04-29 11:43:00', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(49, '2026-05-06 09:15:34', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(50, '2026-05-06 09:16:07', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(51, '2026-05-06 09:18:46', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(52, '2026-05-06 09:23:32', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(53, '2026-05-18 10:54:18', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(54, '2026-05-19 08:47:19', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web');
 
 -- --------------------------------------------------------
 
@@ -313,7 +335,11 @@ CREATE TABLE `diary_tasks` (
 --
 
 INSERT INTO `diary_tasks` (`id`, `user_id`, `task_date`, `place`, `activity`, `status`, `task_type`, `created_at`) VALUES
-(1, 7, '2026-04-18', 'Uppuweli', 'meeting on head office', 'Ongoing', 'Daily', '2026-04-16 09:08:55');
+(1, 7, '2026-04-18', 'Uppuweli', 'meeting on head office', 'Ongoing', 'Daily', '2026-04-16 09:08:55'),
+(2, 20, '2026-04-30', 'Uppuveli', 'rererer', 'Ongoing', 'Daily', '2026-04-29 07:12:44'),
+(3, 20, '2026-05-07', 'Uppuveli', 'Meeting', 'Ongoing', 'Daily', '2026-05-06 09:16:26'),
+(4, 7, '2026-05-07', 'Uppuveli', 'test', 'Ongoing', 'Daily', '2026-05-06 09:27:21'),
+(5, 7, '2026-05-07', 'Uppuveli', 'ww', 'Ongoing', 'Daily', '2026-05-06 09:27:52');
 
 -- --------------------------------------------------------
 
@@ -357,7 +383,8 @@ CREATE TABLE `inquiries` (
 
 INSERT INTO `inquiries` (`id`, `sender_name`, `sender_email`, `subject`, `message_body`, `received_at`, `status`) VALUES
 (1, 'Yohani Abeykoon', 'yohanii725@gmail.com', 'need fresh milk', 'need fresh milk for market', '2026-04-13 00:23:17', 'Pending'),
-(2, 'Uvindu Anurdha', 'danushka@sltds.lk', 'go to the trinco municipal ', 'go and ask about the vaccination programme', '2026-04-13 11:37:47', 'Pending');
+(2, 'Uvindu Anurdha', 'danushka@sltds.lk', 'go to the trinco municipal ', 'go and ask about the vaccination programme', '2026-04-13 11:37:47', 'Pending'),
+(3, 'test', 'yohanii725@gmail.com', 'animal vaccination', 'need a guidance for animal vaccination', '2026-05-06 04:20:23', 'Pending');
 
 -- --------------------------------------------------------
 
@@ -374,6 +401,36 @@ CREATE TABLE `inquiry_logs` (
   `content` text NOT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `leave_requests`
+--
+
+CREATE TABLE `leave_requests` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `leave_type` varchar(50) NOT NULL,
+  `request_date` date NOT NULL,
+  `start_date` date NOT NULL,
+  `resume_date` date NOT NULL,
+  `no_of_days` decimal(4,2) NOT NULL,
+  `is_half_day` tinyint(1) DEFAULT '0',
+  `reason` text NOT NULL,
+  `acting_user_id` int(11) DEFAULT NULL,
+  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `leave_requests`
+--
+
+INSERT INTO `leave_requests` (`id`, `user_id`, `leave_type`, `request_date`, `start_date`, `resume_date`, `no_of_days`, `is_half_day`, `reason`, `acting_user_id`, `status`, `created_at`) VALUES
+(1, 20, 'Casual', '2026-04-29', '2026-04-29', '2026-04-29', 0.50, 1, 'b', 17, 'Pending', '2026-04-29 10:25:55'),
+(2, 20, 'Foreign', '2026-04-29', '2026-05-04', '2026-05-05', 2.00, 0, 'fff', 22, 'Approved', '2026-04-29 11:20:25'),
+(3, 20, 'Maternity', '2026-05-06', '2026-05-11', '2026-05-15', 5.00, 0, 'reason', 23, 'Pending', '2026-05-06 09:17:52');
 
 -- --------------------------------------------------------
 
@@ -468,6 +525,30 @@ INSERT INTO `master_programme_types` (`id`, `programme_name`, `is_active`, `crea
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `master_units`
+--
+
+CREATE TABLE `master_units` (
+  `id` int(11) NOT NULL,
+  `unit_name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `master_units`
+--
+
+INSERT INTO `master_units` (`id`, `unit_name`) VALUES
+(1, 'Veterinary'),
+(2, 'Administration'),
+(3, 'Employee'),
+(4, 'Farm Operations'),
+(5, 'Finance'),
+(6, 'Training Centres'),
+(7, 'Other');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `monthly_production_records`
 --
 
@@ -497,7 +578,8 @@ INSERT INTO `monthly_production_records` (`id`, `range_id`, `item_id`, `amount`,
 
 CREATE TABLE `office_details` (
   `id` int(11) NOT NULL,
-  `range_id` int(11) NOT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `unit_id` int(11) DEFAULT NULL,
   `officer_name` varchar(255) NOT NULL,
   `designation` varchar(100) NOT NULL,
   `emp_id` varchar(50) DEFAULT NULL,
@@ -511,22 +593,22 @@ CREATE TABLE `office_details` (
 -- Dumping data for table `office_details`
 --
 
-INSERT INTO `office_details` (`id`, `range_id`, `officer_name`, `designation`, `emp_id`, `contact_number`, `registered_date`, `email`, `status`) VALUES
-(1, 1, 'Dr .Mrs L. Dujiththera', 'GVS', '001', NULL, NULL, NULL, 'Active'),
-(2, 1, 'Mr A. Sinharasa', 'LDI', '002', NULL, NULL, NULL, 'Active'),
-(3, 1, 'Mrs P. Amirthalingam', 'LDO', '003', '0771234560', '2026-01-10', 'amirthalingam.p@daph.gov.lk', 'Active'),
-(4, 1, 'Mrs S. Vimalathasan', 'PDO', '004', '0771234561', '2026-01-12', 'vimalathasan.s@daph.gov.lk', 'Active'),
-(5, 1, 'Mrs K. Muruhathasan', 'PDO', '005', '0771234562', '2026-01-15', 'muruhathasan.k@daph.gov.lk', 'Active'),
-(6, 1, 'Mrs K. Yoganathan', 'PDO', '006', '0771234563', '2026-01-18', 'yoganathan.k@daph.gov.lk', 'Active'),
-(7, 1, 'Mrs S. Thiruganasuntharam', 'CDO', '007', '0771234564', '2026-01-20', 'thiruganas@daph.gov.lk', 'Active'),
-(8, 1, 'Mr N. Koneswaran', 'PDO', '008', '0771234565', '2026-01-22', 'koneswaran.n@daph.gov.lk', 'Active'),
-(9, 1, 'Mr T. Saththiyawan', 'Driver', '009', '0771234566', '2026-02-01', 'saththi@daph.gov.lk', 'Active'),
-(10, 1, 'Mr N. Gaminiraj', 'Watcher', '010', '0771234567', '2026-02-05', NULL, 'Active'),
-(11, 1, 'Mr K. Perera', 'LDI', '011', '0771234568', '2026-02-10', 'perera.k@daph.gov.lk', 'Active'),
-(12, 1, 'Mrs J. Logitharajah', 'Clerk', '012', '0771234569', '2026-02-12', 'logi.j@daph.gov.lk', 'Active'),
-(13, 1, 'Mr R. Rajeshwaran', 'LDO', '013', '0771234570', '2026-02-15', 'rajesh.r@daph.gov.lk', 'Active'),
-(14, 1, 'Mrs H. Silva', 'PDO', '022', '0771234579', '2026-03-12', 'silva.h@daph.gov.lk', 'Active'),
-(18, 1, 'Yohani Abeykoon', 'GVS', '025', '+94778439871', '2026-04-11', 'yohanii725@gmail.com', 'Active');
+INSERT INTO `office_details` (`id`, `range_id`, `unit_id`, `officer_name`, `designation`, `emp_id`, `contact_number`, `registered_date`, `email`, `status`) VALUES
+(1, 1, 1, 'Dr .Mrs L. Dujiththera', 'GVS', '001', NULL, NULL, NULL, 'Active'),
+(2, 1, 1, 'Mr A. Sinharasa', 'LDI', '002', NULL, NULL, NULL, 'Active'),
+(3, 1, 1, 'Mrs P. Amirthalingam', 'LDO', '003', '0771234560', '2026-01-10', 'amirthalingam.p@daph.gov.lk', 'Active'),
+(4, 1, 1, 'Mrs S. Vimalathasan', 'PDO', '004', '0771234561', '2026-01-12', 'vimalathasan.s@daph.gov.lk', 'Active'),
+(5, 1, 1, 'Mrs K. Muruhathasan', 'PDO', '005', '0771234562', '2026-01-15', 'muruhathasan.k@daph.gov.lk', 'Active'),
+(6, 1, 1, 'Mrs K. Yoganathan', 'PDO', '006', '0771234563', '2026-01-18', 'yoganathan.k@daph.gov.lk', 'Active'),
+(7, 1, 1, 'Mrs S. Thiruganasuntharam', 'CDO', '007', '0771234564', '2026-01-20', 'thiruganas@daph.gov.lk', 'Active'),
+(8, 1, 1, 'Mr N. Koneswaran', 'PDO', '008', '0771234565', '2026-01-22', 'koneswaran.n@daph.gov.lk', 'Active'),
+(9, 1, 1, 'Mr T. Saththiyawan', 'Driver', '009', '0771234566', '2026-02-01', 'saththi@daph.gov.lk', 'Active'),
+(10, 1, 1, 'Mr N. Gaminiraj', 'Watcher', '010', '0771234567', '2026-02-05', NULL, 'Active'),
+(11, 1, 1, 'Mr K. Perera', 'LDI', '011', '0771234568', '2026-02-10', 'perera.k@daph.gov.lk', 'Active'),
+(12, 1, 1, 'Mrs J. Logitharajah', 'Clerk', '012', '0771234569', '2026-02-12', 'logi.j@daph.gov.lk', 'Active'),
+(13, 1, 1, 'Mr R. Rajeshwaran', 'LDO', '013', '0771234570', '2026-02-15', 'rajesh.r@daph.gov.lk', 'Active'),
+(14, 1, 1, 'Mrs H. Silva', 'PDO', '022', '0771234579', '2026-03-12', 'silva.h@daph.gov.lk', 'Active'),
+(15, 13, NULL, 'test', 'GVS', '0100', '0712345678', '2026-05-06', 'test@gmail.com', 'Active');
 
 -- --------------------------------------------------------
 
@@ -744,9 +826,13 @@ CREATE TABLE `users` (
   `phone` varchar(15) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `full_name` varchar(100) NOT NULL,
-  `role` enum('provincial_director','district_dd','veterinary_surgeon','training_officer','sms','farms_dd','finance_admin','planning_officer','administrator','data_entry') NOT NULL,
+  `emp_id` varchar(50) DEFAULT NULL,
+  `designation` varchar(100) DEFAULT NULL,
+  `role` enum('provincial_director','district_dd','veterinary_surgeon','training_officer','sms','farms_dd','finance_admin','planning_officer','administrator','data_entry','employee') NOT NULL,
   `district_id` int(11) DEFAULT NULL,
   `range_id` int(11) DEFAULT NULL,
+  `unit_id` int(11) DEFAULT NULL,
+  `registered_date` date DEFAULT NULL,
   `office_id` int(11) DEFAULT NULL COMMENT 'Links to veterinary_ranges.id (for Veterinary Surgeon only)',
   `district` enum('Amparai','Batticaloa','Trincomalee','Provincial') NOT NULL,
   `is_active` tinyint(1) DEFAULT '1',
@@ -758,18 +844,29 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`, `role`, `district_id`, `range_id`, `office_id`, `district`, `is_active`, `last_login`, `created_at`) VALUES
-(5, 'yo', 'provinciald2@gmail.com', NULL, 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', 'provincial_director', NULL, NULL, NULL, 'Provincial', 1, '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
-(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', 'administrator', NULL, NULL, NULL, 'Provincial', 1, '2026-04-21 19:16:49', '2025-12-15 11:32:14'),
-(10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', 'finance_admin', NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 10:40:11', '2025-12-16 07:42:06'),
-(11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', 'planning_officer', NULL, NULL, NULL, 'Provincial', 1, '2026-02-17 13:11:58', '2025-12-16 09:34:59'),
-(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', 'sms', NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 11:03:05', '2025-12-16 11:30:03'),
-(13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', 'farms_dd', NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 15:09:31', '2025-12-17 08:46:28'),
-(15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', 'training_officer', NULL, NULL, NULL, 'Provincial', 1, '2026-02-18 16:59:37', '2025-12-17 10:22:46'),
-(16, 'District Deputy Director', 'district_dd@gmail.com', NULL, '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', 'district_dd', NULL, NULL, NULL, 'Provincial', 1, '2026-02-18 16:59:48', '2025-12-17 13:23:28'),
-(17, 'veterinary surgeon', 'veterinary@gmail.com', NULL, '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', 'veterinary_surgeon', 1, 1, NULL, 'Amparai', 1, '2026-03-24 11:08:27', '2025-12-18 10:10:22'),
-(18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', 'provincial_director', NULL, NULL, NULL, 'Provincial', 1, '2026-02-13 10:00:42', '2026-01-05 13:18:11'),
-(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', NULL, '$2y$10$tmJDAqL84RjQGr9TxsLdKeZTlIPk0PV5mWSC.RXYg7WqNPygorIhO', 'Ampara Veterinary Surgeon', 'veterinary_surgeon', 1, 1, 1, 'Amparai', 1, '2026-04-04 12:32:40', '2026-03-25 10:58:36');
+INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`, `emp_id`, `designation`, `role`, `district_id`, `range_id`, `unit_id`, `registered_date`, `office_id`, `district`, `is_active`, `last_login`, `created_at`) VALUES
+(5, 'yo', 'provinciald2@gmail.com', NULL, 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', NULL, NULL, 'provincial_director', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-01-03 16:15:19', '2025-12-12 11:30:50'),
+(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, 'administrator', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-06 04:23:32', '2025-12-15 11:32:14'),
+(10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', NULL, NULL, 'finance_admin', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 10:40:11', '2025-12-16 07:42:06'),
+(11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', NULL, NULL, 'planning_officer', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-17 13:11:58', '2025-12-16 09:34:59'),
+(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 11:03:05', '2025-12-16 11:30:03'),
+(13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-19 03:47:19', '2025-12-17 08:46:28'),
+(15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-18 16:59:37', '2025-12-17 10:22:46'),
+(16, 'District Deputy Director', 'district_dd@gmail.com', NULL, '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', NULL, NULL, 'district_dd', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-18 16:59:48', '2025-12-17 13:23:28'),
+(17, 'veterinary surgeon', 'veterinary@gmail.com', NULL, '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', NULL, NULL, 'veterinary_surgeon', 1, 1, NULL, NULL, NULL, 'Amparai', 1, '2026-03-24 11:08:27', '2025-12-18 10:10:22'),
+(18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, 'provincial_director', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-13 10:00:42', '2026-01-05 13:18:11'),
+(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', NULL, '$2y$10$tmJDAqL84RjQGr9TxsLdKeZTlIPk0PV5mWSC.RXYg7WqNPygorIhO', 'Ampara Veterinary Surgeon', NULL, NULL, 'veterinary_surgeon', 1, 1, NULL, NULL, 1, 'Amparai', 1, '2026-04-04 12:32:40', '2026-03-25 10:58:36'),
+(20, 'employee', 'emp@gmail.com', NULL, '$2y$10$ITeSMQXxM8Ciwu4KK/Sy2O7ai30xUjP8yrL1WNRzXlNnsrG8ylfZK', 'Test Employee', NULL, NULL, 'employee', NULL, 1, NULL, NULL, NULL, 'Amparai', 1, '2026-05-06 04:16:07', '2026-04-22 06:10:30'),
+(21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Dr. (Mrs). L. Dujiththera', NULL, 'GVS', 'veterinary_surgeon', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(22, 'sinharasa', 'sinharasa.a@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. A. Sinharasa', NULL, 'LDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(23, 'amirthalingam', 'amirthalingam.p@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. P. Amirthalingam', NULL, 'LDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(24, 'vimalathasan', 'vimalathasan.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Vimalathasan', NULL, 'PDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(25, 'muruhathasan', 'muruhathasan.k@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. K. Muruhathasan', NULL, 'PDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(26, 'yoganathan', 'yoganathan.k@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. K. Yoganathan', NULL, 'PDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(27, 'thiruganasuntharam', 'thiru.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Thiruganasuntharam', NULL, 'CDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(28, 'koneswaran', 'koneswaran.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Koneswaran', NULL, 'PDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(29, 'saththiyawan', 'saththiyawan.t@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. T. Saththiyawan', NULL, 'Driver', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40'),
+(30, 'gaminiraj', 'gaminiraj.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Gaminiraj', NULL, 'Watcher', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40');
 
 -- --------------------------------------------------------
 
@@ -930,6 +1027,13 @@ ALTER TABLE `inquiry_logs`
   ADD KEY `assigned_to` (`assigned_to`);
 
 --
+-- Indexes for table `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_leave_user` (`user_id`);
+
+--
 -- Indexes for table `livestock_targets`
 --
 ALTER TABLE `livestock_targets`
@@ -945,6 +1049,12 @@ ALTER TABLE `master_programme_types`
   ADD UNIQUE KEY `programme_name` (`programme_name`);
 
 --
+-- Indexes for table `master_units`
+--
+ALTER TABLE `master_units`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `monthly_production_records`
 --
 ALTER TABLE `monthly_production_records`
@@ -956,7 +1066,8 @@ ALTER TABLE `monthly_production_records`
 --
 ALTER TABLE `office_details`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `range_id` (`range_id`);
+  ADD KEY `range_id` (`range_id`),
+  ADD KEY `fk_office_unit` (`unit_id`);
 
 --
 -- Indexes for table `production_categories`
@@ -1064,7 +1175,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `breeding_progress`
@@ -1088,7 +1199,7 @@ ALTER TABLE `dairy_hub_records`
 -- AUTO_INCREMENT for table `diary_tasks`
 --
 ALTER TABLE `diary_tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `districts`
@@ -1100,13 +1211,19 @@ ALTER TABLE `districts`
 -- AUTO_INCREMENT for table `inquiries`
 --
 ALTER TABLE `inquiries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `inquiry_logs`
 --
 ALTER TABLE `inquiry_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `livestock_targets`
@@ -1121,6 +1238,12 @@ ALTER TABLE `master_programme_types`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
+-- AUTO_INCREMENT for table `master_units`
+--
+ALTER TABLE `master_units`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
 -- AUTO_INCREMENT for table `monthly_production_records`
 --
 ALTER TABLE `monthly_production_records`
@@ -1130,7 +1253,7 @@ ALTER TABLE `monthly_production_records`
 -- AUTO_INCREMENT for table `office_details`
 --
 ALTER TABLE `office_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `production_categories`
@@ -1178,7 +1301,7 @@ ALTER TABLE `slaughter_statistics`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `veterinary_ranges`
@@ -1229,6 +1352,12 @@ ALTER TABLE `inquiry_logs`
   ADD CONSTRAINT `inquiry_logs_ibfk_2` FOREIGN KEY (`assigned_to`) REFERENCES `office_details` (`id`) ON DELETE SET NULL;
 
 --
+-- Constraints for table `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  ADD CONSTRAINT `fk_leave_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `livestock_targets`
 --
 ALTER TABLE `livestock_targets`
@@ -1245,6 +1374,7 @@ ALTER TABLE `monthly_production_records`
 -- Constraints for table `office_details`
 --
 ALTER TABLE `office_details`
+  ADD CONSTRAINT `fk_office_unit` FOREIGN KEY (`unit_id`) REFERENCES `master_units` (`id`),
   ADD CONSTRAINT `office_details_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`);
 
 --
