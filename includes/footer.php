@@ -25,5 +25,6 @@
         }
     });
 </script>
+<?php if (!empty($pageScripts)) echo $pageScripts; ?>
 </body>
 </html>

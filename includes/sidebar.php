@@ -169,13 +169,22 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     <?php if ($is_sms): ?>
                         <!-- Subject Matter Specialist Menu-->
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/my_diary.php">
-                            My Diary
+                            Diary and Advanced Programme
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/provincial_epidemiology.php">
-                            Provincial Epidemiology
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/immunization.php">
+                            Immunization
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/veterinary_supply_chain.php">
-                            Veterinary Supply Chain
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/mobile_clinics.php">
+                            Mobile Clinics
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/drug_maintenance.php">
+                            Drug Maintenance
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/outbreak_report.php">
+                            Outbreak Report
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/disease_control.php">
+                            Disease Control
                         </a>
                     <?php endif; ?>
 
