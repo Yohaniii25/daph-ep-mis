@@ -37,7 +37,7 @@
                     <!-- Hidden field that actually submits the CSV string value -->
                     <input type="hidden" name="target_animal" id="targetAnimalHidden">
                     <!-- Hidden array field to guarantee POST contains the selected animals -->
-                    <select name="target_animal[]" id="targetAnimalArray" multiple hidden></select>
+                    <select name="target_animal_array[]" id="targetAnimalArray" multiple hidden></select>
                 </div>
                 <div class="mb-2">
                     <label class="form-label fw-bold text-dark">Administrative Scope Notes / Description</label>
