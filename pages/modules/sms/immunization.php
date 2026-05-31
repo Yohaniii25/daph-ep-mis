@@ -3,6 +3,24 @@ require_once '../../../includes/header.php';
 if ($_SESSION['role'] !== 'sms') die("Access denied");
 require_once '../../../config/db_connect.php';
 
+// Dynamic metrics extraction using the centralized stock ledger
+$metric_sql = "SELECT 
+    COUNT(DISTINCT b.id) as active_batches_count,
+    SUM(CASE WHEN l.transaction_type = 'INITIAL' THEN l.quantity ELSE 0 END) as global_starter_doses,
+    ABS(SUM(CASE WHEN l.transaction_type = 'DISPENSE' THEN l.quantity ELSE 0 END)) as global_doses_used,
+    SUM(l.quantity) as real_time_balance
+FROM vaccine_batches b
+LEFT JOIN vaccine_stock_ledger l ON b.id = l.vaccine_batch_id
+WHERE b.is_active = 1";
+
+$metric_res = $mysqli->query($metric_sql);
+$metrics = $metric_res ? $metric_res->fetch_assoc() : [];
+
+$total_batches  = $metrics['active_batches_count'] ?? 0;
+$starter_doses  = $metrics['global_starter_doses'] ?? 0;
+$doses_used     = $metrics['global_doses_used'] ?? 0;
+$balance_doses  = $metrics['real_time_balance'] ?? 0;
+
 ?>
 
 <?php require_once '../../../includes/sidebar.php'; ?>
@@ -16,18 +34,18 @@ require_once '../../../config/db_connect.php';
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Total Vaccinations</h6>
-                        <h2 class="text-primary mb-0 fw-bold">5</h2>
-                       
+                        <h6 class="text-muted small text-uppercase fw-bold">Active Tracked Batches</h6>
+                        <h2 class="text-primary mb-0 fw-bold"><?= number_format($total_batches) ?></h2>
+
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Doses at the Beginning of the Month</h6>
-                        <h2 class="text-warning mb-0 fw-bold">10</h2>
-                        
+                        <h6 class="text-muted small text-uppercase fw-bold">Doses Allocated (Starter)</h6>
+                        <h2 class="text-warning mb-0 fw-bold"><?= number_format($starter_doses) ?></h2>
+
                     </div>
                 </div>
             </div>
@@ -35,17 +53,17 @@ require_once '../../../config/db_connect.php';
                 <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
                     <div class="card-body p-4">
                         <h6 class="text-muted small text-uppercase fw-bold">Total Doses Used</h6>
-                        <h2 class="text-success mb-0 fw-bold">2</h2>
-                        
+                        <h2 class="text-success mb-0 fw-bold"><?= number_format($doses_used) ?></h2>
+
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 border-start border-info border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Total Balance Doses End of the Month</h6>
-                        <h2 class="text-info mb-0 fw-bold">15</h2>
-                        
+                        <h6 class="text-muted small text-uppercase fw-bold">Total Live Balance Available</h6>
+                        <h2 class="text-info mb-0 fw-bold"><?= number_format($balance_doses) ?></h2>
+
                     </div>
                 </div>
             </div>
@@ -58,12 +76,7 @@ require_once '../../../config/db_connect.php';
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#reportCaseModal">
-                            <i class="bi bi-journal-text"></i><br>
-                            Add New Case
-                        </button>
-                    </div>
+
                     <div class="col-md-3">
                         <a href="vaccine_types.php" class="btn btn-primary w-100 py-3">
                             <i class="bi bi-search"></i><br>
@@ -109,39 +122,66 @@ require_once '../../../config/db_connect.php';
                     </thead>
                     <tbody>
                         <?php
-                        $sql = "SELECT * FROM sms_immunization ORDER BY log_date DESC, id DESC";
+                        $sql = "SELECT 
+            b.id,
+            b.created_at as log_date,
+            b.batch_number,
+            t.vaccine_name,
+            -- Baseline allocation opening inventory metric
+            SUM(CASE WHEN l.transaction_type = 'INITIAL' THEN l.quantity ELSE 0 END) as starter_count_month,
+            -- Mid-month incremental entries pool 
+            SUM(CASE WHEN l.transaction_type = 'MID_MONTH_RECEIVE' THEN l.quantity ELSE 0 END) as during_month_received,
+            -- Active distributed application totals
+            ABS(SUM(CASE WHEN l.transaction_type = 'DISPENSE' THEN l.quantity ELSE 0 END)) as used_doses_count,
+            -- Cold chain breakages and waste tracking metric
+            ABS(SUM(CASE WHEN l.transaction_type = 'DAMAGE' THEN l.quantity ELSE 0 END)) as doses_damaged,
+            -- Moving total math formula profile
+            SUM(l.quantity) as balance_doses_qty
+        FROM vaccine_batches b
+        JOIN vaccine_types t ON b.vaccine_type_id = t.id
+        LEFT JOIN `vaccine_stock_ledger` l ON b.id = l.vaccine_batch_id
+        GROUP BY b.id
+        ORDER BY b.id DESC";
+
                         $res = $mysqli->query($sql);
                         while ($row = $res->fetch_assoc()):
                         ?>
                             <tr>
                                 <td class="fw-bold text-center">#<?= $row['id'] ?></td>
-                                <td><?= $row['log_date'] ?></td>
-                                <td class="fw-bold"><?= htmlspecialchars($row['vaccination_type']) ?></td>
-                                <td class="text-center"><?= number_format($row['starter_count_month']) ?></td>
-                                <td class="text-center"><?= number_format($row['during_month_received']) ?></td>
-                                <td class="text-center text-primary bg-light"><?= htmlspecialchars($row['used_batch_number']) ?></td>
+                                <td><?= date('Y-m-d', strtotime($row['log_date'])) ?></td>
+                                <td class="fw-bold text-dark"><?= htmlspecialchars($row['vaccine_name']) ?></td>
+                                <td class="text-center text-secondary"><?= number_format($row['starter_count_month']) ?></td>
+                                <td class="text-center text-info"><?= number_format($row['during_month_received']) ?></td>
+
+                                <!-- Doses Used Data Blocks Section -->
+                                <td class="text-center text-primary bg-light small fw-semibold"><?= htmlspecialchars($row['batch_number']) ?></td>
                                 <td class="text-center fw-bold text-primary bg-light"><?= number_format($row['used_doses_count']) ?></td>
-                                <td class="text-center text-danger"><?= number_format($row['doses_damaged']) ?></td>
-                                <td class="text-center text-success bg-light"><?= htmlspecialchars($row['balance_batch_number']) ?></td>
+
+                                <!-- Damaged Metrics Section -->
+                                <td class="text-center fw-bold text-danger"><?= number_format($row['doses_damaged']) ?></td>
+
+                                <!-- Running Stock Balance Blocks Section -->
+                                <td class="text-center text-success bg-light small fw-semibold"><?= htmlspecialchars($row['batch_number']) ?></td>
                                 <td class="text-center fw-bold text-success bg-light"><?= number_format($row['balance_doses_qty']) ?></td>
+
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
+                                        <!-- Bound contextual parameters down to your Modal framework triggers -->
                                         <button class="btn btn-outline-secondary edit-imm-btn"
                                             data-id="<?= $row['id'] ?>"
-                                            data-date="<?= $row['log_date'] ?>"
-                                            data-type="<?= htmlspecialchars($row['vaccination_type']) ?>"
+                                            data-date="<?= date('Y-m-d', strtotime($row['log_date'])) ?>"
+                                            data-type="<?= htmlspecialchars($row['vaccine_name']) ?>"
                                             data-starter="<?= $row['starter_count_month'] ?>"
                                             data-received="<?= $row['during_month_received'] ?>"
-                                            data-ubatch="<?= htmlspecialchars($row['used_batch_number']) ?>"
-                                            data-uqty="<?= $row['used_doses_count'] ?>"
+                                            data-batch="<?= htmlspecialchars($row['batch_number']) ?>"
+                                            data-used="<?= $row['used_doses_count'] ?>"
                                             data-damaged="<?= $row['doses_damaged'] ?>"
-                                            data-bbatch="<?= htmlspecialchars($row['balance_batch_number']) ?>"
-                                            data-bs-toggle="modal" data-bs-target="#immunizationModal">
+                                            data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <a href="processors/immunization_crud.php?action=delete&id=<?= $row['id'] ?>"
+                                        <a href="processors/vaccine_batch_crud.php?action=delete&id=<?= $row['id'] ?>"
                                             class="btn btn-outline-danger"
-                                            onclick="return confirm('Delete this record?');">
+                                            onclick="return confirm('Are you sure you want to completely remove this entire batch tracking entry sequence from your warehouse indices?');">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
@@ -160,56 +200,35 @@ $pageScripts = <<<SCRIPT
 <script>
     $(document).ready(function() {
         $('#immunizationTable').DataTable({
+            "order": [[0, "desc"]],
             dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
-            buttons: [{
-                    extend: 'csv',
-                    className: 'btn btn-sm btn-success px-3 me-1 rounded'
-                },
-                {
-                    extend: 'pdf',
-                    className: 'btn btn-sm btn-warning px-3 me-1 rounded text-dark'
-                },
-                {
-                    extend: 'print',
-                    className: 'btn btn-sm btn-danger px-3 rounded'
-                }
+            buttons: [
+                { extend: 'csv', className: 'btn btn-sm btn-success px-3 me-1 rounded' },
+                { extend: 'pdf', className: 'btn btn-sm btn-warning px-3 me-1 rounded text-dark' },
+                { extend: 'print', className: 'btn btn-sm btn-danger px-3 rounded' }
             ]
         });
 
-        // Auto-calculate remaining balances
-        $('.calc-trigger').on('input', function() {
-            let starter = parseInt($('#qtyStarter').val()) || 0;
-            let received = parseInt($('#qtyReceived').val()) || 0;
-            let used = parseInt($('#qtyUsed').val()) || 0;
-            let damaged = parseInt($('#qtyDamaged').val()) || 0;
-
-            let balance = (starter + received) - (used + damaged);
-            $('#balancePreview').val(balance.toLocaleString() + " Doses");
-        });
-
-        // Handle updates mapping
+        // Intercept Edit Button clicks and route straight into your adjustment modal lifecycle
         $('.edit-imm-btn').on('click', function() {
-            $('#immAction').val('update');
-            $('#immId').val($(this).data('id'));
-            $('#logDate').val($(this).data('date'));
-            $('#vaccineType').val($(this).data('type'));
-            $('#qtyStarter').val($(this).data('starter'));
-            $('#qtyReceived').val($(this).data('received'));
-            $('#batchUsed').val($(this).data('ubatch'));
-            $('#qtyUsed').val($(this).data('uqty'));
-            $('#qtyDamaged').val($(this).data('damaged'));
-            $('#batchBalance').val($(this).data('bbatch'));
+            // Locate adjustment components safely inside the window context
+            $('#modalAction').val('update');
+            $('#batchId').val($(this).data('id'));
+            $('#batchNumber').val($(this).data('batch'));
+            $('#expiryDate').val($(this).data('date'));
+            
+            // Hide registration layouts, swap control components visibility variables
+            $('#vaccineTypeContainer').addClass('d-none');
+            $('#initialAllocationWrapper').addClass('d-none');
+            $('#initialAllocatedDoses').prop('required', false);
+            $('#ledgerAdjustmentsWrapper').removeClass('d-none');
+            
+            // Clear past input variables to let users set fresh adjustment differences
+            $('#midMonthArrival').val(0);
+            $('#newDamaged').val(0);
 
-            $('.calc-trigger').first().trigger('input'); // Force refresh math calculations
-            $('#immModalTitle').html('<i class="bi bi-pencil-square me-2"></i>Edit Immunization Row');
-        });
-
-        $('#immunizationModal').on('hidden.bs.modal', function() {
-            $('#immAction').val('create');
-            $('#immId').val('');
-            $('#immForm')[0].reset();
-            $('#balancePreview').val('0');
-            $('#immModalTitle').html('<i class="bi bi-shield-plus me-2"></i>Log Immunization Records');
+            $('#modalTitle').html('<i class="bi bi-pencil-square me-2 text-warning"></i>Inject Live Batch Adjustments');
+            $('#submitBtn').removeClass('btn-success').addClass('btn-warning').text('Inject Ledger Updates');
         });
     });
 </script>
