@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 28, 2026 at 02:58 PM
+-- Generation Time: Jun 01, 2026 at 08:34 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -265,7 +265,9 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (81, '2026-05-27 04:42:36', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
 (82, '2026-05-27 08:38:13', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
 (83, '2026-05-27 13:05:48', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(84, '2026-05-28 05:04:52', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web');
+(84, '2026-05-28 05:04:52', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(85, '2026-05-31 09:26:27', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(86, '2026-06-01 04:46:39', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web');
 
 -- --------------------------------------------------------
 
@@ -1018,7 +1020,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, 'administrator', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-21 16:36:50', '2025-12-15 11:32:14', NULL),
 (10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', NULL, NULL, 'finance_admin', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 10:40:11', '2025-12-16 07:42:06', NULL),
 (11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', NULL, NULL, 'planning_officer', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-17 13:11:58', '2025-12-16 09:34:59', NULL),
-(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-28 10:34:52', '2025-12-16 11:30:03', NULL),
+(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-01 10:16:39', '2025-12-16 11:30:03', NULL),
 (13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-25 20:22:03', '2025-12-17 08:46:28', NULL),
 (15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-19 15:58:44', '2025-12-17 10:22:46', NULL),
 (16, 'District Deputy Director', 'district_dd@gmail.com', NULL, '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', NULL, NULL, 'district_dd', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-06 11:06:40', '2025-12-17 13:23:28', NULL),
@@ -1040,6 +1042,21 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `vaccine_batches`
+--
+
+CREATE TABLE `vaccine_batches` (
+  `id` int(11) NOT NULL,
+  `batch_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `remarks` text COLLATE utf8mb4_unicode_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `vaccine_types`
 --
 
@@ -1056,10 +1073,10 @@ CREATE TABLE `vaccine_types` (
 --
 
 INSERT INTO `vaccine_types` (`id`, `vaccine_name`, `target_animal`, `description`, `created_at`) VALUES
-(1, 'FMD (60 dose)', '', 'twice a year', '2026-05-28 11:45:35'),
-(2, 'HS Oil', '', 'once a month', '2026-05-28 12:24:52'),
-(3, 'HS Alum', '', 'none', '2026-05-28 12:39:41'),
-(4, 'Fowl pox', '', 'e', '2026-05-28 12:40:08');
+(4, 'Fowl pox', 'Cattle,Swine,Other', 'test', '2026-05-28 12:40:08'),
+(5, 'Gumboro', 'Cattle,Swine', 'test', '2026-05-28 13:04:12'),
+(6, 'HS Oil (60 dose)', 'Other', 'test', '2026-05-31 10:54:06'),
+(7, 'HS Alum (60 dose)', 'Cattle,Swine,Poultry,Buffalo,Goat,Sheep,Other', 'test', '2026-05-31 10:54:27');
 
 -- --------------------------------------------------------
 
@@ -1365,6 +1382,13 @@ ALTER TABLE `users`
   ADD KEY `fk_user_range` (`range_id`);
 
 --
+-- Indexes for table `vaccine_batches`
+--
+ALTER TABLE `vaccine_batches`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_batch_number_unique` (`batch_number`);
+
+--
 -- Indexes for table `vaccine_types`
 --
 ALTER TABLE `vaccine_types`
@@ -1416,7 +1440,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT for table `breeding_progress`
@@ -1581,10 +1605,16 @@ ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
+-- AUTO_INCREMENT for table `vaccine_batches`
+--
+ALTER TABLE `vaccine_batches`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `vaccine_types`
 --
 ALTER TABLE `vaccine_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `veterinary_ranges`
