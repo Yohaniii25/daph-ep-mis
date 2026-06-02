@@ -1,5 +1,4 @@
 <?php
-// Strict mapping matching your MySQL SET column options definition
 $allowed_animals = ['Cattle', 'Dairy Cows', 'Buffalo', 'Goats', 'Poultry', 'other'];
 ?>
 
@@ -27,10 +26,17 @@ $allowed_animals = ['Cattle', 'Dairy Cows', 'Buffalo', 'Goats', 'Poultry', 'othe
                             <input type="text" class="form-control ps-2 text-dark fw-medium" name="vaccine_name" id="drugName" required placeholder="e.g., Oxytetracycline 20%, Vitamin B-Complex, Albendazole Bolus">
                         </div>
                     </div>
+                    <div class="mb-4">
+                        <label for="expiry_date" class="form-label fw-semibold text-secondary mb-2">Expiry Date</label>
+                        <div class="input-group shadow-sm rounded">
+                            <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-calendar"></i></span>
+                            <input type="date" class="form-control ps-2 text-dark fw-medium" name="expiry_date" id="expiry_date">
+                        </div>
+                    </div>
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-secondary mb-1">Target Animal Classification <span class="text-danger">*</span></label>
-                        <div class="text-muted small mb-3">Select all livestock classifications applicable to this therapeutic drug record:</div>
+                        <div class="text-muted small mb-3">Select all livestock classifications applicable to this drug record:</div>
                         
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             <?php foreach ($allowed_animals as $animal): ?>

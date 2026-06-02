@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 01, 2026 at 04:02 PM
+-- Generation Time: Jun 02, 2026 at 08:06 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -37,6 +37,13 @@ CREATE TABLE `drug_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- Dumping data for table `drug_types`
+--
+
+INSERT INTO `drug_types` (`id`, `vaccine_name`, `target_animal`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'Oxytocine inj', 'Cattle,Dairy Cows,Buffalo,Goats', '', '2026-06-01 14:09:23', '2026-06-01 14:09:23');
+
+--
 -- Indexes for dumped tables
 --
 
@@ -54,7 +61,7 @@ ALTER TABLE `drug_types`
 -- AUTO_INCREMENT for table `drug_types`
 --
 ALTER TABLE `drug_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 01, 2026 at 08:34 AM
+-- Generation Time: Jun 02, 2026 at 09:17 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -267,7 +267,8 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (83, '2026-05-27 13:05:48', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
 (84, '2026-05-28 05:04:52', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
 (85, '2026-05-31 09:26:27', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(86, '2026-06-01 04:46:39', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web');
+(86, '2026-06-01 04:46:39', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(87, '2026-06-02 05:50:09', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web');
 
 -- --------------------------------------------------------
 
@@ -414,6 +415,57 @@ INSERT INTO `districts` (`id`, `name`) VALUES
 (1, 'Ampara'),
 (2, 'Batticaloa'),
 (3, 'Trincomalee');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `drug_records`
+--
+
+CREATE TABLE `drug_records` (
+  `id` int(11) NOT NULL,
+  `log_date` date NOT NULL,
+  `drug_type_id` int(11) NOT NULL COMMENT 'References drug_types.id',
+  `vaccine_batch_id` int(11) NOT NULL COMMENT 'References vaccine_batches.id',
+  `starter_count_month` int(11) NOT NULL DEFAULT 0,
+  `during_month_received` int(11) NOT NULL DEFAULT 0,
+  `used_doses_count` int(11) NOT NULL DEFAULT 0,
+  `doses_damaged` int(11) NOT NULL DEFAULT 0,
+  `balance_end_month` int(11) GENERATED ALWAYS AS (`starter_count_month` + `during_month_received` - (`used_doses_count` + `doses_damaged`)) STORED,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `drug_records`
+--
+
+INSERT INTO `drug_records` (`id`, `log_date`, `drug_type_id`, `vaccine_batch_id`, `starter_count_month`, `during_month_received`, `used_doses_count`, `doses_damaged`, `created_at`) VALUES
+(1, '2026-06-01', 1, 7, 1000, 0, 0, 0, '2026-06-01 14:54:22'),
+(2, '2026-06-02', 2, 6, 400, 0, 0, 0, '2026-06-02 06:52:58');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `drug_types`
+--
+
+CREATE TABLE `drug_types` (
+  `id` int(11) NOT NULL,
+  `vaccine_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target_animal` set('Cattle','Dairy Cows','Buffalo','Goats','Poultry','other') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `drug_types`
+--
+
+INSERT INTO `drug_types` (`id`, `vaccine_name`, `target_animal`, `description`, `expiry_date`, `created_at`, `updated_at`) VALUES
+(1, 'Oxytocine inj', 'Cattle,Dairy Cows,Buffalo,Goats', '', '2026-07-31', '2026-06-01 14:09:23', '2026-06-02 06:51:56'),
+(2, 'Xyaject Inj', 'Cattle,Dairy Cows,Buffalo,Goats,Poultry,other', '', '2026-07-31', '2026-06-02 06:48:31', '2026-06-02 06:48:31');
 
 -- --------------------------------------------------------
 
@@ -960,6 +1012,13 @@ CREATE TABLE `sms_immunization` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `sms_immunization`
+--
+
+INSERT INTO `sms_immunization` (`id`, `user_id`, `log_date`, `vaccination_type`, `starter_count_month`, `during_month_received`, `used_batch_number`, `used_doses_count`, `doses_damaged`, `balance_batch_number`, `balance_doses_qty`, `created_at`) VALUES
+(2, 12, '2026-06-01', 'Fowl pox', 100, 50, '6', 120, 10, '6', 20, '2026-06-01 10:02:09');
+
 -- --------------------------------------------------------
 
 --
@@ -1020,7 +1079,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, 'administrator', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-21 16:36:50', '2025-12-15 11:32:14', NULL),
 (10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', NULL, NULL, 'finance_admin', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-16 10:40:11', '2025-12-16 07:42:06', NULL),
 (11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', NULL, NULL, 'planning_officer', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-17 13:11:58', '2025-12-16 09:34:59', NULL),
-(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-01 10:16:39', '2025-12-16 11:30:03', NULL),
+(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-02 11:20:09', '2025-12-16 11:30:03', NULL),
 (13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-25 20:22:03', '2025-12-17 08:46:28', NULL),
 (15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-19 15:58:44', '2025-12-17 10:22:46', NULL),
 (16, 'District Deputy Director', 'district_dd@gmail.com', NULL, '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', NULL, NULL, 'district_dd', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-06 11:06:40', '2025-12-17 13:23:28', NULL),
@@ -1053,6 +1112,14 @@ CREATE TABLE `vaccine_batches` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `remarks` text COLLATE utf8mb4_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `vaccine_batches`
+--
+
+INSERT INTO `vaccine_batches` (`id`, `batch_number`, `is_active`, `created_at`, `updated_at`, `remarks`) VALUES
+(6, 'SLNV-06/03-2025', 1, '2026-06-01 06:44:59', '2026-06-01 06:49:24', ''),
+(7, 'T-006', 1, '2026-06-01 11:22:24', '2026-06-01 11:22:24', '');
 
 -- --------------------------------------------------------
 
@@ -1228,6 +1295,18 @@ ALTER TABLE `diary_tasks`
 ALTER TABLE `districts`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `drug_records`
+--
+ALTER TABLE `drug_records`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `drug_types`
+--
+ALTER TABLE `drug_types`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `hatchery_batches`
@@ -1440,7 +1519,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT for table `breeding_progress`
@@ -1477,6 +1556,18 @@ ALTER TABLE `diary_tasks`
 --
 ALTER TABLE `districts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `drug_records`
+--
+ALTER TABLE `drug_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `drug_types`
+--
+ALTER TABLE `drug_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `hatchery_batches`
@@ -1590,7 +1681,7 @@ ALTER TABLE `slaughter_statistics`
 -- AUTO_INCREMENT for table `sms_immunization`
 --
 ALTER TABLE `sms_immunization`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `stock_balance_logs`
@@ -1608,7 +1699,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `vaccine_batches`
 --
 ALTER TABLE `vaccine_batches`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `vaccine_types`

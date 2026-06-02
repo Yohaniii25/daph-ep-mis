@@ -112,7 +112,7 @@ $summary = $summary_result->fetch_assoc();
                         $ledger_query = "SELECT r.*, 
                                          COALESCE(t.vaccine_name, 'Unknown Type') AS vaccine_name, 
                                          COALESCE(b.batch_number, 'Unknown Batch') AS batch_number, 
-                                         b.expiry_date, 
+                                         COALESCE(t.expiry_date, 'N/A') AS expiry_date,
                                          (r.starter_count_month + r.during_month_received - r.used_doses_count - r.doses_damaged) AS balance_end_month 
                                          FROM `drug_records` r
                                          LEFT JOIN `drug_types` t ON r.drug_type_id = t.id

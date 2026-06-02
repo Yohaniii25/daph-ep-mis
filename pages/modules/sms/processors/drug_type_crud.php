@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $vaccine_name = isset($_POST['vaccine_name']) ? trim($_POST['vaccine_name']) : '';
     $description  = isset($_POST['description'])  ? trim($_POST['description'])  : '';
+    $expiry_date  = isset($_POST['expiry_date'])  ? trim($_POST['expiry_date'])  : null;
     $id           = isset($_POST['id'])           ? intval($_POST['id'])        : 0;
     
     $submitted_animals = $_POST['target_animal'] ?? [];
@@ -34,8 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $target_animal_string = implode(',', $filtered_animals);
 
     if ($action === 'create') {
-        $insert_stmt = $mysqli->prepare("INSERT INTO `drug_types` (`vaccine_name`, `target_animal`, `description`) VALUES (?, ?, ?)");
-        $insert_stmt->bind_param("sss", $vaccine_name, $target_animal_string, $description);
+        $insert_stmt = $mysqli->prepare("INSERT INTO `drug_types` (`vaccine_name`, `target_animal`, `description`, `expiry_date`) VALUES (?, ?, ?, ?)");
+        $insert_stmt->bind_param("ssss", $vaccine_name, $target_animal_string, $description, $expiry_date);
         
         if ($insert_stmt->execute()) {
             header("Location: ../drug_maintenance.php?status=success&msg=Drug+Type+Registered+Successfully");
@@ -45,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
     } elseif ($action === 'update' && $id > 0) {
-        $update_stmt = $mysqli->prepare("UPDATE `drug_types` SET `vaccine_name` = ?, `target_animal` = ?, `description` = ? WHERE `id` = ?");
-        $update_stmt->bind_param("sssi", $vaccine_name, $target_animal_string, $description, $id);
+        $update_stmt = $mysqli->prepare("UPDATE `drug_types` SET `vaccine_name` = ?, `target_animal` = ?, `description` = ?, `expiry_date` = ? WHERE `id` = ?");
+        $update_stmt->bind_param("sssi", $vaccine_name, $target_animal_string, $description, $expiry_date, $id);
         
         if ($update_stmt->execute()) {
             header("Location: ../drug_maintenance.php?status=success&msg=Drug+Configuration+Row+Modified");

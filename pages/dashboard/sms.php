@@ -63,7 +63,7 @@ require_once './includes/sidebar.php';
                         </a>
                     </div>
                     <div class="col-md-4">
-                        <a href="<?= BASE_PATH ?>pages/modules/sms/mobile_clinic.php" style="background-color: #689ccf;" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/sms/mobile_clinics.php" style="background-color: #689ccf;" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white;" class="bi bi-capsule-pill fs-4"></i><br>
                             <span style="color:white">Mobile Clinic</span>
                         </a>
