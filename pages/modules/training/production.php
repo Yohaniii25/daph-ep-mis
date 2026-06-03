@@ -12,26 +12,26 @@ require_once '../../../config/db_connect.php';
 
 <div id="layoutSidenav_content" class="bg-light">
     <main class="container-fluid px-4 pt-4">
-        <h2 class="mb-4">Training Activities</h2>
+        <h2 class="mb-4">Production Details</h2>
 
         <div class="row g-4 mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
-                    <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Identified Target Groups</h6>
-                        <h2 class="text-primary mb-0 fw-bold">30</h2>
-                    </div>
-                </div>
-            </div>
+
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
                     <div class="card-body p-4">
-                        <h6 class="text-muted small text-uppercase fw-bold">Total Participants</h6>
-                        <h2 class="text-warning mb-0 fw-bold">1,200</h2>
+                        <h6 class="text-muted small text-uppercase fw-bold">Total Production Runs</h6>
+                        <h2 class="text-warning mb-0 fw-bold">04</h2>
                     </div>
                 </div>
             </div>
-
+            <div class="col-xl-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
+                    <div class="card-body p-4">
+                        <h6 class="text-muted small text-uppercase fw-bold">Total Production Hours</h6>
+                        <h2 class="text-success mb-0 fw-bold">10</h2>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="card shadow-sm mb-4">
@@ -41,16 +41,10 @@ require_once '../../../config/db_connect.php';
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#addTrainingModal">
+                        <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#addProductionModal">
                             <i class="bi bi-plus-circle"></i><br>
-                            Create Training Program
+                            Production Management
                         </button>
-                    </div>
-                    <div class="col-md-3">
-                        <a style="background-color: #370709; color: white;" href="target_groups.php" class="btn w-100 py-3">
-                            <i class="bi bi-people"></i><br>
-                            Add New Target Group
-                        </a>
                     </div>
 
                 </div>
