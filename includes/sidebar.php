@@ -104,20 +104,32 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     </a>
                     <!-- Provincial Director Menu -->
                     <?php if ($is_pd): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/my_diary.php">
-                            Diary Management
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/animal_health_reports.php">
+                            Animal Health Log
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/approval_diaries.php">
-                            Approval of Diaries & Programmes
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
+                            Breeding Metrics
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/vehicle_approval.php">
-                            Vehicle Management
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
+                            Hatchability
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/provincial_reports.php">
-                            Reports
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
+                            Vaccine Balances
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
+                            Advanced Programs
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
+                            Leave Reports
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
+                            Asset Inventory
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
+                            Dairy Hub Data
                         </a>
                     <?php endif; ?>
 

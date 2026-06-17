@@ -1,6 +1,5 @@
 <?php
 
-// If ALREADY logged in → go straight to dashboard (no loop)
 if (isset($_SESSION['user_id']) && $_SESSION['logged_in']) {
     header("Location: dashboard.php");
     exit();
@@ -26,7 +25,7 @@ $login_error = $_SESSION['login_error'] ?? '';
 
     <!-- Logo -->
     <div class="text-center mb-4">
-        <img src="assets/img/logo.png" alt="DAPH Logo" class="logo-img">
+        <img src="assets/img/animal_health_logo.png" alt="DAPH Logo" class="logo-img">
     </div>
 
     <!-- Login Box -->
