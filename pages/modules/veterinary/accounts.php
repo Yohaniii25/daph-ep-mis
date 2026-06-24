@@ -120,7 +120,7 @@ require_once '../../../includes/sidebar.php';
                     extend: 'pdf',
                     className: 'btn btn-sm btn-danger',
                     text: '<i class="bi bi-file-pdf"></i> PDF',
-                    title: 'Slaughter Statistics - <?= $current_year ?>'
+                    
                 },
                 {
                     extend: 'print',

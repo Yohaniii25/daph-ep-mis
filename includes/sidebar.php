@@ -241,6 +241,9 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     <?php endif; ?>
                     <?php if ($is_veterinary_surgeon): ?>
 
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
+                            Office details
+                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/animal_health.php">
                             Animal Health
                         </a>
@@ -249,9 +252,6 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/regulatory_functions.php">
                             Regulatory Functions
-                        </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
-                            Office details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/range_statistics.php">
                             Range statistics

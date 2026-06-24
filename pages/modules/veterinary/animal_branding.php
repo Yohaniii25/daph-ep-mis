@@ -1,5 +1,5 @@
 <?php
-// ... (Include your standard session/db headers here) ...
+
 $range_name = "Trincomalee"; // Dynamic from session
 $records = [
     ['date' => '2026-03-15', 'farmer' => 'A.M. Perera', 'reg_no' => 'TR/VET/882', 'animal_type' => 'Cattle', 'brand_mark' => 'EP/TR/22', 'qty' => 12],
