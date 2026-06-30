@@ -1,3 +1,31 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.2
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost:3306
+-- Generation Time: Jun 30, 2026 at 09:45 AM
+-- Server version: 5.7.44-48
+-- PHP Version: 8.3.31
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `sltdigi2_daph`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `advanced_programmes`
+--
 
 CREATE TABLE `advanced_programmes` (
   `id` int(11) NOT NULL,
@@ -16,7 +44,21 @@ CREATE TABLE `advanced_programmes` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `advanced_programmes`
+--
 
+INSERT INTO `advanced_programmes` (`id`, `user_id`, `type_id`, `programme_year`, `place`, `activity_description`, `mid_term_status`, `mid_term_remarks`, `mid_term_approved_at`, `final_status`, `final_remarks`, `final_approved_at`, `current_stage`, `created_at`) VALUES
+(1, 7, 2, '2026', 'Uppuveli', 'meeting on uppuweli', 'Pending', NULL, NULL, 'Pending', NULL, NULL, 'Admin_Draft', '2026-01-20 11:47:40'),
+(2, 12, 15, '2026', 'Uppuveli', 'test', 'Pending', NULL, NULL, 'Pending', NULL, NULL, 'Admin_Draft', '2026-05-20 12:25:49'),
+(3, 12, 4, '2027', 'Uppuveli', 'test', 'Pending', NULL, NULL, 'Pending', NULL, NULL, 'Admin_Draft', '2026-06-16 09:56:51'),
+(4, 7, 15, '2026', 'Uppuveli', 'test', 'Pending', NULL, NULL, 'Pending', NULL, NULL, 'Admin_Draft', '2026-06-17 08:57:14');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `amended_programmes`
+--
 
 CREATE TABLE `amended_programmes` (
   `id` int(11) NOT NULL,
@@ -30,7 +72,18 @@ CREATE TABLE `amended_programmes` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `amended_programmes`
+--
 
+INSERT INTO `amended_programmes` (`id`, `user_id`, `original_id`, `programme_year`, `type_id`, `place`, `activity_description`, `amendment_reason`, `created_at`) VALUES
+(2, 7, 1, '2026', 2, 'Uppuveli', 'meeting on uppuweli', 'increase', '2026-04-21 13:32:28');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `animal_health_records`
+--
 
 CREATE TABLE `animal_health_records` (
   `id` int(11) NOT NULL,
@@ -49,7 +102,22 @@ CREATE TABLE `animal_health_records` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `animal_health_records`
+--
 
+INSERT INTO `animal_health_records` (`id`, `range_id`, `date`, `farmer_reg_no`, `animal_type`, `disease_name`, `occurrence_count`, `vaccine_name`, `doses`, `treatment_details`, `report_status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, '2026-03-28', 'AMP-001', 'Cattle', 'Mouth disease', 2, 'FMD', 2, 'come and see', 'Submitted', NULL, '2026-03-28 11:50:07', '2026-03-28 11:50:07'),
+(2, 1, '2026-03-28', 'AMP-001', 'Cattle', 'Mouth disease', 2, 'FMD', 0, 'ww', 'Submitted', 19, '2026-03-28 11:52:01', '2026-03-28 11:52:01'),
+(3, 1, '2026-03-30', 'AMP-009', 'Cattle', 'Fever', 3, 'FMD', 3, 'come only after having breakfast', 'Submitted', 19, '2026-03-30 13:50:27', '2026-03-30 13:50:27'),
+(4, 1, '2026-06-19', 'EP-AMP-050', 'Buffalo', 'Avian Pox', 10, 'FMD', 0, 'note', 'Submitted', 17, '2026-06-16 04:27:45', '2026-06-16 04:27:45'),
+(5, 1, '2026-06-18', 'EP-AMP-157', 'Cattle', 'Avian Pox', 50, 'FMD', 6, 'test', 'Submitted', 17, '2026-06-17 08:14:37', '2026-06-17 08:14:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `assets_immovable`
+--
 
 CREATE TABLE `assets_immovable` (
   `id` int(11) NOT NULL,
@@ -60,7 +128,20 @@ CREATE TABLE `assets_immovable` (
   `extent` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `assets_immovable`
+--
 
+INSERT INTO `assets_immovable` (`id`, `range_id`, `asset_name`, `description`, `location`, `extent`) VALUES
+(1, 1, 'computer', 'e', 'uppuveli', '2'),
+(2, 1, 'computer', 'e', 'uppuveli', '2'),
+(3, 1, 'Main Auditorium', 'test', 'uppuveli', '40p');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `assets_movable`
+--
 
 CREATE TABLE `assets_movable` (
   `id` int(11) NOT NULL,
@@ -71,7 +152,19 @@ CREATE TABLE `assets_movable` (
   `condition` enum('Good','Fair','Needs Repair','Discarded') DEFAULT 'Good'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `assets_movable`
+--
 
+INSERT INTO `assets_movable` (`id`, `range_id`, `asset_category`, `item_name`, `serial_no`, `condition`) VALUES
+(1, 1, 'Vehicle', 'Car', '202', 'Fair'),
+(2, 1, 'Equipment', 'Computer', '166', 'Needs Repair');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `audit_logs`
+--
 
 CREATE TABLE `audit_logs` (
   `id` int(11) NOT NULL,
@@ -90,6 +183,137 @@ CREATE TABLE `audit_logs` (
   `remarks` text
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `audit_logs`
+--
+
+INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, `action_type`, `module_name`, `table_name`, `record_id`, `old_values`, `new_values`, `ip_address`, `device_info`, `remarks`) VALUES
+(1, '2026-03-27 11:24:17', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(2, '2026-03-28 06:03:04', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(3, '2026-03-28 08:32:41', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(4, '2026-03-28 08:32:54', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(5, '2026-03-28 08:33:18', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(6, '2026-03-28 08:35:48', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(7, '2026-03-28 08:35:57', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(8, '2026-03-28 12:26:21', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(9, '2026-03-28 14:50:57', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(10, '2026-03-28 15:19:33', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(11, '2026-03-30 07:17:11', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(12, '2026-03-30 13:35:19', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(13, '2026-03-31 05:21:17', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(14, '2026-03-31 12:56:40', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(15, '2026-04-02 06:04:39', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(16, '2026-04-03 09:22:12', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(17, '2026-04-04 07:02:40', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(18, '2026-04-07 12:31:50', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(19, '2026-04-07 13:00:07', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(20, '2026-04-08 04:16:22', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(21, '2026-04-10 07:06:44', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(22, '2026-04-10 07:29:59', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(23, '2026-04-11 18:21:10', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
+(24, '2026-04-12 18:10:08', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(25, '2026-04-12 19:32:13', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(26, '2026-04-13 06:05:33', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(27, '2026-04-15 07:40:56', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(28, '2026-04-16 06:16:56', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(29, '2026-04-16 18:29:35', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(30, '2026-04-17 17:41:14', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(31, '2026-04-21 04:57:00', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(32, '2026-04-21 13:46:49', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(33, '2026-04-22 06:10:50', 20, 'employee', '', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(34, '2026-04-22 06:39:35', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(35, '2026-04-22 06:59:04', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(36, '2026-04-22 10:17:49', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(37, '2026-04-22 12:17:33', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(38, '2026-04-22 12:54:39', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(39, '2026-04-27 07:18:17', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(40, '2026-04-27 07:18:55', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(41, '2026-04-28 05:50:56', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(42, '2026-04-28 06:57:23', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(43, '2026-04-28 06:57:42', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(44, '2026-04-29 05:50:22', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(45, '2026-04-29 06:03:51', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(46, '2026-04-29 06:36:21', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36', 'User logged in via Web'),
+(47, '2026-04-29 10:00:49', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(48, '2026-05-06 05:36:40', 16, 'District Deputy Director', 'district_dd', 'LOGIN', NULL, '0', 16, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(49, '2026-05-06 08:53:04', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(50, '2026-05-06 13:13:32', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(51, '2026-05-07 03:55:44', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
+(52, '2026-05-12 12:14:18', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(53, '2026-05-13 06:00:43', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(54, '2026-05-13 06:25:58', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(55, '2026-05-13 06:26:28', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(56, '2026-05-13 06:44:19', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(57, '2026-05-13 06:46:35', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(58, '2026-05-13 06:53:40', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(59, '2026-05-14 04:59:38', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(60, '2026-05-14 11:40:22', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(61, '2026-05-15 03:33:45', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(62, '2026-05-18 10:26:58', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(63, '2026-05-18 11:52:29', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(64, '2026-05-18 12:25:49', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(65, '2026-05-18 12:25:54', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(66, '2026-05-18 12:26:16', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(67, '2026-05-18 12:27:07', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(68, '2026-05-19 03:22:57', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(69, '2026-05-19 10:28:44', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(70, '2026-05-19 10:28:55', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(71, '2026-05-19 11:54:07', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(72, '2026-05-20 04:39:45', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(73, '2026-05-20 04:58:06', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(74, '2026-05-20 06:13:39', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(75, '2026-05-21 11:06:18', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(76, '2026-05-21 11:06:50', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(77, '2026-05-25 14:52:03', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(78, '2026-05-25 14:52:45', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(79, '2026-05-26 06:45:07', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(80, '2026-05-26 13:44:40', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(81, '2026-05-27 04:42:36', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(82, '2026-05-27 08:38:13', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(83, '2026-05-27 13:05:48', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(84, '2026-05-28 05:04:52', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(85, '2026-05-31 09:26:27', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(86, '2026-06-01 04:46:39', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(87, '2026-06-01 15:10:36', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(88, '2026-06-02 05:58:38', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
+(89, '2026-06-09 12:01:14', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(90, '2026-06-10 11:45:06', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(91, '2026-06-10 11:55:44', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(92, '2026-06-10 13:24:31', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(93, '2026-06-10 13:26:26', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(94, '2026-06-15 11:52:27', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(95, '2026-06-16 04:00:57', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(96, '2026-06-16 04:01:17', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(97, '2026-06-16 05:29:04', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(98, '2026-06-16 05:32:19', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(99, '2026-06-16 06:42:42', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(100, '2026-06-16 07:23:23', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(101, '2026-06-16 07:33:49', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(102, '2026-06-16 08:33:04', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(103, '2026-06-16 09:34:48', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(104, '2026-06-16 09:48:17', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(105, '2026-06-16 09:53:29', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(106, '2026-06-16 09:54:56', 10, 'finance_admin', 'finance_admin', 'LOGIN', NULL, '0', 10, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(107, '2026-06-16 09:55:30', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(108, '2026-06-16 12:27:59', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(109, '2026-06-16 12:43:34', 16, 'District Deputy Director', 'district_dd', 'LOGIN', NULL, '0', 16, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(110, '2026-06-16 12:43:55', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(111, '2026-06-17 05:52:34', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(112, '2026-06-17 07:14:33', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '112.134.247.89', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(113, '2026-06-17 07:44:12', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(114, '2026-06-17 08:00:10', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(115, '2026-06-17 08:09:29', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '112.134.246.43', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(116, '2026-06-17 08:11:49', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(117, '2026-06-17 08:43:37', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(118, '2026-06-17 08:59:25', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(119, '2026-06-18 00:33:31', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '112.134.240.164', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
+(120, '2026-06-22 08:41:23', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `breeding_progress`
+--
 
 CREATE TABLE `breeding_progress` (
   `id` int(11) NOT NULL,
@@ -103,7 +327,20 @@ CREATE TABLE `breeding_progress` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `breeding_progress`
+--
 
+INSERT INTO `breeding_progress` (`id`, `range_id`, `officer_id`, `year`, `month_number`, `ai_count`, `pd_count`, `calving_count`, `created_at`) VALUES
+(1, 1, 1, '2026', 1, 5, 8, 6, '2026-03-28 14:08:34'),
+(2, 1, 2, '2025', 5, 5, 7, 7, '2026-03-28 14:31:54'),
+(3, 1, 1, '2026', 1, 7, 9, 0, '2026-03-28 14:31:54');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `breeding_target_templates`
+--
 
 CREATE TABLE `breeding_target_templates` (
   `id` int(11) NOT NULL,
@@ -115,7 +352,18 @@ CREATE TABLE `breeding_target_templates` (
   `target_calving` int(11) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `breeding_target_templates`
+--
 
+INSERT INTO `breeding_target_templates` (`id`, `range_id`, `year`, `designation`, `target_ai`, `target_pd`, `target_calving`) VALUES
+(1, 1, '2026', 'Veterinary Surgeon', 60, 70, 60);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `daily_egg_production`
+--
 
 CREATE TABLE `daily_egg_production` (
   `id` int(11) NOT NULL,
@@ -125,7 +373,21 @@ CREATE TABLE `daily_egg_production` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `daily_egg_production`
+--
 
+INSERT INTO `daily_egg_production` (`id`, `flock_id`, `collection_date`, `egg_count`, `created_at`) VALUES
+(1, 1, '2026-05-14', 200, '2026-05-14 13:32:29'),
+(2, 2, '2026-05-13', 150, '2026-05-14 13:37:09'),
+(4, 3, '2026-05-12', 250, '2026-05-14 13:42:12'),
+(5, 1, '2026-06-16', 40, '2026-06-16 09:51:05');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dairy_hub_records`
+--
 
 CREATE TABLE `dairy_hub_records` (
   `id` int(11) NOT NULL,
@@ -141,7 +403,19 @@ CREATE TABLE `dairy_hub_records` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `dairy_hub_records`
+--
 
+INSERT INTO `dairy_hub_records` (`id`, `range_id`, `collection_date`, `farmer_reg_no`, `milk_quantity_liters`, `fat_percentage`, `snf_percentage`, `price_per_liter`, `created_by`, `created_at`) VALUES
+(1, 1, '2026-04-03', '001', 4000.00, 10.00, 2.00, 200.00, 19, '2026-04-03 13:13:30'),
+(2, 1, '2026-06-18', 'EP-AMP-001', 60.00, 4.00, 5.00, 100.00, 17, '2026-06-17 08:33:07');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `diary_tasks`
+--
 
 CREATE TABLE `diary_tasks` (
   `id` int(11) NOT NULL,
@@ -154,13 +428,35 @@ CREATE TABLE `diary_tasks` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `diary_tasks`
+--
 
+INSERT INTO `diary_tasks` (`id`, `user_id`, `task_date`, `place`, `activity`, `status`, `task_type`, `created_at`) VALUES
+(1, 7, '2026-04-18', 'Uppuweli', 'meeting on head office', 'Ongoing', 'Daily', '2026-04-16 09:08:55'),
+(2, 20, '2026-04-30', 'Uppuveli', 'rererer', 'Ongoing', 'Daily', '2026-04-29 07:12:44'),
+(3, 12, '2026-05-20', 'Uppuveli', 'test', 'Ongoing', 'Daily', '2026-05-20 12:19:53'),
+(6, 7, '2026-06-17', 'Uppuveli', 'test', 'Ongoing', 'Daily', '2026-06-17 08:53:34');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `districts`
+--
 
 CREATE TABLE `districts` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `districts`
+--
+
+INSERT INTO `districts` (`id`, `name`) VALUES
+(1, 'Ampara'),
+(2, 'Batticaloa'),
+(3, 'Trincomalee');
 
 -- --------------------------------------------------------
 
@@ -181,19 +477,44 @@ CREATE TABLE `drug_records` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `drug_records`
+--
 
+INSERT INTO `drug_records` (`id`, `log_date`, `drug_type_id`, `vaccine_batch_id`, `starter_count_month`, `during_month_received`, `used_doses_count`, `doses_damaged`, `created_at`) VALUES
+(1, '2026-06-01', 1, 7, 1000, 0, 0, 0, '2026-06-01 14:54:22'),
+(2, '2026-06-16', 5, 8, 60, 20, 20, 10, '2026-06-16 11:51:50');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `drug_types`
+--
 
 CREATE TABLE `drug_types` (
   `id` int(11) NOT NULL,
   `vaccine_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `target_animal` set('Cattle','Dairy Cows','Buffalo','Goats','Poultry','other') COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
-  `date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `drug_types`
+--
 
+INSERT INTO `drug_types` (`id`, `vaccine_name`, `target_animal`, `description`, `expiry_date`, `created_at`, `updated_at`) VALUES
+(1, 'Oxytocine inj', 'Cattle,Dairy Cows,Buffalo,Goats', '', '2026-07-31', '2026-06-01 14:09:23', '2026-06-02 06:51:56'),
+(3, 'Ivermectin injection', 'Goats,Poultry,other', 'test', '2026-07-31', '2026-06-16 11:13:14', '2026-06-16 11:20:26'),
+(4, 'Xyaject Inj', 'Cattle,Dairy Cows,Buffalo', '', '2026-06-30', '2026-06-16 11:28:51', '2026-06-16 11:28:51'),
+(5, 'Cotton wool', 'Cattle,Dairy Cows,Buffalo,Goats,Poultry,other', 'test', '2026-06-30', '2026-06-16 11:42:17', '2026-06-16 11:42:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hatchery_batches`
 --
 
 CREATE TABLE `hatchery_batches` (
@@ -208,7 +529,18 @@ CREATE TABLE `hatchery_batches` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `hatchery_batches`
+--
 
+INSERT INTO `hatchery_batches` (`id`, `user_id`, `batch_date`, `hatchable_count`, `cracked_count`, `table_count`, `chicks_hatched`, `created_at`) VALUES
+(1, 13, '2026-05-18', 40, 10, 30, 30, '2026-05-18 13:45:59'),
+(3, 13, '2026-04-30', 100, 10, 60, 90, '2026-05-19 08:55:03');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hatchery_sales`
 --
 
 CREATE TABLE `hatchery_sales` (
@@ -223,7 +555,16 @@ CREATE TABLE `hatchery_sales` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `hatchery_sales`
+--
 
+INSERT INTO `hatchery_sales` (`id`, `user_id`, `sales_date`, `egg_category`, `quantity_sold`, `actual_rate`, `hope_rate`, `created_at`) VALUES
+(1, 13, '2026-05-19', 'Table', 30, 30.00, 10.00, '2026-05-19 06:48:49'),
+(2, 13, '2026-05-18', 'Cracked', 10, 10.00, 10.00, '2026-05-19 06:50:19'),
+(3, 13, '2026-06-16', 'Cracked', 50, 90.00, 100.00, '2026-06-16 09:52:54');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `inquiries`
@@ -239,7 +580,17 @@ CREATE TABLE `inquiries` (
   `status` enum('Pending','Minuted','Replied','Closed') DEFAULT 'Pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `inquiries`
+--
 
+INSERT INTO `inquiries` (`id`, `sender_name`, `sender_email`, `subject`, `message_body`, `received_at`, `status`) VALUES
+(1, 'Yohani Abeykoon', 'yohanii725@gmail.com', 'need fresh milk', 'need fresh milk for market', '2026-04-13 00:23:17', 'Pending'),
+(2, 'Uvindu Anurdha', 'danushka@sltds.lk', 'go to the trinco municipal ', 'go and ask about the vaccination programme', '2026-04-13 11:37:47', 'Pending'),
+(3, 'Yohani', 'test@gmail.com', 'test', 'test', '2026-06-16 03:49:29', 'Pending'),
+(4, 'Yohani', 'yohanii725@gmail.com', 'test email by yohani ', 'inquiry test', '2026-06-17 03:52:29', 'Pending');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `inquiry_logs`
@@ -276,7 +627,19 @@ CREATE TABLE `leave_requests` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `leave_requests`
+--
 
+INSERT INTO `leave_requests` (`id`, `user_id`, `leave_type`, `request_date`, `start_date`, `resume_date`, `no_of_days`, `is_half_day`, `reason`, `acting_user_id`, `status`, `created_at`) VALUES
+(1, 20, 'Casual', '2026-04-29', '2026-04-29', '2026-04-29', 0.50, 1, 'b', 17, 'Pending', '2026-04-29 10:25:55'),
+(2, 20, 'Foreign', '2026-04-29', '2026-05-04', '2026-05-05', 2.00, 0, 'fff', 22, 'Approved', '2026-04-29 11:20:25'),
+(3, 20, 'Foreign', '2026-06-16', '2026-06-17', '2026-06-19', 3.00, 0, 'ff', 17, 'Pending', '2026-06-16 09:45:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `livestock_targets`
 --
 
 CREATE TABLE `livestock_targets` (
@@ -287,7 +650,48 @@ CREATE TABLE `livestock_targets` (
   `annual_target_value` decimal(15,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `livestock_targets`
+--
 
+INSERT INTO `livestock_targets` (`id`, `range_id`, `item_id`, `target_year`, `annual_target_value`) VALUES
+(1, 1, 1, 2026, 5000.00),
+(2, 1, 1, 2026, 50000.00),
+(3, 1, 2, 2026, 15000.00),
+(4, 1, 3, 2026, 2000.00),
+(5, 1, 4, 2026, 12000.00),
+(6, 1, 5, 2026, 10000.00),
+(7, 1, 6, 2026, 5000.00),
+(8, 1, 7, 2026, 8000.00),
+(9, 1, 8, 2026, 4000.00),
+(10, 1, 9, 2026, 4000.00),
+(11, 1, 10, 2026, 6000.00),
+(12, 1, 11, 2026, 15000.00),
+(13, 1, 12, 2026, 500.00),
+(14, 1, 13, 2026, 1000.00),
+(15, 1, 14, 2026, 250.00),
+(16, 1, 15, 2026, 100.00),
+(17, 1, 16, 2026, 3000.00),
+(18, 1, 17, 2026, 100000.00),
+(19, 1, 18, 2026, 25000.00),
+(20, 1, 19, 2026, 8000.00),
+(21, 1, 20, 2026, 500.00),
+(22, 1, 21, 2026, 300.00),
+(23, 1, 22, 2026, 10000.00),
+(24, 1, 23, 2026, 50.00),
+(25, 1, 24, 2026, 5000.00),
+(26, 1, 25, 2026, 100.00),
+(27, 1, 26, 2026, 150.00),
+(28, 1, 27, 2026, 200.00),
+(29, 1, 28, 2026, 15000.00),
+(30, 1, 29, 2026, 20000.00),
+(31, 1, 30, 2026, 35000.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `master_programme_types`
+--
 
 CREATE TABLE `master_programme_types` (
   `id` int(11) NOT NULL,
@@ -296,14 +700,61 @@ CREATE TABLE `master_programme_types` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `master_programme_types`
+--
 
+INSERT INTO `master_programme_types` (`id`, `programme_name`, `is_active`, `created_at`) VALUES
+(1, 'Veterinary Office Correspondence', 1, '2026-04-20 06:48:51'),
+(2, 'Cattle Farm Visit', 1, '2026-04-20 07:09:26'),
+(3, 'Poultry From Visit', 1, '2026-04-20 07:10:07'),
+(4, 'Buffalo Farm Visit', 1, '2026-04-20 07:11:11'),
+(5, 'Others (goat, Rabbit, Swine, etc)', 1, '2026-04-20 07:13:59'),
+(6, 'Pregnancy Diagnosis', 1, '2026-04-21 12:53:07'),
+(7, 'Disease Investigation', 1, '2026-04-21 12:53:07'),
+(8, 'Project Follow-up', 1, '2026-04-21 12:53:07'),
+(9, 'Meetings', 1, '2026-04-21 12:53:07'),
+(10, 'Training Programs', 1, '2026-04-21 12:53:07'),
+(11, 'Mobile Clinic', 1, '2026-04-21 12:53:07'),
+(12, 'Field Days', 1, '2026-04-21 12:53:07'),
+(13, 'Dairy Hub', 1, '2026-04-21 12:53:07'),
+(14, 'Special Vaccination Program', 1, '2026-04-21 12:53:07'),
+(15, 'Animal Identification Program', 1, '2026-04-21 12:53:07'),
+(16, 'Farm Registration Program', 1, '2026-04-21 12:53:07'),
+(17, 'Project Implementation', 1, '2026-04-21 12:53:07'),
+(18, 'Disaster Management', 1, '2026-04-21 12:53:07'),
+(19, 'Infertility Investigation Program', 1, '2026-04-21 12:53:07'),
+(20, 'Specified Tasks', 1, '2026-04-21 12:53:07'),
+(21, 'test', 1, '2026-06-17 08:55:38');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `master_units`
+--
 
 CREATE TABLE `master_units` (
   `id` int(11) NOT NULL,
   `unit_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `master_units`
+--
 
+INSERT INTO `master_units` (`id`, `unit_name`) VALUES
+(1, 'Veterinary'),
+(2, 'Administration'),
+(3, 'Employee'),
+(4, 'Farm Operations'),
+(5, 'Finance'),
+(6, 'Training Centres'),
+(7, 'Other');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `monthly_production_records`
 --
 
 CREATE TABLE `monthly_production_records` (
@@ -315,7 +766,19 @@ CREATE TABLE `monthly_production_records` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `monthly_production_records`
+--
 
+INSERT INTO `monthly_production_records` (`id`, `range_id`, `item_id`, `amount`, `report_date`, `created_at`) VALUES
+(1, 1, 1, 300.00, '2026-03-01', '2026-03-31 15:05:48'),
+(2, 1, 4, 2000.00, '2026-04-01', '2026-04-01 17:23:04'),
+(3, 1, 3, 300.00, '2026-04-01', '2026-04-02 13:20:45'),
+(4, 1, 28, 5.00, '2026-06-01', '2026-06-16 06:53:05'),
+(5, 1, 1, 700.00, '2026-06-01', '2026-06-16 06:59:07'),
+(6, 1, 11, 1800.00, '2026-06-01', '2026-06-16 06:59:26');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `office_details`
@@ -334,7 +797,27 @@ CREATE TABLE `office_details` (
   `status` enum('Active','Inactive') DEFAULT 'Active'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `office_details`
+--
 
+INSERT INTO `office_details` (`id`, `range_id`, `unit_id`, `officer_name`, `designation`, `emp_id`, `contact_number`, `registered_date`, `email`, `status`) VALUES
+(1, 1, 1, 'Dr .Mrs L. Dujiththera', 'GVS', '001', NULL, NULL, NULL, 'Active'),
+(2, 1, 1, 'Mr A. Sinharasa', 'LDI', '002', NULL, NULL, NULL, 'Active'),
+(3, 1, 1, 'Mrs P. Amirthalingam', 'LDO', '003', '0771234560', '2026-01-10', 'amirthalingam.p@daph.gov.lk', 'Active'),
+(4, 1, 1, 'Mrs S. Vimalathasan', 'PDO', '004', '0771234561', '2026-01-12', 'vimalathasan.s@daph.gov.lk', 'Active'),
+(5, 1, 1, 'Mrs K. Muruhathasan', 'PDO', '005', '0771234562', '2026-01-15', 'muruhathasan.k@daph.gov.lk', 'Active'),
+(6, 1, 1, 'Mrs K. Yoganathan', 'PDO', '006', '0771234563', '2026-01-18', 'yoganathan.k@daph.gov.lk', 'Active'),
+(7, 1, 1, 'Mrs S. Thiruganasuntharam', 'CDO', '007', '0771234564', '2026-01-20', 'thiruganas@daph.gov.lk', 'Active'),
+(8, 1, 1, 'Mr N. Koneswaran', 'PDO', '008', '0771234565', '2026-01-22', 'koneswaran.n@daph.gov.lk', 'Active'),
+(9, 1, 1, 'Mr T. Saththiyawan', 'Driver', '009', '0771234566', '2026-02-01', 'saththi@daph.gov.lk', 'Active'),
+(10, 1, 1, 'Mr N. Gaminiraj', 'Watcher', '010', '0771234567', '2026-02-05', NULL, 'Active'),
+(11, 1, 1, 'Mr K. Perera', 'LDI', '011', '0771234568', '2026-02-10', 'perera.k@daph.gov.lk', 'Active'),
+(12, 1, 1, 'Mrs J. Logitharajah', 'Clerk', '012', '0771234569', '2026-02-12', 'logi.j@daph.gov.lk', 'Active'),
+(13, 1, 1, 'Mr R. Rajeshwaran', 'LDO', '013', '0771234570', '2026-02-15', 'rajesh.r@daph.gov.lk', 'Active'),
+(14, 1, 1, 'Mrs H. Silva', 'PDO', '022', '0771234579', '2026-03-12', 'silva.h@daph.gov.lk', 'Active');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `parent_stock_flocks`
@@ -348,7 +831,16 @@ CREATE TABLE `parent_stock_flocks` (
   `assigned_cages` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `parent_stock_flocks`
+--
 
+INSERT INTO `parent_stock_flocks` (`id`, `flock_code`, `region`, `current_count`, `assigned_cages`) VALUES
+(1, 'SAT-CB-2026-01', 'Sathurukondan', 6, 'C-09'),
+(2, 'THM-CB-2026-02', 'Thampalakamam', 6, 'B-05'),
+(3, 'TRK-HB-2026-01', 'Thirukkovil', 16, 'A-10');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `production_categories`
@@ -360,7 +852,20 @@ CREATE TABLE `production_categories` (
   `sort_order` int(11) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `production_categories`
+--
 
+INSERT INTO `production_categories` (`id`, `category_name`, `sort_order`) VALUES
+(1, 'Milk Production (Total)', 1),
+(2, 'Milk Production (Formal)', 2),
+(3, 'Milk Production (Informal) ', 3),
+(4, 'Egg Production ', 4),
+(5, 'Meat Production ', 5),
+(6, 'Other Production Details', 6),
+(7, 'Poultry Feed Production ', 7);
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `production_items`
@@ -373,7 +878,43 @@ CREATE TABLE `production_items` (
   `unit` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `production_items`
+--
 
+INSERT INTO `production_items` (`id`, `category_id`, `item_name`, `unit`) VALUES
+(1, 1, 'Cow Milk Production', 'L'),
+(2, 1, 'Buffaloe Milk Production', 'L'),
+(3, 1, 'Goat Milk Production', 'L'),
+(4, 2, 'Nestle', 'L'),
+(5, 2, 'MILCO', 'L'),
+(6, 2, 'Other Private Collectors', 'L'),
+(7, 2, 'Dairy Cooperatives', 'L'),
+(8, 2, 'Palwatha', 'L'),
+(9, 2, 'Kothmale', 'L'),
+(10, 2, 'Cargills', 'L'),
+(11, 3, 'Local Consumption', 'L'),
+(12, 3, 'Ice cream Production', 'L'),
+(13, 3, 'Milk lolly Production', 'Nos'),
+(14, 3, 'Milk Toffee Production', 'Kg'),
+(15, 3, 'Ghee Production', 'Kg'),
+(16, 3, 'Curd Production', 'Nos'),
+(17, 4, 'Egg Production (Total)', 'Nos'),
+(18, 5, 'Chicken meat Production', 'Kg'),
+(19, 5, 'Beef Production', 'Kg'),
+(20, 5, 'Mutton Production', 'Kg'),
+(21, 5, 'Pork Production', 'Kg'),
+(22, 6, 'Silage Production', 'Kg'),
+(23, 6, 'Bio Gas Production', 'Unit'),
+(24, 6, 'Fertilizer production', 'Kg'),
+(25, 6, 'Pasture Production', 'Acres'),
+(26, 6, 'Fodder Production', 'Kg'),
+(27, 6, 'Pasture Land Utilization', 'Acres'),
+(28, 7, 'Starter Feed Production', 'Kg'),
+(29, 7, 'Grower Feed Production', 'Kg'),
+(30, 7, 'Layer Feed Production', 'Kg');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `projects_progress`
@@ -394,7 +935,22 @@ CREATE TABLE `projects_progress` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `projects_progress`
+--
 
+INSERT INTO `projects_progress` (`id`, `range_id`, `project_type`, `project_name`, `summary`, `location`, `start_date`, `end_date`, `priority`, `progress_percent`, `status`, `created_at`) VALUES
+(1, 1, 'PSDG', 'PSDG', 'This is for vaccination of animals in the area', 'uppuveli', '2026-04-04', '2026-04-11', 'Low', 70, 'In Progress', '2026-04-04 11:05:26'),
+(2, 1, 'PSDG', 'PSDG', '', 'Batticola', '2026-04-04', '2026-04-07', 'Medium', 50, 'In Progress', '2026-04-04 11:10:03'),
+(3, 1, 'CBG', 'CBG', 'Vaccination Programme', 'Batticola', '2026-04-04', '2026-04-07', 'Medium', 10, 'In Progress', '2026-04-04 11:11:27'),
+(4, 1, 'LMP', 'LMP', 'no', 'Batticola', '2026-04-04', '2026-04-07', 'High', 30, 'In Progress', '2026-04-04 11:16:05'),
+(5, 1, 'PSDG', 'Test', 'test', 'Uppuveli Ground', '2026-06-27', '2026-04-30', 'Low', 0, 'In Progress', '2026-06-16 07:10:16'),
+(6, 1, 'PSDG', 'Programme 01', 'test', 'uppuveli', '2026-06-18', '2026-06-25', 'High', 0, 'In Progress', '2026-06-17 08:35:32');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_assignments`
 --
 
 CREATE TABLE `project_assignments` (
@@ -403,7 +959,26 @@ CREATE TABLE `project_assignments` (
   `officer_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `project_assignments`
+--
 
+INSERT INTO `project_assignments` (`id`, `project_id`, `officer_id`) VALUES
+(1, 1, 1),
+(2, 1, 5),
+(3, 3, 1),
+(4, 3, 2),
+(5, 4, 5),
+(6, 5, 2),
+(7, 5, 10),
+(8, 6, 2),
+(9, 6, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `regulatory_records`
+--
 
 CREATE TABLE `regulatory_records` (
   `id` int(11) NOT NULL,
@@ -438,7 +1013,17 @@ CREATE TABLE `semen_logs` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `semen_logs`
+--
 
+INSERT INTO `semen_logs` (`id`, `range_id`, `report_month`, `report_year`, `species`, `opening_balance`, `received_qty`, `used_qty`, `issued_qty`, `spoiled_qty`, `paid_amount`, `created_at`) VALUES
+(1, 1, 1, 2026, 'Buffalo', 50, 30, 10, 0, 0, 1000.00, '2026-04-03 11:33:01'),
+(3, 1, 2, 2026, 'Poultry', 60, 10, 20, 10, 0, 2000.00, '2026-04-03 12:03:42'),
+(4, 1, 3, 2026, 'Cock', 50, 10, 10, 0, 0, 2000.00, '2026-04-03 12:04:22'),
+(5, 1, 6, 2026, 'Sheep', 60, 70, 10, 30, 10, 100.00, '2026-06-17 08:31:31');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `slaughter_statistics`
@@ -457,6 +1042,20 @@ CREATE TABLE `slaughter_statistics` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `slaughter_statistics`
+--
+
+INSERT INTO `slaughter_statistics` (`id`, `range_id`, `report_month`, `report_year`, `species`, `location_type`, `animal_count`, `total_weight_kg`, `created_by`, `created_at`) VALUES
+(1, 1, 4, 2026, 'Cattle', 'Slaughter House', 30, 3000.00, 19, '2026-04-03 10:06:53'),
+(2, 1, 4, 2026, 'Goat', 'In-Farm', 29, 5000.00, 19, '2026-04-03 10:08:03'),
+(3, 1, 6, 2026, 'Goat', 'Slaughter House', 5, 1000.00, 17, '2026-06-17 08:28:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sms_immunization`
+--
 
 CREATE TABLE `sms_immunization` (
   `id` int(11) NOT NULL,
@@ -477,6 +1076,10 @@ CREATE TABLE `sms_immunization` (
 -- Dumping data for table `sms_immunization`
 --
 
+INSERT INTO `sms_immunization` (`id`, `user_id`, `log_date`, `vaccination_type`, `starter_count_month`, `during_month_received`, `used_batch_number`, `used_doses_count`, `doses_damaged`, `balance_batch_number`, `balance_doses_qty`, `created_at`) VALUES
+(1, 12, '2026-06-01', 'HS Alum (60 dose)', 100, 0, '6', 0, 0, '6', 100, '2026-06-01 10:01:56'),
+(2, 12, '2026-06-01', 'Fowl pox', 100, 50, '6', 120, 10, '6', 20, '2026-06-01 10:02:09'),
+(3, 12, '2026-06-17', 'HS Oil (60 dose)', 50, 40, '6', 60, 10, '6', 20, '2026-06-16 09:58:02');
 
 -- --------------------------------------------------------
 
@@ -496,6 +1099,12 @@ CREATE TABLE `stock_balance_logs` (
 -- Dumping data for table `stock_balance_logs`
 --
 
+INSERT INTO `stock_balance_logs` (`id`, `flock_id`, `newly_added`, `culling`, `log_date`) VALUES
+(7, 1, 5, 1, '2026-05-14 10:55:13'),
+(8, 2, 7, 1, '2026-05-14 13:36:46'),
+(9, 3, 10, 2, '2026-05-14 13:36:58'),
+(10, 1, 4, 2, '2026-06-16 09:50:26'),
+(11, 3, 10, 2, '2026-06-16 09:50:43');
 
 -- --------------------------------------------------------
 
@@ -529,6 +1138,31 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
+INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`, `emp_id`, `designation`, `role`, `district_id`, `range_id`, `unit_id`, `registered_date`, `office_id`, `district`, `is_active`, `last_login`, `created_at`, `profile_image`) VALUES
+(5, 'yo', 'provinciald2@gmail.com', NULL, 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', NULL, NULL, 'provincial_director', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-01-03 16:15:19', '2025-12-12 11:30:50', NULL),
+(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, 'administrator', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-17 03:59:25', '2025-12-15 11:32:14', NULL),
+(10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', NULL, NULL, 'finance_admin', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-16 04:54:56', '2025-12-16 07:42:06', NULL),
+(11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', NULL, NULL, 'planning_officer', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-02-17 13:11:58', '2025-12-16 09:34:59', NULL),
+(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-16 04:55:30', '2025-12-16 11:30:03', NULL),
+(13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-22 03:41:23', '2025-12-17 08:46:28', NULL),
+(15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-16 07:27:59', '2025-12-17 10:22:46', NULL),
+(16, 'District Deputy Director', 'district_dd@gmail.com', NULL, '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', NULL, NULL, 'district_dd', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-16 07:43:34', '2025-12-17 13:23:28', NULL),
+(17, 'veterinary surgeon', 'veterinary@gmail.com', NULL, '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', NULL, NULL, 'veterinary_surgeon', 1, 1, NULL, NULL, NULL, 'Amparai', 1, '2026-06-17 19:33:31', '2025-12-18 10:10:22', NULL),
+(18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, 'provincial_director', NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-17 02:14:33', '2026-01-05 13:18:11', NULL),
+(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', NULL, '$2y$10$tmJDAqL84RjQGr9TxsLdKeZTlIPk0PV5mWSC.RXYg7WqNPygorIhO', 'Ampara Veterinary Surgeon', NULL, NULL, 'veterinary_surgeon', 1, 1, NULL, NULL, 1, 'Amparai', 1, '2026-06-16 01:42:42', '2026-03-25 10:58:36', NULL),
+(20, 'employee', 'emp@gmail.com', NULL, '$2y$10$ITeSMQXxM8Ciwu4KK/Sy2O7ai30xUjP8yrL1WNRzXlNnsrG8ylfZK', 'Test Employee', NULL, NULL, 'employee', NULL, 1, NULL, NULL, NULL, 'Amparai', 1, '2026-06-16 04:34:48', '2026-04-22 06:10:30', 'profile_20_1781603194.png'),
+(21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Dr. (Mrs). L. Dujiththera', NULL, 'GVS', 'veterinary_surgeon', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(22, 'sinharasa', 'sinharasa.a@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. A. Sinharasa', NULL, 'LDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(23, 'amirthalingam', 'amirthalingam.p@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. P. Amirthalingam', NULL, 'LDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(24, 'vimalathasan', 'vimalathasan.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Vimalathasan', NULL, 'PDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(25, 'muruhathasan', 'muruhathasan.k@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. K. Muruhathasan', NULL, 'PDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(26, 'yoganathan', 'yoganathan.k@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. K. Yoganathan', NULL, 'PDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(27, 'thiruganasuntharam', 'thiru.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Thiruganasuntharam', NULL, 'CDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(28, 'koneswaran', 'koneswaran.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Koneswaran', NULL, 'PDO', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(29, 'saththiyawan', 'saththiyawan.t@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. T. Saththiyawan', NULL, 'Driver', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(30, 'gaminiraj', 'gaminiraj.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Gaminiraj', NULL, 'Watcher', 'employee', 2, 21, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL);
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `vaccine_batches`
@@ -547,6 +1181,12 @@ CREATE TABLE `vaccine_batches` (
 -- Dumping data for table `vaccine_batches`
 --
 
+INSERT INTO `vaccine_batches` (`id`, `batch_number`, `is_active`, `created_at`, `updated_at`, `remarks`) VALUES
+(6, 'SLNV-06/03-2025', 1, '2026-06-01 06:44:59', '2026-06-01 06:49:24', ''),
+(7, 'T-006', 1, '2026-06-01 11:22:24', '2026-06-01 11:22:24', ''),
+(8, '240630', 1, '2026-06-16 11:49:49', '2026-06-16 11:49:49', '');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `vaccine_types`
@@ -564,6 +1204,14 @@ CREATE TABLE `vaccine_types` (
 -- Dumping data for table `vaccine_types`
 --
 
+INSERT INTO `vaccine_types` (`id`, `vaccine_name`, `target_animal`, `description`, `created_at`) VALUES
+(4, 'Fowl pox', 'Cattle,Swine,Other', 'test', '2026-05-28 12:40:08'),
+(5, 'Gumboro', 'Cattle,Swine', 'test', '2026-05-28 13:04:12'),
+(6, 'HS Oil (60 dose)', 'Other', 'test', '2026-05-31 10:54:06'),
+(7, 'HS Alum (60 dose)', 'Cattle,Swine,Poultry,Buffalo,Goat,Sheep,Other', 'test', '2026-05-31 10:54:27'),
+(8, 'FMDf', 'Cattle', '', '2026-06-01 15:13:25');
+
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `veterinary_ranges`
@@ -577,3 +1225,691 @@ CREATE TABLE `veterinary_ranges` (
   `is_active` tinyint(1) DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumping data for table `veterinary_ranges`
+--
+
+INSERT INTO `veterinary_ranges` (`id`, `name`, `district_id`, `code`, `is_active`) VALUES
+(1, 'Ampara', 1, NULL, 1),
+(2, 'Kalmunai TD', 1, NULL, 1),
+(3, 'Kalmunai MD', 1, NULL, 1),
+(4, 'Sammanthurai', 1, NULL, 1),
+(5, 'Navethanveli', 1, NULL, 1),
+(6, 'Akkaraipattu', 1, NULL, 1),
+(7, 'Addalaichenai', 1, NULL, 1),
+(8, 'Pottuvil', 1, NULL, 1),
+(9, 'Lahugala', 1, NULL, 1),
+(10, 'Uhana', 1, NULL, 1),
+(11, 'Dehiattakandiya', 1, NULL, 1),
+(12, 'Mahaoya', 1, NULL, 1),
+(13, 'Damana', 1, NULL, 1),
+(14, 'Irakkamam', 1, NULL, 1),
+(15, 'Karaitivu', 1, NULL, 1),
+(16, 'Alayadivembu', 1, NULL, 1),
+(17, 'Thirukkovil', 1, NULL, 1),
+(18, 'Nintavur', 1, NULL, 1),
+(19, 'Sainthamaruthu', 1, NULL, 1),
+(20, 'Padiyathalawa', 1, NULL, 1),
+(21, 'Batticaloa', 2, NULL, 1),
+(22, 'Chenkalady', 2, NULL, 1),
+(23, 'Eravur', 2, NULL, 1),
+(24, 'Kathankudy', 2, NULL, 1),
+(25, 'Valaichenai', 2, NULL, 1),
+(26, 'Kiran', 2, NULL, 1),
+(27, 'Oddamavadi', 2, NULL, 1),
+(28, 'Vaharai', 2, NULL, 1),
+(29, 'Kaluwanchikudy', 2, NULL, 1),
+(30, 'Kokkaddicholai', 2, NULL, 1),
+(31, 'karadiyanaru', 2, NULL, 1),
+(32, 'Sathurukondan', 2, NULL, 1),
+(33, 'Thumpankerny', 2, NULL, 1),
+(34, 'Rethintenna', 2, NULL, 1),
+(35, 'Town & Gravets', 3, NULL, 1),
+(36, 'Kuchchaveli', 3, NULL, 1),
+(37, 'Morawewa', 3, NULL, 1),
+(38, 'PadaviSeripura', 3, NULL, 1),
+(39, 'Thampalakamam', 3, NULL, 1),
+(40, 'Kanthalai', 3, NULL, 1),
+(41, 'Kinniya', 3, NULL, 1),
+(42, 'Mutur', 3, NULL, 1),
+(43, 'Echchilampattu', 3, NULL, 1),
+(44, 'Seruwila', 3, NULL, 1),
+(45, 'Gomarankadawala', 3, NULL, 1);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `advanced_programmes`
+--
+ALTER TABLE `advanced_programmes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `amended_programmes`
+--
+ALTER TABLE `amended_programmes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `animal_health_records`
+--
+ALTER TABLE `animal_health_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_range` (`range_id`);
+
+--
+-- Indexes for table `assets_immovable`
+--
+ALTER TABLE `assets_immovable`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `range_id` (`range_id`);
+
+--
+-- Indexes for table `assets_movable`
+--
+ALTER TABLE `assets_movable`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `range_id` (`range_id`);
+
+--
+-- Indexes for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_audit_logs_user` (`user_id`),
+  ADD KEY `idx_audit_logs_date` (`log_timestamp`);
+
+--
+-- Indexes for table `breeding_progress`
+--
+ALTER TABLE `breeding_progress`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `range_id` (`range_id`),
+  ADD KEY `officer_id` (`officer_id`);
+
+--
+-- Indexes for table `breeding_target_templates`
+--
+ALTER TABLE `breeding_target_templates`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `range_year_desig` (`range_id`,`year`,`designation`);
+
+--
+-- Indexes for table `daily_egg_production`
+--
+ALTER TABLE `daily_egg_production`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_flock_date` (`flock_id`,`collection_date`);
+
+--
+-- Indexes for table `dairy_hub_records`
+--
+ALTER TABLE `dairy_hub_records`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `diary_tasks`
+--
+ALTER TABLE `diary_tasks`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `districts`
+--
+ALTER TABLE `districts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `drug_records`
+--
+ALTER TABLE `drug_records`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `drug_types`
+--
+ALTER TABLE `drug_types`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `hatchery_batches`
+--
+ALTER TABLE `hatchery_batches`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `hatchery_sales`
+--
+ALTER TABLE `hatchery_sales`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `inquiries`
+--
+ALTER TABLE `inquiries`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `inquiry_logs`
+--
+ALTER TABLE `inquiry_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `inquiry_id` (`inquiry_id`),
+  ADD KEY `assigned_to` (`assigned_to`);
+
+--
+-- Indexes for table `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_leave_user` (`user_id`);
+
+--
+-- Indexes for table `livestock_targets`
+--
+ALTER TABLE `livestock_targets`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `range_id` (`range_id`);
+
+--
+-- Indexes for table `master_programme_types`
+--
+ALTER TABLE `master_programme_types`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `programme_name` (`programme_name`);
+
+--
+-- Indexes for table `master_units`
+--
+ALTER TABLE `master_units`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `monthly_production_records`
+--
+ALTER TABLE `monthly_production_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `item_id` (`item_id`);
+
+--
+-- Indexes for table `office_details`
+--
+ALTER TABLE `office_details`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `range_id` (`range_id`),
+  ADD KEY `fk_office_unit` (`unit_id`);
+
+--
+-- Indexes for table `parent_stock_flocks`
+--
+ALTER TABLE `parent_stock_flocks`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `production_categories`
+--
+ALTER TABLE `production_categories`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `production_items`
+--
+ALTER TABLE `production_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `category_id` (`category_id`);
+
+--
+-- Indexes for table `projects_progress`
+--
+ALTER TABLE `projects_progress`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `project_assignments`
+--
+ALTER TABLE `project_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `project_id` (`project_id`);
+
+--
+-- Indexes for table `regulatory_records`
+--
+ALTER TABLE `regulatory_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `range_id` (`range_id`),
+  ADD KEY `created_by` (`created_by`);
+
+--
+-- Indexes for table `semen_logs`
+--
+ALTER TABLE `semen_logs`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `slaughter_statistics`
+--
+ALTER TABLE `slaughter_statistics`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `range_id` (`range_id`);
+
+--
+-- Indexes for table `sms_immunization`
+--
+ALTER TABLE `sms_immunization`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `stock_balance_logs`
+--
+ALTER TABLE `stock_balance_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `flock_id` (`flock_id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `idx_username` (`username`),
+  ADD KEY `idx_email` (`email`),
+  ADD KEY `idx_role` (`role`),
+  ADD KEY `idx_district` (`district`),
+  ADD KEY `fk_user_district` (`district_id`),
+  ADD KEY `fk_user_range` (`range_id`);
+
+--
+-- Indexes for table `vaccine_batches`
+--
+ALTER TABLE `vaccine_batches`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_batch_number_unique` (`batch_number`);
+
+--
+-- Indexes for table `vaccine_types`
+--
+ALTER TABLE `vaccine_types`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_vaccine_unique` (`vaccine_name`,`target_animal`);
+
+--
+-- Indexes for table `veterinary_ranges`
+--
+ALTER TABLE `veterinary_ranges`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `advanced_programmes`
+--
+ALTER TABLE `advanced_programmes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `amended_programmes`
+--
+ALTER TABLE `amended_programmes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `animal_health_records`
+--
+ALTER TABLE `animal_health_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `assets_immovable`
+--
+ALTER TABLE `assets_immovable`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `assets_movable`
+--
+ALTER TABLE `assets_movable`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=121;
+
+--
+-- AUTO_INCREMENT for table `breeding_progress`
+--
+ALTER TABLE `breeding_progress`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `breeding_target_templates`
+--
+ALTER TABLE `breeding_target_templates`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `daily_egg_production`
+--
+ALTER TABLE `daily_egg_production`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `dairy_hub_records`
+--
+ALTER TABLE `dairy_hub_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `diary_tasks`
+--
+ALTER TABLE `diary_tasks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `districts`
+--
+ALTER TABLE `districts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `drug_records`
+--
+ALTER TABLE `drug_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `drug_types`
+--
+ALTER TABLE `drug_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `hatchery_batches`
+--
+ALTER TABLE `hatchery_batches`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `hatchery_sales`
+--
+ALTER TABLE `hatchery_sales`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `inquiries`
+--
+ALTER TABLE `inquiries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `inquiry_logs`
+--
+ALTER TABLE `inquiry_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `livestock_targets`
+--
+ALTER TABLE `livestock_targets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+
+--
+-- AUTO_INCREMENT for table `master_programme_types`
+--
+ALTER TABLE `master_programme_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+
+--
+-- AUTO_INCREMENT for table `master_units`
+--
+ALTER TABLE `master_units`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `monthly_production_records`
+--
+ALTER TABLE `monthly_production_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `office_details`
+--
+ALTER TABLE `office_details`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `parent_stock_flocks`
+--
+ALTER TABLE `parent_stock_flocks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `production_categories`
+--
+ALTER TABLE `production_categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `production_items`
+--
+ALTER TABLE `production_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT for table `projects_progress`
+--
+ALTER TABLE `projects_progress`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `project_assignments`
+--
+ALTER TABLE `project_assignments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `regulatory_records`
+--
+ALTER TABLE `regulatory_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `semen_logs`
+--
+ALTER TABLE `semen_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `slaughter_statistics`
+--
+ALTER TABLE `slaughter_statistics`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `sms_immunization`
+--
+ALTER TABLE `sms_immunization`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `stock_balance_logs`
+--
+ALTER TABLE `stock_balance_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT for table `vaccine_batches`
+--
+ALTER TABLE `vaccine_batches`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `vaccine_types`
+--
+ALTER TABLE `vaccine_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `veterinary_ranges`
+--
+ALTER TABLE `veterinary_ranges`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `assets_immovable`
+--
+ALTER TABLE `assets_immovable`
+  ADD CONSTRAINT `assets_immovable_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`);
+
+--
+-- Constraints for table `assets_movable`
+--
+ALTER TABLE `assets_movable`
+  ADD CONSTRAINT `assets_movable_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`);
+
+--
+-- Constraints for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  ADD CONSTRAINT `audit_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `breeding_progress`
+--
+ALTER TABLE `breeding_progress`
+  ADD CONSTRAINT `breeding_progress_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`),
+  ADD CONSTRAINT `breeding_progress_ibfk_2` FOREIGN KEY (`officer_id`) REFERENCES `office_details` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `breeding_target_templates`
+--
+ALTER TABLE `breeding_target_templates`
+  ADD CONSTRAINT `fk_target_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`);
+
+--
+-- Constraints for table `daily_egg_production`
+--
+ALTER TABLE `daily_egg_production`
+  ADD CONSTRAINT `daily_egg_production_ibfk_1` FOREIGN KEY (`flock_id`) REFERENCES `parent_stock_flocks` (`id`);
+
+--
+-- Constraints for table `hatchery_batches`
+--
+ALTER TABLE `hatchery_batches`
+  ADD CONSTRAINT `hatchery_batches_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `hatchery_sales`
+--
+ALTER TABLE `hatchery_sales`
+  ADD CONSTRAINT `hatchery_sales_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `inquiry_logs`
+--
+ALTER TABLE `inquiry_logs`
+  ADD CONSTRAINT `inquiry_logs_ibfk_1` FOREIGN KEY (`inquiry_id`) REFERENCES `inquiries` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `inquiry_logs_ibfk_2` FOREIGN KEY (`assigned_to`) REFERENCES `office_details` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `leave_requests`
+--
+ALTER TABLE `leave_requests`
+  ADD CONSTRAINT `fk_leave_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `livestock_targets`
+--
+ALTER TABLE `livestock_targets`
+  ADD CONSTRAINT `livestock_targets_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `production_items` (`id`),
+  ADD CONSTRAINT `livestock_targets_ibfk_2` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`);
+
+--
+-- Constraints for table `monthly_production_records`
+--
+ALTER TABLE `monthly_production_records`
+  ADD CONSTRAINT `monthly_production_records_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `production_items` (`id`);
+
+--
+-- Constraints for table `office_details`
+--
+ALTER TABLE `office_details`
+  ADD CONSTRAINT `fk_office_unit` FOREIGN KEY (`unit_id`) REFERENCES `master_units` (`id`),
+  ADD CONSTRAINT `office_details_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`);
+
+--
+-- Constraints for table `production_items`
+--
+ALTER TABLE `production_items`
+  ADD CONSTRAINT `production_items_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `production_categories` (`id`);
+
+--
+-- Constraints for table `project_assignments`
+--
+ALTER TABLE `project_assignments`
+  ADD CONSTRAINT `project_assignments_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `projects_progress` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `regulatory_records`
+--
+ALTER TABLE `regulatory_records`
+  ADD CONSTRAINT `regulatory_records_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`),
+  ADD CONSTRAINT `regulatory_records_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `slaughter_statistics`
+--
+ALTER TABLE `slaughter_statistics`
+  ADD CONSTRAINT `slaughter_statistics_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `users` (`range_id`);
+
+--
+-- Constraints for table `sms_immunization`
+--
+ALTER TABLE `sms_immunization`
+  ADD CONSTRAINT `sms_immunization_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `stock_balance_logs`
+--
+ALTER TABLE `stock_balance_logs`
+  ADD CONSTRAINT `stock_balance_logs_ibfk_1` FOREIGN KEY (`flock_id`) REFERENCES `parent_stock_flocks` (`id`);
+
+--
+-- Constraints for table `users`
+--
+ALTER TABLE `users`
+  ADD CONSTRAINT `fk_user_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`),
+  ADD CONSTRAINT `fk_user_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
