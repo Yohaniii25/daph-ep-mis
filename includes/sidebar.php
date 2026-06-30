@@ -240,12 +240,13 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                     <?php endif; ?>
                     <?php if ($is_veterinary_surgeon): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
-                            Range Details
-                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
                             Office Details
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
+                            Range Details
+                        </a>
+
                     <?php endif; ?>
                     <!-- employee sidebar -->
                     <?php if ($is_employee): ?>
