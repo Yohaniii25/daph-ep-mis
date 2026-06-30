@@ -1,7 +1,7 @@
 <div class="modal fade" id="addInstrumentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header text-dark" style="background-color: #16a085;">
+            <div class="modal-header text-light" style="background-color: #003ddc;">
                 <h5 class="modal-title"><i class="bi bi-scissors me-2"></i>New Instrument Record</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -36,7 +36,7 @@
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-dark" style="background-color: #16a085;">Save Instrument</button>
+                    <button type="submit" class="btn text-light" style="background-color: #003ddc;">Save Instrument</button>
                 </div>
             </form>
         </div>

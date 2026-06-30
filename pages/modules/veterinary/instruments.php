@@ -50,7 +50,7 @@ require_once '../../../includes/sidebar.php';
                 </p>
             </div>
             <div>
-                <button class="btn text-white shadow-sm" style="background-color: #16a085;" data-bs-toggle="modal" data-bs-target="#addInstrumentModal">
+                <button class="btn text-light shadow-sm" style="background-color: #003ddc;" data-bs-toggle="modal" data-bs-target="#addInstrumentModal">
                     <i class="bi bi-plus-circle-fill me-2"></i>Add Instrument Record
                 </button>
             </div>
@@ -141,7 +141,7 @@ require_once '../../../includes/sidebar.php';
             text: "This safely drops the targeted instrument record row out of active visibility indexes.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#16a085',
+            confirmButtonColor: '#003ddc',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, Delete'
         }).then((result) => {
