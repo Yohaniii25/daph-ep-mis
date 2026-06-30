@@ -7,11 +7,29 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon'
     exit();
 }
 
-// Regional boundaries scoping
+$user_id = $_SESSION['user_id'] ?? null;
 $range_id = $_SESSION['range_id'] ?? null;
 $range_name = $_SESSION['range_name'] ?? 'Your Range';
 $district_id = $_SESSION['district_id'] ?? null;
 $district_name = 'Your District';
+
+// Fetch dynamic regional names matching current session boundaries
+if (!empty($district_id)) {
+    $dst_stmt = $mysqli->prepare("SELECT name FROM districts WHERE id = ?");
+    $dst_stmt->bind_param("i", $district_id);
+    $dst_stmt->execute();
+    $dst_res = $dst_stmt->get_result();
+    if ($row = $dst_res->fetch_assoc()) $district_name = $row['name'];
+    $dst_stmt->close();
+}
+if (!empty($range_id)) {
+    $rng_stmt = $mysqli->prepare("SELECT name FROM veterinary_ranges WHERE id = ?");
+    $rng_stmt->bind_param("i", $range_id);
+    $rng_stmt->execute();
+    $rng_res = $rng_stmt->get_result();
+    if ($row = $rng_res->fetch_assoc()) $range_name = $row['name'];
+    $rng_stmt->close();
+}
 
 require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
@@ -32,24 +50,24 @@ require_once '../../../includes/sidebar.php';
                 </p>
             </div>
             <div>
-                <button class="btn btn-sm btn-outline-secondary me-2" onclick="window.print()">
-                    <i class="bi bi-printer-fill me-1"></i> Print Fleet Report
-                </button>
-                <button class="btn text-white shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
+                <button class="btn text-white shadow-sm me-2" style="background-color: #b08723;" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
                     <i class="bi bi-plus-circle-fill me-2"></i>Register New Vehicle
+                </button>
+                <button class="btn btn-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#addRepairModal">
+                    <i class="bi bi-wrench-adjustable me-2"></i>Log Repair Work
                 </button>
             </div>
         </div>
 
         <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm" id="vehicleTabs" role="tablist">
-            <li class="nav-item" role="presentation">
+            <li class="nav-item">
                 <button class="nav-link active" id="fleet-tab" data-bs-toggle="tab" data-bs-target="#fleet-content" type="button" role="tab" style="--bs-nav-pills-link-active-bg: #b08723;">
                     <i class="bi bi-truck me-2"></i>Active Vehicle Details
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
+            <li class="nav-item">
                 <button class="nav-link" id="repairs-tab" data-bs-toggle="tab" data-bs-target="#repairs-content" type="button" role="tab" style="--bs-nav-pills-link-active-bg: #b08723;">
-                    <i class="bi bi-wrench-adjustable me-2"></i>Maintenance &amp; Repair Logs
+                    <i class="bi bi-tools me-2"></i>Maintenance &amp; Repair Logs
                 </button>
             </li>
         </ul>
@@ -72,32 +90,34 @@ require_once '../../../includes/sidebar.php';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td class="fw-bold text-dark"><i class="bi bi-bicycle me-2 text-secondary"></i>Motorbike</td>
-                                        <td><span class="badge text-white px-2 py-1 fs-6">WP BCX-8452</span></td>
-                                        <td><span class="text-secondary small font-monospace">MJD32A10984321X</span></td>
-                                        <td><span class="badge bg-success text-white rounded-pill px-2">Running (Good)</span></td>
-                                        <td><small class="text-muted">Assigned to Field Officer for remote vaccination rounds.</small></td>
+                                    <?php
+                                    $fleet_stmt = $mysqli->prepare("SELECT * FROM registered_vehicles WHERE district_id = ? AND range_id = ? AND is_active = 1 ORDER BY id DESC");
+                                    $fleet_stmt->bind_param("ii", $district_id, $range_id);
+                                    $fleet_stmt->execute();
+                                    $fleet_res = $fleet_stmt->get_result();
+                                    
+                                    $vehicles_cache = [];
+                                    while ($row = $fleet_res->fetch_assoc()):
+                                        $vehicles_cache[] = $row;
+                                    ?>
+                                    <tr id="vehicle-row-<?= $row['id'] ?>">
+                                        <td class="fw-bold text-dark"><?= htmlspecialchars($row['vehicle_type']) ?></td>
+                                        <td><span class="badge bg-dark text-light px-2 py-1 font-monospace"><?= htmlspecialchars($row['vehicle_number']) ?></span></td>
+                                        <td><span class="text-secondary small font-monospace fw-semibold"><?= htmlspecialchars($row['chassis_number']) ?></span></td>
+                                        <td>
+                                            <?php 
+                                            $cond_class = ($row['current_condition'] === 'Running') ? 'bg-success' : (($row['current_condition'] === 'Needs Repair') ? 'bg-warning text-dark' : 'bg-secondary');
+                                            ?>
+                                            <span class="badge <?= $cond_class ?> rounded-pill px-2"><?= htmlspecialchars($row['current_condition']) ?></span>
+                                        </td>
+                                        <td><small class="text-muted"><?= htmlspecialchars($row['other_details']) ?></small></td>
                                         <td class="text-center">
-                                            <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline-primary me-1" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                                <button class="btn btn-sm btn-outline-danger" title="Remove" onclick="handleVehicleDelete(1, this)"><i class="bi bi-trash"></i></button>
-                                            </div>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="handleVehicleDelete(<?= $row['id'] ?>)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td class="fw-bold text-dark"><i class="bi bi-truck me-2 text-secondary"></i>Single Cab (4x4)</td>
-                                        <td><span class="badge text-white px-2 py-1 fs-6">CP NB-1024</span></td>
-                                        <td><span class="text-secondary small font-monospace">AHTFR22G40812356</span></td>
-                                        <td><span class="badge bg-warning text-dark rounded-pill px-2">Needs Repair</span></td>
-                                        <td><small class="text-muted">Main range logistics vehicle. Suspended engine component issue.</small></td>
-                                        <td class="text-center">
-                                            <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline-primary me-1" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                                <button class="btn btn-sm btn-outline-danger" title="Remove" onclick="handleVehicleDelete(2, this)"><i class="bi bi-trash"></i></button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <?php endwhile; $fleet_stmt->close(); ?>
                                 </tbody>
                             </table>
                         </div>
@@ -122,34 +142,34 @@ require_once '../../../includes/sidebar.php';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td class="fw-semibold text-secondary">2026-04-12</td>
-                                        <td><span class="badge bg-light text-dark border">WP BCX-8452</span></td>
-                                        <td><span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">Routine Service</span></td>
-                                        <td><small class="text-muted">Engine oil renewal, brake pad replacement, chain adjustments done.</small></td>
-                                        <td><span class="small">Saman Motors, Local Junction</span></td>
-                                        <td class="text-end fw-bold text-dark">14,500.00</td>
+                                    <?php
+                                    $rep_stmt = $mysqli->prepare("
+                                        SELECT vr.*, rv.vehicle_number 
+                                        FROM vehicle_repairs vr
+                                        JOIN registered_vehicles rv ON vr.vehicle_id = rv.id
+                                        WHERE rv.district_id = ? AND rv.range_id = ? AND vr.is_active = 1
+                                        ORDER BY vr.repair_date DESC
+                                    ");
+                                    $rep_stmt->bind_param("ii", $district_id, $range_id);
+                                    $rep_stmt->execute();
+                                    $rep_res = $rep_stmt->get_result();
+
+                                    while ($row = $rep_res->fetch_assoc()):
+                                    ?>
+                                    <tr id="repair-row-<?= $row['id'] ?>">
+                                        <td class="fw-semibold text-secondary"><?= htmlspecialchars($row['repair_date']) ?></td>
+                                        <td><span class="badge bg-light text-dark border font-monospace"><?= htmlspecialchars($row['vehicle_number']) ?></span></td>
+                                        <td class="fw-bold text-dark"><?= htmlspecialchars($row['repair_done']) ?></td>
+                                        <td><small class="text-muted"><?= htmlspecialchars($row['repair_description']) ?></small></td>
+                                        <td><span class="small"><?= htmlspecialchars($row['place_of_repair']) ?></span></td>
+                                        <td class="text-end fw-bold text-dark"><?= number_format($row['amount'], 2) ?></td>
                                         <td class="text-center">
-                                            <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline-primary me-1" title="Edit Log"><i class="bi bi-pencil-square"></i></button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="handleVehicleDelete(101, this)"><i class="bi bi-trash"></i></button>
-                                            </div>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="handleRepairDelete(<?= $row['id'] ?>)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td class="fw-semibold text-secondary">2026-05-28</td>
-                                        <td><span class="badge bg-light text-dark border">CP NB-1024</span></td>
-                                        <td><span class="badge bg-danger-subtle text-danger border border-danger-subtle">Clutch Overhaul</span></td>
-                                        <td><small class="text-muted">Full clutch plate setup replaced. Pressure plate alignment done.</small></td>
-                                        <td><span class="small">District Engineering Workshop</span></td>
-                                        <td class="text-end fw-bold text-dark">82,300.00</td>
-                                        <td class="text-center">
-                                            <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline-primary me-1" title="Edit Log"><i class="bi bi-pencil-square"></i></button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="handleVehicleDelete(102, this)"><i class="bi bi-trash"></i></button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <?php endwhile; $rep_stmt->close(); ?>
                                 </tbody>
                             </table>
                         </div>
@@ -161,19 +181,11 @@ require_once '../../../includes/sidebar.php';
     </main>
 </div>
 
-<div class="modal fade" id="addVehicleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header text-white" style="background-color: #820100;">
-                <h5 class="modal-title"><i class="bi bi-car-front-fill me-2"></i>Add Asset Log Entry</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4 text-center text-muted">
-                <p>Form mapping endpoints dynamically targeting vehicle fields will load securely inside this node structure.</p>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- include models -->
+<?php include 'models/add_vehicle.php'; ?>
+<?php include 'models/add_repair_vehicle.php'; ?>
+
+
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -181,36 +193,94 @@ require_once '../../../includes/sidebar.php';
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    var fleetTable, repairsTable;
     $(document).ready(function() {
-        // Initialize dynamic responsive tracking tables
-        $('#vehiclesTable').DataTable({ "pageLength": 5 });
-        $('#repairsTable').DataTable({ 
-            "pageLength": 5,
-            "order": [[0, "desc"]]
+        fleetTable = $('#vehiclesTable').DataTable({ "pageLength": 10 });
+        repairsTable = $('#repairsTable').DataTable({ "pageLength": 10, "order": [[0, "desc"]] });
+
+        // Fleet Entry Processing
+        $('#addVehicleForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/save_vehicle.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if(res.success) {
+                        Swal.fire('Registered!', res.message, 'success').then(() => { location.reload(); });
+                    } else { Swal.fire('Error', res.message, 'error'); }
+                }
+            });
+        });
+
+        // Maintenance Operation Logging Processing
+        $('#addRepairForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/save_vehicle_repair.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if(res.success) {
+                        Swal.fire('Logged!', res.message, 'success').then(() => { location.reload(); });
+                    } else { Swal.fire('Error', res.message, 'error'); }
+                }
+            });
         });
     });
 
-    // Elegant SweetAlert2 Deletion execution wrapper
-    function handleVehicleDelete(id, buttonElement) {
+    function handleVehicleDelete(id) {
         Swal.fire({
-            title: 'Delete Asset Entry?',
-            text: "This will cleanly remove the fleet profile information from your current interface.",
+            title: 'Delete Fleet Asset?',
+            text: "This operation will drop the active record line data.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#b08723', // Matches the golden brand button accent context
+            confirmButtonColor: '#b08723',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, Confirm Delete',
-            cancelButtonText: 'Cancel',
-            reverseButtons: true
+            confirmButtonText: 'Yes, Delete'
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Removed!',
-                    text: 'The vehicle registry record entity line item has been scrubbed successfully.',
-                    icon: 'success',
-                    confirmButtonColor: '#370709'
+                $.ajax({
+                    url: 'processors/delete_vehicle.php',
+                    type: 'POST',
+                    data: { id: id },
+                    dataType: 'json',
+                    success: function(res) {
+                        if(res.success) {
+                            Swal.fire('Removed!', res.message, 'success');
+                            fleetTable.row('#vehicle-row-' + id).remove().draw(false);
+                        } else { Swal.fire('Failed', res.message, 'error'); }
+                    }
                 });
-                $(buttonElement).closest('tr').fadeOut('slow', function() { $(this).remove(); });
+            }
+        });
+    }
+
+    function handleRepairDelete(id) {
+        Swal.fire({
+            title: 'Scrub Repair Entry?',
+            text: "Permanently drop this log row configuration statement item?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#212529',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Purge'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'processors/delete_vehicle_repair.php',
+                    type: 'POST',
+                    data: { id: id },
+                    dataType: 'json',
+                    success: function(res) {
+                        if(res.success) {
+                            Swal.fire('Cleared!', res.message, 'success');
+                            repairsTable.row('#repair-row-' + id).remove().draw(false);
+                        } else { Swal.fire('Failed', res.message, 'error'); }
+                    }
+                });
             }
         });
     }
