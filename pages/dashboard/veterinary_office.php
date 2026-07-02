@@ -98,7 +98,7 @@ if (!empty($_SESSION['range_id'])) {
     }
 
     // 3. Office Details (Units/Staff Allocated)
-    $office_q = $mysqli->prepare("SELECT COUNT(*) as total FROM office_details WHERE range_id = ?");
+    $office_q = $mysqli->prepare("SELECT COUNT(*) as total FROM users WHERE range_id = ?");
     if ($office_q) {
         $office_q->bind_param("i", $range_id);
         $office_q->execute();
@@ -248,7 +248,7 @@ require_once __DIR__ . '/../../config/constants.php';
 
         <div class="row g-3 mb-4">
             <div class="col-md-6">
-                <a href="range_details.php" class="nav-card nav-card-range shadow-sm">
+                <a href="<?= $base_path ?>pages/modules/veterinary/range_details.php" class="nav-card nav-card-range shadow-sm">
                     <div class="d-flex align-items-center gap-3">
                         <div class="nav-card-icon nav-card-icon-blue">
                             <i class="bi bi-map-fill"></i>
