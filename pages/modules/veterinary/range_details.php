@@ -190,21 +190,13 @@ require_once '../../../includes/sidebar.php';
                                     </select>
                                 </div>
                                 <div class="col-12 col-md-4">
-                                    <label class="form-label small fw-bold text-secondary">Ethnicity Focus</label>
-                                    <div class="d-flex flex-column gap-1 filter-control" id="filterEthnicity">
-                                        <div class="form-check form-check-sm">
-                                            <input class="form-check-input ethnicity-check" type="checkbox" value="Sinhala" id="ethSinhala" checked>
-                                            <label class="form-check-label small" for="ethSinhala">Sinhala</label>
-                                        </div>
-                                        <div class="form-check form-check-sm">
-                                            <input class="form-check-input ethnicity-check" type="checkbox" value="Tamil" id="ethTamil" checked>
-                                            <label class="form-check-label small" for="ethTamil">Tamil</label>
-                                        </div>
-                                        <div class="form-check form-check-sm">
-                                            <input class="form-check-input ethnicity-check" type="checkbox" value="Muslim" id="ethMuslim" checked>
-                                            <label class="form-check-label small" for="ethMuslim">Muslim</label>
-                                        </div>
-                                    </div>
+                                    <label class="form-label small fw-bold text-secondary">Ethnicity Focus (Multi-select)</label>
+                                    <select id="filterEthnicity" class="form-control form-control-sm" multiple size="3">
+                                        <option value="Sinhala" selected>Sinhala</option>
+                                        <option value="Tamil" selected>Tamil</option>
+                                        <option value="Muslim" selected>Muslim</option>
+                                    </select>
+                                    <div class="form-text small">Hold Ctrl/Cmd to select multiple.</div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <label class="form-label small fw-bold text-secondary">Population Type Metric</label>
@@ -251,157 +243,140 @@ require_once '../../../includes/sidebar.php';
     </main>
 </div>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        let datasetTableInstance = null;
-        let pieChartInstance = null;
+document.addEventListener("DOMContentLoaded", function () {
+    let datasetTableInstance = null;
+    let pieChartInstance = null;
 
-        // Register Center Text Plugin Layout Rules for Chart.js
-        const centerTotalTextPlugin = {
-            id: 'centerTotalText',
-            afterDraw: function(chart) {
-                if (chart.config.options.plugins.centerTotalText) {
-                    const ctx = chart.ctx;
-                    const chartArea = chart.chartArea;
-                    const configOptions = chart.config.options.plugins.centerTotalText;
-
-                    ctx.save();
-                    ctx.font = "bold 11px system-ui, sans-serif";
-                    ctx.fillStyle = "#64748b";
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-                    const centerX = (chartArea.left + chartArea.right) / 2;
-                    const centerY = (chartArea.top + chartArea.bottom) / 2;
-                    ctx.fillText(configOptions.text.toUpperCase(), centerX, centerY - 10);
-
-                    ctx.font = "bold 20px system-ui, sans-serif";
-                    ctx.fillStyle = "#370709"; // Maroon Accent Indicator Text
-                    ctx.fillText(configOptions.value.toLocaleString(), centerX, centerY + 12);
-                    ctx.restore();
-                }
+    // Register Center Text Plugin Layout Rules for Chart.js
+    const centerTotalTextPlugin = {
+        id: 'centerTotalText',
+        afterDraw: function (chart) {
+            if (chart.config.options.plugins.centerTotalText) {
+                const ctx = chart.ctx;
+                const chartArea = chart.chartArea;
+                const configOptions = chart.config.options.plugins.centerTotalText;
+                
+                ctx.save();
+                ctx.font = "bold 11px system-ui, sans-serif";
+                ctx.fillStyle = "#64748b";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                const centerX = (chartArea.left + chartArea.right) / 2;
+                const centerY = (chartArea.top + chartArea.bottom) / 2;
+                ctx.fillText(configOptions.text.toUpperCase(), centerX, centerY - 10);
+                
+                ctx.font = "bold 20px system-ui, sans-serif";
+                ctx.fillStyle = "#370709"; // Maroon Accent Indicator Text
+                ctx.fillText(configOptions.value.toLocaleString(), centerX, centerY + 12);
+                ctx.restore();
             }
-        };
-        Chart.register(centerTotalTextPlugin);
-
-        function getSelectedEthnicities() {
-            const ethnicitySelect = document.getElementById("filterEthnicity");
-            return Array.from(ethnicitySelect.selectedOptions, option => option.value);
         }
+    };
+    Chart.register(centerTotalTextPlugin);
 
-        // Primary Core Database Fetcher Implementation
-        function fetchFilteredPopulationData() {
-            const targetYear = document.getElementById("filterYear").value;
-            const targetPopType = document.getElementById("filterPopType").value;
-            const targetEthnicities = getSelectedEthnicities();
+    function getSelectedEthnicities() {
+        const ethnicitySelect = document.getElementById("filterEthnicity");
+        return Array.from(ethnicitySelect.selectedOptions, option => option.value);
+    }
 
-            const urlParams = new URLSearchParams({
-                year: targetYear,
-                pop_type: targetPopType,
-                ethnicities: JSON.stringify(targetEthnicities)
-            });
+    // Primary Core Database Fetcher Implementation
+    function fetchFilteredPopulationData() {
+        const targetYear = document.getElementById("filterYear").value;
+        const targetPopType = document.getElementById("filterPopType").value;
+        const targetEthnicities = getSelectedEthnicities();
 
-            fetch(`get_population_data.php?${urlParams.toString()}`)
-                .then(response => response.json())
-                .then(data => {
-                    let runningTotalSum = 0;
+        const urlParams = new URLSearchParams({
+            year: targetYear,
+            pop_type: targetPopType,
+            ethnicities: JSON.stringify(targetEthnicities)
+        });
 
-                    // Calculate runtime column sum
-                    data.forEach(item => {
-                        runningTotalSum += item.count;
+        fetch(`get_population_data.php?${urlParams.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                let runningTotalSum = 0;
+                
+                // Calculate runtime column sum
+                data.forEach(item => { runningTotalSum += item.count; });
+
+                // Restructure values into DataTable rows
+                const processedTableRows = data.map(item => [
+                    item.year,
+                    item.ethnicity,
+                    item.count.toLocaleString(),
+                    runningTotalSum.toLocaleString()
+                ]);
+
+                // Sync data rows seamlessly into your existing DataTables instance
+                if (datasetTableInstance) {
+                    datasetTableInstance.clear().rows.add(processedTableRows).draw();
+                } else {
+                    datasetTableInstance = $('#humanPopulationTable').DataTable({
+                        data: processedTableRows,
+                        responsive: true,
+                        dom: "<'row mb-2'<'col-sm-12 col-md-6'B><'col-sm-12 col-md-6'f>>" +
+                             "<'row'<'col-sm-12'tr>>" +
+                             "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                        buttons: [
+                            { extend: 'excelHtml5', className: 'btn btn-sm btn-outline-success me-1', text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel' },
+                            { extend: 'print', className: 'btn btn-sm btn-outline-dark', text: '<i class="bi bi-printer me-1"></i> Print' }
+                        ],
+                        pageLength: 5,
+                        lengthChange: false,
+                        ordering: false,
+                        language: { search: "_INPUT_", searchPlaceholder: "Search records..." }
                     });
+                }
 
-                    // Restructure values into DataTable rows
-                    const processedTableRows = data.map(item => [
-                        item.year,
-                        item.ethnicity,
-                        item.count.toLocaleString(),
-                        runningTotalSum.toLocaleString()
-                    ]);
+                // Isolate vectors to map directly onto the Chart labels object tracking matrices
+                const chartLabels = data.map(item => item.ethnicity);
+                const chartValues = data.map(item => item.count);
 
-                    // Sync data rows seamlessly into your existing DataTables instance
-                    if (datasetTableInstance) {
-                        datasetTableInstance.clear().rows.add(processedTableRows).draw();
-                    } else {
-                        datasetTableInstance = $('#humanPopulationTable').DataTable({
-                            data: processedTableRows,
+                if (pieChartInstance) {
+                    pieChartInstance.data.labels = chartLabels;
+                    pieChartInstance.data.datasets[0].data = chartValues;
+                    pieChartInstance.options.plugins.centerTotalText.text = targetPopType;
+                    pieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
+                    pieChartInstance.update();
+                } else {
+                    const ctxCanvas = document.getElementById('humanPopulationPieChart').getContext('2d');
+                    pieChartInstance = new Chart(ctxCanvas, {
+                        type: 'doughnut',
+                        data: {
+                            labels: chartLabels,
+                            datasets: [{
+                                data: chartValues,
+                                backgroundColor: ['#370709', '#a07174', '#e2e8f0'],
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
                             responsive: true,
-                            dom: "<'row mb-2'<'col-sm-12 col-md-6'B><'col-sm-12 col-md-6'f>>" +
-                                "<'row'<'col-sm-12'tr>>" +
-                                "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-                            buttons: [{
-                                    extend: 'excelHtml5',
-                                    className: 'btn btn-sm btn-outline-success me-1',
-                                    text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel'
-                                },
-                                {
-                                    extend: 'print',
-                                    className: 'btn btn-sm btn-outline-dark',
-                                    text: '<i class="bi bi-printer me-1"></i> Print'
-                                }
-                            ],
-                            pageLength: 5,
-                            lengthChange: false,
-                            ordering: false,
-                            language: {
-                                search: "_INPUT_",
-                                searchPlaceholder: "Search records..."
-                            }
-                        });
-                    }
-
-                    // Isolate vectors to map directly onto the Chart labels object tracking matrices
-                    const chartLabels = data.map(item => item.ethnicity);
-                    const chartValues = data.map(item => item.count);
-
-                    if (pieChartInstance) {
-                        pieChartInstance.data.labels = chartLabels;
-                        pieChartInstance.data.datasets[0].data = chartValues;
-                        pieChartInstance.options.plugins.centerTotalText.text = targetPopType;
-                        pieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
-                        pieChartInstance.update();
-                    } else {
-                        const ctxCanvas = document.getElementById('humanPopulationPieChart').getContext('2d');
-                        pieChartInstance = new Chart(ctxCanvas, {
-                            type: 'doughnut',
-                            data: {
-                                labels: chartLabels,
-                                datasets: [{
-                                    data: chartValues,
-                                    backgroundColor: ['#370709', '#a07174', '#e2e8f0'],
-                                    borderWidth: 2,
-                                    borderColor: '#ffffff'
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                cutout: '70%',
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom',
-                                        labels: {
-                                            boxWidth: 12
-                                        }
-                                    },
-                                    centerTotalText: {
-                                        text: targetPopType,
-                                        value: runningTotalSum
-                                    }
+                            maintainAspectRatio: false,
+                            cutout: '70%',
+                            plugins: {
+                                legend: { position: 'bottom', labels: { boxWidth: 12 } },
+                                centerTotalText: {
+                                    text: targetPopType,
+                                    value: runningTotalSum
                                 }
                             }
-                        });
-                    }
-                })
-                .catch(error => console.error('Error fetching dynamic dashboard profiles:', error));
-        }
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('Error fetching dynamic dashboard profiles:', error));
+    }
 
-        // Attach simple listener hooks for the filter controls
-        document.getElementById("filterYear").addEventListener("change", fetchFilteredPopulationData);
-        document.getElementById("filterEthnicity").addEventListener("change", fetchFilteredPopulationData);
-        document.getElementById("filterPopType").addEventListener("change", fetchFilteredPopulationData);
+    // Attach simple listener hooks for the filter controls
+    document.getElementById("filterYear").addEventListener("change", fetchFilteredPopulationData);
+    document.getElementById("filterEthnicity").addEventListener("change", fetchFilteredPopulationData);
+    document.getElementById("filterPopType").addEventListener("change", fetchFilteredPopulationData);
 
-        // Run primary compilation load trace
-        fetchFilteredPopulationData();
-    });
+    // Run primary compilation load trace
+    fetchFilteredPopulationData();
+});
 </script>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
