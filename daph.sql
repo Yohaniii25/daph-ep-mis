@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 30, 2026 at 04:45 PM
+-- Generation Time: Jul 06, 2026 at 09:31 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -108,6 +108,69 @@ INSERT INTO `animal_health_records` (`id`, `range_id`, `date`, `farmer_reg_no`, 
 (1, 1, '2026-03-28', 'AMP-001', 'Cattle', 'Mouth disease', 2, 'FMD', 2, 'come and see', 'Submitted', NULL, '2026-03-28 11:50:07', '2026-03-28 11:50:07'),
 (2, 1, '2026-03-28', 'AMP-001', 'Cattle', 'Mouth disease', 2, 'FMD', 0, 'ww', 'Submitted', 19, '2026-03-28 11:52:01', '2026-03-28 11:52:01'),
 (3, 1, '2026-03-30', 'AMP-009', 'Cattle', 'Fever', 3, 'FMD', 3, 'come only after having breakfast', 'Submitted', 19, '2026-03-30 13:50:27', '2026-03-30 13:50:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `animal_populations`
+--
+
+CREATE TABLE `animal_populations` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `year` int(11) NOT NULL,
+  `animal_type` enum('Cow','Buffalo','Goat','Chicken','Pig','Others') NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `animal_populations`
+--
+
+INSERT INTO `animal_populations` (`id`, `range_id`, `year`, `animal_type`, `quantity`, `updated_at`) VALUES
+(1, 1, 2024, 'Cow', 3950, '2026-07-04 11:35:24'),
+(2, 1, 2024, 'Buffalo', 1450, '2026-07-04 11:35:24'),
+(3, 1, 2024, 'Goat', 2320, '2026-07-04 11:35:24'),
+(4, 1, 2024, 'Chicken', 18700, '2026-07-04 11:35:24'),
+(5, 1, 2024, 'Pig', 850, '2026-07-04 11:35:24'),
+(6, 1, 2024, 'Others', 440, '2026-07-04 11:35:24'),
+(7, 1, 2025, 'Cow', 4330, '2026-07-04 11:35:24'),
+(8, 1, 2025, 'Buffalo', 1600, '2026-07-04 11:35:24'),
+(9, 1, 2025, 'Goat', 2550, '2026-07-04 11:35:24'),
+(10, 1, 2025, 'Chicken', 21000, '2026-07-04 11:35:24'),
+(11, 1, 2025, 'Pig', 930, '2026-07-04 11:35:24'),
+(12, 1, 2025, 'Others', 500, '2026-07-04 11:35:24'),
+(13, 1, 2026, 'Cow', 4650, '2026-07-04 11:35:24'),
+(14, 1, 2026, 'Buffalo', 1700, '2026-07-04 11:35:24'),
+(15, 1, 2026, 'Goat', 2800, '2026-07-04 11:35:24'),
+(16, 1, 2026, 'Chicken', 23500, '2026-07-04 11:35:24'),
+(17, 1, 2026, 'Pig', 1030, '2026-07-04 11:35:24'),
+(18, 1, 2026, 'Others', 570, '2026-07-04 11:35:24');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_vaccination_targets`
+--
+
+CREATE TABLE `annual_vaccination_targets` (
+  `id` int(11) NOT NULL,
+  `year` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `target_fmd` int(11) DEFAULT 0,
+  `target_bq` int(11) DEFAULT 0,
+  `target_hs` int(11) DEFAULT 0,
+  `available_ldo_count` int(11) DEFAULT 0,
+  `allocated_ldo_target` int(11) DEFAULT 0,
+  `casual_vaccinators_needed` int(11) DEFAULT 0,
+  `allocated_man_days` int(11) DEFAULT 0,
+  `syringes_10cc_req` int(11) DEFAULT 0,
+  `needles_14g_dozen_req` int(11) DEFAULT 0,
+  `fuel_liters_per_month` decimal(5,2) DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -297,7 +360,13 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (113, '2026-06-24 13:55:05', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
 (114, '2026-06-24 14:06:16', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
 (115, '2026-06-25 02:31:54', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(116, '2026-06-30 10:12:07', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer');
+(116, '2026-06-30 10:12:07', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(117, '2026-06-30 14:48:36', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(118, '2026-06-30 15:02:47', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(119, '2026-07-01 04:25:29', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(120, '2026-07-04 08:41:17', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(121, '2026-07-04 12:30:24', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(122, '2026-07-06 06:16:14', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer');
 
 -- --------------------------------------------------------
 
@@ -374,6 +443,19 @@ CREATE TABLE `building_inventories` (
 
 INSERT INTO `building_inventories` (`id`, `land_asset_id`, `user_id`, `inventory_item`, `specification`, `current_condition`, `available_quantity`, `remarks`, `is_active`, `created_at`) VALUES
 (1, 2, 19, 'AC', '2', 'Excellent', 1, '2', 1, '2026-06-30 13:36:51');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `casual_vaccinator_deployments`
+--
+
+CREATE TABLE `casual_vaccinator_deployments` (
+  `id` int(11) NOT NULL,
+  `vaccination_target_id` int(11) NOT NULL,
+  `full_name` varchar(255) NOT NULL,
+  `nic_no` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -631,6 +713,40 @@ CREATE TABLE `hatchery_sales` (
 INSERT INTO `hatchery_sales` (`id`, `user_id`, `sales_date`, `egg_category`, `quantity_sold`, `actual_rate`, `hope_rate`, `created_at`) VALUES
 (1, 13, '2026-05-19', 'Table', 30, '30.00', '10.00', '2026-05-19 06:48:49'),
 (2, 13, '2026-05-18', 'Cracked', 10, '10.00', '10.00', '2026-05-19 06:50:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `human_populations`
+--
+
+CREATE TABLE `human_populations` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `year` int(11) NOT NULL,
+  `ethnicity` varchar(50) NOT NULL,
+  `population_type` varchar(50) NOT NULL,
+  `population_count` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `human_populations`
+--
+
+INSERT INTO `human_populations` (`id`, `range_id`, `year`, `ethnicity`, `population_type`, `population_count`, `created_at`) VALUES
+(1, 1, 2025, 'Sinhala', 'Male', 1800, '2026-07-01 11:42:10'),
+(2, 1, 2025, 'Sinhala', 'Female', 1700, '2026-07-01 11:42:10'),
+(3, 1, 2025, 'Sinhala', 'Households', 850, '2026-07-01 11:42:10'),
+(4, 1, 2025, 'Tamil', 'Male', 1000, '2026-07-01 11:42:10'),
+(5, 1, 2025, 'Tamil', 'Female', 900, '2026-07-01 11:42:10'),
+(6, 1, 2025, 'Tamil', 'Households', 450, '2026-07-01 11:42:10'),
+(7, 1, 2025, 'Muslim', 'Male', 520, '2026-07-01 11:42:10'),
+(8, 1, 2025, 'Muslim', 'Female', 500, '2026-07-01 11:42:10'),
+(9, 1, 2025, 'Muslim', 'Households', 255, '2026-07-01 11:42:10'),
+(10, 1, 2024, 'Sinhala', 'Male', 1750, '2026-07-01 11:42:10'),
+(11, 1, 2024, 'Sinhala', 'Female', 1680, '2026-07-01 11:42:10'),
+(12, 1, 2024, 'Sinhala', 'Households', 830, '2026-07-01 11:42:10');
 
 -- --------------------------------------------------------
 
@@ -948,6 +1064,25 @@ INSERT INTO `parent_stock_flocks` (`id`, `flock_code`, `region`, `current_count`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `production_activity_targets`
+--
+
+CREATE TABLE `production_activity_targets` (
+  `id` int(11) NOT NULL,
+  `year` year(4) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `activity_name` varchar(255) NOT NULL,
+  `animal_category` enum('Cow','Buffalo','Goat','Chicken','Pig','Other') DEFAULT NULL,
+  `animal_category_other` varchar(100) DEFAULT NULL,
+  `target_quantity` int(11) NOT NULL DEFAULT 0,
+  `achieved_quantity` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `production_categories`
 --
 
@@ -1257,6 +1392,24 @@ INSERT INTO `stock_balance_logs` (`id`, `flock_id`, `newly_added`, `culling`, `l
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `strategic_action_indicators`
+--
+
+CREATE TABLE `strategic_action_indicators` (
+  `id` int(11) NOT NULL,
+  `year` year(4) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `strategy_pillar` varchar(255) NOT NULL,
+  `sub_activity` text NOT NULL,
+  `target_count` int(11) NOT NULL DEFAULT 0,
+  `achieved_count` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `training_centers`
 --
 
@@ -1325,7 +1478,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (16, 'District Deputy Director', 'district_dd@gmail.com', NULL, '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', NULL, NULL, NULL, 'district_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-09 18:17:56', '2025-12-17 13:23:28', NULL),
 (17, 'veterinary surgeon', 'veterinary@gmail.com', '0712345678', '$2y$10$BuPbuNbGjVvPCb14jXTaBO4lKeuJSaMVVqMBmOlEmnQV2K.8P4B0W', 'veterinary surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 1, NULL, NULL, NULL, NULL, NULL, 'Amparai', 1, '2026-06-22 11:55:11', '2025-12-18 10:10:22', NULL),
 (18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, NULL, 'provincial_director', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-17 12:17:54', '2026-01-05 13:18:11', NULL),
-(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$tmJDAqL84RjQGr9TxsLdKeZTlIPk0PV5mWSC.RXYg7WqNPygorIhO', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 1, NULL, NULL, NULL, NULL, 1, 'Amparai', 1, '2026-06-30 15:42:07', '2026-03-25 10:58:36', NULL),
+(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$tmJDAqL84RjQGr9TxsLdKeZTlIPk0PV5mWSC.RXYg7WqNPygorIhO', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 1, NULL, NULL, NULL, NULL, 1, 'Amparai', 1, '2026-07-06 11:46:14', '2026-03-25 10:58:36', NULL),
 (20, 'employee', 'emp@gmail.com', NULL, '$2y$10$ITeSMQXxM8Ciwu4KK/Sy2O7ai30xUjP8yrL1WNRzXlNnsrG8ylfZK', 'Test Employee', NULL, NULL, NULL, 'employee', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, 'Amparai', 1, '2026-05-18 17:56:16', '2026-04-22 06:10:30', 'profile_20_1777526035.png'),
 (21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Dr. (Mrs). L. Dujiththera', NULL, NULL, 'GVS', 'veterinary_surgeon', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
 (22, 'sinharasa', 'sinharasa.a@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. A. Sinharasa', NULL, NULL, 'LDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
@@ -1478,6 +1631,26 @@ INSERT INTO `veterinary_ranges` (`id`, `name`, `district_id`, `code`, `is_active
 (44, 'Seruwila', 3, NULL, 1),
 (45, 'Gomarankadawala', 3, NULL, 1);
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `veterinary_range_maps`
+--
+
+CREATE TABLE `veterinary_range_maps` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `iframe_url` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `veterinary_range_maps`
+--
+
+INSERT INTO `veterinary_range_maps` (`id`, `range_id`, `iframe_url`, `created_at`) VALUES
+(1, 1, 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3944.965725775666!2d81.21529707414845!3d8.59928909556909!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3afbbcf9ebe05efb%3A0x554f03dee02fd89e!2sGovernment%20Veterinary%20Office!5e0!3m2!1sen!2slk!4v1782904673982!5m2!1sen!2slk', '2026-07-01 11:16:42');
+
 --
 -- Indexes for dumped tables
 --
@@ -1500,6 +1673,20 @@ ALTER TABLE `amended_programmes`
 ALTER TABLE `animal_health_records`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_range` (`range_id`);
+
+--
+-- Indexes for table `animal_populations`
+--
+ALTER TABLE `animal_populations`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_range_year_animal_type` (`range_id`,`year`,`animal_type`);
+
+--
+-- Indexes for table `annual_vaccination_targets`
+--
+ALTER TABLE `annual_vaccination_targets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_range_year_vaccination` (`range_id`,`year`);
 
 --
 -- Indexes for table `assets_immovable`
@@ -1545,6 +1732,13 @@ ALTER TABLE `building_inventories`
   ADD PRIMARY KEY (`id`),
   ADD KEY `land_asset_id` (`land_asset_id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `casual_vaccinator_deployments`
+--
+ALTER TABLE `casual_vaccinator_deployments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `vaccination_target_id` (`vaccination_target_id`);
 
 --
 -- Indexes for table `counterfoil_assets`
@@ -1615,6 +1809,13 @@ ALTER TABLE `hatchery_batches`
 ALTER TABLE `hatchery_sales`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `human_populations`
+--
+ALTER TABLE `human_populations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `range_id` (`range_id`);
 
 --
 -- Indexes for table `inquiries`
@@ -1699,6 +1900,12 @@ ALTER TABLE `parent_stock_flocks`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `production_activity_targets`
+--
+ALTER TABLE `production_activity_targets`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `production_categories`
 --
 ALTER TABLE `production_categories`
@@ -1777,6 +1984,12 @@ ALTER TABLE `stock_balance_logs`
   ADD KEY `flock_id` (`flock_id`);
 
 --
+-- Indexes for table `strategic_action_indicators`
+--
+ALTER TABLE `strategic_action_indicators`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `training_centers`
 --
 ALTER TABLE `training_centers`
@@ -1826,6 +2039,13 @@ ALTER TABLE `veterinary_ranges`
   ADD UNIQUE KEY `code` (`code`);
 
 --
+-- Indexes for table `veterinary_range_maps`
+--
+ALTER TABLE `veterinary_range_maps`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `range_id` (`range_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -1848,6 +2068,18 @@ ALTER TABLE `animal_health_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `animal_populations`
+--
+ALTER TABLE `animal_populations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `annual_vaccination_targets`
+--
+ALTER TABLE `annual_vaccination_targets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `assets_immovable`
 --
 ALTER TABLE `assets_immovable`
@@ -1863,7 +2095,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=123;
 
 --
 -- AUTO_INCREMENT for table `breeding_progress`
@@ -1882,6 +2114,12 @@ ALTER TABLE `breeding_target_templates`
 --
 ALTER TABLE `building_inventories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `casual_vaccinator_deployments`
+--
+ALTER TABLE `casual_vaccinator_deployments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `counterfoil_assets`
@@ -1942,6 +2180,12 @@ ALTER TABLE `hatchery_batches`
 --
 ALTER TABLE `hatchery_sales`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `human_populations`
+--
+ALTER TABLE `human_populations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `inquiries`
@@ -2010,6 +2254,12 @@ ALTER TABLE `parent_stock_flocks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `production_activity_targets`
+--
+ALTER TABLE `production_activity_targets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `production_categories`
 --
 ALTER TABLE `production_categories`
@@ -2076,6 +2326,12 @@ ALTER TABLE `stock_balance_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
+-- AUTO_INCREMENT for table `strategic_action_indicators`
+--
+ALTER TABLE `strategic_action_indicators`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `training_centers`
 --
 ALTER TABLE `training_centers`
@@ -2112,8 +2368,26 @@ ALTER TABLE `veterinary_ranges`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
+-- AUTO_INCREMENT for table `veterinary_range_maps`
+--
+ALTER TABLE `veterinary_range_maps`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `animal_populations`
+--
+ALTER TABLE `animal_populations`
+  ADD CONSTRAINT `animal_populations_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_vaccination_targets`
+--
+ALTER TABLE `annual_vaccination_targets`
+  ADD CONSTRAINT `fk_vaccination_targets_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `assets_immovable`
@@ -2154,6 +2428,12 @@ ALTER TABLE `building_inventories`
   ADD CONSTRAINT `building_inventories_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
+-- Constraints for table `casual_vaccinator_deployments`
+--
+ALTER TABLE `casual_vaccinator_deployments`
+  ADD CONSTRAINT `casual_vaccinator_deployments_ibfk_1` FOREIGN KEY (`vaccination_target_id`) REFERENCES `annual_vaccination_targets` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `counterfoil_assets`
 --
 ALTER TABLE `counterfoil_assets`
@@ -2186,6 +2466,12 @@ ALTER TABLE `hatchery_batches`
 --
 ALTER TABLE `hatchery_sales`
   ADD CONSTRAINT `hatchery_sales_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `human_populations`
+--
+ALTER TABLE `human_populations`
+  ADD CONSTRAINT `human_populations_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `inquiry_logs`
@@ -2295,6 +2581,12 @@ ALTER TABLE `users`
 ALTER TABLE `vehicle_repairs`
   ADD CONSTRAINT `vehicle_repairs_ibfk_1` FOREIGN KEY (`vehicle_id`) REFERENCES `registered_vehicles` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `vehicle_repairs_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `veterinary_range_maps`
+--
+ALTER TABLE `veterinary_range_maps`
+  ADD CONSTRAINT `veterinary_range_maps_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

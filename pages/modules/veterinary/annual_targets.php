@@ -31,7 +31,9 @@ if ($district_id) {
     $stmt->bind_param("i", $district_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) { $district_name = $row['name']; }
+    if ($row = $result->fetch_assoc()) {
+        $district_name = $row['name'];
+    }
     $stmt->close();
 }
 
@@ -40,7 +42,9 @@ if ($range_id) {
     $stmt->bind_param("i", $range_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) { $range_name = $row['name']; }
+    if ($row = $result->fetch_assoc()) {
+        $range_name = $row['name'];
+    }
     $stmt->close();
 }
 
@@ -57,10 +61,17 @@ $pop_stmt->close();
 
 // 5. Fetch Target Data from annual_vaccination_targets
 $vax_targets = [
-    'id' => null, 'target_fmd' => 0, 'target_bq' => 0, 'target_hs' => 0,
-    'available_ldo_count' => 0, 'allocated_ldo_target' => 0,
-    'casual_vaccinators_needed' => 0, 'allocated_man_days' => 0,
-    'syringes_10cc_req' => 0, 'needles_14g_dozen_req' => 0, 'fuel_liters_per_month' => 0.00
+    'id' => null,
+    'target_fmd' => 0,
+    'target_bq' => 0,
+    'target_hs' => 0,
+    'available_ldo_count' => 0,
+    'allocated_ldo_target' => 0,
+    'casual_vaccinators_needed' => 0,
+    'allocated_man_days' => 0,
+    'syringes_10cc_req' => 0,
+    'needles_14g_dozen_req' => 0,
+    'fuel_liters_per_month' => 0.00
 ];
 
 $vax_stmt = $mysqli->prepare("SELECT * FROM annual_vaccination_targets WHERE range_id = ? AND year = ?");
@@ -75,383 +86,254 @@ $vax_stmt->close();
 require_once '../../../includes/header.php';
 ?>
 
-<!-- DataTables CSS Dependencies inside head execution flow -->
-<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
-<div class="d-flex w-100 align-items-stretch min-vh-100">
-    
-    <!-- Left Static Sidebar Container Allocation -->
-    <div class="flex-shrink-0" style="background-color: #370709;">
-        <?php require_once '../../../includes/sidebar.php'; ?>
-    </div>
 
-    <!-- Right Content Workspace Area (Next to Sidebar) -->
-    <div class="flex-grow-1 p-4 bg-light" style="overflow-x: hidden;">
-        <div class="container-fluid p-0">
-            
-            <!-- Header Profile Banner Info Wrap -->
-            <div class="mb-4 p-4 rounded shadow-sm d-flex justify-content-between align-items-center bg-white border-start border-4" style="border-color: #820100 !important;">
-                <div>
-                    <h4 class="fw-bold mb-1" style="color: #370709;">Annual Targets & Action Metrics</h4>
-                    <span class="badge" style="background-color: #d4c7b7; color: #370709;"><i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($range_name) ?> Range</span>
-                    <span class="badge text-white" style="background-color: #a07174;"><i class="bi bi-building me-1"></i><?= htmlspecialchars($district_name) ?> District</span>
-                </div>
-                <div>
-                    <div class="input-group">
-                        <label class="input-group-text fw-bold text-white" style="background-color: #820100; border-color: #820100;">Fiscal Evaluation Year</label>
-                        <select id="dashboardYearFilter" class="form-select border-secondary" onchange="location = '?year='+this.value;">
-                            <option value="2026" <?= $selected_year == 2026 ? 'selected' : '' ?>>2026</option>
-                            <option value="2025" <?= $selected_year == 2025 ? 'selected' : '' ?>>2025</option>
-                            <option value="2024" <?= $selected_year == 2024 ? 'selected' : '' ?>>2024</option>
-                        </select>
-                    </div>
-                </div>
+<div id="layoutSidenav_content">
+    <main class="container-fluid px-4 pt-4">
+
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Annual Targets</h2>
+                <p class="text-muted small mb-0">Annual Target Details</p>
             </div>
-
-            <!-- QUICK ACTIONS & STATS HIGHLIGHT CARDS -->
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-lg-3">
-                    <div class="card border-0 shadow-sm text-white" style="background-color: #820100;">
-                        <div class="card-body">
-                            <h6 class="small text-uppercase text-white-50">Total Livestock Population</h6>
-                            <h3 class="fw-bold mb-0"><?= number_format($total_population) ?></h3>
-                        </div>
-                    </div>
+            <?php if (isset($_SESSION['msg'])): ?>
+                <div class="alert alert-<?= $_SESSION['msg_type'] ?> py-2 px-3 mb-0 small">
+                    <?= $_SESSION['msg'] ?>
                 </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card border-0 shadow-sm text-white" style="background-color: #185dbd;">
-                        <div class="card-body">
-                            <h6 class="small text-uppercase text-white-50">FMD Campaign Target</h6>
-                            <h3 class="fw-bold mb-0"><?= number_format($vax_targets['target_fmd']) ?></h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card border-0 shadow-sm text-dark" style="background-color: #efbe2c;">
-                        <div class="card-body">
-                            <h6 class="small text-uppercase text-dark-50">BQ Campaign Target</h6>
-                            <h3 class="fw-bold mb-0"><?= number_format($vax_targets['target_bq']) ?></h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card border-0 shadow-sm text-white" style="background-color: #8d170e;">
-                        <div class="card-body">
-                            <h6 class="small text-uppercase text-white-50">HS Campaign Target</h6>
-                            <h3 class="fw-bold mb-0"><?= number_format($vax_targets['target_hs']) ?></h3>
-                        </div>
-                    </div>
-                </div>
+                <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+            <?php endif; ?>
+        </div>
+        <div class="card gov-card mb-4">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="mb-0 fw-bold" style="color: #370709;"><i class="bi bi-lightning-charge-fill me-2"></i>Quick Actions</h6>
             </div>
-
-            <div class="row g-4">
-                <!-- LEFT CONTENT REGION -->
-                <div class="col-12 col-xl-8">
-                    
-                    <!-- Section 1: Vaccination Matrix Setup -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white pt-3 border-0 d-flex justify-content-between align-items-center">
-                            <h6 class="fw-bold mb-0" style="color: #370709;"><i class="bi bi-shield-plus me-2"></i>Vaccination Targets & Resource Ledger</h6>
-                            <button class="btn btn-sm text-white fw-bold" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#vaxTargetModal">
-                                <i class="bi bi-sliders me-1"></i> Configure Matrix
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-bordered align-middle small bg-white text-dark m-0">
-                                    <thead style="background-color: #d4c7b7; color: #370709;">
-                                        <tr>
-                                            <th>Resource Field Component</th>
-                                            <th class="text-center" style="width: 40%;">Allocation Configuration Value</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td>Available LDO Count</td><td class="text-center fw-bold text-secondary"><?= $vax_targets['available_ldo_count'] ?> Officers</td></tr>
-                                        <tr><td>Allocated Target assigned to LDO</td><td class="text-center fw-bold" style="color: #185dbd;"><?= $vax_targets['allocated_ldo_target'] ?> Operations</td></tr>
-                                        <tr><td>Casual Vaccinators Needed Personnel count</td><td class="text-center fw-bold text-danger"><?= $vax_targets['casual_vaccinators_needed'] ?> Staff</td></tr>
-                                        <tr><td>Allocated Staff Field Man-Days</td><td class="text-center fw-bold"><?= $vax_targets['allocated_man_days'] ?> Days</td></tr>
-                                        <tr><td>Nylon Syringes Requirement (10CC)</td><td class="text-center fw-bold"><?= $vax_targets['syringes_10cc_req'] ?> Pcs</td></tr>
-                                        <tr><td>Needle 14G Requirement Tracker</td><td class="text-center fw-bold"><?= $vax_targets['needles_14g_dozen_req'] ?> Dozen</td></tr>
-                                        <tr><td>Logistics Fuel Allocation Scale</td><td class="text-center fw-bold" style="color: #8d170e;"><?= number_format($vax_targets['fuel_liters_per_month'], 2) ?> L / Month</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="vaccination_targets.php" class="btn w-100 py-3" style="background-color: #820100; color: #fff; border-color: #820100;">
+                            <i class="bi bi-people-fill fs-3"></i><br>
+                            Vaccination Targets
+                        </a>
                     </div>
-
-                    <!-- Section 2: Production Activities with JS DataTables -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white pt-3 border-0 d-flex justify-content-between align-items-center">
-                            <h6 class="fw-bold mb-0" style="color: #370709;"><i class="bi bi-egg-fried me-2"></i>Production & Distribution Goals</h6>
-                            <button class="btn btn-sm text-white fw-bold" style="background-color: #370709;" data-bs-toggle="modal" data-bs-target="#productionTargetModal">
-                                <i class="bi bi-plus-lg me-1"></i> Add Goal Item
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <table class="table table-striped table-bordered align-middle w-100" id="productionTargetsDataTable">
-                                <thead style="background-color: #370709; color: #fff;">
-                                    <tr>
-                                        <th>Activity Metric Name</th>
-                                        <th>Target Scope Category</th>
-                                        <th class="text-center">Target Goal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $prod_stmt = $mysqli->prepare("SELECT * FROM production_activity_targets WHERE range_id = ? AND year = ?");
-                                    $prod_stmt->bind_param("ii", $range_id, $selected_year);
-                                    $prod_stmt->execute();
-                                    $prod_res = $prod_stmt->get_result();
-                                    while ($row = $prod_res->fetch_assoc()):
-                                    ?>
-                                        <tr>
-                                            <td class="fw-bold"><?= htmlspecialchars($row['activity_name']) ?></td>
-                                            <td>
-                                                <?php if($row['animal_category']): ?>
-                                                    <span class="badge text-dark" style="background-color: #d4c7b7;"><?= $row['animal_category'] ?></span>
-                                                    <?= $row['animal_category'] === 'Other' ? '('.htmlspecialchars($row['animal_category_other']).')' : '' ?>
-                                                <?php else: ?>
-                                                    <span class="text-muted small">General Framework</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="text-center fw-bold text-primary"><?= number_format($row['target_quantity']) ?></td>
-                                        </tr>
-                                    <?php endwhile; $prod_stmt->close(); ?>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="col-md-3">
+                        <a href="production_activities.php" class="btn w-100 py-3" style="background-color: #370709; color: #fff; border-color: #370709;">
+                            <i class="bi bi-building-fill fs-3"></i><br>
+                            Production Activities Plan
+                        </a>
                     </div>
-
-                </div>
-
-                <!-- RIGHT AREA: STAFF SIDEBAR -->
-                <div class="col-12 col-xl-4">
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white pt-3 border-0 d-flex justify-content-between align-items-center">
-                            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill me-2"></i>Casual Field Personnel</h6>
-                            <button class="btn btn-xs btn-outline-dark px-2 btn-sm" data-bs-toggle="modal" data-bs-target="#deployPersonnelModal" <?= empty($vax_targets['id']) ? 'disabled' : '' ?>>
-                                <i class="bi bi-person-plus-fill"></i> Assign
-                            </button>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="list-group list-group-flush small">
-                                <?php
-                                if (!empty($vax_targets['id'])) {
-                                    $staff_stmt = $mysqli->prepare("SELECT * FROM casual_vaccinator_deployments WHERE vaccination_target_id = ?");
-                                    $staff_stmt->bind_param("i", $vax_targets['id']);
-                                    $staff_stmt->execute();
-                                    $staff_res = $staff_stmt->get_result();
-                                    if ($staff_res->num_rows > 0) {
-                                        while ($st = $staff_res->fetch_assoc()) {
-                                            echo '<div class="list-group-item p-3 d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <h6 class="fw-bold mb-0 text-dark">'.htmlspecialchars($st['full_name']).'</h6>
-                                                        <small class="text-muted">NIC: '.htmlspecialchars($st['nic_no']).'</small>
-                                                    </div>
-                                                    <span class="badge text-white" style="background-color: #a07174;">Active Vaccinator</span>
-                                                  </div>';
-                                        }
-                                    } else {
-                                        echo '<p class="text-muted small text-center p-4 m-0">No active deployment records attached.</p>';
-                                    }
-                                    $staff_stmt->close();
-                                } else {
-                                    echo '<p class="text-muted small text-center p-4 m-0">Initialize matrix to assign staff.</p>';
-                                }
-                                ?>
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <a href="strategic_indicators.php" class="btn w-100 py-3" style="background-color: #b08723; color: #fff; border-color: #b08723;">
+                            <i class="bi bi-car-front-fill fs-3"></i><br>
+                            Strategic Indicators
+                        </a>
                     </div>
                 </div>
             </div>
 
         </div>
-    </div>
-</div>
 
-<!-- ==========================================
-     MODAL WINDOW 1: CONFIG VACCINATION PARAMETERS
-     ========================================== -->
-<div class="modal fade text-dark" id="vaxTargetModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="save_vax_targets.php" method="POST">
-                <input type="hidden" name="year" value="<?= $selected_year ?>">
-                <input type="hidden" name="range_id" value="<?= $range_id ?>">
-                
-                <div class="modal-header text-white" style="background-color: #370709;">
-                    <h5 class="modal-title h6 fw-bold"><i class="bi bi-sliders me-2"></i>Configure Vaccination & Resource Allocation Matrix</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4 small">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold text-secondary">Target FMD Count</label>
-                            <input type="number" name="target_fmd" class="form-control form-control-sm" value="<?= $vax_targets['target_fmd'] ?>" min="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold text-secondary">Target BQ Count</label>
-                            <input type="number" name="target_bq" class="form-control form-control-sm" value="<?= $vax_targets['target_bq'] ?>" min="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold text-secondary">Target HS Count</label>
-                            <input type="number" name="target_hs" class="form-control form-control-sm" value="<?= $vax_targets['target_hs'] ?>" min="0">
-                        </div>
-                        
-                        <div class="col-12"><hr class="my-1"></div>
-                        
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold text-secondary">Available LDO Count</label>
-                            <input type="number" name="available_ldo_count" class="form-control form-control-sm" value="<?= $vax_targets['available_ldo_count'] ?>" min="0">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold text-secondary">Allocated LDO Target</label>
-                            <input type="number" name="allocated_ldo_target" class="form-control form-control-sm" value="<?= $vax_targets['allocated_ldo_target'] ?>" min="0">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold text-secondary">Casual Vaccinators Need</label>
-                            <input type="number" name="casual_vaccinators_needed" class="form-control form-control-sm" value="<?= $vax_targets['casual_vaccinators_needed'] ?>" min="0">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold text-secondary">Allocated Man Days</label>
-                            <input type="number" name="allocated_man_days" class="form-control form-control-sm" value="<?= $vax_targets['allocated_man_days'] ?>" min="0">
-                        </div>
-                        
-                        <div class="col-12"><hr class="my-1"></div>
-                        
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold text-secondary">Nylon Syringes Req (10CC)</label>
-                            <input type="number" name="syringes_10cc_req" class="form-control form-control-sm" value="<?= $vax_targets['syringes_10cc_req'] ?>" min="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold text-secondary">Needle 14G (In Dozen)</label>
-                            <input type="number" name="needles_14g_dozen_req" class="form-control form-control-sm" value="<?= $vax_targets['needles_14g_dozen_req'] ?>" min="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold text-secondary">Fuel Allocation (Liters)</label>
-                            <input type="number" step="0.01" name="fuel_liters_per_month" class="form-control form-control-sm" value="<?= $vax_targets['fuel_liters_per_month'] ?>" min="0">
-                        </div>
+        <!-- SECTION – PRODUCTION ACTIVITY TARGETS DATA VISUALIZATION -->
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <div class="card gov-card">
+                    <div class="card-header bg-white pt-4 px-4 border-0">
+                        <h5 class="fw-bold mb-1" style="color: #370709;"><i class="bi bi-bar-chart-fill me-2"></i>Production Activities Targets</h5>
+                        <p class="text-muted small mb-0">Production activities target composition tracking and breakdown analytics.</p>
                     </div>
-                </div>
-                <div class="modal-footer bg-light p-2">
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm text-white" style="background-color: #370709;">Commit Target Metrics</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+                    <div class="card-body px-4 pb-4">
 
-<!-- ==========================================
-     MODAL WINDOW 2: PRODUCTION TARGET LOGS
-     ========================================== -->
-<div class="modal fade text-dark" id="productionTargetModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="save_production_target.php" method="POST">
-                <input type="hidden" name="year" value="<?= $selected_year ?>">
-                <input type="hidden" name="range_id" value="<?= $range_id ?>">
-                
-                <div class="modal-header text-white" style="background-color: #370709;">
-                    <h5 class="modal-title h6 fw-bold"><i class="bi bi-box-seam me-2"></i>Append Production Target Configuration Item</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-3 small">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label fw-bold text-secondary">Activity Target Track Name</label>
-                            <input type="text" name="activity_name" class="form-control form-control-sm" placeholder="e.g., Cattle Shed construction, Stud goats issue" required>
-                        </div>
-                        
-                        <div class="col-12">
-                            <div class="form-check form-switch bg-light p-2 rounded ps-5">
-                                <input class="form-check-input" type="checkbox" id="isAnimalSpecificToggle" checked onchange="toggleAnimalSelectionLayout(this.checked)">
-                                <label class="form-check-label fw-bold text-dark small" for="isAnimalSpecificToggle">Is this activity animal-specific?</label>
+                        <div class="row g-3 mb-4 p-3 rounded text-dark" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-bold text-secondary">Year Selection</label>
+                                <select id="filterYearProduction" class="form-select form-select-sm filter-control-production">
+                                    <option value="2026" <?= $selected_year == 2026 ? 'selected' : '' ?>>2026</option>
+                                    <option value="2025" <?= $selected_year == 2025 ? 'selected' : '' ?>>2025</option>
+                                    <option value="2024" <?= $selected_year == 2024 ? 'selected' : '' ?>>2024</option>
+                                    <option value="2023" <?= $selected_year == 2023 ? 'selected' : '' ?>>2023</option>
+                                </select>
                             </div>
-                        </div>
 
-                        <div id="animalSelectionWrapperBlock" class="row g-2 m-0 p-0 w-100">
-                            <div class="col-6">
-                                <label class="form-label fw-bold text-secondary">Target Animal Scope</label>
-                                <select id="animalCategoryField" name="animal_category" class="form-select form-select-sm" onchange="toggleCustomAnimalSpecificationInput(this.value)">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-bold text-secondary">Livestock Category Focus</label>
+                                <select id="filterCategoryProduction" class="form-select form-select-sm filter-control-production">
+                                    <option value="All" selected>All Categories</option>
                                     <option value="Cow">Cow</option>
                                     <option value="Buffalo">Buffalo</option>
                                     <option value="Goat">Goat</option>
                                     <option value="Chicken">Chicken</option>
                                     <option value="Pig">Pig</option>
-                                    <option value="Other">Other (Specify Below)</option>
+                                    <option value="Other">Other / General</option>
                                 </select>
                             </div>
-                            <div class="col-6">
-                                <label class="form-label fw-bold text-secondary">Target Goal (Quantity)</label>
-                                <input type="number" name="target_quantity" class="form-control form-control-sm" min="1" value="1" required>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-12 col-lg-5 d-flex justify-content-center align-items-center position-relative">
+                                <div style="position: relative; width: 100%; max-width: 320px; height: 320px;">
+                                    <canvas id="productionActivityPieChart"></canvas>
+                                </div>
                             </div>
-                            <div class="col-12 mt-2" id="customAnimalSpecificationInputBlock" style="display:none;">
-                                <label class="form-label fw-bold text-danger">Specify Custom Animal Classification</label>
-                                <input type="text" id="customAnimalInput" name="animal_category_other" class="form-control form-control-sm" placeholder="e.g., Swine, Duck">
+                            <div class="col-12 col-lg-7">
+                                <div class="table-responsive">
+                                    <table id="productionActivityTable" class="table table-striped table-hover table-bordered align-middle w-100 m-0">
+                                        <thead class="table-light text-secondary small">
+                                            <tr>
+                                                <th>Activity Name</th>
+                                                <th>Category</th>
+                                                <th class="text-right">Target Quantity</th>
+                                                <th class="text-right">Achieved Quantity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
                     </div>
                 </div>
-                <div class="modal-footer bg-light p-2">
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm text-white" style="background-color: #370709;">Save Production Entry</button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
+
+    </main>
 </div>
 
-<!-- JS CDN dependencies and DataTables initialization engine scripts -->
+<?php include 'models/asset_modals.php'; ?>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-$(document).ready(function() {
-    $('#productionTargetsDataTable').DataTable({
-        responsive: true,
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50],
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search goals..."
+    $(document).ready(function() {
+        let productionActivityTableInstance = null;
+        let productionPieChartInstance = null;
+
+        // Register Center Text Plugin Layout Rules for Chart.js
+        if (typeof Chart !== 'undefined' && !Chart.registry.plugins.get('centerTotalText')) {
+            const centerTotalTextPlugin = {
+                id: 'centerTotalText',
+                afterDraw: function(chart) {
+                    if (chart.config.options.plugins.centerTotalText) {
+                        const ctx = chart.ctx;
+                        const chartArea = chart.chartArea;
+                        const configOptions = chart.config.options.plugins.centerTotalText;
+
+                        ctx.save();
+                        ctx.font = "bold 11px system-ui, sans-serif";
+                        ctx.fillStyle = "#64748b";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        const centerX = (chartArea.left + chartArea.right) / 2;
+                        const centerY = (chartArea.top + chartArea.bottom) / 2;
+                        ctx.fillText(configOptions.text.toUpperCase(), centerX, centerY - 10);
+
+                        ctx.font = "bold 20px system-ui, sans-serif";
+                        ctx.fillStyle = "#370709"; // Maroon Accent Indicator Text
+                        ctx.fillText(configOptions.value.toLocaleString(), centerX, centerY + 12);
+                        ctx.restore();
+                    }
+                }
+            };
+            Chart.register(centerTotalTextPlugin);
         }
+
+        function fetchProductionTargetsData() {
+            const targetYear = $('#filterYearProduction').val();
+            const targetCategory = $('#filterCategoryProduction').val();
+
+            const urlParams = new URLSearchParams({
+                year: targetYear,
+                animal_category: targetCategory
+            });
+
+            fetch(`get_production_activity_targets.php?${urlParams.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    let runningTotalSum = 0;
+                    data.forEach(item => {
+                        runningTotalSum += item.target_quantity;
+                    });
+
+                    const processedTableRows = data.map(item => [
+                        item.activity_name,
+                        `<span class="badge text-dark" style="background-color: #d4c7b7;">${item.animal_category}</span>`,
+                        item.target_quantity.toLocaleString(),
+                        item.achieved_quantity.toLocaleString()
+                    ]);
+
+                    if (productionActivityTableInstance) {
+                        productionActivityTableInstance.clear().rows.add(processedTableRows).draw();
+                    } else {
+                        productionActivityTableInstance = $('#productionActivityTable').DataTable({
+                            data: processedTableRows,
+                            responsive: true,
+                            pageLength: 5,
+                            lengthChange: false,
+                            ordering: false,
+                            language: {
+                                search: "_INPUT_",
+                                searchPlaceholder: "Search records..."
+                            }
+                        });
+                    }
+
+                    const chartLabels = data.map(item => item.activity_name);
+                    const chartValues = data.map(item => item.target_quantity);
+
+                    if (productionPieChartInstance) {
+                        productionPieChartInstance.data.labels = chartLabels;
+                        productionPieChartInstance.data.datasets[0].data = chartValues;
+                        productionPieChartInstance.options.plugins.centerTotalText.text = targetCategory + ' Targets';
+                        productionPieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
+                        productionPieChartInstance.update();
+                    } else {
+                        const ctxCanvas = document.getElementById('productionActivityPieChart').getContext('2d');
+                        productionPieChartInstance = new Chart(ctxCanvas, {
+                            type: 'doughnut',
+                            data: {
+                                labels: chartLabels,
+                                datasets: [{
+                                    data: chartValues,
+                                    backgroundColor: ['#370709', '#820100', '#a07174', '#94a3b8', '#f59e0b', '#10b981', '#1e3a8a', '#10b981'],
+                                    borderWidth: 2,
+                                    borderColor: '#ffffff'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                cutout: '70%',
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            boxWidth: 12
+                                        }
+                                    },
+                                    centerTotalText: {
+                                        text: targetCategory + ' Targets',
+                                        value: runningTotalSum
+                                    }
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => console.error('Error fetching production activity targets:', error));
+        }
+
+        $('#filterYearProduction').change(fetchProductionTargetsData);
+        $('#filterCategoryProduction').change(fetchProductionTargetsData);
+
+        fetchProductionTargetsData();
     });
-});
-
-function toggleAnimalSelectionLayout(isAnimalSpecific) {
-    const block = document.getElementById('animalSelectionWrapperBlock');
-    const catField = document.getElementById('animalCategoryField');
-    const customInput = document.getElementById('customAnimalInput');
-    
-    if (!isAnimalSpecific) {
-        block.style.opacity = '0.5';
-        catField.disabled = true;
-        customInput.disabled = true;
-        catField.value = '';
-    } else {
-        block.style.opacity = '1';
-        catField.disabled = false;
-        customInput.disabled = false;
-        catField.value = 'Cow';
-    }
-}
-
-function toggleCustomAnimalSpecificationInput(selectedValue) {
-    const customBlock = document.getElementById('customAnimalSpecificationInputBlock');
-    const customInput = document.getElementById('customAnimalInput');
-    if (selectedValue === 'Other') {
-        customBlock.style.display = 'block';
-        customInput.setAttribute('required', 'required');
-    } else {
-        customBlock.style.display = 'none';
-        customInput.removeAttribute('required');
-    }
-}
 </script>
 
-<?php 
-require_once '../../../includes/footer.php'; 
+<?php
+require_once '../../../includes/footer.php';
 ?>
