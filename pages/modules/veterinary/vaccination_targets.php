@@ -71,7 +71,36 @@ if ($enum_query) {
 }
 
 
-// 5. Fetch Target Data from annual_vaccination_targets
+// 5. Fetch Target Data from annual_vaccination_targets (Map by species)
+$vax_targets_map = [];
+foreach ($species_options as $sp_opt) {
+    $vax_targets_map[$sp_opt] = [
+        'id' => null,
+        'target_fmd' => 0,
+        'target_bq' => 0,
+        'target_hs' => 0,
+        'available_ldo_count' => 0,
+        'allocated_ldo_target' => 0,
+        'casual_vaccinators_needed' => 0,
+        'allocated_man_days' => 0,
+        'syringes_10cc_req' => 0,
+        'needles_14g_dozen_req' => 0,
+        'fuel_liters_per_month' => 0.00
+    ];
+}
+
+$vax_stmt = $mysqli->prepare("SELECT * FROM annual_vaccination_targets WHERE range_id = ? AND year = ?");
+if ($vax_stmt) {
+    $vax_stmt->bind_param("ii", $range_id, $selected_year);
+    $vax_stmt->execute();
+    $vax_res = $vax_stmt->get_result();
+    while ($row = $vax_res->fetch_assoc()) {
+        $vax_targets_map[$row['animal_type']] = $row;
+    }
+    $vax_stmt->close();
+}
+
+// Fallback $vax_targets for add_target_modal.php initial load
 $vax_targets = [
     'id' => null,
     'target_fmd' => 0,
@@ -126,17 +155,17 @@ if ($anim_stmt) {
 }
 
 $deployed_staff = [];
-if (!empty($vax_targets['id'])) {
-    $staff_stmt = $mysqli->prepare("SELECT * FROM casual_vaccinator_deployments WHERE vaccination_target_id = ?");
-    if ($staff_stmt) {
-        $staff_stmt->bind_param("i", $vax_targets['id']);
-        $staff_stmt->execute();
-        $staff_res = $staff_stmt->get_result();
-        while ($st = $staff_res->fetch_assoc()) {
-            $deployed_staff[] = htmlspecialchars($st['full_name']) . " (NIC: " . htmlspecialchars($st['nic_no']) . ")";
-        }
-        $staff_stmt->close();
+$deployed_staff_records = [];
+$staff_stmt = $mysqli->prepare("SELECT * FROM casual_vaccinator_deployments WHERE id = ?");
+if ($staff_stmt) {
+    $staff_stmt->bind_param("i", $id);
+    $staff_stmt->execute();
+    $staff_res = $staff_stmt->get_result();
+    while ($st = $staff_res->fetch_assoc()) {
+        $deployed_staff_records[] = $st;
+        $deployed_staff[] = htmlspecialchars($st['full_name']) . " (NIC: " . htmlspecialchars($st['nic_no']) . ")";
     }
+    $staff_stmt->close();
 }
 $deployed_staff_str = !empty($deployed_staff) ? implode("<br>", $deployed_staff) : '<span class="text-muted small">None Deployed</span>';
 
@@ -144,6 +173,7 @@ require_once '../../../includes/header.php';
 ?>
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
 
@@ -215,7 +245,61 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
 
+            <!-- Casual Vaccinator Deployments Table -->
+            <div class="card gov-card mb-4 shadow-sm border-0">
+                <div class="card-header bg-white pt-3 px-4 border-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color: #370709;"><i class="bi bi-people-fill me-2 text-danger"></i>Casual Vaccinator Deployments</h6>
+                        <p class="text-muted small mb-0">Manage registered casual vaccinators deployed for this range/year.</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-dark fw-bold add-staff-btn" data-bs-toggle="modal" data-bs-target="#deployPersonnelModal"><i class="bi bi-plus-circle me-1"></i> Add / Deploy Vaccinator</button>
+                    </div>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="table-responsive">
+                        <table id="casualVaccinatorsTable" class="table table-sm table-striped table-bordered align-middle small bg-white m-0">
+                            <thead style="background-color: #d4c7b7; color: #370709;">
+                                <tr>
+                                    <th style="width: 80px;">#</th>
+                                    <th>Full Name</th>
+                                    <th class="text-center" style="width: 250px;">NIC Number</th>
+                                    <th class="text-center" style="width: 200px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $counter = 1;
+                                foreach ($deployed_staff_records as $st) {
+                                    $safe_name = htmlspecialchars($st['full_name']);
+                                    $safe_nic = htmlspecialchars($st['nic_no']);
+                                    echo '<tr>';
+                                    echo '<td>' . $counter++ . '</td>';
+                                    echo '<td class="fw-bold">' . $safe_name . '</td>';
+                                    echo '<td class="text-center">' . $safe_nic . '</td>';
+                                    echo '<td class="text-center">';
+                                    echo '<button class="btn btn-xs btn-outline-primary edit-staff-btn me-2" data-id="' . $st['id'] . '" data-name="' . $safe_name . '" data-nic="' . $safe_nic . '"><i class="bi bi-pencil-square me-1"></i>Edit</button>';
+                                    echo '<form action="processors/save_vaccinator_deployment.php" method="POST" class="d-none" id="delete-form-' . $st['id'] . '">';
+                                    echo '<input type="hidden" name="id" value="' . $st['id'] . '">';
+                                    echo '<input type="hidden" name="year" value="' . htmlspecialchars($selected_year) . '">';
+                                    echo '</form>';
+                                    echo '<form action="processors/delete_vaccinator_deployment.php" method="POST" class="d-inline" onsubmit="return confirm(\'Are you sure you want to delete this vaccinator record?\');">';
+                                    echo '<input type="hidden" name="id" value="' . $st['id'] . '">';
+                                    echo '<input type="hidden" name="year" value="' . htmlspecialchars($selected_year) . '">';
+                                    echo '<button type="submit" class="btn btn-xs btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete</button>';
+                                    echo '</form>';
+                                    echo '</td>';
+                                    echo '</tr>';
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <?php if (isset($_SESSION['msg'])): ?>
+
                 <div class="alert alert-<?= $_SESSION['msg_type'] ?> alert-dismissible fade show shadow-sm py-2 px-3 mb-4 small" role="alert">
                     <?= $_SESSION['msg'] ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -232,9 +316,10 @@ require_once '../../../includes/header.php';
                         <p class="text-muted small mb-0">Unified dashboard aligning live animal populations, configured vaccination targets, and assigned casual vaccinators.</p>
                     </div>
                     <div>
-                        <button class="btn btn-sm text-light fw-bold" style="background-color: #185dbd;" data-bs-toggle="modal" data-bs-target="#recordVaccinationModal">
-                            <i class="bi bi-shield-plus me-1"></i> Record Vaccination
+                        <button class="btn btn-sm btn-dark fw-bold me-2" data-bs-toggle="modal" data-bs-target="#addTargetModal" id="addVaxTargetBtn">
+                            <i class="bi bi-gear-fill me-1"></i> Configure Targets & Resources
                         </button>
+
                     </div>
                 </div>
                 <div class="card-body px-4 pb-4">
@@ -255,67 +340,78 @@ require_once '../../../includes/header.php';
                                     <th class="text-center">Nylon Syringes (10CC)</th>
                                     <th class="text-center">Needle 14G</th>
                                     <th class="text-center">Fuel Allocation (L)</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php
+                                $all_species = array_unique(array_merge(array_keys($animal_pop_data), $species_options));
+                                foreach ($all_species as $sp) {
+                                    $qty = isset($animal_pop_data[$sp]) ? intval($animal_pop_data[$sp]) : 0;
+                                    $safe_sp = htmlspecialchars($sp);
 
+                                    $vt = isset($vax_targets_map[$sp]) ? $vax_targets_map[$sp] : [
+                                        'id' => null,
+                                        'target_fmd' => 0,
+                                        'target_bq' => 0,
+                                        'target_hs' => 0,
+                                        'available_ldo_count' => 0,
+                                        'allocated_ldo_target' => 0,
+                                        'casual_vaccinators_needed' => 0,
+                                        'allocated_man_days' => 0,
+                                        'syringes_10cc_req' => 0,
+                                        'needles_14g_dozen_req' => 0,
+                                        'fuel_liters_per_month' => 0.00
+                                    ];
+
+                                    echo '<tr>';
+                                    echo '<td class="fw-bold">' . $safe_sp . '</td>';
+                                    echo '<td class="text-center fw-bold">' . number_format($qty) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['target_fmd'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['target_bq'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['target_hs'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['available_ldo_count'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['allocated_ldo_target'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['casual_vaccinators_needed'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . $deployed_staff_str . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['allocated_man_days'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['syringes_10cc_req'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['needles_14g_dozen_req'] ?? 0) . '</td>';
+                                    echo '<td class="text-center">' . number_format($vt['fuel_liters_per_month'] ?? 0, 2) . '</td>';
+                                    echo '<td class="text-center">';
+                                    echo '<button class="btn btn-xs btn-outline-primary edit-target-row-btn" ' .
+                                        ' data-species="' . $safe_sp . '"' .
+                                        ' data-qty="' . $qty . '"' .
+                                        ' data-fmd="' . intval($vt['target_fmd'] ?? 0) . '"' .
+                                        ' data-bq="' . intval($vt['target_bq'] ?? 0) . '"' .
+                                        ' data-hs="' . intval($vt['target_hs'] ?? 0) . '"' .
+                                        ' data-ldo-count="' . intval($vt['available_ldo_count'] ?? 0) . '"' .
+                                        ' data-ldo-target="' . intval($vt['allocated_ldo_target'] ?? 0) . '"' .
+                                        ' data-casual-needed="' . intval($vt['casual_vaccinators_needed'] ?? 0) . '"' .
+                                        ' data-man-days="' . intval($vt['allocated_man_days'] ?? 0) . '"' .
+                                        ' data-syringes="' . intval($vt['syringes_10cc_req'] ?? 0) . '"' .
+                                        ' data-needles="' . intval($vt['needles_14g_dozen_req'] ?? 0) . '"' .
+                                        ' data-fuel="' . floatval($vt['fuel_liters_per_month'] ?? 0) . '"' .
+                                        '><i class="bi bi-pencil-square me-1"></i>Configure</button>';
+                                    echo '</td>';
+                                    echo '</tr>';
+                                }
+                                ?>
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Deployed Casual Staff Details -->
-                    <div class="mt-3">
-                        <h6 class="fw-bold small mb-2" style="color: #370709;"><i class="bi bi-people-fill me-1 text-danger"></i>Deployed Casual Staff</h6>
-                        <div class="list-group">
-                            <?php
-                            if (!empty($vax_targets['id'])) {
-                                $ds = $mysqli->prepare("SELECT id, full_name, nic_no FROM casual_vaccinator_deployments WHERE vaccination_target_id = ? ORDER BY id ASC");
-                                if ($ds) {
-                                    $ds->bind_param("i", $vax_targets['id']);
-                                    $ds->execute();
-                                    $dres = $ds->get_result();
-                                    if ($dres->num_rows > 0) {
-                                        while ($row = $dres->fetch_assoc()) {
-                                            $sid = intval($row['id']);
-                                            $sname = htmlspecialchars($row['full_name']);
-                                            $snic = htmlspecialchars($row['nic_no']);
-                                            echo '<div class="list-group-item d-flex justify-content-between align-items-center">';
-                                            echo '<div><span class="fw-bold text-dark d-block">' . $sname . '</span><small class="text-muted">NIC: ' . $snic . '</small></div>';
-                                            echo '<div class="btn-group btn-group-sm" role="group">';
-                                            echo '<button class="btn btn-outline-primary edit-staff-btn" data-id="' . $sid . '" data-name="' . $sname . '" data-nic="' . $snic . '" title="Edit"><i class="bi bi-pencil-square"></i></button>';
-                                            echo '<form method="POST" action="processors/delete_vaccinator_deployment.php" onsubmit="return confirm(\'Delete this vaccinator?\');" style="display:inline-block; margin:0;">';
-                                            echo '<input type="hidden" name="id" value="' . $sid . '">';
-                                            echo '<input type="hidden" name="year" value="' . htmlspecialchars($selected_year) . '">';
-                                            echo '<button type="submit" class="btn btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>';
-                                            echo '</form>';
-                                            echo '</div>';
-                                            echo '</div>';
-                                        }
-                                    } else {
-                                        echo '<div class="list-group-item text-muted small">No deployed staff assigned.</div>';
-                                    }
-                                    $ds->close();
-                                }
-                            } else {
-                                echo '<div class="list-group-item text-muted small">Setup target matrix to assign staff.</div>';
-                            }
-                            ?>
-                        </div>
-                    </div>
-
-
-                    </div>
                 </div>
             </div>
-
-
-
     </div>
-    </main>
+
+
+
+</div>
+</main>
 </div>
 
-<!-- Record Vaccination Modal -->
-<?php include 'models/vaccination_model.php'; ?>
+
 
 <!-- Deploy Casual Staff Modal -->
 <?php include 'models/vaccination_staff.php'; ?>
@@ -323,17 +419,56 @@ require_once '../../../includes/header.php';
 <!-- Add/Update Species Population Modal -->
 <?php include 'models/add_animal_population.php'; ?>
 
+<!-- Configure Annual Targets Modal -->
+<?php include 'models/add_target_modal.php'; ?>
+
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
 <script>
     $(document).ready(function() {
         $('#combinedMatrixTable').DataTable({
             responsive: true,
             pageLength: 10,
-            lengthMenu: [5, 10, 25]
+            lengthMenu: [5, 10, 25],
+            dom: 'Bfrtip',
+            buttons: [{
+                    extend: 'csv',
+                    text: '<i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV',
+                    className: 'btn btn-sm btn-success fw-bold me-2',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="bi bi-file-pdf me-1"></i> Export PDF',
+                    className: 'btn btn-sm btn-danger fw-bold me-2',
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="bi bi-printer me-1"></i> Print',
+                    className: 'btn btn-sm btn-dark fw-bold',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                }
+            ]
         });
 
         $('#vaxResourcesTable').DataTable({
@@ -347,6 +482,12 @@ require_once '../../../includes/header.php';
             pageLength: 10,
             lengthMenu: [5, 10, 25]
         });
+        $('#casualVaccinatorsTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            lengthMenu: [5, 10, 25]
+        });
+
         $('#recentVaxTable').DataTable({
             responsive: true,
             pageLength: 10,
@@ -378,6 +519,46 @@ require_once '../../../includes/header.php';
         bsModal.show();
     });
 
+    // Edit target row behavior: populate target modal and show
+    $(document).on('click', '.edit-target-row-btn', function(e) {
+        e.preventDefault();
+        var dataset = $(this).data();
+
+        var $modal = $('#addTargetModal');
+        $modal.find('select[name="animal_type"]').val(dataset.species);
+        $modal.find('input[name="quantity"]').val(dataset.qty);
+        $modal.find('input[name="target_fmd"]').val(dataset.fmd);
+        $modal.find('input[name="target_bq"]').val(dataset.bq);
+        $modal.find('input[name="target_hs"]').val(dataset.hs);
+        $modal.find('input[name="available_ldo_count"]').val(dataset.ldoCount);
+        $modal.find('input[name="allocated_ldo_target"]').val(dataset.ldoTarget);
+        $modal.find('input[name="casual_vaccinators_needed"]').val(dataset.casualNeeded);
+        $modal.find('input[name="allocated_man_days"]').val(dataset.manDays);
+        $modal.find('input[name="syringes_10cc_req"]').val(dataset.syringes);
+        $modal.find('input[name="needles_14g_dozen_req"]').val(dataset.needles);
+        $modal.find('input[name="fuel_liters_per_month"]').val(dataset.fuel);
+
+        var bsModal = new bootstrap.Modal(document.getElementById('addTargetModal'));
+        bsModal.show();
+    });
+
+    // Add target button behavior: clear species specific fields
+    $(document).on('click', '#addVaxTargetBtn', function(e) {
+        var $modal = $('#addTargetModal');
+        $modal.find('select[name="animal_type"]').val('');
+        $modal.find('input[name="quantity"]').val('');
+        $modal.find('input[name="target_fmd"]').val(0);
+        $modal.find('input[name="target_bq"]').val(0);
+        $modal.find('input[name="target_hs"]').val(0);
+        $modal.find('input[name="available_ldo_count"]').val(0);
+        $modal.find('input[name="allocated_ldo_target"]').val(0);
+        $modal.find('input[name="casual_vaccinators_needed"]').val(0);
+        $modal.find('input[name="allocated_man_days"]').val(0);
+        $modal.find('input[name="syringes_10cc_req"]').val(0);
+        $modal.find('input[name="needles_14g_dozen_req"]').val(0);
+        $modal.find('input[name="fuel_liters_per_month"]').val(0.00);
+    });
+
     // Edit staff button: populate deploy staff modal and show
     $(document).on('click', '.edit-staff-btn', function(e) {
         e.preventDefault();
@@ -393,7 +574,16 @@ require_once '../../../includes/header.php';
         var bs = new bootstrap.Modal(document.getElementById('deployPersonnelModal'));
         bs.show();
     });
+
+    // Add staff button behavior: clear modal fields
+    $(document).on('click', '.add-staff-btn', function(e) {
+        var $modal = $('#deployPersonnelModal');
+        $modal.find('input[name="full_name"]').val('');
+        $modal.find('input[name="nic_no"]').val('');
+        $modal.find('input#deploy_staff_id').val('');
+    });
 </script>
+
 
 <?php
 require_once '../../../includes/footer.php';

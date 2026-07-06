@@ -11,10 +11,6 @@
 
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Farmer Reg Number</label>
-                            <input type="text" name="farmer_reg_no" class="form-control form-control-sm border-secondary" placeholder="e.g. EP/TRIN/VET/1024">
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Date of Vaccination</label>
                             <input type="date" name="date" class="form-control form-control-sm border-secondary" value="<?= date('Y-m-d') ?>">
                         </div>

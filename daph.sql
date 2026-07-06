@@ -452,7 +452,6 @@ INSERT INTO `building_inventories` (`id`, `land_asset_id`, `user_id`, `inventory
 
 CREATE TABLE `casual_vaccinator_deployments` (
   `id` int(11) NOT NULL,
-  `vaccination_target_id` int(11) NOT NULL,
   `full_name` varchar(255) NOT NULL,
   `nic_no` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -1737,8 +1736,7 @@ ALTER TABLE `building_inventories`
 -- Indexes for table `casual_vaccinator_deployments`
 --
 ALTER TABLE `casual_vaccinator_deployments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `vaccination_target_id` (`vaccination_target_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `counterfoil_assets`
@@ -2430,8 +2428,6 @@ ALTER TABLE `building_inventories`
 --
 -- Constraints for table `casual_vaccinator_deployments`
 --
-ALTER TABLE `casual_vaccinator_deployments`
-  ADD CONSTRAINT `casual_vaccinator_deployments_ibfk_1` FOREIGN KEY (`vaccination_target_id`) REFERENCES `annual_vaccination_targets` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `counterfoil_assets`

@@ -236,7 +236,7 @@ require_once '../../../includes/sidebar.php';
                 </div>
             </div>
         </div>
-        <?php include 'models/add_target_modal.php'; ?>
+        <?php include 'models/add_breeding_target_modal.php'; ?>
         <?php include 'models/add_breeding_record.php'; ?>
     </main>
 </div>
