@@ -1,3 +1,14 @@
+<?php
+if (!isset($selected_year)) {
+    $selected_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+}
+if (!isset($range_id)) {
+    $range_id = $_SESSION['range_id'] ?? 0;
+}
+if (!isset($species_options)) {
+    $species_options = [];
+}
+?>
 <div class="modal fade" id="addTargetModal" tabindex="-1" aria-labelledby="addTargetLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -13,12 +24,15 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-dark">Animal Species</label>
-                            <select name="animal_type" class="form-select form-select-sm border-secondary" required id="target_animal_type">
-                                <option value="" selected disabled>-- Select Species --</option>
-                                <?php foreach ($species_list as $sp_opt): ?>
-                                    <option value="<?= htmlspecialchars($sp_opt) ?>"><?= htmlspecialchars($sp_opt) ?></option>
+                            <input type="text" name="animal_type" class="form-control form-control-sm border-secondary" required id="target_animal_type" list="targetSpeciesList" placeholder="Type or select species">
+                            <datalist id="targetSpeciesList">
+                                <?php
+                                $vax_sp_list = isset($species_options) ? $species_options : (isset($species_list) ? $species_list : []);
+                                foreach ($vax_sp_list as $sp_opt):
+                                ?>
+                                    <option value="<?= htmlspecialchars($sp_opt) ?>"></option>
                                 <?php endforeach; ?>
-                            </select>
+                            </datalist>
                         </div>
 
                         <div class="col-md-6">

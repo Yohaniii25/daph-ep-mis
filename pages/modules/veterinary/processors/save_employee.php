@@ -1,4 +1,10 @@
 <?php
+
+//debug code
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 require_once '../../../../config/db_connect.php';
 
@@ -22,22 +28,31 @@ if (isset($_POST['save_employee'])) {
     $district_id    = intval($_POST['district_id']);
     $range_id       = intval($_POST['range_id']);
 
+    $district_enum = 'Provincial';
+    if ($district_id === 1) {
+        $district_enum = 'Amparai';
+    } elseif ($district_id === 2) {
+        $district_enum = 'Batticaloa';
+    } elseif ($district_id === 3) {
+        $district_enum = 'Trincomalee';
+    }
+
     $username = strtolower(explode('@', $email)[0]);
-    $default_password = password_hash("Daph1234", PASSWORD_BCRYPT); 
+    $default_password = password_hash("Daph1234", PASSWORD_BCRYPT);
 
     $insert_stmt = $mysqli->prepare("
         INSERT INTO users (
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
             district_id, range_id, registered_date, appointment_date, 
-            appointment_date_current_position, is_active
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1)
+            appointment_date_current_position, is_active, district
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?)
     ");
 
     if ($insert_stmt) {
         // emp_id field defaults initially to match service_number structure
         $insert_stmt->bind_param(
-            "ssssssssssiiss",
+            "ssssssssssiisss",
             $username,
             $default_password,
             $email,
@@ -51,7 +66,8 @@ if (isset($_POST['save_employee'])) {
             $district_id,
             $range_id,
             $app_date,
-            $app_current
+            $app_current,
+            $district_enum
         );
 
         if ($insert_stmt->execute()) {

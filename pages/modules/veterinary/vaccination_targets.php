@@ -156,9 +156,9 @@ if ($anim_stmt) {
 
 $deployed_staff = [];
 $deployed_staff_records = [];
-$staff_stmt = $mysqli->prepare("SELECT * FROM casual_vaccinator_deployments WHERE id = ?");
+$staff_stmt = $mysqli->prepare("SELECT * FROM casual_vaccinator_deployments WHERE range_id = ? AND year = ? ORDER BY full_name ASC");
 if ($staff_stmt) {
-    $staff_stmt->bind_param("i", $id);
+    $staff_stmt->bind_param("ii", $range_id, $selected_year);
     $staff_stmt->execute();
     $staff_res = $staff_stmt->get_result();
     while ($st = $staff_res->fetch_assoc()) {
@@ -168,6 +168,10 @@ if ($staff_stmt) {
     $staff_stmt->close();
 }
 $deployed_staff_str = !empty($deployed_staff) ? implode("<br>", $deployed_staff) : '<span class="text-muted small">None Deployed</span>';
+$assigned_vaccinator_lookup = [];
+foreach ($deployed_staff_records as $staff_record) {
+    $assigned_vaccinator_lookup[intval($staff_record['id'])] = htmlspecialchars($staff_record['full_name']) . ' (NIC: ' . htmlspecialchars($staff_record['nic_no']) . ')';
+}
 
 require_once '../../../includes/header.php';
 ?>
@@ -317,12 +321,17 @@ require_once '../../../includes/header.php';
                     </div>
                     <div>
                         <button class="btn btn-sm btn-dark fw-bold me-2" data-bs-toggle="modal" data-bs-target="#addTargetModal" id="addVaxTargetBtn">
-                            <i class="bi bi-gear-fill me-1"></i> Configure Targets & Resources
+                            <i class="bi bi-plus-circle me-1"></i> Add Record Manually
                         </button>
 
                     </div>
                 </div>
                 <div class="card-body px-4 pb-4">
+                    <div class="row mb-3">
+                        <div class="col-md-4 ms-auto">
+                            <input type="text" id="matrixFilter" class="form-control form-control-sm border-secondary" placeholder="Search species, vaccinator or target...">
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table id="combinedMatrixTable" class="table table-striped table-hover table-bordered align-middle small bg-white text-dark m-0">
                             <thead style="background-color: #d4c7b7; color: #370709;">
@@ -373,7 +382,12 @@ require_once '../../../includes/header.php';
                                     echo '<td class="text-center">' . number_format($vt['available_ldo_count'] ?? 0) . '</td>';
                                     echo '<td class="text-center">' . number_format($vt['allocated_ldo_target'] ?? 0) . '</td>';
                                     echo '<td class="text-center">' . number_format($vt['casual_vaccinators_needed'] ?? 0) . '</td>';
-                                    echo '<td class="text-center">' . $deployed_staff_str . '</td>';
+                                    $assigned_personnel_display = '<span class="text-muted small">Not Assigned</span>';
+                                    $assigned_vaccinator_id = intval($vt['assigned_vaccinator_id'] ?? 0);
+                                    if ($assigned_vaccinator_id > 0 && isset($assigned_vaccinator_lookup[$assigned_vaccinator_id])) {
+                                        $assigned_personnel_display = '<span class="fw-bold text-success">' . $assigned_vaccinator_lookup[$assigned_vaccinator_id] . '</span>';
+                                    }
+                                    echo '<td class="text-center">' . $assigned_personnel_display . '</td>';
                                     echo '<td class="text-center">' . number_format($vt['allocated_man_days'] ?? 0) . '</td>';
                                     echo '<td class="text-center">' . number_format($vt['syringes_10cc_req'] ?? 0) . '</td>';
                                     echo '<td class="text-center">' . number_format($vt['needles_14g_dozen_req'] ?? 0) . '</td>';
@@ -437,7 +451,7 @@ require_once '../../../includes/header.php';
 
 <script>
     $(document).ready(function() {
-        $('#combinedMatrixTable').DataTable({
+        var combinedMatrixTable = $('#combinedMatrixTable').DataTable({
             responsive: true,
             pageLength: 10,
             lengthMenu: [5, 10, 25],
@@ -469,6 +483,10 @@ require_once '../../../includes/header.php';
                     }
                 }
             ]
+        });
+
+        $('#matrixFilter').on('keyup', function() {
+            combinedMatrixTable.search(this.value).draw();
         });
 
         $('#vaxResourcesTable').DataTable({

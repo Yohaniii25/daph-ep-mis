@@ -1,3 +1,11 @@
+<?php
+if (!isset($range_id)) {
+    $range_id = $_SESSION['range_id'] ?? 0;
+}
+if (!isset($selected_year)) {
+    $selected_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+}
+?>
 <div class="modal fade" id="recordVaccinationModal" tabindex="-1" aria-labelledby="recordVaccinationLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -80,9 +88,9 @@
                                 <select name="vaccinator_id" class="form-select form-select-sm border-secondary">
                                     <option value="" selected>-- Select Vaccinator --</option>
                                     <?php
-                                    $sv = $mysqli->prepare("SELECT id, full_name, nic_no FROM casual_vaccinator_deployments WHERE vaccination_target_id = ? ORDER BY id ASC");
+                                    $sv = $mysqli->prepare("SELECT id, full_name, nic_no FROM casual_vaccinator_deployments WHERE range_id = ? AND year = ? ORDER BY full_name ASC");
                                     if ($sv) {
-                                        $sv->bind_param("i", $vax_targets['id']);
+                                        $sv->bind_param("ii", $range_id, $selected_year);
                                         $sv->execute();
                                         $rs = $sv->get_result();
                                         while ($r = $rs->fetch_assoc()) {
