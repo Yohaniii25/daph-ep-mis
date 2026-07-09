@@ -24,15 +24,15 @@ if (!isset($species_options)) {
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-dark">Animal Species</label>
-                            <input type="text" name="animal_type" class="form-control form-control-sm border-secondary" required id="target_animal_type" list="targetSpeciesList" placeholder="Type or select species">
-                            <datalist id="targetSpeciesList">
+                            <select name="animal_type" class="form-select form-select-sm border-secondary" required id="target_animal_type">
+                                <option value="" disabled selected>Select species</option>
                                 <?php
                                 $vax_sp_list = isset($species_options) ? $species_options : (isset($species_list) ? $species_list : []);
                                 foreach ($vax_sp_list as $sp_opt):
                                 ?>
-                                    <option value="<?= htmlspecialchars($sp_opt) ?>"></option>
+                                    <option value="<?= htmlspecialchars($sp_opt) ?>"><?= htmlspecialchars($sp_opt) ?></option>
                                 <?php endforeach; ?>
-                            </datalist>
+                            </select>
                         </div>
 
                         <div class="col-md-6">

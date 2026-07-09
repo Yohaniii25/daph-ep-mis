@@ -406,6 +406,7 @@ require_once '../../../includes/header.php';
                                         ' data-syringes="' . intval($vt['syringes_10cc_req'] ?? 0) . '"' .
                                         ' data-needles="' . intval($vt['needles_14g_dozen_req'] ?? 0) . '"' .
                                         ' data-fuel="' . floatval($vt['fuel_liters_per_month'] ?? 0) . '"' .
+                                        ' data-assigned-vaccinator="' . intval($vt['assigned_vaccinator_id'] ?? 0) . '"' .
                                         '><i class="bi bi-pencil-square me-1"></i>Configure</button>';
                                     echo '</td>';
                                     echo '</tr>';
@@ -555,6 +556,7 @@ require_once '../../../includes/header.php';
         $modal.find('input[name="syringes_10cc_req"]').val(dataset.syringes);
         $modal.find('input[name="needles_14g_dozen_req"]').val(dataset.needles);
         $modal.find('input[name="fuel_liters_per_month"]').val(dataset.fuel);
+        $modal.find('select[name="assigned_vaccinator_id"]').val(dataset.assignedVaccinator || '');
 
         var bsModal = new bootstrap.Modal(document.getElementById('addTargetModal'));
         bsModal.show();

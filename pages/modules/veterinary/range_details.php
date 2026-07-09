@@ -352,7 +352,7 @@ require_once '../../../includes/sidebar.php';
                             </a>
                         </div>
                         <div class="col">
-                            <a href="vehicles.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #b08723; min-height: 105px;">
+                            <a href="monthly-annual-reports.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #b08723; min-height: 105px;">
                                 <i class="bi bi-car-front-fill fs-3 mb-1"></i>
                                 <span class="text-center">Monthly/Annual Reports</span>
                             </a>

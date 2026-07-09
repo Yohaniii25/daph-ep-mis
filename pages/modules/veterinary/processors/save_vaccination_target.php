@@ -44,8 +44,8 @@ try {
     $pop_stmt->close();
 
     // B. Save configuration parameters directly mapping assigned_vaccinator_id reference column
-    $target_check = $mysqli->prepare("SELECT id FROM annual_vaccination_targets WHERE range_id = ? AND year = ?");
-    $target_check->bind_param("ii", $range_id, $year);
+    $target_check = $mysqli->prepare("SELECT id FROM annual_vaccination_targets WHERE range_id = ? AND year = ? AND animal_type = ?");
+    $target_check->bind_param("iis", $range_id, $year, $animal_type);
     $target_check->execute();
     $target_exists = $target_check->get_result()->fetch_assoc();
     $target_check->close();
@@ -54,8 +54,8 @@ try {
         $vax_stmt = $mysqli->prepare("UPDATE annual_vaccination_targets SET assigned_vaccinator_id = ?, target_fmd = ?, target_bq = ?, target_hs = ?, available_ldo_count = ?, allocated_ldo_target = ?, casual_vaccinators_needed = 1, allocated_man_days = ?, syringes_10cc_req = ?, needles_14g_dozen_req = ?, fuel_liters_per_month = ? WHERE id = ?");
         $vax_stmt->bind_param("iiiiiiiiidi", $assigned_vaccinator_id, $target_fmd, $target_bq, $target_hs, $available_ldo_count, $allocated_ldo_target, $allocated_man_days, $syringes_10cc_req, $needles_14g_dozen_req, $fuel_liters_per_month, $target_exists['id']);
     } else {
-        $vax_stmt = $mysqli->prepare("INSERT INTO annual_vaccination_targets (year, range_id, assigned_vaccinator_id, target_fmd, target_bq, target_hs, available_ldo_count, allocated_ldo_target, casual_vaccinators_needed, allocated_man_days, syringes_10cc_req, needles_14g_dozen_req, fuel_liters_per_month) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)");
-        $vax_stmt->bind_param("iiiiiiiiiiid", $year, $range_id, $assigned_vaccinator_id, $target_fmd, $target_bq, $target_hs, $available_ldo_count, $allocated_ldo_target, $allocated_man_days, $syringes_10cc_req, $needles_14g_dozen_req, $fuel_liters_per_month);
+        $vax_stmt = $mysqli->prepare("INSERT INTO annual_vaccination_targets (year, range_id, animal_type, assigned_vaccinator_id, target_fmd, target_bq, target_hs, available_ldo_count, allocated_ldo_target, casual_vaccinators_needed, allocated_man_days, syringes_10cc_req, needles_14g_dozen_req, fuel_liters_per_month) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)");
+        $vax_stmt->bind_param("iisiiiiiiiiid", $year, $range_id, $animal_type, $assigned_vaccinator_id, $target_fmd, $target_bq, $target_hs, $available_ldo_count, $allocated_ldo_target, $allocated_man_days, $syringes_10cc_req, $needles_14g_dozen_req, $fuel_liters_per_month);
     }
     $vax_stmt->execute();
     $vax_stmt->close();
@@ -63,7 +63,6 @@ try {
     $mysqli->commit();
     $_SESSION['msg'] = "Annual Matrix metrics and Casual Allocations saved properly.";
     $_SESSION['msg_type'] = "success";
-
 } catch (Exception $e) {
     $mysqli->rollback();
     $_SESSION['msg'] = "Transaction error encountered: " . htmlspecialchars($e->getMessage());
