@@ -1066,26 +1066,30 @@ INSERT INTO `master_units` (`id`, `unit_name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `monthly_production_records`
+-- Table structure for table `section_e`
 --
 
-CREATE TABLE `monthly_production_records` (
-  `id` int(11) NOT NULL,
+CREATE TABLE `section_e` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `district_id` int(11) NOT NULL,
   `range_id` int(11) NOT NULL,
+  `report_year` int(11) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `category_id` int(11) NOT NULL,
   `item_id` int(11) NOT NULL,
-  `amount` decimal(15,2) NOT NULL,
-  `report_date` date NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `monthly_production_records`
---
-
-INSERT INTO `monthly_production_records` (`id`, `range_id`, `item_id`, `amount`, `report_date`, `created_at`) VALUES
-(1, 1, 1, '300.00', '2026-03-01', '2026-03-31 15:05:48'),
-(2, 1, 4, '2000.00', '2026-04-01', '2026-04-01 17:23:04'),
-(3, 1, 3, '300.00', '2026-04-01', '2026-04-02 13:20:45');
+  `amount` decimal(15,2) NOT NULL DEFAULT '0.00',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_prod_rec_district` (`district_id`),
+  KEY `fk_prod_rec_range` (`range_id`),
+  KEY `fk_prod_rec_category` (`category_id`),
+  KEY `fk_prod_rec_item` (`item_id`),
+  CONSTRAINT `fk_prod_rec_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_prod_rec_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_prod_rec_category` FOREIGN KEY (`category_id`) REFERENCES `production_categories` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_prod_rec_item` FOREIGN KEY (`item_id`) REFERENCES `production_items` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -1952,12 +1956,7 @@ ALTER TABLE `master_programme_types`
 ALTER TABLE `master_units`
   ADD PRIMARY KEY (`id`);
 
---
--- Indexes for table `monthly_production_records`
---
-ALTER TABLE `monthly_production_records`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `item_id` (`item_id`);
+
 
 --
 -- Indexes for table `parent_stock_flocks`
@@ -2307,11 +2306,7 @@ ALTER TABLE `master_programme_types`
 ALTER TABLE `master_units`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
---
--- AUTO_INCREMENT for table `monthly_production_records`
---
-ALTER TABLE `monthly_production_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
 
 --
 -- AUTO_INCREMENT for table `parent_stock_flocks`
