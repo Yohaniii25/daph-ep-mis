@@ -137,10 +137,22 @@ require_once '../../../includes/sidebar.php';
                     </div>
                     <div class="card-body pt-0">
                         <div class="row g-3">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <button class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #370709; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addProductionModal">
                                     <i class="bi bi-file-earmark-plus fs-3 mb-1"></i>
                                     <span class="small fw-bold text-uppercase">Add Production Record</span>
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #58181b; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                                    <i class="bi bi-folder-plus fs-3 mb-1"></i>
+                                    <span class="small fw-bold text-uppercase">Add Category</span>
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addSubCategoryModal">
+                                    <i class="bi bi-tag-fill fs-3 mb-1"></i>
+                                    <span class="small fw-bold text-uppercase">Add Sub Category</span>
                                 </button>
                             </div>
                         </div>
@@ -226,6 +238,8 @@ require_once '../../../includes/sidebar.php';
 
         <?php include 'models/add_production_record_modal.php'; ?>
         <?php include 'models/edit_production_record_modal.php'; ?>
+        <?php include 'models/add_category_modal.php'; ?>
+        <?php include 'models/add_subcategory_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
