@@ -99,9 +99,9 @@ require_once '../../../includes/sidebar.php';
                             </a>
                         </div>
                         <div class="col">
-                            <a href="annual_targets.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #370709; min-height: 105px;">
+                            <a href="daily_diary.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #370709; min-height: 105px;">
                                 <i class="bi bi-bar-chart fs-3 mb-1"></i>
-                                <span class="text-center">Dairy</span>
+                                <span class="text-center">Daily Diary</span>
                             </a>
                         </div>
                         <div class="col">
@@ -111,7 +111,7 @@ require_once '../../../includes/sidebar.php';
                             </a>
                         </div>
                         <div class="col">
-                            <a href="furniture.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #a07174; min-height: 105px;">
+                            <a href="production_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #a07174; min-height: 105px;">
                                 <i class="bi bi-file-earmark-plus fs-3 mb-1"></i>
                                 <span class="text-center">Production Balance</span>
                             </a>

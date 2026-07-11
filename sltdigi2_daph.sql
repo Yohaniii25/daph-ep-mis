@@ -594,6 +594,30 @@ INSERT INTO `diary_tasks` (`id`, `user_id`, `task_date`, `place`, `activity`, `s
 (2, 20, '2026-04-30', 'Uppuveli', 'rererer', 'Ongoing', 'Daily', '2026-04-29 07:12:44'),
 (3, 12, '2026-05-20', 'Uppuveli', 'test', 'Ongoing', 'Daily', '2026-05-20 12:19:53');
 
+-- Table structure for table `crop_returns`
+--
+
+CREATE TABLE `crop_returns` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `item_name` varchar(255) NOT NULL,
+  `balance_previous_month` int(11) NOT NULL DEFAULT 0,
+  `received_current_month` int(11) NOT NULL DEFAULT 0,
+  `issued_current_month` int(11) NOT NULL DEFAULT 0,
+  `balance_current_month` int(11) NOT NULL DEFAULT 0,
+  `remark` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_crop_returns_district` (`district_id`),
+  KEY `fk_crop_returns_range` (`range_id`),
+  CONSTRAINT `fk_crop_returns_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_crop_returns_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- --------------------------------------------------------
 
 --
