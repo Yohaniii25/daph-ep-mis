@@ -130,32 +130,32 @@ require_once '../../../includes/sidebar.php';
                             </a>
                         </div>
                         <div class="col">
-                            <a href="counter_foilage.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #e65100; min-height: 105px;">
+                            <a href="ear_tag_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #e65100; min-height: 105px;">
                                 <i class="bi bi-ear fs-3 mb-1"></i>
                                 <span class="text-center">Ear Tag Balance</span>
                             </a>
                         </div>
                         <div class="col">
-                            <a href="human_population.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #455a64; min-height: 105px;">
+                            <a href="cattle_voucher.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #455a64; min-height: 105px;">
                                 <i class="bi bi-card-heading fs-3 mb-1"></i>
                                 <span class="text-center">Cattle Voucher</span>
                             </a>
                         </div>
                         <div class="col">
-                            <a href="animal_population.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #1565c0; min-height: 105px;">
+                            <a href="health_certificate.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #1565c0; min-height: 105px;">
                                 <i class="bi bi-hospital fs-3 mb-1"></i>
                                 <span class="text-center">Health Certificate</span>
                             </a>
                         </div>
                         <div class="col">
-                            <a href="range_maps.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #00838f; min-height: 105px;">
+                            <a href="breeding.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #00838f; min-height: 105px;">
                                 <i class="bi bi-file-earmark-medical fs-3 mb-1"></i>
                                 <span class="text-center">Breeding</span>
                             </a>
                         </div>
 
                         <div class="col">
-                            <a href="#" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #283593; min-height: 105px;">
+                            <a href="mobile_clinic_reports.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #283593; min-height: 105px;">
                                 <i class="bi bi-folder-fill fs-3 mb-1"></i>
                                 <span class="text-center">Mobile Clinic Reports</span>
                             </a>
