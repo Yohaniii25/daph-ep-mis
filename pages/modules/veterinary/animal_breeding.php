@@ -1,272 +1,198 @@
 <?php
 session_start();
+require_once '../../../config/db_connect.php';
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
-    header("Location: ../../../../index.php");
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) {
+    header("Location: ../../../index.php");
     exit();
 }
 
-if (!isset($_SESSION['full_name'])) {
-    $_SESSION['full_name'] = $_SESSION['username'] ?? 'Veterinary Surgeon';
-}
+$user_id = $_SESSION['user_id'] ?? null;
+$range_id = $_SESSION['range_id'] ?? null;
 
-$full_name   = $_SESSION['full_name'];
-$range_id    = $_SESSION['range_id'] ?? null;
-$district_id = $_SESSION['district_id'] ?? null;
+$range_name = 'Your Range';
+$district_name = 'Your District';
 
-if (empty($range_id)) {
-    die('<div class="alert alert-danger text-center p-5 m-5">Error: Your account is not assigned to any Veterinary Range.</div>');
-}
+// Extract Range Name and District Name
+if (!empty($range_id)) {
+    $details_sql = "
+        SELECT 
+            vr.name AS range_name,
+            d.name AS district_name
+        FROM veterinary_ranges vr
+        LEFT JOIN districts d ON vr.district_id = d.id
+        WHERE vr.id = ?
+    ";
 
-require_once '../../../config/db_connect.php';
-
-$district_name = 'Unknown District';
-$range_name    = 'Unknown Range';
-
-// Fetch District and Range Names
-if ($district_id) {
-    $stmt = $mysqli->prepare("SELECT name FROM districts WHERE id = ?");
-    $stmt->bind_param("i", $district_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        $district_name = $row['name'];
+    $details_query = $mysqli->prepare($details_sql);
+    if ($details_query) {
+        $details_query->bind_param("i", $range_id);
+        $details_query->execute();
+        $details_result = $details_query->get_result();
+        if ($data = $details_result->fetch_assoc()) {
+            $range_name = $data['range_name'] ?? 'Your Assigned Range';
+            $district_name = $data['district_name'] ?? 'Your District';
+        }
+        $details_query->close();
     }
-    $stmt->close();
 }
 
-if ($range_id) {
-    $stmt = $mysqli->prepare("SELECT name FROM veterinary_ranges WHERE id = ?");
-    $stmt->bind_param("i", $range_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        $range_name = $row['name'];
+$selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
+
+// Calculate stats for current dashboard context
+$total_ai = 0;
+$total_pd = 0;
+$total_calving = 0;
+
+if (!empty($range_id)) {
+    // 1. AI count
+    $ai_stmt = $mysqli->prepare("SELECT COUNT(*) FROM breeding_ai_performance WHERE range_id = ? AND report_year = ?");
+    if ($ai_stmt) {
+        $ai_stmt->bind_param("ii", $range_id, $selected_year);
+        $ai_stmt->execute();
+        $ai_stmt->bind_result($total_ai);
+        $ai_stmt->fetch();
+        $ai_stmt->close();
     }
-    $stmt->close();
+
+    // 2. PD count
+    $pd_stmt = $mysqli->prepare("SELECT COUNT(*) FROM breeding_pd_performance WHERE range_id = ? AND report_year = ?");
+    if ($pd_stmt) {
+        $pd_stmt->bind_param("ii", $range_id, $selected_year);
+        $pd_stmt->execute();
+        $pd_stmt->bind_result($total_pd);
+        $pd_stmt->fetch();
+        $pd_stmt->close();
+    }
+
+    // 3. Calving count
+    $calving_stmt = $mysqli->prepare("SELECT COUNT(*) FROM breeding_calving_performance WHERE range_id = ? AND report_year = ?");
+    if ($calving_stmt) {
+        $calving_stmt->bind_param("ii", $range_id, $selected_year);
+        $calving_stmt->execute();
+        $calving_stmt->bind_result($total_calving);
+        $calving_stmt->fetch();
+        $calving_stmt->close();
+    }
 }
-
-// Stats Calculations (AI, PD, and Calving totals for current year)
-$current_year = date('Y');
-
-$stats_stmt = $mysqli->prepare("
-    SELECT 
-        SUM(ai_count) as total_ai, 
-        SUM(pd_count) as total_pd, 
-        SUM(calving_count) as total_calvings 
-    FROM breeding_progress 
-    WHERE range_id = ? AND year = ?
-");
-$stats_stmt->bind_param("ii", $range_id, $current_year);
-$stats_stmt->execute();
-$stats = $stats_stmt->get_result()->fetch_assoc();
-
-// Fetch Officer List for Modal Suggestion
-$off_stmt = $mysqli->prepare("SELECT id, officer_name FROM office_details WHERE range_id = ? AND status = 'Active'");
-$off_stmt->bind_param("i", $range_id);
-$off_stmt->execute();
-$officer_suggestions = $off_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// Main Table Query (Modified to match your HTML expectations)
-$stmt = $mysqli->prepare("
-    SELECT 
-        od.id as officer_id,
-        od.officer_name, 
-        od.designation,
-        0 as month_number,
-        (COALESCE(tt.target_ai, 0) + COALESCE(tt.target_pd, 0) + COALESCE(tt.target_calving, 0)) as target_year,
-        SUM(bp.ai_count) as ai_count, 
-        SUM(bp.pd_count) as pd_count, 
-        SUM(bp.calving_count) as calving_count
-    FROM office_details od
-    INNER JOIN breeding_progress bp 
-        ON od.id = bp.officer_id 
-    LEFT JOIN breeding_target_templates tt 
-        ON od.designation = tt.designation 
-        AND od.range_id = tt.range_id 
-        AND tt.year = ?
-    WHERE od.range_id = ? 
-      AND od.status = 'Active' 
-      AND bp.year = ?
-    GROUP BY od.id, od.officer_name, od.designation, tt.target_ai, tt.target_pd, tt.target_calving
-    HAVING (ai_count > 0 OR pd_count > 0 OR calving_count > 0)
-    ORDER BY od.officer_name ASC
-");
-
-// Note: Ensure the order of parameters matches: year, range_id, year
-$stmt->bind_param("iii", $current_year, $range_id, $current_year);
-$stmt->execute();
-$results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-
-if (!$stmt) {
-    die("SQL Error: " . $mysqli->error);
-}
-
-$stmt->execute();
-$results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
 ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../../../assets/css/veterinary.css">
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="h4 mb-0 fw-bold">Breeding Activities & Progress</h2>
-                <small class="text-muted"><?= htmlspecialchars($range_name) ?> | <?= $current_year ?> Monitoring</small>
+                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Animal Breeding & Performance Dashboard</h2>
+                <p class="text-muted small mb-0">Monitor Artificial Insemination, Pregnancy Diagnosis, and Calvings for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+                <form method="GET" class="d-flex align-items-center gap-2">
+                    <label class="small fw-bold text-muted mb-0">Year:</label>
+                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
+                        <?php
+                        $curr_year = intval(date('Y'));
+                        for ($y = $curr_year - 5; $y <= $curr_year + 5; $y++) {
+                            $sel = ($y === $selected_year) ? 'selected' : '';
+                            echo "<option value=\"$y\" $sel>$y</option>";
+                        }
+                        ?>
+                    </select>
+                </form>
             </div>
         </div>
 
+        <!-- STATS CARD GROUP -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card shadow-sm border-0 border-start border-primary border-4">
+                    <div class="card-body py-3">
+                        <span class="text-muted small text-uppercase fw-bold">Active Year</span>
+                        <h4 class="mb-0 fw-bold math-numeric text-primary mt-1"><?= $selected_year ?></h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card shadow-sm border-0 border-start border-success border-4">
+                    <div class="card-body py-3">
+                        <span class="text-muted small text-uppercase fw-bold">Total AI Performed</span>
+                        <h4 class="mb-0 fw-bold math-numeric text-success mt-1"><?= number_format($total_ai) ?></h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card shadow-sm border-0 border-start border-info border-4">
+                    <div class="card-body py-3">
+                        <span class="text-muted small text-uppercase fw-bold">Total PD Completed</span>
+                        <h4 class="mb-0 fw-bold math-numeric text-info mt-1"><?= number_format($total_pd) ?></h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card shadow-sm border-0 border-start border-warning border-4">
+                    <div class="card-body py-3">
+                        <span class="text-muted small text-uppercase fw-bold">Total Calvings Logged</span>
+                        <h4 class="mb-0 fw-bold math-numeric text-warning mt-1"><?= number_format($total_calving) ?></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- THREE ACTION PAGES LINKS -->
         <div class="row g-4 mb-4">
-            <div class="col-xl-4 col-md-6">
-                <div class="card border-0 shadow-sm h-100 text-center p-3 border-start border-primary border-4">
-                    <h6 class="text-muted small fw-bold text-uppercase">Total AI</h6>
-                    <h3 class="mb-0 text-primary"><?= number_format($stats['total_ai'] ?? 0) ?></h3>
-                </div>
-            </div>
-            <div class="col-xl-4 col-md-6">
-                <div class="card border-0 shadow-sm h-100 text-center p-3 border-start border-info border-4">
-                    <h6 class="text-muted small fw-bold text-uppercase">Total PD</h6>
-                    <h3 class="mb-0 text-info"><?= number_format($stats['total_pd'] ?? 0) ?></h3>
-                </div>
-            </div>
-            <div class="col-xl-4 col-md-6">
-                <div class="card border-0 shadow-sm h-100 text-center p-3 border-start border-success border-4">
-                    <h6 class="text-muted small fw-bold text-uppercase">Total Calvings</h6>
-                    <h3 class="mb-0 text-success"><?= number_format($stats['total_calvings'] ?? 0) ?></h3>
-                </div>
-            </div>
-        </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h6 class="mb-0 fw-bold">Quick Actions</h6>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <button style="color:white;" class="btn btn-info w-100 py-3" data-bs-toggle="modal" data-bs-target="#addTargetModal">
-                            <i class="bi bi-plus-circle fs-3"></i><br>
-                            Add Target for Year
-                        </button>
-                    </div>
-
-                    <div class="col-md-4">
-                        <a href="animal_breeding_reports.php" class="btn btn-primary w-100 py-3">
-                            <i class="bi bi-search fs-3"></i><br>
-                            Search Records
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column justify-content-between align-items-center text-center">
+                        <div class="bg-light p-3 rounded-circle mb-3">
+                            <i class="bi bi-activity text-primary display-5"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Artificial Insemination</h5>
+                        <p class="text-muted small mb-4">Record and manage Artificial Insemination (AI) activities: technicians, cow registry, semen codes and AI types.</p>
+                        <a href="ai_performance.php?year=<?= $selected_year ?>" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-arrow-right-circle me-1"></i> Manage AI Records
                         </a>
                     </div>
-                    <!-- <div class="col-md-4">
-                        <a href="officer_management.php" class="btn btn-dark w-100 py-3 text-white fw-bold">
-                            <i class="bi bi-people fs-3"></i><br>
-                            Manage Officers
+                </div>
+            </div>
+            
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column justify-content-between align-items-center text-center">
+                        <div class="bg-light p-3 rounded-circle mb-3">
+                            <i class="bi bi-gender-female text-info display-5"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Pregnancy Diagnosis</h5>
+                        <p class="text-muted small mb-4">Register pregnancy diagnosis tests: test dates, pregnant/non-pregnant results, and linking with initial AI date.</p>
+                        <a href="pd_performance.php?year=<?= $selected_year ?>" class="btn btn-info text-white btn-sm w-100">
+                            <i class="bi bi-arrow-right-circle me-1"></i> Manage PD Records
                         </a>
-                    </div> -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-4 d-flex flex-column justify-content-between align-items-center text-center">
+                        <div class="bg-light p-3 rounded-circle mb-3">
+                            <i class="bi bi-clipboard-plus text-warning display-5"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Calving Performance</h5>
+                        <p class="text-muted small mb-4">Track calf registration logs: mapping parent cow, semen code details, calving date, sex and calf ID tracking.</p>
+                        <a href="calving_performance.php?year=<?= $selected_year ?>" class="btn btn-warning text-white btn-sm w-100">
+                            <i class="bi bi-arrow-right-circle me-1"></i> Manage Calving Records
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="breedingTable" class="table table-hover align-middle w-100">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Month</th>
-                                <th>Officer Name</th>
-                                <th class="text-center">Annual Target</th>
-                                <th class="text-center">AI</th>
-                                <th class="text-center">PD</th>
-                                <th class="text-center">Calving</th>
-                                <!-- <th>Status</th> -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($results as $r): ?>
-                                <tr>
-                                    <td>
-                                        <span class="badge bg-dark">
-                                            <?= ($r['month_number'] == 0) ? 'Annual' : 'Month ' . $r['month_number'] ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <strong><?= htmlspecialchars($r['officer_name']) ?></strong><br>
-                                        <small class="text-muted"><?= htmlspecialchars($r['designation']) ?></small>
-                                    </td>
-                                    <td class="text-center fw-bold text-secondary">
-                                        <?= number_format($r['target_year']) ?>
-                                    </td>
-                                    <td class="text-center fw-bold text-primary">
-                                        <?= number_format($r['ai_count']) ?>
-                                    </td>
-                                    <td class="text-center fw-bold text-info">
-                                        <?= number_format($r['pd_count']) ?>
-                                    </td>
-                                    <td class="text-center fw-bold text-success">
-                                        <?= number_format($r['calving_count']) ?>
-                                    </td>
-                                    <!-- <td>
-                                        <?php
-                                        $total_actual = $r['ai_count'] + $r['pd_count'] + $r['calving_count'];
-                                        $target = $r['target_year'];
-                                        $prog = ($target > 0) ? round(($total_actual / $target) * 100) : 0;
-
-                                        // Determine color based on progress
-                                        $bar_class = 'bg-danger';
-                                        if ($prog >= 100) $bar_class = 'bg-success';
-                                        elseif ($prog >= 50) $bar_class = 'bg-primary';
-                                        elseif ($prog > 0) $bar_class = 'bg-warning';
-                                        ?>
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar <?= $bar_class ?>" style="width: <?= min($prog, 100) ?>%"></div>
-                                        </div>
-                                        <small class="small fw-bold"><?= $prog ?>% of target</small>
-                                    </td> -->
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <?php include 'models/add_breeding_target_modal.php'; ?>
-        <?php include 'models/add_breeding_record.php'; ?>
     </main>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-
-<script>
-    $(document).ready(function() {
-        var table = $('#breedingTable').DataTable({
-            "dom": 'rtip', // Hiding the default buttons to use our custom Quick Action button
-            "buttons": [{
-                extend: 'csv',
-                title: 'Breeding_Records_<?= $range_name ?>_<?= $current_year ?>',
-                exportOptions: {
-                    columns: ':visible'
-                }
-            }]
-        });
-
-        // Link the custom Quick Action button to the DataTables Export
-        $('#exportCSVBtn').on('click', function() {
-            table.button('.buttons-csv').trigger();
-        });
-    });
-</script>
 
 <?php require_once '../../../includes/footer.php'; ?>
