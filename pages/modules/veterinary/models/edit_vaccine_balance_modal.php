@@ -33,11 +33,33 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Vaccine Name</label>
-                            <input type="text" name="vaccine_name" id="edit_vaccine_name" class="form-control form-control-sm" required>
+                            <select name="vaccine_name" id="edit_vaccine_name" class="form-select form-select-sm fw-bold text-dark" required>
+                                <option value="" disabled>-- Select Vaccine --</option>
+                                <?php
+                                $type_opts = $mysqli->query("SELECT id, vaccine_name, expiry_date FROM drug_types ORDER BY vaccine_name ASC");
+                                while ($t_opt = $type_opts->fetch_assoc()):
+                                    $expiry = !empty($t_opt['expiry_date']) ? date('Y-m-d', strtotime($t_opt['expiry_date'])) : 'N/A';
+                                ?>
+                                    <option value="<?= htmlspecialchars($t_opt['vaccine_name'], ENT_QUOTES) ?>" data-expiry="<?= $expiry ?>">
+                                        <?= htmlspecialchars($t_opt['vaccine_name']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Batch No.</label>
-                            <input type="text" name="batch_no" id="edit_batch_no" class="form-control form-control-sm">
+                            <select name="batch_no" id="edit_batch_no" class="form-select form-select-sm fw-bold text-dark">
+                                <option value="" selected disabled>-- Select Batch --</option>
+                                <?php
+                                // Fetch all batches in edit modal to prevent legacy active state orphans
+                                $batch_opts = $mysqli->query("SELECT DISTINCT batch_number FROM vaccine_batches ORDER BY id DESC");
+                                while ($opt = $batch_opts->fetch_assoc()):
+                                ?>
+                                    <option value="<?= htmlspecialchars($opt['batch_number'], ENT_QUOTES) ?>">
+                                        <?= htmlspecialchars($opt['batch_number']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
                         
                         <div class="col-md-4">
@@ -106,6 +128,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     [obVal, rcVal, usVal, spVal, trVal].forEach(input => {
         input.addEventListener('input', calculateClosing);
+    });
+
+    // Auto-fill expiry date on vaccine name change
+    document.getElementById('edit_vaccine_name').addEventListener('change', function() {
+        const selectedExpiry = this.options[this.selectedIndex].getAttribute('data-expiry');
+        document.getElementById('edit_expiry_date').value = (selectedExpiry && selectedExpiry !== 'N/A') ? selectedExpiry : '';
     });
 });
 </script>

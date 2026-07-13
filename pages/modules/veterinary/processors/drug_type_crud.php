@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'sms') {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) {
     die("Access denied: Invalid profile context verification execution drop.");
 }
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $insert_stmt->bind_param("ssss", $vaccine_name, $target_animal_string, $description, $expiry_date);
         
         if ($insert_stmt->execute()) {
-            header("Location: ../drug_maintenance.php?status=success&msg=Drug+Type+Registered+Successfully");
+            header("Location: ../drug_types.php?status=success&msg=Drug+Type+Registered+Successfully");
             exit();
         } else {
             die("Database Write Fault: Error compiling row logging parameter updates: " . $mysqli->error);
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_stmt->bind_param("sssi", $vaccine_name, $target_animal_string, $description, $expiry_date, $id);
         
         if ($update_stmt->execute()) {
-            header("Location: ../drug_maintenance.php?status=success&msg=Drug+Configuration+Row+Modified");
+            header("Location: ../drug_types.php?status=success&msg=Drug+Configuration+Row+Modified");
             exit();
         } else {
             die("Database Update Fault: Error writing target modification configurations to row data layout: " . $mysqli->error);
@@ -69,12 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $delete_stmt->bind_param("i", $id);
     
     if ($delete_stmt->execute()) {
-        header("Location: ../drug_maintenance.php?status=success&msg=Drug+Registration+Row+Purged");
+        header("Location: ../drug_types.php?status=success&msg=Drug+Registration+Row+Purged");
         exit();
     } else {
         die("Database Structural Execution Error: Could not clear entry configuration index target line row: " . $mysqli->error);
     }
 }
 
-header("Location: ../drug_maintenance.php");
+header("Location: ../drug_types.php");
 exit();

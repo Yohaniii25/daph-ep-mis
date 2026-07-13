@@ -2,7 +2,7 @@
 session_start();
 require_once '../../../../config/db_connect.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'sms') {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) {
     die("Access denied");
 }
 

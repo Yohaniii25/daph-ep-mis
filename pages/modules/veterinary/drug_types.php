@@ -1,6 +1,6 @@
 <?php
 require_once '../../../includes/header.php';
-if ($_SESSION['role'] !== 'sms') die("Access denied");
+if (!in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) die("Access denied");
 require_once '../../../config/db_connect.php';
 
 // Fetch live counts for metric card fallback tracking dynamically
@@ -37,6 +37,7 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <div id="layoutSidenav_content" class="bg-light">
     <main class="container-fluid px-4 pt-4">
@@ -117,8 +118,8 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                             <a href="processors/drug_type_crud.php?action=delete&id=<?= $row['id'] ?>"
-                                                class="btn btn-outline-danger"
-                                                onclick="return confirm('Are you sure you want to delete this drug configuration? This could affect linked inventory rows.');">
+                                                class="btn btn-outline-danger btn-delete-drugtype"
+                                                data-name="<?= htmlspecialchars($row['vaccine_name'], ENT_QUOTES) ?>">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         </div>
@@ -147,6 +148,7 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     $(document).ready(function() {
@@ -224,6 +226,51 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
             updateAnimalHidden();
             return true;
         });
+
+        // Delete Alert Confirmation Click Handler
+        $(document).on('click', '.btn-delete-drugtype', function(e) {
+            e.preventDefault();
+            var deleteUrl = $(this).attr('href');
+            var name = $(this).data('name') || 'this drug type';
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Delete Drug Type?',
+                html: 'You are about to delete drug configuration for "<strong>' + name + '</strong>".<br>This action cannot be undone and could affect linked inventory rows.',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+
+        // Check status redirects for SweetAlert feedback Toast
+        var urlParams = new URLSearchParams(window.location.search);
+        var status = urlParams.get('status');
+        var msg = urlParams.get('msg');
+        
+        if (status === 'success') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Operation Successful',
+                text: msg || 'Success!',
+                confirmButtonColor: '#370709'
+            });
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (status === 'error' || status === 'db_error') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Operation Failed',
+                text: msg || 'An error occurred.',
+                confirmButtonColor: '#370709'
+            });
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
         $('#drugTypeTable').DataTable({
             "order": [[0, "desc"]],

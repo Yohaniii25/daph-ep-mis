@@ -1,7 +1,7 @@
 <div class="modal fade" id="addDrugRecordModal" tabindex="-1" aria-labelledby="drugRecordModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-light text-white py-3">
+            <div class="modal-header text-light py-3" style="background-color: #370709;">
                 <h5 class="modal-title" id="drugRecordModalTitle">
                     <i class="bi bi-capsule-compartment me-2"></i>Drug Stock Ledger Entry
                 </h5>
@@ -25,10 +25,11 @@
                                 <option value="" selected disabled>-- Choose Type --</option>
                                 <?php
                                 // Fetch all registered drug type records for selection
-                                $type_opts = $mysqli->query("SELECT id, vaccine_name FROM drug_types ORDER BY vaccine_name ASC");
+                                $type_opts = $mysqli->query("SELECT id, vaccine_name, expiry_date FROM drug_types ORDER BY vaccine_name ASC");
                                 while($t_opt = $type_opts->fetch_assoc()):
+                                    $expiry = !empty($t_opt['expiry_date']) ? date('Y-m-d', strtotime($t_opt['expiry_date'])) : 'N/A';
                                 ?>
-                                    <option value="<?= (int) $t_opt['id'] ?>">
+                                    <option value="<?= (int) $t_opt['id'] ?>" data-expiry="<?= $expiry ?>">
                                         <?= htmlspecialchars($t_opt['vaccine_name'], ENT_QUOTES) ?>
                                     </option>
                                 <?php endwhile; ?>
@@ -84,6 +85,13 @@
                             </div>
                         </div>
 
+                        <div class="col-12">
+                            <div class="alert alert-secondary d-flex justify-content-between align-items-center mb-0 py-2">
+                                <span class="small fw-semibold text-secondary">Drug Expiry: <strong id="drugExpiryDisplay" class="text-dark">None selected</strong></span>
+                                <span class="small fw-semibold text-secondary">Ending Balance: <strong id="drugLiveBalanceDisplay" class="text-dark">0 Units</strong></span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -96,32 +104,3 @@
     </div>
 </div>
 
-<script>
-$(document).ready(function() {
-    // Expiry date viewer sync logic
-    $('#vaccineBatchId').on('change', function() {
-        const selectedExpiry = $(this).find(':selected').data('expiry');
-        $('#drugExpiryDisplay').text(selectedExpiry ? selectedExpiry : 'None selected');
-    });
-
-    // Dynamic Balance Calculation Engine
-    $(document).on('input', '.drug-calc-trigger', function() {
-        const starter  = parseInt($('#qtyStarter').val()) || 0;
-        const received = parseInt($('#qtyReceived').val()) || 0;
-        const used     = parseInt($('#qtyUsed').val()) || 0;
-        const damaged  = parseInt($('#qtyDamaged').val()) || 0;
-
-        const balance = (starter + received) - (used + damaged);
-        const display = $('#drugLiveBalanceDisplay');
-        display.text(balance.toLocaleString() + ' Units');
-
-        if (balance < 0) {
-            display.removeClass('text-dark text-success').addClass('text-danger fw-bold');
-            $('#drugSubmitBtn').prop('disabled', true).text('Error: Inventory Deficit');
-        } else {
-            display.removeClass('text-danger').addClass('text-success fw-bold');
-            $('#drugSubmitBtn').prop('disabled', false).text($('#drugAction').val() === 'update' ? 'Save Changes' : 'Commit Ledger Entry');
-        }
-    });
-});
-</script>

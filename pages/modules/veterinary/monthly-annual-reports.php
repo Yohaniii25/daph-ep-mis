@@ -124,7 +124,7 @@ require_once '../../../includes/sidebar.php';
                         </div>
 
                         <div class="col">
-                            <a href="drug_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #2e7d32; min-height: 105px;">
+                            <a href="drug_maintenance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #2e7d32; min-height: 105px;">
                                 <i class="bi bi-capsule-pill fs-3 mb-1"></i>
                                 <span class="text-center">Drugs Balance</span>
                             </a>

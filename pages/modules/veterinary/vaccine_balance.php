@@ -130,6 +130,18 @@ require_once '../../../includes/sidebar.php';
                                     <span class="small fw-bold text-uppercase">Add Vaccine Record</span>
                                 </button>
                             </div>
+                            <div class="col-md-3">
+                                <a href="batches.php" class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background-color: #b08723; min-height: 105px;">
+                                    <i class="bi bi-box-seam fs-3 mb-1"></i>
+                                    <span class="small fw-bold text-uppercase">Vaccine Batches</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="drug_types.php" class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background-color: #370709; min-height: 105px;">
+                                    <i class="bi bi-capsule fs-3 mb-1"></i>
+                                    <span class="small fw-bold text-uppercase">Drug Types Config</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

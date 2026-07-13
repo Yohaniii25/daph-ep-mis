@@ -32,11 +32,32 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Vaccine Name</label>
-                            <input type="text" name="vaccine_name" class="form-control form-control-sm" placeholder="e.g. Ranikhet 1, Fowl Pox, ARV" required>
+                            <select name="vaccine_name" id="add_vaccine_name" class="form-select form-select-sm fw-bold text-dark" required>
+                                <option value="" disabled selected>-- Select Vaccine --</option>
+                                <?php
+                                $type_opts = $mysqli->query("SELECT id, vaccine_name, expiry_date FROM drug_types ORDER BY vaccine_name ASC");
+                                while ($t_opt = $type_opts->fetch_assoc()):
+                                    $expiry = !empty($t_opt['expiry_date']) ? date('Y-m-d', strtotime($t_opt['expiry_date'])) : 'N/A';
+                                ?>
+                                    <option value="<?= htmlspecialchars($t_opt['vaccine_name'], ENT_QUOTES) ?>" data-expiry="<?= $expiry ?>">
+                                        <?= htmlspecialchars($t_opt['vaccine_name']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Batch No.</label>
-                            <input type="text" name="batch_no" class="form-control form-control-sm" placeholder="e.g. B-90382">
+                            <select name="batch_no" id="add_batch_no" class="form-select form-select-sm fw-bold text-dark">
+                                <option value="" selected disabled>-- Select Batch --</option>
+                                <?php
+                                $batch_opts = $mysqli->query("SELECT batch_number FROM vaccine_batches WHERE is_active = 1 ORDER BY id DESC");
+                                while ($opt = $batch_opts->fetch_assoc()):
+                                ?>
+                                    <option value="<?= htmlspecialchars($opt['batch_number'], ENT_QUOTES) ?>">
+                                        <?= htmlspecialchars($opt['batch_number']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
                         
                         <div class="col-md-4">
@@ -66,7 +87,7 @@
                         
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Expiry Date</label>
-                            <input type="text" name="expiry_date" class="form-control form-control-sm" placeholder="e.g. August/2026 or YYYY-MM-DD">
+                            <input type="text" name="expiry_date" id="add_expiry_date" class="form-control form-control-sm" placeholder="e.g. August/2026 or YYYY-MM-DD">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Remarks</label>
@@ -105,6 +126,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     [obVal, rcVal, usVal, spVal, trVal].forEach(input => {
         input.addEventListener('input', calculateClosing);
+    });
+
+    // Auto-fill expiry date on vaccine name change
+    document.getElementById('add_vaccine_name').addEventListener('change', function() {
+        const selectedExpiry = this.options[this.selectedIndex].getAttribute('data-expiry');
+        document.getElementById('add_expiry_date').value = (selectedExpiry && selectedExpiry !== 'N/A') ? selectedExpiry : '';
     });
 });
 </script>
