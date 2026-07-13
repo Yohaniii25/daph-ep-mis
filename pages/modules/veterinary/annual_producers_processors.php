@@ -1,0 +1,645 @@
+<?php
+session_start();
+require_once '../../../config/db_connect.php';
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) {
+    header("Location: ../../../index.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'] ?? null;
+$range_id = $_SESSION['range_id'] ?? null;
+
+$range_name = 'Your Range';
+$district_name = 'Your District';
+$district_id = null;
+
+if (!empty($range_id)) {
+    $details_sql = "
+        SELECT vr.name AS range_name, d.name AS district_name, d.id AS district_id
+        FROM veterinary_ranges vr
+        LEFT JOIN districts d ON vr.district_id = d.id
+        WHERE vr.id = ?
+    ";
+    $details_query = $mysqli->prepare($details_sql);
+    if ($details_query) {
+        $details_query->bind_param("i", $range_id);
+        $details_query->execute();
+        $details_result = $details_query->get_result();
+        if ($data = $details_result->fetch_assoc()) {
+            $range_name = $data['range_name'];
+            $district_name = $data['district_name'];
+            $district_id = $data['district_id'];
+        }
+        $details_query->close();
+    }
+}
+
+// Handle GET year filter
+$selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
+
+// Inline CRUD actions:
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action'])) {
+        if ($_POST['action'] === 'add') {
+            $year = intval($_POST['report_year']);
+            $chick_prod_cnt = intval($_POST['chick_producers_count']);
+            $chicks_prod_m = intval($_POST['chicks_produced_month']);
+            $feed_prod_cnt = intval($_POST['feed_producers_count']);
+            $feed_prod_mt = floatval($_POST['feed_production_mt_month']);
+            $poultry_proc_cnt = intval($_POST['poultry_processors_count']);
+            $chick_sale_live = floatval($_POST['chicken_sale_live_kg_month']);
+            $chick_sale_dressed = floatval($_POST['chicken_sale_dressed_kg_month']);
+            $org_fert_fam = intval($_POST['organic_fert_farm_families']);
+            $org_fert_mt = floatval($_POST['organic_fert_prod_mt_year']);
+            $org_fert_sale = floatval($_POST['organic_fert_sale_kg_month']);
+            $org_fert_own = floatval($_POST['organic_fert_own_use_kg_month']);
+            $org_fert_price = floatval($_POST['organic_fert_price_rs_kg']);
+
+            // Validate duplicate year
+            $check_stmt = $mysqli->prepare("SELECT id FROM annual_producers_processors WHERE range_id = ? AND report_year = ?");
+            $check_stmt->bind_param("ii", $range_id, $year);
+            $check_stmt->execute();
+            if ($check_stmt->get_result()->num_rows > 0) {
+                header("Location: annual_producers_processors.php?year=$selected_year&status=error&msg=" . urlencode("A record for the year $year already exists."));
+                exit();
+            }
+            $check_stmt->close();
+
+            $insert_query = "
+                INSERT INTO annual_producers_processors 
+                (district_id, range_id, report_year, chick_producers_count, chicks_produced_month, feed_producers_count, 
+                 feed_production_mt_month, poultry_processors_count, chicken_sale_live_kg_month, chicken_sale_dressed_kg_month, 
+                 organic_fert_farm_families, organic_fert_prod_mt_year, organic_fert_sale_kg_month, organic_fert_own_use_kg_month, 
+                 organic_fert_price_rs_kg, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ";
+            $stmt = $mysqli->prepare($insert_query);
+            if ($stmt) {
+                // district_id, range_id, report_year, chick_prod_cnt, chicks_prod_m, feed_prod_cnt are 'iiiiii'
+                // feed_prod_mt is 'd'
+                // poultry_proc_cnt is 'i'
+                // chick_sale_live, chick_sale_dressed are 'dd'
+                // org_fert_fam is 'i'
+                // org_fert_mt, org_fert_sale, org_fert_own, org_fert_price are 'dddd'
+                // created_by is 'i'
+                $stmt->bind_param("iiiiiiididdiidddi", $district_id, $range_id, $year, $chick_prod_cnt, $chicks_prod_m, 
+                                  $feed_prod_cnt, $feed_prod_mt, $poultry_proc_cnt, $chick_sale_live, $chick_sale_dressed, 
+                                  $org_fert_fam, $org_fert_mt, $org_fert_sale, $org_fert_own, $org_fert_price, $user_id);
+                if ($stmt->execute()) {
+                    header("Location: annual_producers_processors.php?year=$year&status=success&msg=" . urlencode("Data added successfully."));
+                } else {
+                    header("Location: annual_producers_processors.php?year=$selected_year&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
+                }
+                $stmt->close();
+            } else {
+                header("Location: annual_producers_processors.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+            }
+            exit();
+
+        } elseif ($_POST['action'] === 'edit') {
+            $id = intval($_POST['id']);
+            $year = intval($_POST['report_year']);
+            $chick_prod_cnt = intval($_POST['chick_producers_count']);
+            $chicks_prod_m = intval($_POST['chicks_produced_month']);
+            $feed_prod_cnt = intval($_POST['feed_producers_count']);
+            $feed_prod_mt = floatval($_POST['feed_production_mt_month']);
+            $poultry_proc_cnt = intval($_POST['poultry_processors_count']);
+            $chick_sale_live = floatval($_POST['chicken_sale_live_kg_month']);
+            $chick_sale_dressed = floatval($_POST['chicken_sale_dressed_kg_month']);
+            $org_fert_fam = intval($_POST['organic_fert_farm_families']);
+            $org_fert_mt = floatval($_POST['organic_fert_prod_mt_year']);
+            $org_fert_sale = floatval($_POST['organic_fert_sale_kg_month']);
+            $org_fert_own = floatval($_POST['organic_fert_own_use_kg_month']);
+            $org_fert_price = floatval($_POST['organic_fert_price_rs_kg']);
+
+            $update_query = "
+                UPDATE annual_producers_processors 
+                SET report_year = ?, chick_producers_count = ?, chicks_produced_month = ?, feed_producers_count = ?, 
+                    feed_production_mt_month = ?, poultry_processors_count = ?, chicken_sale_live_kg_month = ?, 
+                    chicken_sale_dressed_kg_month = ?, organic_fert_farm_families = ?, organic_fert_prod_mt_year = ?, 
+                    organic_fert_sale_kg_month = ?, organic_fert_own_use_kg_month = ?, organic_fert_price_rs_kg = ?
+                WHERE id = ? AND range_id = ?
+            ";
+            $stmt = $mysqli->prepare($update_query);
+            if ($stmt) {
+                $stmt->bind_param("iiiiididdiidddii", $year, $chick_prod_cnt, $chicks_prod_m, $feed_prod_cnt, 
+                                  $feed_prod_mt, $poultry_proc_cnt, $chick_sale_live, $chick_sale_dressed, 
+                                  $org_fert_fam, $org_fert_mt, $org_fert_sale, $org_fert_own, $org_fert_price, 
+                                  $id, $range_id);
+                if ($stmt->execute()) {
+                    header("Location: annual_producers_processors.php?year=$year&status=success&msg=" . urlencode("Data updated successfully."));
+                } else {
+                    header("Location: annual_producers_processors.php?year=$selected_year&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+                }
+                $stmt->close();
+            } else {
+                header("Location: annual_producers_processors.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+            }
+            exit();
+        }
+    }
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
+    $id = intval($_GET['id']);
+    $stmt = $mysqli->prepare("DELETE FROM annual_producers_processors WHERE id = ? AND range_id = ?");
+    if ($stmt) {
+        $stmt->bind_param("ii", $id, $range_id);
+        if ($stmt->execute()) {
+            header("Location: annual_producers_processors.php?year=$selected_year&status=success&msg=" . urlencode("Record deleted successfully."));
+        } else {
+            header("Location: annual_producers_processors.php?year=$selected_year&status=error&msg=" . urlencode("Failed to delete record."));
+        }
+        $stmt->close();
+    }
+    exit();
+}
+
+// Fetch records matching year filter and range
+$records = [];
+if (!empty($range_id)) {
+    $stmt = $mysqli->prepare("SELECT * FROM annual_producers_processors WHERE range_id = ? AND report_year = ? ORDER BY id DESC");
+    if ($stmt) {
+        $stmt->bind_param("ii", $range_id, $selected_year);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        while ($row = $res->fetch_assoc()) {
+            $records[] = $row;
+        }
+        $stmt->close();
+    }
+}
+
+// Summary stats
+$summary = [
+    'chick_producers_sum' => 0,
+    'feed_producers_sum' => 0,
+    'poultry_processors_sum' => 0,
+    'organic_fert_sum' => 0
+];
+foreach ($records as $r) {
+    $summary['chick_producers_sum'] += $r['chick_producers_count'];
+    $summary['feed_producers_sum'] += $r['feed_producers_count'];
+    $summary['poultry_processors_sum'] += $r['poultry_processors_count'];
+    $summary['organic_fert_sum'] += $r['organic_fert_prod_mt_year'];
+}
+
+require_once '../../../includes/header.php';
+require_once '../../../includes/sidebar.php';
+?>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="../../../assets/css/veterinary.css">
+
+<div id="layoutSidenav_content">
+    <main class="container-fluid px-4 pt-4">
+
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Annual Producers & Processors</h2>
+                <p class="text-muted small mb-0">Monitor animal feed, chick production, poultry processing, and organic fertilizer stats for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+                <form method="GET" class="d-flex align-items-center gap-2">
+                    <label class="small fw-bold text-muted mb-0">Year:</label>
+                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
+                        <?php
+                        $curr_year = intval(date('Y'));
+                        for ($y = $curr_year - 5; $y <= $curr_year + 5; $y++) {
+                            $sel = ($y === $selected_year) ? 'selected' : '';
+                            echo "<option value=\"$y\" $sel>$y</option>";
+                        }
+                        ?>
+                    </select>
+                </form>
+            </div>
+        </div>
+
+        <!-- STATS CARD GROUP -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
+                    <div class="card-body py-3">
+                        <span class="text-muted small text-uppercase fw-bold">Chick Producers</span>
+                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= number_format($summary['chick_producers_sum']) ?> Farms</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card shadow-sm border-0 border-start border-success border-4 text-center">
+                    <div class="card-body py-3">
+                        <span class="text-muted small text-uppercase fw-bold">Feed Producers</span>
+                        <h4 class="mb-0 fw-bold text-success mt-1"><?= number_format($summary['feed_producers_sum']) ?> Farms</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card shadow-sm border-0 border-start border-info border-4 text-center">
+                    <div class="card-body py-3">
+                        <span class="text-muted small text-uppercase fw-bold">Poultry Processors</span>
+                        <h4 class="mb-0 fw-bold text-info mt-1"><?= number_format($summary['poultry_processors_sum']) ?> Nos</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card shadow-sm border-0 border-start border-warning border-4 text-center">
+                    <div class="card-body py-3">
+                        <span class="text-muted small text-uppercase fw-bold">Fertilizer Yield</span>
+                        <h4 class="mb-0 fw-bold text-warning mt-1"><?= number_format($summary['organic_fert_sum'], 2) ?> MT</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3 border-0">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Quick Actions</h6>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addProdProcModal">
+                                    <i class="bi bi-plus-circle fs-3 mb-1"></i>
+                                    <span class="small fw-bold text-uppercase">Add Records</span>
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="range_statistics.php" class="btn btn-outline-secondary w-100 py-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 105px;">
+                                    <i class="bi bi-arrow-left-circle fs-3 mb-1"></i>
+                                    <span class="small fw-bold text-uppercase">Back to Statistics</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECORDS LIST TABLE -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Logs - <?= $selected_year ?></h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="prodProcTable" style="min-width: 1800px;">
+                        <thead class="table-light text-secondary small uppercase">
+                            <tr>
+                                <th class="text-center" rowspan="2">Year</th>
+                                <th class="text-center text-primary" colspan="2">Chick Production</th>
+                                <th class="text-center text-success" colspan="2">Feed Production</th>
+                                <th class="text-center text-danger" colspan="3">Poultry Sales (kg/month)</th>
+                                <th class="text-center text-warning" colspan="5">Organic Fertilizer Production & Price</th>
+                                <th class="text-center" rowspan="2" style="width: 8%">Actions</th>
+                            </tr>
+                            <tr>
+                                <th class="text-end">Farms</th>
+                                <th class="text-end">Chicks/month</th>
+                                <th class="text-end">Producers</th>
+                                <th class="text-end">MT/month</th>
+                                <th class="text-end">Processors</th>
+                                <th class="text-end">Live Weight</th>
+                                <th class="text-end">Dressed Weight</th>
+                                <th class="text-end">Families</th>
+                                <th class="text-end">MT/Year</th>
+                                <th class="text-end">Sales (kg/mo)</th>
+                                <th class="text-end">Own Use (kg)</th>
+                                <th class="text-end">Price (Rs/kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            <?php if (empty($records)): ?>
+                                <tr>
+                                    <td colspan="14" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                        No records located for the selected year <?= $selected_year ?>.
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($records as $row): ?>
+                                    <tr 
+                                        data-id="<?= $row['id'] ?>"
+                                        data-year="<?= htmlspecialchars($row['report_year']) ?>"
+                                        data-chick_producers_count="<?= htmlspecialchars($row['chick_producers_count']) ?>"
+                                        data-chicks_produced_month="<?= htmlspecialchars($row['chicks_produced_month']) ?>"
+                                        data-feed_producers_count="<?= htmlspecialchars($row['feed_producers_count']) ?>"
+                                        data-feed_production_mt_month="<?= htmlspecialchars($row['feed_production_mt_month']) ?>"
+                                        data-poultry_processors_count="<?= htmlspecialchars($row['poultry_processors_count']) ?>"
+                                        data-chicken_sale_live_kg_month="<?= htmlspecialchars($row['chicken_sale_live_kg_month']) ?>"
+                                        data-chicken_sale_dressed_kg_month="<?= htmlspecialchars($row['chicken_sale_dressed_kg_month']) ?>"
+                                        data-organic_fert_farm_families="<?= htmlspecialchars($row['organic_fert_farm_families']) ?>"
+                                        data-organic_fert_prod_mt_year="<?= htmlspecialchars($row['organic_fert_prod_mt_year']) ?>"
+                                        data-organic_fert_sale_kg_month="<?= htmlspecialchars($row['organic_fert_sale_kg_month']) ?>"
+                                        data-organic_fert_own_use_kg_month="<?= htmlspecialchars($row['organic_fert_own_use_kg_month']) ?>"
+                                        data-organic_fert_price_rs_kg="<?= htmlspecialchars($row['organic_fert_price_rs_kg']) ?>">
+                                        <td class="text-center fw-bold"><?= htmlspecialchars($row['report_year']) ?></td>
+                                        
+                                        <td class="text-end font-monospace"><?= number_format($row['chick_producers_count']) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['chicks_produced_month']) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['feed_producers_count']) ?></td>
+                                        <td class="text-end font-monospace bg-light"><?= number_format($row['feed_production_mt_month'], 2) ?></td>
+                                        
+                                        <td class="text-end font-monospace"><?= number_format($row['poultry_processors_count']) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['chicken_sale_live_kg_month'], 2) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['chicken_sale_dressed_kg_month'], 2) ?></td>
+                                        
+                                        <td class="text-end font-monospace"><?= number_format($row['organic_fert_farm_families']) ?></td>
+                                        <td class="text-end font-monospace bg-light"><?= number_format($row['organic_fert_prod_mt_year'], 2) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['organic_fert_sale_kg_month'], 2) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['organic_fert_own_use_kg_month'], 2) ?></td>
+                                        <td class="text-end font-monospace text-success fw-bold">LKR <?= number_format($row['organic_fert_price_rs_kg'], 2) ?></td>
+                                        
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                                            <a href="annual_producers_processors.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal: Add Record -->
+<div class="modal fade" id="addProdProcModal" tabindex="-1" aria-labelledby="addProdProcModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST">
+            <input type="hidden" name="action" value="add">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #370709; color: white;">
+                    <h5 class="modal-title" id="addProdProcModalLabel"><i class="bi bi-plus-circle me-2"></i>Add Annual Producers & Processors</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Report Year</label>
+                            <input type="number" name="report_year" class="form-control" value="<?= date('Y') ?>" required>
+                        </div>
+                        
+                        <div class="col-md-6 border-end">
+                            <h6 class="fw-bold text-primary mb-3">Chick Producers</h6>
+                            <div class="mb-2">
+                                <label class="form-label">No. of Farms</label>
+                                <input type="number" name="chick_producers_count" class="form-control" value="0">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Avg Chicks Produced / month</label>
+                                <input type="number" name="chicks_produced_month" class="form-control" value="0">
+                            </div>
+                            
+                            <h6 class="fw-bold text-success mb-3 mt-4">Feed Producers</h6>
+                            <div class="mb-2">
+                                <label class="form-label">No. of Producers</label>
+                                <input type="number" name="feed_producers_count" class="form-control" value="0">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Monthly Production (MT)</label>
+                                <input type="number" step="0.01" name="feed_production_mt_month" class="form-control" value="0.00">
+                            </div>
+                            
+                            <h6 class="fw-bold text-danger mb-3 mt-4">Poultry Processing & Sales</h6>
+                            <div class="mb-2">
+                                <label class="form-label">No. of Processors</label>
+                                <input type="number" name="poultry_processors_count" class="form-control" value="0">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Sales - Live weight (kg/month)</label>
+                                <input type="number" step="0.01" name="chicken_sale_live_kg_month" class="form-control" value="0.00">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Sales - Dressed weight (kg/month)</label>
+                                <input type="number" step="0.01" name="chicken_sale_dressed_kg_month" class="form-control" value="0.00">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-warning mb-3">Organic Fertilizer Production</h6>
+                            <div class="mb-2">
+                                <label class="form-label">No. of Farm Families</label>
+                                <input type="number" name="organic_fert_farm_families" class="form-control" value="0">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Total Production (MT/Year)</label>
+                                <input type="number" step="0.01" name="organic_fert_prod_mt_year" class="form-control" value="0.00">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Avg Sales (kg/month)</label>
+                                <input type="number" step="0.01" name="organic_fert_sale_kg_month" class="form-control" value="0.00">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Avg Own Use (kg/month)</label>
+                                <input type="number" step="0.01" name="organic_fert_own_use_kg_month" class="form-control" value="0.00">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Avg Selling Price (Rs./kg)</label>
+                                <input type="number" step="0.01" name="organic_fert_price_rs_kg" class="form-control" value="0.00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Record</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Record -->
+<div class="modal fade" id="editProdProcModal" tabindex="-1" aria-labelledby="editProdProcModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="id" id="edit_id">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #370709; color: white;">
+                    <h5 class="modal-title" id="editProdProcModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit Annual Producers & Processors</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Report Year</label>
+                            <input type="number" name="report_year" id="edit_report_year" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-md-6 border-end">
+                            <h6 class="fw-bold text-primary mb-3">Chick Producers</h6>
+                            <div class="mb-2">
+                                <label class="form-label">No. of Farms</label>
+                                <input type="number" name="chick_producers_count" id="edit_chick_producers_count" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Avg Chicks Produced / month</label>
+                                <input type="number" name="chicks_produced_month" id="edit_chicks_produced_month" class="form-control">
+                            </div>
+                            
+                            <h6 class="fw-bold text-success mb-3 mt-4">Feed Producers</h6>
+                            <div class="mb-2">
+                                <label class="form-label">No. of Producers</label>
+                                <input type="number" name="feed_producers_count" id="edit_feed_producers_count" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Monthly Production (MT)</label>
+                                <input type="number" step="0.01" name="feed_production_mt_month" id="edit_feed_production_mt_month" class="form-control">
+                            </div>
+                            
+                            <h6 class="fw-bold text-danger mb-3 mt-4">Poultry Processing & Sales</h6>
+                            <div class="mb-2">
+                                <label class="form-label">No. of Processors</label>
+                                <input type="number" name="poultry_processors_count" id="edit_poultry_processors_count" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Sales - Live weight (kg/month)</label>
+                                <input type="number" step="0.01" name="chicken_sale_live_kg_month" id="edit_chicken_sale_live_kg_month" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Sales - Dressed weight (kg/month)</label>
+                                <input type="number" step="0.01" name="chicken_sale_dressed_kg_month" id="edit_chicken_sale_dressed_kg_month" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-warning mb-3">Organic Fertilizer Production</h6>
+                            <div class="mb-2">
+                                <label class="form-label">No. of Farm Families</label>
+                                <input type="number" name="organic_fert_farm_families" id="edit_organic_fert_farm_families" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Total Production (MT/Year)</label>
+                                <input type="number" step="0.01" name="organic_fert_prod_mt_year" id="edit_organic_fert_prod_mt_year" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Avg Sales (kg/month)</label>
+                                <input type="number" step="0.01" name="organic_fert_sale_kg_month" id="edit_organic_fert_sale_kg_month" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Avg Own Use (kg/month)</label>
+                                <input type="number" step="0.01" name="organic_fert_own_use_kg_month" id="edit_organic_fert_own_use_kg_month" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Avg Selling Price (Rs./kg)</label>
+                                <input type="number" step="0.01" name="organic_fert_price_rs_kg" id="edit_organic_fert_price_rs_kg" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Record</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?php
+$pageScripts = '
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    $("#prodProcTable").DataTable({
+        "order": [[0, "desc"]],
+        "pageLength": 10,
+        "dom": "Bfrtip",
+        "buttons": [
+            {
+                extend: "csv",
+                text: "<i class=\\"bi bi-file-earmark-spreadsheet\\"></i> CSV",
+                className: "btn btn-sm btn-success me-2"
+            },
+            {
+                extend: "pdf",
+                text: "<i class=\\"bi bi-file-pdf\\"></i> PDF",
+                className: "btn btn-sm btn-danger me-2"
+            },
+            {
+                extend: "print",
+                text: "<i class=\\"bi bi-printer\\"></i> Print",
+                className: "btn btn-sm btn-dark"
+            }
+        ]
+    });
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var status = urlParams.get(\'status\');
+    var msg = urlParams.get(\'msg\') || \'\';
+
+    if (status === \'success\') {
+        Swal.fire({
+            icon: \'success\',
+            title: \'Success!\',
+            text: msg ? msg : \'Operation completed successfully.\',
+            confirmButtonColor: \'#370709\'
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (status === \'error\') {
+        Swal.fire({
+            icon: \'error\',
+            title: \'Operation Failed\',
+            text: msg ? msg : \'Could not process database action.\',
+            confirmButtonColor: \'#370709\'
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    $(document).on(\'click\', \'.btn-edit\', function() {
+        var $row = $(this).closest(\'tr\');
+        $(\'#edit_id\').val($row.data(\'id\'));
+        $(\'#edit_report_year\').val($row.data(\'year\'));
+        $(\'#edit_chick_producers_count\').val($row.data(\'chick_producers_count\'));
+        $(\'#edit_chicks_produced_month\').val($row.data(\'chicks_produced_month\'));
+        $(\'#edit_feed_producers_count\').val($row.data(\'feed_producers_count\'));
+        $(\'#edit_feed_production_mt_month\').val($row.data(\'feed_production_mt_month\'));
+        $(\'#edit_poultry_processors_count\').val($row.data(\'poultry_processors_count\'));
+        $(\'#edit_chicken_sale_live_kg_month\').val($row.data(\'chicken_sale_live_kg_month\'));
+        $(\'#edit_chicken_sale_dressed_kg_month\').val($row.data(\'chicken_sale_dressed_kg_month\'));
+        $(\'#edit_organic_fert_farm_families\').val($row.data(\'organic_fert_farm_families\'));
+        $(\'#edit_organic_fert_prod_mt_year\').val($row.data(\'organic_fert_prod_mt_year\'));
+        $(\'#edit_organic_fert_sale_kg_month\').val($row.data(\'organic_fert_sale_kg_month\'));
+        $(\'#edit_organic_fert_own_use_kg_month\').val($row.data(\'organic_fert_own_use_kg_month\'));
+        $(\'#edit_organic_fert_price_rs_kg\').val($row.data(\'organic_fert_price_rs_kg\'));
+
+        new bootstrap.Modal(document.getElementById(\'editProdProcModal\')).show();
+    });
+
+    $(document).on(\'click\', \'.btn-delete\', function(e) {
+        e.preventDefault();
+        var deleteUrl = $(this).attr(\'href\');
+        var $row = $(this).closest(\'tr\');
+        var year = $row.data(\'year\');
+
+        Swal.fire({
+            icon: \'warning\',
+            title: \'Delete Record?\',
+            html: \'Are you sure you want to permanently delete this record for year <strong>\' + year + \'</strong>?<br>This action cannot be undone.\',
+            showCancelButton: true,
+            confirmButtonColor: \'#d33\',
+            cancelButtonColor: \'#6c757d\',
+            confirmButtonText: \'Yes, Delete\',
+            cancelButtonText: \'Cancel\'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                window.location.href = deleteUrl;
+            }
+        });
+    });
+});
+</script>
+';
+require_once '../../../includes/footer.php';
+?>

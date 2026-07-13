@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
-    header("Location: ../../../../index.php");
+    header("Location: ../../../index.php");
     exit();
 }
 
@@ -250,12 +250,71 @@ require_once '../../../includes/sidebar.php';
 
                     </div>
                 </div>
+        <!-- Annual Returns & Inventories Quick Actions -->
+        <div class="card gov-card mb-5">
+            <div class="card-header bg-white pt-4 px-4 border-0">
+                <h5 class="fw-bold mb-1" style="color: #370709;"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Annual Returns & Inventory Management</h5>
+                <p class="text-muted small mb-0">Quick access links to manage annual data logs, production levels, pasture details, and livestock societies.</p>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_production_levels.php" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
+                            <i class="bi bi-graph-up-arrow fs-3 mb-2"></i>
+                            <span class="text-center">Production Levels</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_pasture_lands.php" class="btn btn-success w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
+                            <i class="bi bi-tree-fill fs-3 mb-2"></i>
+                            <span class="text-center">Pasture & Fodder Lands</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_pasture_yields.php" class="btn btn-info w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
+                            <i class="bi bi-water fs-3 mb-2"></i>
+                            <span class="text-center">Pasture Yields</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_producers_processors.php" class="btn btn-warning w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2 text-dark">
+                            <i class="bi bi-buildings fs-3 mb-2"></i>
+                            <span class="text-center">Producers & Processors</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_feed_production.php" class="btn btn-danger w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
+                            <i class="bi bi-prescription2 fs-3 mb-2"></i>
+                            <span class="text-center">Feed Production</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_livestock_societies.php" class="btn btn-secondary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
+                            <i class="bi bi-heart-fill fs-3 mb-2"></i>
+                            <span class="text-center">Livestock Societies</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_milk_collecting.php" class="btn btn-dark w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
+                            <i class="bi bi-bucket-fill fs-3 mb-2"></i>
+                            <span class="text-center">Milk Collecting Centers</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_milk_processing.php" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
+                            <i class="bi bi-gear-wide-connected fs-3 mb-2"></i>
+                            <span class="fw-semibold small text-center">Milk Processing Centers</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="annual_milk_sales.php" class="btn btn-success w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
+                            <i class="bi bi-shop fs-3 mb-2"></i>
+                            <span class="fw-semibold small text-center">Milk Sales Centers</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
-
-
-
-
 
         <?php
 
