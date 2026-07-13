@@ -106,50 +106,50 @@ require_once '../../../includes/sidebar.php';
                         </div>
                         <div class="col">
                             <a href="monthly-annual-reports.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #b08723; min-height: 105px;">
-                                <i class="bi bi-car-front-fill fs-3 mb-1"></i>
+                                <i class="bi bi-calendar-week fs-3 mb-1"></i>
                                 <span class="text-center">Monthly Returns</span>
                             </a>
                         </div>
                         <div class="col">
                             <a href="production_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #a07174; min-height: 105px;">
-                                <i class="bi bi-file-earmark-plus fs-3 mb-1"></i>
+                                <i class="bi bi-backpack4 fs-3 mb-1"></i>
                                 <span class="text-center">Production Balance</span>
                             </a>
                         </div>
                         <div class="col">
-                            <a href="machineries.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #689ccf; min-height: 105px;">
-                                <i class="bi bi-gear-fill fs-3 mb-1"></i>
+                            <a href="vaccine_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #689ccf; min-height: 105px;">
+                                <i class="bi bi-capsule fs-3 mb-1"></i>
                                 <span class="text-center">Vaccine Balance</span>
                             </a>
                         </div>
 
                         <div class="col">
-                            <a href="instruments.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #2e7d32; min-height: 105px;">
-                                <i class="bi bi-tools fs-3 mb-1"></i>
+                            <a href="drug_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #2e7d32; min-height: 105px;">
+                                <i class="bi bi-capsule-pill fs-3 mb-1"></i>
                                 <span class="text-center">Drugs Balance</span>
                             </a>
                         </div>
                         <div class="col">
                             <a href="counter_foilage.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #e65100; min-height: 105px;">
-                                <i class="bi bi-file-earmark-text-fill fs-3 mb-1"></i>
+                                <i class="bi bi-ear fs-3 mb-1"></i>
                                 <span class="text-center">Ear Tag Balance</span>
                             </a>
                         </div>
                         <div class="col">
                             <a href="human_population.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #455a64; min-height: 105px;">
-                                <i class="bi bi-person-bounding-box fs-3 mb-1"></i>
+                                <i class="bi bi-card-heading fs-3 mb-1"></i>
                                 <span class="text-center">Cattle Voucher</span>
                             </a>
                         </div>
                         <div class="col">
                             <a href="animal_population.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #1565c0; min-height: 105px;">
-                                <i class="bi bi-patch-check-fill fs-3 mb-1"></i>
+                                <i class="bi bi-hospital fs-3 mb-1"></i>
                                 <span class="text-center">Health Certificate</span>
                             </a>
                         </div>
                         <div class="col">
                             <a href="range_maps.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #00838f; min-height: 105px;">
-                                <i class="bi bi-geo-alt-fill fs-3 mb-1"></i>
+                                <i class="bi bi-file-earmark-medical fs-3 mb-1"></i>
                                 <span class="text-center">Breeding</span>
                             </a>
                         </div>
