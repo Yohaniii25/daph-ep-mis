@@ -9,11 +9,15 @@ if ($_SESSION['role'] !== 'farms_dd') {
 
 $user_id = $_SESSION['user_id'] ?? 1; // Fallback to 1 if session key differs
 
+$where = " WHERE sales_date = CURDATE()";
+if ($_SESSION['role'] === 'farms_dd' && !empty($_SESSION['farm_id'])) {
+    $where .= " AND farm_id = " . (int)$_SESSION['farm_id'];
+}
 $kpi_query = "SELECT 
     IFNULL(SUM(total_revenue), 0) AS total_sales,
     IFNULL(SUM(CASE WHEN egg_category = 'Table' THEN quantity_sold ELSE 0 END), 0) AS table_qty,
     IFNULL(SUM(CASE WHEN egg_category = 'Cracked' THEN quantity_sold ELSE 0 END), 0) AS cracked_qty
-FROM hatchery_sales WHERE sales_date = CURDATE()";
+FROM hatchery_sales" . $where;
 
 $kpi_result = $mysqli->query($kpi_query);
 $kpi_res = $kpi_result ? $kpi_result->fetch_assoc() : ['total_sales' => 0, 'table_qty' => 0, 'cracked_qty' => 0];
@@ -105,34 +109,38 @@ require_once '../../../includes/sidebar.php';
                     </thead>
                     <tbody>
                         <?php
-                        $sales_sql = "SELECT * FROM hatchery_sales ORDER BY sales_date DESC, id DESC";
+                        $where_ledger = "";
+                        if ($_SESSION['role'] === 'farms_dd' && !empty($_SESSION['farm_id'])) {
+                            $where_ledger = " WHERE farm_id = " . (int)$_SESSION['farm_id'];
+                        }
+                        $sales_sql = "SELECT * FROM hatchery_sales" . $where_ledger . " ORDER BY sales_date DESC, id DESC";
                         $res = $mysqli->query($sales_sql);
                         if ($res):
                             while ($row = $res->fetch_assoc()):
                                 $target_met = ($row['actual_rate'] >= $row['hope_rate']);
                         ?>
-                            <tr>
-                                <td class="fw-bold">#<?= $row['id'] ?></td>
-                                <td><?= $row['sales_date'] ?></td>
-                                <td>
-                                    <span class="badge <?= ($row['egg_category'] === 'Table') ? 'bg-primary' : 'bg-danger' ?>">
-                                        <?= $row['egg_category'] ?> Egg
-                                    </span>
-                                </td>
-                                <td class="fw-bold"><?= number_format($row['quantity_sold']) ?></td>
-                                <td>LKR <?= number_format($row['actual_rate'], 2) ?></td>
-                                <td class="text-muted">LKR <?= number_format($row['hope_rate'], 2) ?></td>
-                                <td class="fw-bold text-dark">LKR <?= number_format($row['total_revenue'], 2) ?></td>
-                                <td>
-                                    <?php if ($target_met): ?>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2">Met Target</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2">Below Hope</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary edit-sales-btn" 
+                                <tr>
+                                    <td class="fw-bold">#<?= $row['id'] ?></td>
+                                    <td><?= $row['sales_date'] ?></td>
+                                    <td>
+                                        <span class="badge <?= ($row['egg_category'] === 'Table') ? 'bg-primary' : 'bg-danger' ?>">
+                                            <?= $row['egg_category'] ?> Egg
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold"><?= number_format($row['quantity_sold']) ?></td>
+                                    <td>LKR <?= number_format($row['actual_rate'], 2) ?></td>
+                                    <td class="text-muted">LKR <?= number_format($row['hope_rate'], 2) ?></td>
+                                    <td class="fw-bold text-dark">LKR <?= number_format($row['total_revenue'], 2) ?></td>
+                                    <td>
+                                        <?php if ($target_met): ?>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2">Met Target</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2">Below Hope</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-secondary edit-sales-btn"
                                                 data-id="<?= $row['id'] ?>"
                                                 data-date="<?= $row['sales_date'] ?>"
                                                 data-category="<?= $row['egg_category'] ?>"
@@ -140,17 +148,18 @@ require_once '../../../includes/sidebar.php';
                                                 data-actual="<?= $row['actual_rate'] ?>"
                                                 data-hope="<?= $row['hope_rate'] ?>"
                                                 data-bs-toggle="modal" data-bs-target="#salesModal">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <a href="processors/sales_crud.php?action=delete&id=<?= $row['id'] ?>" 
-                                           class="btn btn-outline-danger" 
-                                           onclick="return confirm('Are you sure you want to permanently delete this sales row?');">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endwhile; endif; ?>
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <a href="processors/sales_crud.php?action=delete&id=<?= $row['id'] ?>"
+                                                class="btn btn-outline-danger"
+                                                onclick="return confirm('Are you sure you want to permanently delete this sales row?');">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                        <?php endwhile;
+                        endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -158,9 +167,9 @@ require_once '../../../includes/sidebar.php';
     </main>
 </div>
 
-<?php 
-include './models/sales_modal.php'; 
-require_once '../../../includes/footer.php'; 
+<?php
+include './models/sales_modal.php';
+require_once '../../../includes/footer.php';
 ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
@@ -175,38 +184,46 @@ require_once '../../../includes/footer.php';
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
 <script>
-$(document).ready(function() {
-    $('#salesTable').DataTable({
-        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
-        buttons: [
-            { extend: 'csv', className: 'btn btn-sm btn-success px-3 me-1 rounded' },
-            { extend: 'pdf', className: 'btn btn-sm btn-warning px-3 me-1 rounded text-dark' },
-            { extend: 'print', className: 'btn btn-sm btn-danger px-3 rounded' }
-        ],
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search sales rows..."
-        }
-    });
+    $(document).ready(function() {
+        $('#salesTable').DataTable({
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+            buttons: [{
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-success px-3 me-1 rounded'
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-sm btn-warning px-3 me-1 rounded text-dark'
+                },
+                {
+                    extend: 'print',
+                    className: 'btn btn-sm btn-danger px-3 rounded'
+                }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search sales rows..."
+            }
+        });
 
-    // Populate dynamic adjustments into fields on trigger
-    $('.edit-sales-btn').on('click', function() {
-        $('#modalAction').val('update');
-        $('#saleId').val($(this).data('id'));
-        $('#salesDate').val($(this).data('date'));
-        $('#eggCategory').val($(this).data('category'));
-        $('#qtySold').val($(this).data('qty'));
-        $('#rateActual').val($(this).data('actual'));
-        $('#rateHope').val($(this).data('hope'));
-        $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i>Edit Sales Invoice');
-    });
+        // Populate dynamic adjustments into fields on trigger
+        $('.edit-sales-btn').on('click', function() {
+            $('#modalAction').val('update');
+            $('#saleId').val($(this).data('id'));
+            $('#salesDate').val($(this).data('date'));
+            $('#eggCategory').val($(this).data('category'));
+            $('#qtySold').val($(this).data('qty'));
+            $('#rateActual').val($(this).data('actual'));
+            $('#rateHope').val($(this).data('hope'));
+            $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i>Edit Sales Invoice');
+        });
 
-    // Reset layout elements smoothly upon cancellation
-    $('#salesModal').on('hidden.bs.modal', function () {
-        $('#modalAction').val('create');
-        $('#saleId').val('');
-        $('#salesForm')[0].reset();
-        $('#modalTitle').html('<i class="bi bi-cart-plus me-2"></i>Log New Sales Invoice');
+        // Reset layout elements smoothly upon cancellation
+        $('#salesModal').on('hidden.bs.modal', function() {
+            $('#modalAction').val('create');
+            $('#saleId').val('');
+            $('#salesForm')[0].reset();
+            $('#modalTitle').html('<i class="bi bi-cart-plus me-2"></i>Log New Sales Invoice');
+        });
     });
-});
 </script>

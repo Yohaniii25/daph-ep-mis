@@ -10,33 +10,33 @@ $user_id = $_SESSION['user_id'] ?? 1;
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
+
     $batch_date = $mysqli->real_escape_string($_POST['batch_date']);
     $hatchable  = intval($_POST['hatchable_count']);
     $cracked    = intval($_POST['cracked_count']);
     $table      = intval($_POST['table_count']);
     $chicks     = ($_POST['chicks_hatched'] !== '') ? intval($_POST['chicks_hatched']) : null;
+    $farm_id    = $_SESSION['farm_id'] ?? null;
 
     if ($action === 'create') {
         // Create Operation
-        $stmt = $mysqli->prepare("INSERT INTO hatchery_batches (user_id, batch_date, hatchable_count, cracked_count, table_count, chicks_hatched) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isiiii", $user_id, $batch_date, $hatchable, $cracked, $table, $chicks);
-        
+        $stmt = $mysqli->prepare("INSERT INTO hatchery_batches (user_id, farm_id, batch_date, hatchable_count, cracked_count, table_count, chicks_hatched) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iisiiii", $user_id, $farm_id, $batch_date, $hatchable, $cracked, $table, $chicks);
+
         if ($stmt->execute()) {
             header("Location: ../hatchery_operations.php?status=success&msg=Batch logged successfully.");
         } else {
             header("Location: ../hatchery_operations.php?status=error&msg=Failed to save entry.");
         }
         $stmt->close();
-    } 
-    
-    elseif ($action === 'update') {
+    } elseif ($action === 'update') {
         // Update Operation
         $id = intval($_POST['id']);
-        
-        $stmt = $mysqli->prepare("UPDATE hatchery_batches SET batch_date = ?, hatchable_count = ?, cracked_count = ?, table_count = ?, chicks_hatched = ? WHERE id = ?");
-        $stmt->bind_param("siiiii", $batch_date, $hatchable, $cracked, $table, $chicks, $id);
-        
+
+        // Scope update to user's assigned farm_id to secure action
+        $stmt = $mysqli->prepare("UPDATE hatchery_batches SET batch_date = ?, hatchable_count = ?, cracked_count = ?, table_count = ?, chicks_hatched = ? WHERE id = ? AND farm_id = ?");
+        $stmt->bind_param("siiiiii", $batch_date, $hatchable, $cracked, $table, $chicks, $id, $farm_id);
+
         if ($stmt->execute()) {
             header("Location: ../hatchery_operations.php?status=success&msg=Batch updated successfully.");
         } else {
@@ -44,15 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
     }
-} 
-
-elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'delete') {
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'delete') {
     // Delete Operation
     $id = intval($_GET['id']);
-    
-    $stmt = $mysqli->prepare("DELETE FROM hatchery_batches WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    
+    $farm_id = $_SESSION['farm_id'] ?? null;
+
+    // Scope delete to user's assigned farm_id to secure action
+    $stmt = $mysqli->prepare("DELETE FROM hatchery_batches WHERE id = ? AND farm_id = ?");
+    $stmt->bind_param("ii", $id, $farm_id);
+
     if ($stmt->execute()) {
         header("Location: ../hatchery_operations.php?status=success&msg=Batch row removed successfully.");
     } else {
@@ -62,4 +62,3 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'delete') {
 }
 
 $mysqli->close();
-?>

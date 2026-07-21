@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 11, 2026 at 10:52 AM
+-- Generation Time: Jul 20, 2026 at 10:13 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -141,6 +141,251 @@ INSERT INTO `animal_populations` (`id`, `range_id`, `year`, `animal_type`, `quan
 (16, 1, 2026, 'Chicken', 23500, '2026-07-04 11:35:24'),
 (17, 1, 2026, 'Pig', 1030, '2026-07-04 11:35:24'),
 (18, 1, 2026, 'Others', 570, '2026-07-04 11:35:24');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_feed_production`
+--
+
+CREATE TABLE `annual_feed_production` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `pasture_farm_families` int(11) DEFAULT 0,
+  `pasture_prod_kg_month` decimal(12,2) DEFAULT 0.00,
+  `pasture_sales_kg_month` decimal(12,2) DEFAULT 0.00,
+  `pasture_price_rs` decimal(10,2) DEFAULT 0.00,
+  `fodder_farm_families` int(11) DEFAULT 0,
+  `fodder_prod_kg_month` decimal(12,2) DEFAULT 0.00,
+  `fodder_sales_kg_month` decimal(12,2) DEFAULT 0.00,
+  `fodder_price_rs` decimal(10,2) DEFAULT 0.00,
+  `silage_farm_families` int(11) DEFAULT 0,
+  `silage_prod_kg_year` decimal(12,2) DEFAULT 0.00,
+  `paddy_straw_families` int(11) DEFAULT 0,
+  `paddy_straw_storage_sqft` decimal(12,2) DEFAULT 0.00,
+  `paddy_straw_capacity_ton` decimal(10,2) DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_livestock_societies`
+--
+
+CREATE TABLE `annual_livestock_societies` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `gn_division` varchar(150) DEFAULT NULL,
+  `name_and_address` text NOT NULL,
+  `overall_objective` varchar(255) DEFAULT NULL,
+  `total_members` int(11) DEFAULT 0,
+  `registration_no` varchar(100) DEFAULT NULL,
+  `registration_department` varchar(150) DEFAULT NULL,
+  `major_activities` text DEFAULT NULL,
+  `has_financial_records` enum('Yes','No') DEFAULT 'No' COMMENT 'State whether audited financial statement maintained',
+  `regulated_by` varchar(150) DEFAULT NULL,
+  `contact_no` varchar(50) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_milk_collecting_centers`
+--
+
+CREATE TABLE `annual_milk_collecting_centers` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `center_name` varchar(200) NOT NULL,
+  `address` text DEFAULT NULL,
+  `contact_no` varchar(50) DEFAULT NULL,
+  `collection_lit_month` decimal(12,2) DEFAULT 0.00,
+  `chilling_capacity_lit` decimal(12,2) DEFAULT 0.00,
+  `milk_supply_to` varchar(200) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_milk_processing_centers`
+--
+
+CREATE TABLE `annual_milk_processing_centers` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `center_name` varchar(200) NOT NULL,
+  `address` text DEFAULT NULL,
+  `contact_no` varchar(50) DEFAULT NULL,
+  `yoghurt_lit_month` decimal(10,2) DEFAULT 0.00,
+  `curd_lit_month` decimal(10,2) DEFAULT 0.00,
+  `ice_cream_lit_month` decimal(10,2) DEFAULT 0.00,
+  `ghee_lit_month` decimal(10,2) DEFAULT 0.00,
+  `other_products_lit_month` decimal(10,2) DEFAULT 0.00,
+  `income_rs_month` decimal(15,2) DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_milk_sales_centers`
+--
+
+CREATE TABLE `annual_milk_sales_centers` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `sales_center_name` varchar(200) NOT NULL,
+  `address` text DEFAULT NULL,
+  `contact_no` varchar(50) DEFAULT NULL,
+  `fresh_milk_lit_month` decimal(10,2) DEFAULT 0.00,
+  `yoghurt_lit_month` decimal(10,2) DEFAULT 0.00,
+  `curd_lit_month` decimal(10,2) DEFAULT 0.00,
+  `ice_cream_lit_month` decimal(10,2) DEFAULT 0.00,
+  `ghee_lit_month` decimal(10,2) DEFAULT 0.00,
+  `other_products_lit_month` decimal(10,2) DEFAULT 0.00,
+  `income_rs_month` decimal(15,2) DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_pasture_fodder_lands`
+--
+
+CREATE TABLE `annual_pasture_fodder_lands` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `pasture_fam_quarter_ac` int(11) DEFAULT 0,
+  `pasture_fam_half_ac` int(11) DEFAULT 0,
+  `pasture_fam_one_ac` int(11) DEFAULT 0,
+  `pasture_fam_gt_one_ac` int(11) DEFAULT 0,
+  `pasture_total_acres` decimal(10,2) DEFAULT 0.00,
+  `fodder_fam_quarter_ac` int(11) DEFAULT 0,
+  `fodder_fam_half_ac` int(11) DEFAULT 0,
+  `fodder_fam_one_ac` int(11) DEFAULT 0,
+  `fodder_fam_gt_one_ac` int(11) DEFAULT 0,
+  `fodder_total_acres` decimal(10,2) DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `annual_pasture_fodder_lands`
+--
+
+INSERT INTO `annual_pasture_fodder_lands` (`id`, `district_id`, `range_id`, `report_year`, `pasture_fam_quarter_ac`, `pasture_fam_half_ac`, `pasture_fam_one_ac`, `pasture_fam_gt_one_ac`, `pasture_total_acres`, `fodder_fam_quarter_ac`, `fodder_fam_half_ac`, `fodder_fam_one_ac`, `fodder_fam_gt_one_ac`, `fodder_total_acres`, `created_by`, `created_at`) VALUES
+(1, 1, 1, 2026, 4, 0, 4, 0, '0.00', 4, 0, 0, 4, '0.00', 19, '2026-07-13 13:58:41');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_pasture_yields`
+--
+
+CREATE TABLE `annual_pasture_yields` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `co3_kg_year` decimal(12,2) DEFAULT 0.00,
+  `co4_kg_year` decimal(12,2) DEFAULT 0.00,
+  `co5_kg_year` decimal(12,2) DEFAULT 0.00,
+  `australian_red_nepier_kg_year` decimal(12,2) DEFAULT 0.00,
+  `super_nepier_kg_year` decimal(12,2) DEFAULT 0.00,
+  `sampoorna_kg_year` decimal(12,2) DEFAULT 0.00,
+  `other_varieties_kg_year` decimal(12,2) DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `annual_pasture_yields`
+--
+
+INSERT INTO `annual_pasture_yields` (`id`, `district_id`, `range_id`, `report_year`, `co3_kg_year`, `co4_kg_year`, `co5_kg_year`, `australian_red_nepier_kg_year`, `super_nepier_kg_year`, `sampoorna_kg_year`, `other_varieties_kg_year`, `created_by`, `created_at`) VALUES
+(1, 1, 1, 2026, '4.00', '7.00', '0.00', '9.00', '0.00', '7.00', '0.00', 19, '2026-07-13 14:02:57');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_producers_processors`
+--
+
+CREATE TABLE `annual_producers_processors` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `chick_producers_count` int(11) DEFAULT 0,
+  `chicks_produced_month` int(11) DEFAULT 0,
+  `feed_producers_count` int(11) DEFAULT 0,
+  `feed_production_mt_month` decimal(10,2) DEFAULT 0.00,
+  `poultry_processors_count` int(11) DEFAULT 0,
+  `chicken_sale_live_kg_month` decimal(12,2) DEFAULT 0.00,
+  `chicken_sale_dressed_kg_month` decimal(12,2) DEFAULT 0.00,
+  `organic_fert_farm_families` int(11) DEFAULT 0,
+  `organic_fert_prod_mt_year` decimal(10,2) DEFAULT 0.00,
+  `organic_fert_sale_kg_month` decimal(12,2) DEFAULT 0.00,
+  `organic_fert_own_use_kg_month` decimal(12,2) DEFAULT 0.00,
+  `organic_fert_price_rs_kg` decimal(10,2) DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_production_levels`
+--
+
+CREATE TABLE `annual_production_levels` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `cow_milk_lit_day` decimal(10,2) DEFAULT 0.00,
+  `buffalo_milk_lit_day` decimal(10,2) DEFAULT 0.00,
+  `goat_milk_lit_day` decimal(10,2) DEFAULT 0.00,
+  `chicks_production_no_day` int(11) DEFAULT 0,
+  `eggs_production_no_day` int(11) DEFAULT 0,
+  `beef_kg_day` decimal(10,2) DEFAULT 0.00,
+  `mutton_kg_day` decimal(10,2) DEFAULT 0.00,
+  `chicken_kg_day` decimal(10,2) DEFAULT 0.00,
+  `curd_lit_day` decimal(10,2) DEFAULT 0.00,
+  `ghee_lit_day` decimal(10,2) DEFAULT 0.00,
+  `yoghurt_lit_day` decimal(10,2) DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `annual_production_levels`
+--
+
+INSERT INTO `annual_production_levels` (`id`, `district_id`, `range_id`, `report_year`, `cow_milk_lit_day`, `buffalo_milk_lit_day`, `goat_milk_lit_day`, `chicks_production_no_day`, `eggs_production_no_day`, `beef_kg_day`, `mutton_kg_day`, `chicken_kg_day`, `curd_lit_day`, `ghee_lit_day`, `yoghurt_lit_day`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, '7.00', '8.00', '9.00', 0, 50, '8.00', '6.00', '8.00', '4.00', '8.00', '10.00', 19, '2026-07-13 13:58:06', '2026-07-13 13:58:22');
 
 -- --------------------------------------------------------
 
@@ -384,57 +629,105 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (131, '2026-07-07 07:49:25', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
 (132, '2026-07-07 08:20:56', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
 (133, '2026-07-09 06:28:31', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
-(134, '2026-07-10 09:43:13', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer');
+(134, '2026-07-10 09:43:13', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(135, '2026-07-13 04:32:40', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(136, '2026-07-13 04:44:12', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(137, '2026-07-13 05:18:53', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(138, '2026-07-13 06:03:52', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: subject_matter_specialist'),
+(139, '2026-07-13 06:35:34', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(140, '2026-07-13 10:08:55', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
+(141, '2026-07-13 11:30:58', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
+(142, '2026-07-13 13:45:24', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
+(143, '2026-07-13 14:41:49', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(144, '2026-07-20 06:38:31', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(145, '2026-07-20 07:32:51', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `breeding_progress`
+-- Table structure for table `breeding_ai_performance`
 --
 
-CREATE TABLE `breeding_progress` (
+CREATE TABLE `breeding_ai_performance` (
   `id` int(11) NOT NULL,
   `range_id` int(11) NOT NULL,
-  `officer_id` int(11) NOT NULL,
-  `year` year(4) NOT NULL,
-  `month_number` tinyint(4) NOT NULL,
-  `ai_count` int(11) DEFAULT 0,
-  `pd_count` int(11) DEFAULT 0,
-  `calving_count` int(11) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `breeding_progress`
---
-
-INSERT INTO `breeding_progress` (`id`, `range_id`, `officer_id`, `year`, `month_number`, `ai_count`, `pd_count`, `calving_count`, `created_at`) VALUES
-(1, 1, 1, 2026, 1, 5, 8, 6, '2026-03-28 14:08:34'),
-(2, 1, 2, 2025, 5, 5, 7, 7, '2026-03-28 14:31:54'),
-(3, 1, 1, 2026, 1, 7, 9, 0, '2026-03-28 14:31:54');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `breeding_target_templates`
---
-
-CREATE TABLE `breeding_target_templates` (
-  `id` int(11) NOT NULL,
-  `range_id` int(11) NOT NULL,
-  `year` year(4) NOT NULL,
-  `designation` varchar(100) NOT NULL,
-  `target_ai` int(11) DEFAULT 0,
-  `target_pd` int(11) DEFAULT 0,
-  `target_calving` int(11) DEFAULT 0
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12',
+  `technician_code` varchar(50) DEFAULT NULL,
+  `ai_date` date NOT NULL,
+  `cow_id` varchar(50) NOT NULL,
+  `semen_code` varchar(50) NOT NULL,
+  `ai_type` varchar(50) DEFAULT NULL COMMENT 'Stores the sub-category ticked under Type of AI',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `breeding_target_templates`
+-- Dumping data for table `breeding_ai_performance`
 --
 
-INSERT INTO `breeding_target_templates` (`id`, `range_id`, `year`, `designation`, `target_ai`, `target_pd`, `target_calving`) VALUES
-(1, 1, 2026, 'Veterinary Surgeon', 300, 100, 500);
+INSERT INTO `breeding_ai_performance` (`id`, `range_id`, `report_year`, `report_month`, `technician_code`, `ai_date`, `cow_id`, `semen_code`, `ai_type`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 2026, 1, 'Test', '2026-07-13', 'Test', 'Test', 'Repeat', 19, '2026-07-13 10:09:00', '2026-07-13 10:09:00'),
+(2, 1, 2026, 1, 'TECH/T1', '2026-01-10', 'COW/TEST01', 'SEMEN/S01', 'First Service', 17, '2026-07-13 10:10:06', '2026-07-13 10:10:06');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `breeding_calving_performance`
+--
+
+CREATE TABLE `breeding_calving_performance` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12',
+  `technician_code` varchar(50) DEFAULT NULL,
+  `ai_date` date DEFAULT NULL,
+  `semen_code` varchar(50) DEFAULT NULL,
+  `cow_id` varchar(50) NOT NULL,
+  `calf_id` varchar(50) NOT NULL,
+  `calving_date` date NOT NULL,
+  `calf_sex` enum('M','F') NOT NULL COMMENT 'M = Male, F = Female',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `breeding_calving_performance`
+--
+
+INSERT INTO `breeding_calving_performance` (`id`, `range_id`, `report_year`, `report_month`, `technician_code`, `ai_date`, `semen_code`, `cow_id`, `calf_id`, `calving_date`, `calf_sex`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 2026, 7, 'Test', '2026-07-14', 'Test', 'Test', 'test', '2026-07-16', 'M', 19, '2026-07-13 10:10:00', '2026-07-13 10:10:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `breeding_pd_performance`
+--
+
+CREATE TABLE `breeding_pd_performance` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12',
+  `vs_tech_code` varchar(50) DEFAULT NULL,
+  `ai_date` date DEFAULT NULL,
+  `cow_id` varchar(50) NOT NULL,
+  `pd_date` date NOT NULL,
+  `result` enum('P','NP') NOT NULL COMMENT 'P = Pregnant, NP = Not Pregnant',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `breeding_pd_performance`
+--
+
+INSERT INTO `breeding_pd_performance` (`id`, `range_id`, `report_year`, `report_month`, `vs_tech_code`, `ai_date`, `cow_id`, `pd_date`, `result`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 2026, 5, 'Test', '2026-07-15', 'test', '2026-07-21', 'P', 19, '2026-07-13 10:09:31', '2026-07-13 10:09:31');
 
 -- --------------------------------------------------------
 
@@ -466,6 +759,35 @@ INSERT INTO `building_inventories` (`id`, `land_asset_id`, `user_id`, `inventory
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `cash_book_summaries`
+--
+
+CREATE TABLE `cash_book_summaries` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `item_name` varchar(255) NOT NULL COMMENT 'e.g., Consultation fee, Day old chicks, Semen straws',
+  `quantity_sold` int(11) NOT NULL DEFAULT 0,
+  `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `total_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `amount_deposited` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `cash_book_summaries`
+--
+
+INSERT INTO `cash_book_summaries` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `item_name`, `quantity_sold`, `unit_price`, `total_amount`, `amount_deposited`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 6, 'Wound ress', 2, '100.00', '200.00', '200.00', 19, '2026-07-13 05:20:01', '2026-07-13 05:20:01');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `casual_vaccinator_deployments`
 --
 
@@ -485,6 +807,37 @@ INSERT INTO `casual_vaccinator_deployments` (`id`, `full_name`, `nic_no`, `range
 (2, 'Uvindu Rathnayaka', '4', 1, 2026),
 (3, 'Yohani Abeykoon', '4', 1, 2026),
 (4, 'Lakmi Uresha', '19876543219', 1, 2026);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cattle_voucher_usage`
+--
+
+CREATE TABLE `cattle_voucher_usage` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `opening_balance` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. at the Beginning of the month',
+  `received_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. Received During the month',
+  `used_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. used During The Month',
+  `spoilt_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. Spoilt/Damaged',
+  `transferred_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Transfer to Another Range',
+  `closing_balance` int(11) NOT NULL DEFAULT 0 COMMENT 'Balance at the End of the Month',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `cattle_voucher_usage`
+--
+
+INSERT INTO `cattle_voucher_usage` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `opening_balance`, `received_qty`, `used_qty`, `spoilt_qty`, `transferred_qty`, `closing_balance`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 8, 300, 100, 50, 5, 15, 330, 17, '2026-07-13 08:24:37', '2026-07-13 08:24:37'),
+(2, 1, 1, 2026, 6, 700, 600, 500, 100, 200, 500, 19, '2026-07-13 08:25:22', '2026-07-13 08:25:22');
 
 -- --------------------------------------------------------
 
@@ -513,6 +866,35 @@ CREATE TABLE `counterfoil_assets` (
 INSERT INTO `counterfoil_assets` (`id`, `user_id`, `district_id`, `range_id`, `counterfoil_type`, `current_condition`, `available_quantity`, `purchase_date`, `remarks`, `is_active`, `created_at`) VALUES
 (1, 19, 1, 1, 'TEST', 'Half-Used', 1, '0000-00-00', 'TEST', 0, '2026-06-30 14:43:19'),
 (2, 19, 1, 1, 'Test', 'Half-Used', 100, '0000-00-00', 'Note', 1, '2026-07-07 07:58:52');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `crop_returns`
+--
+
+CREATE TABLE `crop_returns` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `item_name` varchar(255) NOT NULL,
+  `balance_previous_month` int(11) NOT NULL DEFAULT 0,
+  `received_current_month` int(11) NOT NULL DEFAULT 0,
+  `issued_current_month` int(11) NOT NULL DEFAULT 0,
+  `balance_current_month` int(11) NOT NULL DEFAULT 0,
+  `remark` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `crop_returns`
+--
+
+INSERT INTO `crop_returns` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `item_name`, `balance_previous_month`, `received_current_month`, `issued_current_month`, `balance_current_month`, `remark`, `created_at`, `updated_at`) VALUES
+(6, 1, 1, 2026, 6, 'BQ', 0, 0, 0, 0, '', '2026-07-11 10:26:46', '2026-07-11 10:26:46');
 
 -- --------------------------------------------------------
 
@@ -580,29 +962,12 @@ CREATE TABLE `diary_tasks` (
   `time_duration` varchar(100) NOT NULL COMMENT 'e.g., 2 hours, 08:30-10:30'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Table structure for table `crop_returns`
+--
+-- Dumping data for table `diary_tasks`
 --
 
-CREATE TABLE `crop_returns` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `district_id` int(11) NOT NULL,
-  `range_id` int(11) NOT NULL,
-  `report_year` year(4) NOT NULL,
-  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
-  `item_name` varchar(255) NOT NULL,
-  `balance_previous_month` int(11) NOT NULL DEFAULT 0,
-  `received_current_month` int(11) NOT NULL DEFAULT 0,
-  `issued_current_month` int(11) NOT NULL DEFAULT 0,
-  `balance_current_month` int(11) NOT NULL DEFAULT 0,
-  `remark` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `fk_crop_returns_district` (`district_id`),
-  KEY `fk_crop_returns_range` (`range_id`),
-  CONSTRAINT `fk_crop_returns_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_crop_returns_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `diary_tasks` (`id`, `user_id`, `task_date`, `place`, `activity`, `created_at`, `time_duration`) VALUES
+(2, 19, '2026-07-11', 'uppuveli', 'test', '2026-07-11 09:32:30', '09.00 am - 11.00 am');
 
 -- --------------------------------------------------------
 
@@ -648,8 +1013,8 @@ CREATE TABLE `drug_records` (
 --
 
 INSERT INTO `drug_records` (`id`, `log_date`, `drug_type_id`, `vaccine_batch_id`, `starter_count_month`, `during_month_received`, `used_doses_count`, `doses_damaged`, `created_at`) VALUES
-(1, '2026-06-01', 1, 7, 1000, 0, 0, 0, '2026-06-01 14:54:22'),
-(2, '2026-06-02', 2, 6, 400, 0, 0, 0, '2026-06-02 06:52:58');
+(5, '2026-07-13', 2, 7, 100, 50, 30, 70, '2026-07-13 07:13:10'),
+(6, '2026-07-14', 2, 6, 800, 600, 500, 300, '2026-07-13 07:32:02');
 
 -- --------------------------------------------------------
 
@@ -672,9 +1037,37 @@ CREATE TABLE `drug_types` (
 --
 
 INSERT INTO `drug_types` (`id`, `vaccine_name`, `target_animal`, `description`, `expiry_date`, `created_at`, `updated_at`) VALUES
-(1, 'Oxytocine inj', 'Cattle,Dairy Cows,Buffalo,Goats', '', '2026-07-31', '2026-06-01 14:09:23', '2026-06-02 06:51:56'),
-(2, 'Xyaject Inj', 'Cattle,Dairy Cows,Buffalo,Goats,Poultry,other', '', '2026-07-31', '2026-06-02 06:48:31', '2026-06-02 06:48:31'),
-(3, 'Ivermectin injection', 'Goats,Poultry,other', 'test', '2026-07-31', '2026-06-16 11:13:14', '2026-06-16 11:20:26');
+(2, 'Xyaject Inj', 'Cattle,Dairy Cows,Buffalo,Goats,Poultry,other', '', '2026-07-31', '2026-06-02 06:48:31', '2026-06-02 06:48:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ear_tag_usage`
+--
+
+CREATE TABLE `ear_tag_usage` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `opening_balance` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. at the Beginning of the month',
+  `received_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. Received During the month',
+  `used_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. used During The Month',
+  `spoilt_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. Spoilt/Damaged',
+  `transferred_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Transfer to Another Range',
+  `closing_balance` int(11) NOT NULL DEFAULT 0 COMMENT 'Balance at the End of the Month',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `ear_tag_usage`
+--
+
+INSERT INTO `ear_tag_usage` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `opening_balance`, `received_qty`, `used_qty`, `spoilt_qty`, `transferred_qty`, `closing_balance`, `created_by`, `created_at`, `updated_at`) VALUES
+(2, 1, 1, 2026, 7, 400, 200, 120, 10, 5, 465, 17, '2026-07-13 08:22:02', '2026-07-13 08:23:12');
 
 -- --------------------------------------------------------
 
@@ -716,6 +1109,7 @@ INSERT INTO `furniture_assets` (`id`, `user_id`, `district_id`, `range_id`, `fur
 CREATE TABLE `hatchery_batches` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
+  `farm_id` int(11) DEFAULT NULL,
   `batch_date` date NOT NULL,
   `hatchable_count` int(11) NOT NULL DEFAULT 0,
   `cracked_count` int(11) NOT NULL DEFAULT 0,
@@ -729,9 +1123,9 @@ CREATE TABLE `hatchery_batches` (
 -- Dumping data for table `hatchery_batches`
 --
 
-INSERT INTO `hatchery_batches` (`id`, `user_id`, `batch_date`, `hatchable_count`, `cracked_count`, `table_count`, `chicks_hatched`, `created_at`) VALUES
-(1, 13, '2026-05-18', 40, 10, 30, 30, '2026-05-18 13:45:59'),
-(3, 13, '2026-04-30', 100, 10, 60, 90, '2026-05-19 08:55:03');
+INSERT INTO `hatchery_batches` (`id`, `user_id`, `farm_id`, `batch_date`, `hatchable_count`, `cracked_count`, `table_count`, `chicks_hatched`, `created_at`) VALUES
+(1, 13, NULL, '2026-05-18', 40, 10, 30, 30, '2026-05-18 13:45:59'),
+(3, 13, NULL, '2026-04-30', 100, 10, 60, 90, '2026-05-19 08:55:03');
 
 -- --------------------------------------------------------
 
@@ -742,6 +1136,7 @@ INSERT INTO `hatchery_batches` (`id`, `user_id`, `batch_date`, `hatchable_count`
 CREATE TABLE `hatchery_sales` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
+  `farm_id` int(11) DEFAULT NULL,
   `sales_date` date NOT NULL,
   `egg_category` enum('Table','Cracked') NOT NULL,
   `quantity_sold` int(11) NOT NULL DEFAULT 0,
@@ -755,9 +1150,42 @@ CREATE TABLE `hatchery_sales` (
 -- Dumping data for table `hatchery_sales`
 --
 
-INSERT INTO `hatchery_sales` (`id`, `user_id`, `sales_date`, `egg_category`, `quantity_sold`, `actual_rate`, `hope_rate`, `created_at`) VALUES
-(1, 13, '2026-05-19', 'Table', 30, '30.00', '10.00', '2026-05-19 06:48:49'),
-(2, 13, '2026-05-18', 'Cracked', 10, '10.00', '10.00', '2026-05-19 06:50:19');
+INSERT INTO `hatchery_sales` (`id`, `user_id`, `farm_id`, `sales_date`, `egg_category`, `quantity_sold`, `actual_rate`, `hope_rate`, `created_at`) VALUES
+(1, 13, NULL, '2026-05-19', 'Table', 30, '30.00', '10.00', '2026-05-19 06:48:49'),
+(2, 13, NULL, '2026-05-18', 'Cracked', 10, '10.00', '10.00', '2026-05-19 06:50:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `health_certificate_issues`
+--
+
+CREATE TABLE `health_certificate_issues` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `health_certificate_no` varchar(100) NOT NULL,
+  `applicant_name_address` text NOT NULL COMMENT 'Name of the Applicant & Address',
+  `farm_registration_no` varchar(100) DEFAULT NULL,
+  `date_of_issue` date NOT NULL,
+  `species` varchar(100) DEFAULT NULL COMMENT 'Species B/Nc',
+  `animal_details_male` int(11) NOT NULL DEFAULT 0 COMMENT 'Details of animal - Male',
+  `animal_details_female` int(11) NOT NULL DEFAULT 0 COMMENT 'Details of animal - Female',
+  `vehicle_fitness_certificate_no` varchar(100) DEFAULT NULL,
+  `purpose` varchar(255) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `health_certificate_issues`
+--
+
+INSERT INTO `health_certificate_issues` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `health_certificate_no`, `applicant_name_address`, `farm_registration_no`, `date_of_issue`, `species`, `animal_details_male`, `animal_details_female`, `vehicle_fitness_certificate_no`, `purpose`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 10, 'HC/2026/0854', 'John Doe, 123 Farm Road, Balapitiya', 'FRN/BAL/101', '2026-10-15', 'Bovine', 15, 20, 'VF/6075', 'Breeding', 17, '2026-07-13 09:17:13', '2026-07-13 09:18:06');
 
 -- --------------------------------------------------------
 
@@ -924,53 +1352,32 @@ INSERT INTO `leave_requests` (`id`, `user_id`, `leave_type`, `request_date`, `st
 -- --------------------------------------------------------
 
 --
--- Table structure for table `livestock_targets`
+-- Table structure for table `letter_h_accounts`
 --
 
-CREATE TABLE `livestock_targets` (
+CREATE TABLE `letter_h_accounts` (
   `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
   `range_id` int(11) NOT NULL,
-  `item_id` int(11) NOT NULL,
-  `target_year` int(11) NOT NULL,
-  `annual_target_value` decimal(15,2) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `transaction_date` date NOT NULL,
+  `transaction_type` enum('Receipt','Disbursement') NOT NULL DEFAULT 'Receipt',
+  `reference_no` varchar(50) DEFAULT NULL COMMENT 'Receipt No (e.g., 1030832) or Deposit Ref',
+  `particulars` varchar(255) NOT NULL COMMENT 'Description (e.g., Consultation, Ranikhet vaccine, Deposit to Bank)',
+  `quantity` int(11) DEFAULT NULL COMMENT 'Optional: Extracted from details (e.g., 01 from 01x150/-)',
+  `rate` decimal(10,2) DEFAULT NULL COMMENT 'Optional: Extracted from details (e.g., 150.00)',
+  `amount` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `created_by` int(11) DEFAULT NULL COMMENT 'References users.id',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `livestock_targets`
+-- Dumping data for table `letter_h_accounts`
 --
 
-INSERT INTO `livestock_targets` (`id`, `range_id`, `item_id`, `target_year`, `annual_target_value`) VALUES
-(1, 1, 1, 2026, '5000.00'),
-(2, 1, 1, 2026, '50000.00'),
-(3, 1, 2, 2026, '15000.00'),
-(4, 1, 3, 2026, '2000.00'),
-(5, 1, 4, 2026, '12000.00'),
-(6, 1, 5, 2026, '10000.00'),
-(7, 1, 6, 2026, '5000.00'),
-(8, 1, 7, 2026, '8000.00'),
-(9, 1, 8, 2026, '4000.00'),
-(10, 1, 9, 2026, '4000.00'),
-(11, 1, 10, 2026, '6000.00'),
-(12, 1, 11, 2026, '15000.00'),
-(13, 1, 12, 2026, '500.00'),
-(14, 1, 13, 2026, '1000.00'),
-(15, 1, 14, 2026, '250.00'),
-(16, 1, 15, 2026, '100.00'),
-(17, 1, 16, 2026, '3000.00'),
-(18, 1, 17, 2026, '100000.00'),
-(19, 1, 18, 2026, '25000.00'),
-(20, 1, 19, 2026, '8000.00'),
-(21, 1, 20, 2026, '500.00'),
-(22, 1, 21, 2026, '300.00'),
-(23, 1, 22, 2026, '10000.00'),
-(24, 1, 23, 2026, '50.00'),
-(25, 1, 24, 2026, '5000.00'),
-(26, 1, 25, 2026, '100.00'),
-(27, 1, 26, 2026, '150.00'),
-(28, 1, 27, 2026, '200.00'),
-(29, 1, 28, 2026, '15000.00'),
-(30, 1, 29, 2026, '20000.00'),
-(31, 1, 30, 2026, '35000.00');
+INSERT INTO `letter_h_accounts` (`id`, `district_id`, `range_id`, `transaction_date`, `transaction_type`, `reference_no`, `particulars`, `quantity`, `rate`, `amount`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, '2026-07-13', 'Receipt', '1030832', 'Consultation', 1, '150.00', '150.00', 19, '2026-07-13 04:45:17', '2026-07-13 05:02:00'),
+(2, 1, 1, '2026-07-13', 'Disbursement', '1030832', 'Consultation', 1, '150.00', '150.00', 19, '2026-07-13 05:06:25', '2026-07-13 05:06:25');
 
 -- --------------------------------------------------------
 
@@ -1066,30 +1473,36 @@ INSERT INTO `master_units` (`id`, `unit_name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `section_e`
+-- Table structure for table `monthly_vaccine_balances`
 --
 
-CREATE TABLE `section_e` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE `monthly_vaccine_balances` (
+  `id` int(11) NOT NULL,
   `district_id` int(11) NOT NULL,
   `range_id` int(11) NOT NULL,
-  `report_year` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
   `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
-  `category_id` int(11) NOT NULL,
-  `item_id` int(11) NOT NULL,
-  `amount` decimal(15,2) NOT NULL DEFAULT '0.00',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `fk_prod_rec_district` (`district_id`),
-  KEY `fk_prod_rec_range` (`range_id`),
-  KEY `fk_prod_rec_category` (`category_id`),
-  KEY `fk_prod_rec_item` (`item_id`),
-  CONSTRAINT `fk_prod_rec_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_prod_rec_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_prod_rec_category` FOREIGN KEY (`category_id`) REFERENCES `production_categories` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_prod_rec_item` FOREIGN KEY (`item_id`) REFERENCES `production_items` (`id`) ON DELETE CASCADE
+  `vaccine_name` varchar(150) NOT NULL COMMENT 'e.g., Ranikhet 1, Fowl pox, ARV',
+  `opening_balance` int(11) NOT NULL DEFAULT 0 COMMENT 'No. of Doses beginning of the Month',
+  `received_doses` int(11) NOT NULL DEFAULT 0 COMMENT 'No. of Doses Received During the Month',
+  `used_doses` int(11) NOT NULL DEFAULT 0 COMMENT 'No. of Doses Used During the Month',
+  `spoilt_damaged_doses` int(11) NOT NULL DEFAULT 0 COMMENT 'No. of Doses Spoilt/Damaged',
+  `transferred_doses` int(11) NOT NULL DEFAULT 0 COMMENT 'Transfer to another Range',
+  `closing_balance` int(11) NOT NULL DEFAULT 0 COMMENT 'Balance Doses at the End of the Month',
+  `batch_no` varchar(100) DEFAULT NULL,
+  `expiry_date` varchar(50) DEFAULT NULL COMMENT 'VARCHAR used because sometimes formats are loose (e.g. August/2026)',
+  `remarks` varchar(255) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `monthly_vaccine_balances`
+--
+
+INSERT INTO `monthly_vaccine_balances` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `vaccine_name`, `opening_balance`, `received_doses`, `used_doses`, `spoilt_damaged_doses`, `transferred_doses`, `closing_balance`, `batch_no`, `expiry_date`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 6, 'Ranikhet 1', 4800, 0, 2800, 0, 0, 2000, '2025/03', '05.08.2026', 'Pg No.67', 19, '2026-07-13 06:01:56', '2026-07-13 06:01:56');
 
 -- --------------------------------------------------------
 
@@ -1099,6 +1512,8 @@ CREATE TABLE `section_e` (
 
 CREATE TABLE `parent_stock_flocks` (
   `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `farm_id` int(11) DEFAULT NULL,
   `flock_code` varchar(50) NOT NULL,
   `region` varchar(100) NOT NULL,
   `current_count` int(11) NOT NULL DEFAULT 0,
@@ -1109,10 +1524,10 @@ CREATE TABLE `parent_stock_flocks` (
 -- Dumping data for table `parent_stock_flocks`
 --
 
-INSERT INTO `parent_stock_flocks` (`id`, `flock_code`, `region`, `current_count`, `assigned_cages`) VALUES
-(1, 'SAT-CB-2026-01', 'Sathurukondan', 4, 'C-09'),
-(2, 'THM-CB-2026-02', 'Thampalakamam', 6, 'B-05'),
-(3, 'TRK-HB-2026-01', 'Thirukkovil', 8, 'A-10');
+INSERT INTO `parent_stock_flocks` (`id`, `user_id`, `farm_id`, `flock_code`, `region`, `current_count`, `assigned_cages`) VALUES
+(1, NULL, NULL, 'SAT-CB-2026-01', 'Sathurukondan', 4, 'C-09'),
+(2, NULL, NULL, 'THM-CB-2026-02', 'Thampalakamam', 6, 'B-05'),
+(3, NULL, NULL, 'TRK-HB-2026-01', 'Thirukkovil', 8, 'A-10');
 
 -- --------------------------------------------------------
 
@@ -1164,7 +1579,9 @@ INSERT INTO `production_categories` (`id`, `category_name`, `sort_order`) VALUES
 (4, 'Egg Production ', 4),
 (5, 'Meat Production ', 5),
 (6, 'Other Production Details', 6),
-(7, 'Poultry Feed Production ', 7);
+(7, 'Poultry Feed Production ', 7),
+(9, 'Slaughter Statistics', 0),
+(10, 'Semen Details', 0);
 
 -- --------------------------------------------------------
 
@@ -1213,7 +1630,9 @@ INSERT INTO `production_items` (`id`, `category_id`, `item_name`, `unit`) VALUES
 (27, 6, 'Pasture Land Utilization', 'Acres'),
 (28, 7, 'Starter Feed Production', 'Kg'),
 (29, 7, 'Grower Feed Production', 'Kg'),
-(30, 7, 'Layer Feed Production', 'Kg');
+(30, 7, 'Layer Feed Production', 'Kg'),
+(32, 9, 'Neat Cattle Slaughter at Slaughter House During the Month', 'Nos'),
+(33, 10, 'Available Semen at beginning of the month', 'Nos');
 
 -- --------------------------------------------------------
 
@@ -1346,6 +1765,34 @@ CREATE TABLE `regulatory_records` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `section_e`
+--
+
+CREATE TABLE `section_e` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` int(11) NOT NULL,
+  `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `category_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `amount` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `section_e`
+--
+
+INSERT INTO `section_e` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `category_id`, `item_id`, `amount`, `created_at`, `updated_at`) VALUES
+(2, 1, 1, 2026, 7, 1, 1, '8.00', '2026-07-11 12:18:26', '2026-07-11 12:18:37'),
+(3, 1, 1, 2026, 7, 9, 32, '20.00', '2026-07-11 12:37:27', '2026-07-11 12:37:27'),
+(4, 1, 1, 2026, 7, 10, 33, '154.00', '2026-07-11 12:38:54', '2026-07-11 12:38:54');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `semen_logs`
 --
 
@@ -1369,9 +1816,9 @@ CREATE TABLE `semen_logs` (
 --
 
 INSERT INTO `semen_logs` (`id`, `range_id`, `report_month`, `report_year`, `species`, `opening_balance`, `received_qty`, `used_qty`, `issued_qty`, `spoiled_qty`, `paid_amount`, `created_at`) VALUES
-(1, 1, 1, 2026, 'Buffalo', 50, 30, 10, 0, 0, '1000.00', '2026-04-03 11:33:01'),
-(3, 1, 2, 2026, 'Poultry', 60, 10, 20, 10, 0, '2000.00', '2026-04-03 12:03:42'),
-(4, 1, 3, 2026, 'Cock', 50, 10, 10, 0, 0, '2000.00', '2026-04-03 12:04:22');
+(1, 1, 1, 2026, 'Buffalo', 50, 30, 10, 0, 0, '1000.00', '2026-04-03 06:03:01'),
+(3, 1, 2, 2026, 'Poultry', 60, 10, 20, 10, 0, '2000.00', '2026-04-03 06:33:42'),
+(4, 1, 3, 2026, 'Cock', 50, 10, 10, 0, 0, '2000.00', '2026-04-03 06:34:22');
 
 -- --------------------------------------------------------
 
@@ -1397,8 +1844,8 @@ CREATE TABLE `slaughter_statistics` (
 --
 
 INSERT INTO `slaughter_statistics` (`id`, `range_id`, `report_month`, `report_year`, `species`, `location_type`, `animal_count`, `total_weight_kg`, `created_by`, `created_at`) VALUES
-(1, 1, 4, 2026, 'Cattle', 'Slaughter House', 30, '3000.00', 19, '2026-04-03 10:06:53'),
-(2, 1, 4, 2026, 'Goat', 'In-Farm', 29, '5000.00', 19, '2026-04-03 10:08:03');
+(1, 1, 4, 2026, 'Cattle', 'Slaughter House', 30, '3000.00', 19, '2026-04-03 04:36:53'),
+(2, 1, 4, 2026, 'Goat', 'In-Farm', 29, '5000.00', 19, '2026-04-03 04:38:03');
 
 -- --------------------------------------------------------
 
@@ -1541,15 +1988,15 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, NULL, 'administrator', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-21 16:36:50', '2025-12-15 11:32:14', NULL),
 (10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', NULL, NULL, NULL, 'finance_admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 16:04:04', '2025-12-16 07:42:06', NULL),
 (11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', NULL, NULL, NULL, 'planning_officer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 16:05:02', '2025-12-16 09:34:59', NULL),
-(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-17 12:34:03', '2025-12-16 11:30:03', NULL),
+(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-07-13 11:33:52', '2025-12-16 11:30:03', NULL),
 (13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', NULL, NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-25 20:22:03', '2025-12-17 08:46:28', NULL),
 (15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 17:18:35', '2025-12-17 10:22:46', NULL),
 (16, 'District Deputy Director', 'district_dd@gmail.com', NULL, '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', NULL, NULL, NULL, 'district_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-09 18:17:56', '2025-12-17 13:23:28', NULL),
-(17, 'veterinary surgeon', 'veterinary@gmail.com', '0712345678', '/PlbhcejtIVR8iCMpcS/0pFAdvbhW', 'veterinary surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 1, NULL, NULL, NULL, NULL, NULL, 'Amparai', 1, '2026-07-06 16:17:16', '2025-12-18 10:10:22', NULL),
+(17, 'veterinary surgeon', 'veterinary@gmail.com', '0712345678', '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'veterinary surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 13, NULL, NULL, NULL, NULL, NULL, 'Amparai', 1, '2026-07-13 19:15:24', '2025-12-18 10:10:22', NULL),
 (18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, NULL, 'provincial_director', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-17 12:17:54', '2026-01-05 13:18:11', NULL),
-(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$tmJDAqL84RjQGr9TxsLdKeZTlIPk0PV5mWSC.RXYg7WqNPygorIhO', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 1, NULL, NULL, NULL, NULL, 1, 'Amparai', 1, '2026-07-10 15:13:13', '2026-03-25 10:58:36', NULL),
+(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$C23XrN3nUI/IaA4vmnQOR.lASC11IaUhMlh6lfrwTFo6lUorD8hmG', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 1, NULL, NULL, NULL, NULL, 1, 'Amparai', 1, '2026-07-20 12:08:31', '2026-03-25 10:58:36', NULL),
 (20, 'employee', 'emp@gmail.com', NULL, '$2y$10$ITeSMQXxM8Ciwu4KK/Sy2O7ai30xUjP8yrL1WNRzXlNnsrG8ylfZK', 'Test Employee', NULL, NULL, NULL, 'employee', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, 'Amparai', 1, '2026-05-18 17:56:16', '2026-04-22 06:10:30', 'profile_20_1777526035.png'),
-(21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Dr. (Mrs). L. Dujiththera', NULL, NULL, 'GVS', 'veterinary_surgeon', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
+(21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'Dr. (Mrs). L. Dujiththera', NULL, NULL, 'GVS', 'veterinary_surgeon', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
 (22, 'sinharasa', 'sinharasa.a@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. A. Sinharasa', NULL, NULL, 'LDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
 (23, 'amirthalingam', 'amirthalingam.p@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. P. Amirthalingam', NULL, NULL, 'LDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
 (24, 'vimalathasan', 'vimalathasan.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Vimalathasan', NULL, NULL, 'PDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
@@ -1559,7 +2006,8 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (28, 'koneswaran', 'koneswaran.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Koneswaran', NULL, NULL, 'PDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
 (29, 'saththiyawan', 'saththiyawan.t@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. T. Saththiyawan', NULL, NULL, 'Driver', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
 (30, 'gaminiraj', 'gaminiraj.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Gaminiraj', NULL, NULL, 'Watcher', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
-(42, 'test', 'test@gmail.com', '0778439871', '$2y$10$dynlOJHtL.8fdGd0fcwNz.dZYr4FHzBsUxSUqBOxk9zgjySfr4n7y', 'test', '210', '210', 'Veterinary Surgeon', 'employee', 'test', 1, 1, NULL, '2026-07-09', '2026-07-09', '2026-07-09', NULL, 'Amparai', 0, NULL, '2026-07-09 06:32:57', NULL);
+(42, 'test', 'test@gmail.com', '0778439871', '$2y$10$dynlOJHtL.8fdGd0fcwNz.dZYr4FHzBsUxSUqBOxk9zgjySfr4n7y', 'test', '210', '210', 'Veterinary Surgeon', 'employee', 'test', 1, 1, NULL, '2026-07-09', '2026-07-09', '2026-07-09', NULL, 'Amparai', 0, NULL, '2026-07-09 06:32:57', NULL),
+(45, 'regionalfarms', 'regionalfarms@gmail.com', NULL, '$2y$10$k5hbQiiYpVp70ObCvcWTTecgRxgETgKmvSCs/.b/ENUMuwfceWMVS', 'Regional Farms User', NULL, NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-07-20 13:02:51', '2026-07-20 07:29:39', NULL);
 
 -- --------------------------------------------------------
 
@@ -1752,6 +2200,69 @@ ALTER TABLE `animal_populations`
   ADD UNIQUE KEY `unique_range_year_animal_type` (`range_id`,`year`,`animal_type`);
 
 --
+-- Indexes for table `annual_feed_production`
+--
+ALTER TABLE `annual_feed_production`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_feed_prod_range` (`range_id`);
+
+--
+-- Indexes for table `annual_livestock_societies`
+--
+ALTER TABLE `annual_livestock_societies`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_society_range` (`range_id`);
+
+--
+-- Indexes for table `annual_milk_collecting_centers`
+--
+ALTER TABLE `annual_milk_collecting_centers`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_collecting_center_range` (`range_id`);
+
+--
+-- Indexes for table `annual_milk_processing_centers`
+--
+ALTER TABLE `annual_milk_processing_centers`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_processing_center_range` (`range_id`);
+
+--
+-- Indexes for table `annual_milk_sales_centers`
+--
+ALTER TABLE `annual_milk_sales_centers`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_sales_center_range` (`range_id`);
+
+--
+-- Indexes for table `annual_pasture_fodder_lands`
+--
+ALTER TABLE `annual_pasture_fodder_lands`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_land_fam_range` (`range_id`);
+
+--
+-- Indexes for table `annual_pasture_yields`
+--
+ALTER TABLE `annual_pasture_yields`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_yield_range` (`range_id`);
+
+--
+-- Indexes for table `annual_producers_processors`
+--
+ALTER TABLE `annual_producers_processors`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_producers_range` (`range_id`);
+
+--
+-- Indexes for table `annual_production_levels`
+--
+ALTER TABLE `annual_production_levels`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_prod_lvl_range` (`range_id`);
+
+--
 -- Indexes for table `annual_vaccination_targets`
 --
 ALTER TABLE `annual_vaccination_targets`
@@ -1781,19 +2292,28 @@ ALTER TABLE `audit_logs`
   ADD KEY `idx_audit_logs_date` (`log_timestamp`);
 
 --
--- Indexes for table `breeding_progress`
+-- Indexes for table `breeding_ai_performance`
 --
-ALTER TABLE `breeding_progress`
+ALTER TABLE `breeding_ai_performance`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `range_id` (`range_id`),
-  ADD KEY `officer_id` (`officer_id`);
+  ADD KEY `fk_breeding_ai_range` (`range_id`),
+  ADD KEY `fk_breeding_ai_user` (`created_by`);
 
 --
--- Indexes for table `breeding_target_templates`
+-- Indexes for table `breeding_calving_performance`
 --
-ALTER TABLE `breeding_target_templates`
+ALTER TABLE `breeding_calving_performance`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `range_year_desig` (`range_id`,`year`,`designation`);
+  ADD KEY `fk_breeding_calving_range` (`range_id`),
+  ADD KEY `fk_breeding_calving_user` (`created_by`);
+
+--
+-- Indexes for table `breeding_pd_performance`
+--
+ALTER TABLE `breeding_pd_performance`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_breeding_pd_range` (`range_id`),
+  ADD KEY `fk_breeding_pd_user` (`created_by`);
 
 --
 -- Indexes for table `building_inventories`
@@ -1804,10 +2324,28 @@ ALTER TABLE `building_inventories`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `cash_book_summaries`
+--
+ALTER TABLE `cash_book_summaries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_cash_book_district` (`district_id`),
+  ADD KEY `fk_cash_book_range` (`range_id`),
+  ADD KEY `fk_cash_book_user` (`created_by`);
+
+--
 -- Indexes for table `casual_vaccinator_deployments`
 --
 ALTER TABLE `casual_vaccinator_deployments`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `cattle_voucher_usage`
+--
+ALTER TABLE `cattle_voucher_usage`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_cattle_vouchers_district` (`district_id`),
+  ADD KEY `fk_cattle_vouchers_range` (`range_id`),
+  ADD KEY `fk_cattle_vouchers_user` (`created_by`);
 
 --
 -- Indexes for table `counterfoil_assets`
@@ -1817,6 +2355,14 @@ ALTER TABLE `counterfoil_assets`
   ADD KEY `user_id` (`user_id`),
   ADD KEY `district_id` (`district_id`),
   ADD KEY `range_id` (`range_id`);
+
+--
+-- Indexes for table `crop_returns`
+--
+ALTER TABLE `crop_returns`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_crop_returns_district` (`district_id`),
+  ADD KEY `fk_crop_returns_range` (`range_id`);
 
 --
 -- Indexes for table `daily_egg_production`
@@ -1858,6 +2404,15 @@ ALTER TABLE `drug_types`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `ear_tag_usage`
+--
+ALTER TABLE `ear_tag_usage`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_ear_tags_district` (`district_id`),
+  ADD KEY `fk_ear_tags_range` (`range_id`),
+  ADD KEY `fk_ear_tags_user` (`created_by`);
+
+--
 -- Indexes for table `furniture_assets`
 --
 ALTER TABLE `furniture_assets`
@@ -1879,6 +2434,15 @@ ALTER TABLE `hatchery_batches`
 ALTER TABLE `hatchery_sales`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `health_certificate_issues`
+--
+ALTER TABLE `health_certificate_issues`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_health_cert_district` (`district_id`),
+  ADD KEY `fk_health_cert_range` (`range_id`),
+  ADD KEY `fk_health_cert_user` (`created_by`);
 
 --
 -- Indexes for table `human_populations`
@@ -1927,12 +2491,13 @@ ALTER TABLE `leave_requests`
   ADD KEY `fk_leave_user` (`user_id`);
 
 --
--- Indexes for table `livestock_targets`
+-- Indexes for table `letter_h_accounts`
 --
-ALTER TABLE `livestock_targets`
+ALTER TABLE `letter_h_accounts`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `item_id` (`item_id`),
-  ADD KEY `range_id` (`range_id`);
+  ADD KEY `fk_letter_h_district` (`district_id`),
+  ADD KEY `fk_letter_h_range` (`range_id`),
+  ADD KEY `fk_letter_h_user` (`created_by`);
 
 --
 -- Indexes for table `machinery_assets`
@@ -1956,7 +2521,14 @@ ALTER TABLE `master_programme_types`
 ALTER TABLE `master_units`
   ADD PRIMARY KEY (`id`);
 
-
+--
+-- Indexes for table `monthly_vaccine_balances`
+--
+ALTER TABLE `monthly_vaccine_balances`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_vac_bal_district` (`district_id`),
+  ADD KEY `fk_vac_bal_range` (`range_id`),
+  ADD KEY `fk_vac_bal_user` (`created_by`);
 
 --
 -- Indexes for table `parent_stock_flocks`
@@ -2020,6 +2592,16 @@ ALTER TABLE `regulatory_records`
   ADD PRIMARY KEY (`id`),
   ADD KEY `range_id` (`range_id`),
   ADD KEY `created_by` (`created_by`);
+
+--
+-- Indexes for table `section_e`
+--
+ALTER TABLE `section_e`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_prod_rec_district` (`district_id`),
+  ADD KEY `fk_prod_rec_range` (`range_id`),
+  ADD KEY `fk_prod_rec_category` (`category_id`),
+  ADD KEY `fk_prod_rec_item` (`item_id`);
 
 --
 -- Indexes for table `semen_logs`
@@ -2139,6 +2721,60 @@ ALTER TABLE `animal_populations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
+-- AUTO_INCREMENT for table `annual_feed_production`
+--
+ALTER TABLE `annual_feed_production`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `annual_livestock_societies`
+--
+ALTER TABLE `annual_livestock_societies`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `annual_milk_collecting_centers`
+--
+ALTER TABLE `annual_milk_collecting_centers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `annual_milk_processing_centers`
+--
+ALTER TABLE `annual_milk_processing_centers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `annual_milk_sales_centers`
+--
+ALTER TABLE `annual_milk_sales_centers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `annual_pasture_fodder_lands`
+--
+ALTER TABLE `annual_pasture_fodder_lands`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `annual_pasture_yields`
+--
+ALTER TABLE `annual_pasture_yields`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `annual_producers_processors`
+--
+ALTER TABLE `annual_producers_processors`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `annual_production_levels`
+--
+ALTER TABLE `annual_production_levels`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `annual_vaccination_targets`
 --
 ALTER TABLE `annual_vaccination_targets`
@@ -2160,18 +2796,24 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=146;
 
 --
--- AUTO_INCREMENT for table `breeding_progress`
+-- AUTO_INCREMENT for table `breeding_ai_performance`
 --
-ALTER TABLE `breeding_progress`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+ALTER TABLE `breeding_ai_performance`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `breeding_target_templates`
+-- AUTO_INCREMENT for table `breeding_calving_performance`
 --
-ALTER TABLE `breeding_target_templates`
+ALTER TABLE `breeding_calving_performance`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `breeding_pd_performance`
+--
+ALTER TABLE `breeding_pd_performance`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
@@ -2181,16 +2823,34 @@ ALTER TABLE `building_inventories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `cash_book_summaries`
+--
+ALTER TABLE `cash_book_summaries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `casual_vaccinator_deployments`
 --
 ALTER TABLE `casual_vaccinator_deployments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT for table `cattle_voucher_usage`
+--
+ALTER TABLE `cattle_voucher_usage`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `counterfoil_assets`
 --
 ALTER TABLE `counterfoil_assets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `crop_returns`
+--
+ALTER TABLE `crop_returns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `daily_egg_production`
@@ -2208,7 +2868,7 @@ ALTER TABLE `dairy_hub_records`
 -- AUTO_INCREMENT for table `diary_tasks`
 --
 ALTER TABLE `diary_tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `districts`
@@ -2220,13 +2880,19 @@ ALTER TABLE `districts`
 -- AUTO_INCREMENT for table `drug_records`
 --
 ALTER TABLE `drug_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `drug_types`
 --
 ALTER TABLE `drug_types`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `ear_tag_usage`
+--
+ALTER TABLE `ear_tag_usage`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `furniture_assets`
@@ -2244,6 +2910,12 @@ ALTER TABLE `hatchery_batches`
 -- AUTO_INCREMENT for table `hatchery_sales`
 --
 ALTER TABLE `hatchery_sales`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `health_certificate_issues`
+--
+ALTER TABLE `health_certificate_issues`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
@@ -2283,10 +2955,10 @@ ALTER TABLE `leave_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `livestock_targets`
+-- AUTO_INCREMENT for table `letter_h_accounts`
 --
-ALTER TABLE `livestock_targets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+ALTER TABLE `letter_h_accounts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `machinery_assets`
@@ -2306,7 +2978,11 @@ ALTER TABLE `master_programme_types`
 ALTER TABLE `master_units`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
-
+--
+-- AUTO_INCREMENT for table `monthly_vaccine_balances`
+--
+ALTER TABLE `monthly_vaccine_balances`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `parent_stock_flocks`
@@ -2324,13 +3000,13 @@ ALTER TABLE `production_activity_targets`
 -- AUTO_INCREMENT for table `production_categories`
 --
 ALTER TABLE `production_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `production_items`
 --
 ALTER TABLE `production_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `projects_progress`
@@ -2361,6 +3037,12 @@ ALTER TABLE `registered_vehicles`
 --
 ALTER TABLE `regulatory_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `section_e`
+--
+ALTER TABLE `section_e`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `semen_logs`
@@ -2402,7 +3084,7 @@ ALTER TABLE `training_centers`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT for table `vaccine_batches`
@@ -2451,6 +3133,60 @@ ALTER TABLE `animal_populations`
   ADD CONSTRAINT `animal_populations_ibfk_1` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `annual_feed_production`
+--
+ALTER TABLE `annual_feed_production`
+  ADD CONSTRAINT `fk_feed_prod_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_livestock_societies`
+--
+ALTER TABLE `annual_livestock_societies`
+  ADD CONSTRAINT `fk_society_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_milk_collecting_centers`
+--
+ALTER TABLE `annual_milk_collecting_centers`
+  ADD CONSTRAINT `fk_collecting_center_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_milk_processing_centers`
+--
+ALTER TABLE `annual_milk_processing_centers`
+  ADD CONSTRAINT `fk_processing_center_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_milk_sales_centers`
+--
+ALTER TABLE `annual_milk_sales_centers`
+  ADD CONSTRAINT `fk_sales_center_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_pasture_fodder_lands`
+--
+ALTER TABLE `annual_pasture_fodder_lands`
+  ADD CONSTRAINT `fk_land_fam_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_pasture_yields`
+--
+ALTER TABLE `annual_pasture_yields`
+  ADD CONSTRAINT `fk_yield_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_producers_processors`
+--
+ALTER TABLE `annual_producers_processors`
+  ADD CONSTRAINT `fk_producers_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `annual_production_levels`
+--
+ALTER TABLE `annual_production_levels`
+  ADD CONSTRAINT `fk_prod_lvl_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `annual_vaccination_targets`
 --
 ALTER TABLE `annual_vaccination_targets`
@@ -2475,10 +3211,95 @@ ALTER TABLE `audit_logs`
   ADD CONSTRAINT `audit_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
+-- Constraints for table `breeding_ai_performance`
+--
+ALTER TABLE `breeding_ai_performance`
+  ADD CONSTRAINT `fk_breeding_ai_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_breeding_ai_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `breeding_calving_performance`
+--
+ALTER TABLE `breeding_calving_performance`
+  ADD CONSTRAINT `fk_breeding_calving_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_breeding_calving_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `breeding_pd_performance`
+--
+ALTER TABLE `breeding_pd_performance`
+  ADD CONSTRAINT `fk_breeding_pd_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_breeding_pd_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `cash_book_summaries`
+--
+ALTER TABLE `cash_book_summaries`
+  ADD CONSTRAINT `fk_cash_book_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_cash_book_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_cash_book_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `cattle_voucher_usage`
+--
+ALTER TABLE `cattle_voucher_usage`
+  ADD CONSTRAINT `fk_cattle_vouchers_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_cattle_vouchers_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_cattle_vouchers_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `crop_returns`
+--
+ALTER TABLE `crop_returns`
+  ADD CONSTRAINT `fk_crop_returns_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_crop_returns_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `diary_tasks`
 --
 ALTER TABLE `diary_tasks`
   ADD CONSTRAINT `fk_diary_user_link` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `ear_tag_usage`
+--
+ALTER TABLE `ear_tag_usage`
+  ADD CONSTRAINT `fk_ear_tags_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_ear_tags_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_ear_tags_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `health_certificate_issues`
+--
+ALTER TABLE `health_certificate_issues`
+  ADD CONSTRAINT `fk_health_cert_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_health_cert_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_health_cert_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `letter_h_accounts`
+--
+ALTER TABLE `letter_h_accounts`
+  ADD CONSTRAINT `fk_letter_h_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_letter_h_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_letter_h_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `monthly_vaccine_balances`
+--
+ALTER TABLE `monthly_vaccine_balances`
+  ADD CONSTRAINT `fk_vac_bal_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_vac_bal_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_vac_bal_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `section_e`
+--
+ALTER TABLE `section_e`
+  ADD CONSTRAINT `fk_prod_rec_category` FOREIGN KEY (`category_id`) REFERENCES `production_categories` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_prod_rec_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_prod_rec_item` FOREIGN KEY (`item_id`) REFERENCES `production_items` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_prod_rec_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

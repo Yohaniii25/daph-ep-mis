@@ -2,6 +2,15 @@
 // add_user.php  →  Keep this file forever (protect it later with .htaccess)
 require_once 'config/db_connect.php';
 
+// Fetch active farms for select dropdown
+$farms = [];
+$farms_res = $mysqli->query("SELECT id, farm_name, location FROM regional_farms WHERE is_active = 1 ORDER BY farm_name");
+if ($farms_res) {
+    while ($row = $farms_res->fetch_assoc()) {
+        $farms[] = $row;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username   = trim($_POST['username']);
     $email      = trim($_POST['email']);
@@ -10,24 +19,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role       = $_POST['role'];
     $district   = $_POST['district'];
 
-    // Auto hash the password
-    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $farm_id = null;
+    $validation_failed = false;
 
-    // FIXED - declare variable first
-    $is_active = 1;
+    // Validation for Farms Officer (farms_dd)
+    if ($role === 'farms_dd') {
+        $farm_id = isset($_POST['farm_id']) && $_POST['farm_id'] !== '' ? intval($_POST['farm_id']) : null;
+        if (is_null($farm_id)) {
+            echo '<div class="alert alert-danger">Error: Farm assignment is required for Deputy Director (Farms Operation) role.</div>';
+            $validation_failed = true;
+        } else {
+            // Verify if farm_id exists in regional_farms
+            $farm_check = $mysqli->prepare("SELECT id FROM regional_farms WHERE id = ?");
+            if ($farm_check) {
+                $farm_check->bind_param("i", $farm_id);
+                $farm_check->execute();
+                $farm_res = $farm_check->get_result();
+                if ($farm_res->num_rows === 0) {
+                    echo '<div class="alert alert-danger">Error: Invalid Farm selection.</div>';
+                    $validation_failed = true;
+                }
+                $farm_check->close();
+            }
+        }
+    }
 
-    // === FIXED INSERT (matches your actual users table) ===
-    $stmt = $mysqli->prepare("INSERT INTO users 
-        (username, email, password, full_name, role, district, is_active) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)");
+    if (!$validation_failed) {
+        // Auto hash the password
+        $hash = password_hash($password, PASSWORD_DEFAULT);
 
-    $stmt->bind_param("ssssssi", $username, $email, $hash, $full_name, $role, $district, $is_active);
+        // FIXED - declare variable first
+        $is_active = 1;
 
-    if ($stmt->execute()) {
-        echo '<div class="alert alert-success">✅ User <b>' . htmlspecialchars($username) . 
-             '</b> created successfully!<br>Password: <b>' . htmlspecialchars($password) . '</b></div>';
-    } else {
-        echo '<div class="alert alert-danger">Error: ' . $stmt->error . '</div>';
+        // === FIXED INSERT (matches your actual users table including farm_id) ===
+        $stmt = $mysqli->prepare("INSERT INTO users 
+            (username, email, password, full_name, role, district, farm_id, is_active) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+
+        $stmt->bind_param("ssssssii", $username, $email, $hash, $full_name, $role, $district, $farm_id, $is_active);
+
+        if ($stmt->execute()) {
+            echo '<div class="alert alert-success">✅ User <b>' . htmlspecialchars($username) . 
+                 '</b> created successfully!<br>Password: <b>' . htmlspecialchars($password) . '</b></div>';
+        } else {
+            echo '<div class="alert alert-danger">Error: ' . $stmt->error . '</div>';
+        }
     }
 }
 ?>
@@ -72,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="administrator">Administrator</option>
                             <option value="finance_admin">Finance Admin</option>
                             <option value="planning_officer">Planning Officer</option>
-                            <option value="farms_dd">Deputy Director (Farms Operation)</option>\
+                            <option value="farms_dd">Deputy Director (Farms Operation)</option>
                             <option value="employee">Employee</option>
                         </select>
                     </div>
@@ -85,6 +121,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="Provincial">Provincial</option>
                         </select>
                     </div>
+                    <!-- Farm selection container dynamically toggled -->
+                    <div class="col-md-6" id="farm_container" style="display: none;">
+                        <label>Farm Assignment</label>
+                        <select name="farm_id" id="farm_id" class="form-select">
+                            <option value="">-- Select Farm --</option>
+                            <?php foreach ($farms as $farm): ?>
+                                <option value="<?= $farm['id'] ?>"><?= htmlspecialchars($farm['farm_name']) ?> (<?= htmlspecialchars($farm['location']) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
                 <hr>
                 <button type="submit" class="btn btn-success btn-lg">Create User</button>
@@ -93,5 +139,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var roleSelect = document.querySelector('select[name="role"]');
+    var farmContainer = document.getElementById('farm_container');
+    var farmSelect = document.getElementById('farm_id');
+
+    function toggleFarmField() {
+        if (roleSelect.value === 'farms_dd') {
+            farmContainer.style.display = 'block';
+            farmSelect.setAttribute('required', 'required');
+        } else {
+            farmContainer.style.display = 'none';
+            farmSelect.removeAttribute('required');
+            farmSelect.value = '';
+        }
+    }
+
+    roleSelect.addEventListener('change', toggleFarmField);
+    toggleFarmField(); // run once on load
+});
+</script>
 </body>
 </html>

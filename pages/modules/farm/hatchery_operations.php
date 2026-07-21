@@ -10,13 +10,18 @@ if ($_SESSION['role'] !== 'farms_dd') {
 $user_id = $_SESSION['user_id'] ?? 1; // Fallback to 1 if session key differs
 
 // 1. Fetch KPI Summary Metrics (Overall Totals)
+$where = "";
+if ($_SESSION['role'] === 'farms_dd' && !empty($_SESSION['farm_id'])) {
+    $where = " WHERE farm_id = " . (int)$_SESSION['farm_id'];
+}
+
 $kpi_query = "SELECT 
     IFNULL(SUM(total_collected), 0) AS total_eggs,
     IFNULL(SUM(hatchable_count), 0) AS total_hatchable,
     IFNULL(SUM(chicks_hatched), 0) AS total_chicks,
     IFNULL(SUM(table_count) + SUM(cracked_count), 0) AS total_commercial_waste,
     IFNULL(SUM(CASE WHEN chicks_hatched IS NOT NULL THEN hatchable_count ELSE 0 END), 0) AS completed_hatchable
-FROM hatchery_batches";
+FROM hatchery_batches" . $where;
 
 $kpi_res = $mysqli->query($kpi_query)->fetch_assoc();
 
@@ -106,7 +111,7 @@ require_once '../../../includes/sidebar.php';
         </div>
 
         <!-- Registered Farms Table -->
-<div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                 <h5 class="m-0 fw-bold text-dark"><i class="bi bi-journal-text me-2"></i>Hatchery Batches</h5>
             </div>
@@ -127,7 +132,7 @@ require_once '../../../includes/sidebar.php';
                     </thead>
                     <tbody>
                         <?php
-                        $ledger_sql = "SELECT * FROM hatchery_batches ORDER BY batch_date DESC, id DESC";
+                        $ledger_sql = "SELECT * FROM hatchery_batches" . $where . " ORDER BY batch_date DESC, id DESC";
                         $res = $mysqli->query($ledger_sql);
                         while ($row = $res->fetch_assoc()):
                             $rate = 0;
@@ -152,19 +157,19 @@ require_once '../../../includes/sidebar.php';
                                 </td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary edit-btn" 
-                                                data-id="<?= $row['id'] ?>"
-                                                data-date="<?= $row['batch_date'] ?>"
-                                                data-hatchable="<?= $row['hatchable_count'] ?>"
-                                                data-cracked="<?= $row['cracked_count'] ?>"
-                                                data-table="<?= $row['table_count'] ?>"
-                                                data-chicks="<?= $row['chicks_hatched'] ?? '' ?>"
-                                                data-bs-toggle="modal" data-bs-target="#gradingModal">
+                                        <button class="btn btn-outline-secondary edit-btn"
+                                            data-id="<?= $row['id'] ?>"
+                                            data-date="<?= $row['batch_date'] ?>"
+                                            data-hatchable="<?= $row['hatchable_count'] ?>"
+                                            data-cracked="<?= $row['cracked_count'] ?>"
+                                            data-table="<?= $row['table_count'] ?>"
+                                            data-chicks="<?= $row['chicks_hatched'] ?? '' ?>"
+                                            data-bs-toggle="modal" data-bs-target="#gradingModal">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <a href="processors/hatchery_crud.php?action=delete&id=<?= $row['id'] ?>" 
-                                           class="btn btn-outline-danger" 
-                                           onclick="return confirm('Are you sure you want to permanently delete this batch row?');">
+                                        <a href="processors/hatchery_crud.php?action=delete&id=<?= $row['id'] ?>"
+                                            class="btn btn-outline-danger"
+                                            onclick="return confirm('Are you sure you want to permanently delete this batch row?');">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
@@ -178,10 +183,10 @@ require_once '../../../includes/sidebar.php';
     </main>
 </div>
 
-<?php 
+<?php
 // Include the consolidated model modal view template 
-include './models/grading_modal.php'; 
-require_once '../../../includes/footer.php'; 
+include './models/grading_modal.php';
+require_once '../../../includes/footer.php';
 ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
@@ -196,38 +201,46 @@ require_once '../../../includes/footer.php';
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
 <script>
-$(document).ready(function() {
-    $('#hatcheryTable').DataTable({
-        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
-        buttons: [
-            { extend: 'csv', className: 'btn btn-sm btn-success px-3 me-1 rounded' },
-            { extend: 'pdf', className: 'btn btn-sm btn-warning px-3 me-1 rounded text-dark' },
-            { extend: 'print', className: 'btn btn-sm btn-danger px-3 rounded' }
-        ],
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search batch records..."
-        }
-    });
+    $(document).ready(function() {
+        $('#hatcheryTable').DataTable({
+            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+            buttons: [{
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-success px-3 me-1 rounded'
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-sm btn-warning px-3 me-1 rounded text-dark'
+                },
+                {
+                    extend: 'print',
+                    className: 'btn btn-sm btn-danger px-3 rounded'
+                }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search batch records..."
+            }
+        });
 
-    // Populate data inside modal for editing
-    $('.edit-btn').on('click', function() {
-        $('#modalAction').val('update');
-        $('#batchId').val($(this).data('id'));
-        $('#batchDate').val($(this).data('date'));
-        $('#qtyHatchable').val($(this).data('hatchable'));
-        $('#qtyCracked').val($(this).data('cracked'));
-        $('#qtyTable').val($(this).data('table'));
-        $('#qtyChicks').val($(this).data('chicks'));
-        $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i>Edit Hatchery Entry');
-    });
+        // Populate data inside modal for editing
+        $('.edit-btn').on('click', function() {
+            $('#modalAction').val('update');
+            $('#batchId').val($(this).data('id'));
+            $('#batchDate').val($(this).data('date'));
+            $('#qtyHatchable').val($(this).data('hatchable'));
+            $('#qtyCracked').val($(this).data('cracked'));
+            $('#qtyTable').val($(this).data('table'));
+            $('#qtyChicks').val($(this).data('chicks'));
+            $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i>Edit Hatchery Entry');
+        });
 
-    // Reset fields on modal close to keep "Add" layout fresh
-    $('#gradingModal').on('hidden.bs.modal', function () {
-        $('#modalAction').val('create');
-        $('#batchId').val('');
-        $('#gradingForm')[0].reset();
-        $('#modalTitle').html('<i class="bi bi-egg-fried me-2"></i>Log Grading & Collection');
+        // Reset fields on modal close to keep "Add" layout fresh
+        $('#gradingModal').on('hidden.bs.modal', function() {
+            $('#modalAction').val('create');
+            $('#batchId').val('');
+            $('#gradingForm')[0].reset();
+            $('#modalTitle').html('<i class="bi bi-egg-fried me-2"></i>Log Grading & Collection');
+        });
     });
-});
 </script>

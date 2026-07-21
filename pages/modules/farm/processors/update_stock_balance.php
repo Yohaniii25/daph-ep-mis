@@ -20,11 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         exit();
     }
 
-    // DEBUG: Check if flock exists
-    $check_flock = $mysqli->query("SELECT id FROM parent_stock_flocks WHERE id = " . $flock_id);
+    // DEBUG: Check if flock exists and belongs to the user's farm
+    $farm_where = "";
+    if ($_SESSION['role'] === 'farms_dd' && !empty($_SESSION['farm_id'])) {
+        $farm_where = " AND farm_id = " . (int)$_SESSION['farm_id'];
+    }
+    $check_flock = $mysqli->query("SELECT id FROM parent_stock_flocks WHERE id = " . $flock_id . $farm_where);
     if (!$check_flock || $check_flock->num_rows == 0) {
-        error_log("Flock ID " . $flock_id . " does not exist in parent_stock_flocks");
-        header("Location: ../parent_stock_operations.php?status=error&msg=Selected flock does not exist. Please add flocks first.");
+        error_log("Flock ID " . $flock_id . " does not exist or unauthorized");
+        header("Location: ../parent_stock_operations.php?status=error&msg=Selected flock does not exist or access denied.");
         exit();
     }
 
