@@ -103,12 +103,28 @@ require_once '../../../includes/sidebar.php';
             </div>
         </div>
 
-        <!-- 1. Daily Egg Collection Records Table -->
-        <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px; overflow: hidden;">
-            <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold text-dark m-0"><i class="bi bi-journal-text me-2 text-primary"></i>Daily Egg Collection Records</h5>
-            </div>
-            <div class="card-body">
+        <!-- Tabs Components -->
+        <ul class="nav nav-tabs mb-4 px-3 border-bottom-0" id="eggModuleTabs" role="tablist">
+            <li class="nav-item shadow-sm" role="presentation" style="margin-right: 4px;">
+                <button class="nav-link active fw-bold text-dark border-0 py-3 px-4" id="records-tab" data-bs-toggle="tab" data-bs-target="#records-pane" type="button" role="tab" aria-controls="records-pane" aria-selected="true" style="border-radius: 8px 8px 0 0;">
+                    <i class="bi bi-journal-text me-2 text-primary"></i>Daily Egg Collection Records
+                </button>
+            </li>
+            <li class="nav-item shadow-sm" role="presentation" style="margin-right: 4px;">
+                <button class="nav-link fw-bold text-dark border-0 py-3 px-4" id="cages-tab" data-bs-toggle="tab" data-bs-target="#cages-pane" type="button" role="tab" aria-controls="cages-pane" aria-selected="false" style="border-radius: 8px 8px 0 0;">
+                    <i class="bi bi-grid-3x3 me-2 text-success"></i>Active Cages
+                </button>
+            </li>
+            <li class="nav-item shadow-sm" role="presentation">
+                <button class="nav-link fw-bold text-dark border-0 py-3 px-4" id="batches-tab" data-bs-toggle="tab" data-bs-target="#batches-pane" type="button" role="tab" aria-controls="batches-pane" aria-selected="false" style="border-radius: 8px 8px 0 0;">
+                    <i class="bi bi-tags-fill me-2 text-warning"></i>My Batches (Scoped to You)
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content bg-white p-4 shadow-sm mb-5" style="border-radius: 0 12px 12px 12px; min-height: 400px;">
+            <!-- Tab 1: Collection Records -->
+            <div class="tab-pane fade show active" id="records-pane" role="tabpanel" aria-labelledby="records-tab" tabindex="0">
                 <table id="eggCollectionTable" class="table table-striped align-middle row-border" style="width:100%">
                     <thead class="table-light">
                         <tr>
@@ -164,79 +180,94 @@ require_once '../../../includes/sidebar.php';
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- 2 & 3: Columns for Cages & Batches side-by-side -->
-        <div class="row g-4 mb-4">
-            <!-- Cage List Table -->
-            <div class="col-xl-6">
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                    <div class="card-header bg-white py-3 border-0">
-                        <h6 class="m-0 fw-bold text-success"><i class="bi bi-grid-3x3 me-2"></i>Active Cages</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                            <table class="table table-sm table-hover align-middle">
-                                <thead style="background:#f8fafc;">
+            <!-- Tab 2: Active Cages -->
+            <div class="tab-pane fade" id="cages-pane" role="tabpanel" aria-labelledby="cages-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle row-border" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cage ID</th>
+                                <th>Cage Name</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($cages)): ?>
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3">No active cages.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($cages as $cg): ?>
                                     <tr>
-                                        <th class="py-2 px-3 text-secondary" style="font-size:12px;">Cage ID</th>
-                                        <th class="py-2 text-secondary" style="font-size:12px;">Cage Name</th>
+                                        <td class="fw-bold text-muted">#<?= $cg['id'] ?></td>
+                                        <td class="fw-medium text-dark"><?= htmlspecialchars($cg['cage_name']) ?></td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-secondary edit-cage-btn"
+                                                    data-id="<?= $cg['id'] ?>"
+                                                    data-name="<?= htmlspecialchars($cg['cage_name']) ?>"
+                                                    data-bs-toggle="modal" data-bs-target="#editCageModal">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <a href="processors/save_cage.php?action=delete&id=<?= $cg['id'] ?>"
+                                                    class="btn btn-outline-danger"
+                                                    onclick="return confirm('Are you sure you want to permanently delete this cage?');">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($cages)): ?>
-                                        <tr>
-                                            <td colspan="2" class="text-center text-muted py-3">No active cages.</td>
-                                        </tr>
-                                    <?php else: ?>
-                                        <?php foreach ($cages as $cg): ?>
-                                            <tr>
-                                                <td class="py-2 px-3 fw-bold text-muted">#<?= $cg['id'] ?></td>
-                                                <td class="py-2 fw-medium text-dark"><?= htmlspecialchars($cg['cage_name']) ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- Batch Scoped List Table -->
-            <div class="col-xl-6">
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                    <div class="card-header bg-white py-3 border-0">
-                        <h6 class="m-0 fw-bold text-warning text-dark"><i class="bi bi-tags-fill me-2 text-warning"></i>My Batches (Scoped to You)</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                            <table class="table table-sm table-hover align-middle">
-                                <thead style="background:#f8fafc;">
+            <!-- Tab 3: My Batches -->
+            <div class="tab-pane fade" id="batches-pane" role="tabpanel" aria-labelledby="batches-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle row-border" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Batch Number / Code</th>
+                                <th>Created On</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($batches)): ?>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">You have not created any batches yet.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($batches as $bt): ?>
                                     <tr>
-                                        <th class="py-2 px-3 text-secondary" style="font-size:12px;">Batch ID</th>
-                                        <th class="py-2 text-secondary" style="font-size:12px;">Batch Name</th>
-                                        <th class="py-2 text-secondary" style="font-size:12px;">Created On</th>
+                                        <td class="fw-bold text-muted">#<?= $bt['id'] ?></td>
+                                        <td class="fw-bold text-primary"><?= htmlspecialchars($bt['batch_name']) ?></td>
+                                        <td class="text-muted"><?= date('d-M-Y H:i', strtotime($bt['created_at'])) ?></td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-secondary edit-batch-btn"
+                                                    data-id="<?= $bt['id'] ?>"
+                                                    data-name="<?= htmlspecialchars($bt['batch_name']) ?>"
+                                                    data-bs-toggle="modal" data-bs-target="#editBatchModal">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <a href="processors/save_batch.php?action=delete&id=<?= $bt['id'] ?>"
+                                                    class="btn btn-outline-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this batch? All associated daily collections will be removed.');">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($batches)): ?>
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted py-3">You have not created any batches yet.</td>
-                                        </tr>
-                                    <?php else: ?>
-                                        <?php foreach ($batches as $bt): ?>
-                                            <tr>
-                                                <td class="py-2 px-3 fw-bold text-muted">#<?= $bt['id'] ?></td>
-                                                <td class="py-2 fw-bold text-primary"><?= htmlspecialchars($bt['batch_name']) ?></td>
-                                                <td class="py-2 text-muted" style="font-size:12px;"><?= date('d-M-Y H:i', strtotime($bt['created_at'])) ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -250,6 +281,8 @@ include './models/add_daily_egg_collection.php';
 include './models/add_cage_modal.php';
 include './models/add_batch_modal.php';
 include './models/edit_daily_egg_collection_modal.php';
+include './models/edit_cage_modal.php';
+include './models/edit_batch_modal.php';
 ?>
 
 <!-- Scripts -->
@@ -310,6 +343,22 @@ include './models/edit_daily_egg_collection_modal.php';
             $('#edit_hatchable_eggs').val(hatchable);
             $('#edit_table_eggs').val(tableEggs);
             $('#edit_cracked_eggs').val(cracked);
+        });
+
+        // Handle editing cage
+        $('.edit-cage-btn').on('click', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            $('#edit_cage_id').val(id);
+            $('#edit_cage_name').val(name);
+        });
+
+        // Handle editing batch
+        $('.edit-batch-btn').on('click', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            $('#edit_batch_num_id').val(id);
+            $('#edit_batch_number').val(name);
         });
     });
 </script>

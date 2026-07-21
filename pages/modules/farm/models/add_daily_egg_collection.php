@@ -4,7 +4,7 @@
         <form class="modal-content border-0 shadow" action="processors/save_daily_egg_collection.php" method="POST">
             <input type="hidden" name="action" value="create">
 
-            <div class="modal-header text-white" style="background-color: #370709 !important;">
+            <div class="modal-header text-light" style="background-color: #370709 !important;">
                 <h5 class="modal-title fw-bold">
                     <i class="bi bi-egg-fill me-2"></i>Add Daily Egg Collection
                 </h5>

@@ -5,7 +5,7 @@
             <input type="hidden" name="action" value="update">
             <input type="hidden" id="edit_collection_id" name="id">
 
-            <div class="modal-header bg-dark text-white">
+            <div class="modal-header bg-dark text-light">
                 <h5 class="modal-title fw-bold">
                     <i class="bi bi-pencil-square me-2"></i>Edit Daily Egg Collection
                 </h5>
