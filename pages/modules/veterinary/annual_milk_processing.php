@@ -35,86 +35,112 @@ if (!empty($range_id)) {
     }
 }
 
-// Handle GET year filter
-$selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
-
 // Inline CRUD actions:
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'add') {
-            $year = intval($_POST['report_year']);
-            $center_name = trim($_POST['center_name']);
-            $owner = trim($_POST['owner_proprietor']);
-            $past_vol = floatval($_POST['pasteurised_volume_day']);
-            $ster_vol = floatval($_POST['sterilised_volume_day']);
-            $yoghurt = intval($_POST['yoghurt_cups_day']);
-            $curd = intval($_POST['curd_pots_day']);
-            $ghee = floatval($_POST['ghee_lit_day']);
-            $ice_cream = intval($_POST['ice_cream_cups_day']);
-            $buy_price = floatval($_POST['average_buying_price_lit']);
+            $vs_range = trim($_POST['vs_range']);
+            $processing_center_name = trim($_POST['processing_center_name']);
+            $address = trim($_POST['address']);
+            $contact_no = trim($_POST['contact_no']);
+            $yoghurt_lit_per_month = floatval($_POST['yoghurt_lit_per_month']);
+            $curd_lit_per_month = floatval($_POST['curd_lit_per_month']);
+            $ice_cream_lit_per_month = floatval($_POST['ice_cream_lit_per_month']);
+            $ghee_lit_per_month = floatval($_POST['ghee_lit_per_month']);
+            $other_milk_product_lit_per_month = floatval($_POST['other_milk_product_lit_per_month']);
+            $total_lit_per_month = floatval($_POST['total_lit_per_month']);
+            $income_rs_per_month = floatval($_POST['income_rs_per_month']);
 
             $insert_query = "
-                INSERT INTO annual_milk_processing_centers 
-                (district_id, range_id, report_year, center_name, owner_proprietor, pasteurised_volume_day, 
-                 sterilised_volume_day, yoghurt_cups_day, curd_pots_day, ghee_lit_day, ice_cream_cups_day, 
-                 average_buying_price_lit, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO milk_processing_centers 
+                (vs_range, processing_center_name, address, contact_no, 
+                 yoghurt_lit_per_month, curd_lit_per_month, ice_cream_lit_per_month, 
+                 ghee_lit_per_month, other_milk_product_lit_per_month, total_lit_per_month, 
+                 income_rs_per_month)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $mysqli->prepare($insert_query);
             if ($stmt) {
-                // district_id, range_id, report_year format: i i i
-                // center_name, owner_proprietor format: s s
-                // pasteurised_volume_day, sterilised_volume_day format: d d
-                // yoghurt_cups_day, curd_pots_day format: i i
-                // ghee_lit_day format: d
-                // ice_cream_cups_day format: i
-                // average_buying_price_lit format: d
-                // created_by format: i
-                $stmt->bind_param("iiissddiididi", $district_id, $range_id, $year, $center_name, $owner, 
-                                  $past_vol, $ster_vol, $yoghurt, $curd, $ghee, $ice_cream, $buy_price, $user_id);
+                // vs_range (s), processing_center_name (s), address (s), contact_no (s),
+                // yoghurt_lit_per_month (d), curd_lit_per_month (d), ice_cream_lit_per_month (d),
+                // ghee_lit_per_month (d), other_milk_product_lit_per_month (d), total_lit_per_month (d),
+                // income_rs_per_month (d) -> ssssddddddd (11 placeholders)
+                $stmt->bind_param(
+                    "ssssddddddd",
+                    $vs_range,
+                    $processing_center_name,
+                    $address,
+                    $contact_no,
+                    $yoghurt_lit_per_month,
+                    $curd_lit_per_month,
+                    $ice_cream_lit_per_month,
+                    $ghee_lit_per_month,
+                    $other_milk_product_lit_per_month,
+                    $total_lit_per_month,
+                    $income_rs_per_month
+                );
                 if ($stmt->execute()) {
-                    header("Location: annual_milk_processing.php?year=$year&status=success&msg=" . urlencode("Processing center added successfully."));
+                    header("Location: annual_milk_processing.php?status=success&msg=" . urlencode("Processing center added successfully."));
                 } else {
-                    header("Location: annual_milk_processing.php?year=$selected_year&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
+                    header("Location: annual_milk_processing.php?status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_milk_processing.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_milk_processing.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
             }
             exit();
-
         } elseif ($_POST['action'] === 'edit') {
             $id = intval($_POST['id']);
-            $year = intval($_POST['report_year']);
-            $center_name = trim($_POST['center_name']);
-            $owner = trim($_POST['owner_proprietor']);
-            $past_vol = floatval($_POST['pasteurised_volume_day']);
-            $ster_vol = floatval($_POST['sterilised_volume_day']);
-            $yoghurt = intval($_POST['yoghurt_cups_day']);
-            $curd = intval($_POST['curd_pots_day']);
-            $ghee = floatval($_POST['ghee_lit_day']);
-            $ice_cream = intval($_POST['ice_cream_cups_day']);
-            $buy_price = floatval($_POST['average_buying_price_lit']);
+            $vs_range = trim($_POST['vs_range']);
+            $processing_center_name = trim($_POST['processing_center_name']);
+            $address = trim($_POST['address']);
+            $contact_no = trim($_POST['contact_no']);
+            $yoghurt_lit_per_month = floatval($_POST['yoghurt_lit_per_month']);
+            $curd_lit_per_month = floatval($_POST['curd_lit_per_month']);
+            $ice_cream_lit_per_month = floatval($_POST['ice_cream_lit_per_month']);
+            $ghee_lit_per_month = floatval($_POST['ghee_lit_per_month']);
+            $other_milk_product_lit_per_month = floatval($_POST['other_milk_product_lit_per_month']);
+            $total_lit_per_month = floatval($_POST['total_lit_per_month']);
+            $income_rs_per_month = floatval($_POST['income_rs_per_month']);
 
             $update_query = "
-                UPDATE annual_milk_processing_centers 
-                SET report_year = ?, center_name = ?, owner_proprietor = ?, pasteurised_volume_day = ?, 
-                    sterilised_volume_day = ?, yoghurt_cups_day = ?, curd_pots_day = ?, ghee_lit_day = ?, 
-                    ice_cream_cups_day = ?, average_buying_price_lit = ?
-                WHERE id = ? AND range_id = ?
+                UPDATE milk_processing_centers 
+                SET vs_range = ?, processing_center_name = ?, address = ?, contact_no = ?, 
+                    yoghurt_lit_per_month = ?, curd_lit_per_month = ?, ice_cream_lit_per_month = ?, 
+                    ghee_lit_per_month = ?, other_milk_product_lit_per_month = ?, total_lit_per_month = ?, 
+                    income_rs_per_month = ?
+                WHERE id = ? AND vs_range = ?
             ";
             $stmt = $mysqli->prepare($update_query);
             if ($stmt) {
-                $stmt->bind_param("issddiididii", $year, $center_name, $owner, $past_vol, $ster_vol, 
-                                  $yoghurt, $curd, $ghee, $ice_cream, $buy_price, $id, $range_id);
+                // vs_range (s), processing_center_name (s), address (s), contact_no (s), 
+                // yoghurt_lit_per_month (d), curd_lit_per_month (d), ice_cream_lit_per_month (d), 
+                // ghee_lit_per_month (d), other_milk_product_lit_per_month (d), total_lit_per_month (d), 
+                // income_rs_per_month (d), id (i), vs_range (s) -> ssssdddddddis (13 placeholders)
+                $stmt->bind_param(
+                    "ssssdddddddis",
+                    $vs_range,
+                    $processing_center_name,
+                    $address,
+                    $contact_no,
+                    $yoghurt_lit_per_month,
+                    $curd_lit_per_month,
+                    $ice_cream_lit_per_month,
+                    $ghee_lit_per_month,
+                    $other_milk_product_lit_per_month,
+                    $total_lit_per_month,
+                    $income_rs_per_month,
+                    $id,
+                    $range_name
+                );
                 if ($stmt->execute()) {
-                    header("Location: annual_milk_processing.php?year=$year&status=success&msg=" . urlencode("Processing center updated successfully."));
+                    header("Location: annual_milk_processing.php?status=success&msg=" . urlencode("Processing center updated successfully."));
                 } else {
-                    header("Location: annual_milk_processing.php?year=$selected_year&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+                    header("Location: annual_milk_processing.php?status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_milk_processing.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_milk_processing.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
             }
             exit();
         }
@@ -123,25 +149,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
-    $stmt = $mysqli->prepare("DELETE FROM annual_milk_processing_centers WHERE id = ? AND range_id = ?");
+    $stmt = $mysqli->prepare("DELETE FROM milk_processing_centers WHERE id = ? AND vs_range = ?");
     if ($stmt) {
-        $stmt->bind_param("ii", $id, $range_id);
+        $stmt->bind_param("is", $id, $range_name);
         if ($stmt->execute()) {
-            header("Location: annual_milk_processing.php?year=$selected_year&status=success&msg=" . urlencode("Record deleted successfully."));
+            header("Location: annual_milk_processing.php?status=success&msg=" . urlencode("Record deleted successfully."));
         } else {
-            header("Location: annual_milk_processing.php?year=$selected_year&status=error&msg=" . urlencode("Failed to delete record."));
+            header("Location: annual_milk_processing.php?status=error&msg=" . urlencode("Failed to delete record."));
         }
         $stmt->close();
     }
     exit();
 }
 
-// Fetch records matching year filter and range
+// Fetch records matching VS range
 $records = [];
-if (!empty($range_id)) {
-    $stmt = $mysqli->prepare("SELECT * FROM annual_milk_processing_centers WHERE range_id = ? AND report_year = ? ORDER BY id DESC");
+if (!empty($range_name)) {
+    $stmt = $mysqli->prepare("SELECT * FROM milk_processing_centers WHERE vs_range = ? ORDER BY id DESC");
     if ($stmt) {
-        $stmt->bind_param("ii", $range_id, $selected_year);
+        $stmt->bind_param("s", $range_name);
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) {
@@ -154,14 +180,12 @@ if (!empty($range_id)) {
 // Summary stats
 $summary = [
     'center_count' => count($records),
-    'yoghurt_sum' => 0,
-    'curd_sum' => 0,
-    'total_pasteurised' => 0
+    'total_processed' => 0,
+    'total_income' => 0
 ];
 foreach ($records as $r) {
-    $summary['yoghurt_sum'] += $r['yoghurt_cups_day'];
-    $summary['curd_sum'] += $r['curd_pots_day'];
-    $summary['total_pasteurised'] += $r['pasteurised_volume_day'];
+    $summary['total_processed'] += floatval($r['total_lit_per_month']);
+    $summary['total_income'] += floatval($r['income_rs_per_month']);
 }
 
 require_once '../../../includes/header.php';
@@ -179,57 +203,26 @@ require_once '../../../includes/sidebar.php';
 
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Milk Processing Centers</h2>
-                <p class="text-muted small mb-0">Record daily milk products (yoghurt, curd, ghee, pasteurised) for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
-            </div>
-            
-            <div class="d-flex align-items-center gap-2">
-                <form method="GET" class="d-flex align-items-center gap-2">
-                    <label class="small fw-bold text-muted mb-0">Year:</label>
-                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
-                        <?php
-                        $curr_year = intval(date('Y'));
-                        for ($y = $curr_year - 5; $y <= $curr_year + 5; $y++) {
-                            $sel = ($y === $selected_year) ? 'selected' : '';
-                            echo "<option value=\"$y\" $sel>$y</option>";
-                        }
-                        ?>
-                    </select>
-                </form>
+                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Details of Milk Processing Centers</h2>
+                <p class="text-muted small mb-0">Record and track processing volumes and products for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
         </div>
 
         <!-- STATS CARD GROUP -->
         <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
-                    <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Active Year</span>
-                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= $selected_year ?></h4>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-6 col-lg-6">
                 <div class="card shadow-sm border-0 border-start border-success border-4 text-center">
                     <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Active Processors</span>
+                        <span class="text-muted small text-uppercase fw-bold">Total Centers</span>
                         <h4 class="mb-0 fw-bold text-success mt-1"><?= number_format($summary['center_count']) ?> Centers</h4>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-start border-info border-4 text-center">
+            <div class="col-6 col-lg-6">
+                <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
                     <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold text-truncate d-block">Yoghurt (Cups/Day)</span>
-                        <h4 class="mb-0 fw-bold text-info mt-1"><?= number_format($summary['yoghurt_sum']) ?> Cups</h4>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-start border-warning border-4 text-center">
-                    <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Pasteurised Vol</span>
-                        <h4 class="mb-0 fw-bold text-warning mt-1"><?= number_format($summary['total_pasteurised'], 2) ?> L/day</h4>
+                        <span class="text-muted small text-uppercase fw-bold">Total Processed (Litre/Month)</span>
+                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= number_format($summary['total_processed'], 2) ?> Litres</h4>
                     </div>
                 </div>
             </div>
@@ -246,7 +239,7 @@ require_once '../../../includes/sidebar.php';
                             <div class="col-md-3">
                                 <button class="btn btn-primary w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addCenterModal">
                                     <i class="bi bi-plus-circle fs-3 mb-1"></i>
-                                    <span class="small fw-bold text-uppercase">Add Processor</span>
+                                    <span class="small fw-bold text-uppercase">Add Processing Centre</span>
                                 </button>
                             </div>
                             <div class="col-md-3">
@@ -264,63 +257,65 @@ require_once '../../../includes/sidebar.php';
         <!-- RECORDS LIST TABLE -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Processing Centers - <?= $selected_year ?></h5>
+                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Milk Processing Centers log</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="centerTable" style="min-width: 1400px;">
+                    <table class="table table-hover align-middle mb-0 table-bordered" id="centerTable" style="min-width: 1600px;">
                         <thead class="table-light text-secondary small uppercase">
                             <tr>
-                                <th>Center Name</th>
-                                <th>Owner / Proprietor</th>
-                                <th class="text-end">Pasteurised (L/day)</th>
-                                <th class="text-end">Sterilised (L/day)</th>
-                                <th class="text-end">Yoghurt (Cups/day)</th>
-                                <th class="text-end">Curd (Pots/day)</th>
-                                <th class="text-end">Ghee (L/day)</th>
-                                <th class="text-end">Ice Cream (Cups/day)</th>
-                                <th class="text-end">Milk Buy Price (LKR)</th>
-                                <th class="text-center" style="width: 10%">Actions</th>
+                                <th rowspan="2" class="align-middle text-center">S.No</th>
+                                <th rowspan="2" class="align-middle">VS Range</th>
+                                <th rowspan="2" class="align-middle">Processing Center Name</th>
+                                <th rowspan="2" class="align-middle">Address</th>
+                                <th rowspan="2" class="align-middle">Contact No</th>
+                                <th colspan="6" class="text-center">Milk process lit / month</th>
+                                <th rowspan="2" class="align-middle text-end">Income Rs / month</th>
+                                <th rowspan="2" class="align-middle text-center" style="width: 12%">Actions</th>
+                            </tr>
+                            <tr class="table-light text-secondary small">
+                                <th class="text-end">Yoghurt lit / month</th>
+                                <th class="text-end">Curd lit / month</th>
+                                <th class="text-end">Ice cream lit / month</th>
+                                <th class="text-end">Ghee lit / month</th>
+                                <th class="text-end">Other milk product lit / month</th>
+                                <th class="text-end fw-bold bg-light">Total lit / month</th>
                             </tr>
                         </thead>
                         <tbody class="small">
-                            <?php if (empty($records)): ?>
-                                <tr>
-                                    <td colspan="10" class="text-center py-4 text-muted">
-                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                        No records located for the selected year <?= $selected_year ?>.
+                            <?php foreach ($records as $row): ?>
+                                <tr
+                                    data-id="<?= $row['id'] ?>"
+                                    data-vs_range="<?= htmlspecialchars($row['vs_range']) ?>"
+                                    data-center_name="<?= htmlspecialchars($row['processing_center_name']) ?>"
+                                    data-address="<?= htmlspecialchars($row['address']) ?>"
+                                    data-contact_no="<?= htmlspecialchars($row['contact_no']) ?>"
+                                    data-yoghurt="<?= htmlspecialchars($row['yoghurt_lit_per_month']) ?>"
+                                    data-curd="<?= htmlspecialchars($row['curd_lit_per_month']) ?>"
+                                    data-ice_cream="<?= htmlspecialchars($row['ice_cream_lit_per_month']) ?>"
+                                    data-ghee="<?= htmlspecialchars($row['ghee_lit_per_month']) ?>"
+                                    data-other_product="<?= htmlspecialchars($row['other_milk_product_lit_per_month']) ?>"
+                                    data-total="<?= htmlspecialchars($row['total_lit_per_month']) ?>"
+                                    data-income="<?= htmlspecialchars($row['income_rs_per_month']) ?>">
+                                    <td class="fw-bold text-center"><?= htmlspecialchars($row['id']) ?></td>
+                                    <td><?= htmlspecialchars($row['vs_range']) ?></td>
+                                    <td class="fw-bold"><?= htmlspecialchars($row['processing_center_name']) ?></td>
+                                    <td><?= nl2br(htmlspecialchars($row['address'])) ?></td>
+                                    <td><?= htmlspecialchars($row['contact_no']) ?></td>
+                                    <td class="text-end font-monospace"><?= number_format($row['yoghurt_lit_per_month'], 2) ?></td>
+                                    <td class="text-end font-monospace"><?= number_format($row['curd_lit_per_month'], 2) ?></td>
+                                    <td class="text-end font-monospace"><?= number_format($row['ice_cream_lit_per_month'], 2) ?></td>
+                                    <td class="text-end font-monospace"><?= number_format($row['ghee_lit_per_month'], 2) ?></td>
+                                    <td class="text-end font-monospace"><?= number_format($row['other_milk_product_lit_per_month'], 2) ?></td>
+                                    <td class="text-end font-monospace fw-bold bg-light"><?= number_format($row['total_lit_per_month'], 2) ?></td>
+                                    <td class="text-end font-monospace fw-bold text-success">Rs. <?= number_format($row['income_rs_per_month'], 2) ?></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-info btn-view" title="View"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+                                        <a href="annual_milk_processing.php?action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash-fill"></i></a>
                                     </td>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($records as $row): ?>
-                                    <tr 
-                                        data-id="<?= $row['id'] ?>"
-                                        data-year="<?= htmlspecialchars($row['report_year']) ?>"
-                                        data-center_name="<?= htmlspecialchars($row['center_name']) ?>"
-                                        data-owner_proprietor="<?= htmlspecialchars($row['owner_proprietor']) ?>"
-                                        data-pasteurised_volume_day="<?= htmlspecialchars($row['pasteurised_volume_day']) ?>"
-                                        data-sterilised_volume_day="<?= htmlspecialchars($row['sterilised_volume_day']) ?>"
-                                        data-yoghurt_cups_day="<?= htmlspecialchars($row['yoghurt_cups_day']) ?>"
-                                        data-curd_pots_day="<?= htmlspecialchars($row['curd_pots_day']) ?>"
-                                        data-ghee_lit_day="<?= htmlspecialchars($row['ghee_lit_day']) ?>"
-                                        data-ice_cream_cups_day="<?= htmlspecialchars($row['ice_cream_cups_day']) ?>"
-                                        data-average_buying_price_lit="<?= htmlspecialchars($row['average_buying_price_lit']) ?>">
-                                        <td class="fw-bold"><?= htmlspecialchars($row['center_name']) ?></td>
-                                        <td><?= htmlspecialchars($row['owner_proprietor']) ?></td>
-                                        <td class="text-end font-monospace"><?= number_format($row['pasteurised_volume_day'], 2) ?></td>
-                                        <td class="text-end font-monospace"><?= number_format($row['sterilised_volume_day'], 2) ?></td>
-                                        <td class="text-end font-monospace text-primary"><?= number_format($row['yoghurt_cups_day']) ?></td>
-                                        <td class="text-end font-monospace text-primary"><?= number_format($row['curd_pots_day']) ?></td>
-                                        <td class="text-end font-monospace"><?= number_format($row['ghee_lit_day'], 2) ?></td>
-                                        <td class="text-end font-monospace"><?= number_format($row['ice_cream_cups_day']) ?></td>
-                                        <td class="text-end font-monospace text-success fw-bold">LKR <?= number_format($row['average_buying_price_lit'], 2) ?></td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                            <a href="annual_milk_processing.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -332,55 +327,63 @@ require_once '../../../includes/sidebar.php';
 
 <!-- Modal: Add Record -->
 <div class="modal fade" id="addCenterModal" tabindex="-1" aria-labelledby="addCenterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form method="POST">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" id="addCenterForm">
             <input type="hidden" name="action" value="add">
             <div class="modal-content">
                 <div class="modal-header" style="background-color: #370709; color: white;">
-                    <h5 class="modal-title" id="addCenterModalLabel"><i class="bi bi-plus-circle me-2"></i>Add Processing Center</h5>
+                    <h5 class="modal-title" id="addCenterModalLabel"><i class="bi bi-plus-circle me-2"></i>Add Milk Processing Centre</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Report Year</label>
-                            <input type="number" name="report_year" class="form-control" value="<?= date('Y') ?>" required>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">VS Range</label>
+                            <input type="text" name="vs_range" class="form-control" value="<?= htmlspecialchars($range_name) ?>" required>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Processing Center Name</label>
-                            <input type="text" name="center_name" class="form-control" placeholder="e.g. Balapitiya Dairy processing" required>
+                            <input type="text" name="processing_center_name" class="form-control" placeholder="e.g. Balapitiya Milk Coop." required>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Owner / Proprietor</label>
-                            <input type="text" name="owner_proprietor" class="form-control" placeholder="Owner Details">
+                            <label class="form-label fw-bold">Address</label>
+                            <textarea name="address" class="form-control" rows="2" placeholder="Full Address of Centre" required></textarea>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Pasteurised Volume (L/Day)</label>
-                            <input type="number" step="0.01" name="pasteurised_volume_day" class="form-control" value="0.00">
+                            <label class="form-label fw-bold">Contact No</label>
+                            <input type="text" name="contact_no" class="form-control" placeholder="Telephone/Mobile">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Sterilised Volume (L/Day)</label>
-                            <input type="number" step="0.01" name="sterilised_volume_day" class="form-control" value="0.00">
+                            <label class="form-label fw-bold text-success">Income Rs / month</label>
+                            <input type="number" step="0.01" name="income_rs_per_month" class="form-control" value="0.00" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Yoghurt Production (Cups/Day)</label>
-                            <input type="number" name="yoghurt_cups_day" class="form-control" value="0">
+
+                        <div class="col-12 mt-4">
+                            <h6 class="fw-bold border-bottom pb-2 text-secondary">Milk Processing Volume (lit / month)</h6>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Curd Production (Pots/Day)</label>
-                            <input type="number" name="curd_pots_day" class="form-control" value="0">
+                        <div class="col-md-4">
+                            <label class="form-label">Yoghurt lit / month</label>
+                            <input type="number" step="0.01" name="yoghurt_lit_per_month" id="add_yoghurt" class="form-control volume-input" value="0.00">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Ghee Production (L/Day)</label>
-                            <input type="number" step="0.01" name="ghee_lit_day" class="form-control" value="0.00">
+                        <div class="col-md-4">
+                            <label class="form-label">Curd lit / month</label>
+                            <input type="number" step="0.01" name="curd_lit_per_month" id="add_curd" class="form-control volume-input" value="0.00">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Ice Cream Production (Cups/Day)</label>
-                            <input type="number" name="ice_cream_cups_day" class="form-control" value="0">
+                        <div class="col-md-4">
+                            <label class="form-label">Ice cream lit / month</label>
+                            <input type="number" step="0.01" name="ice_cream_lit_per_month" id="add_ice_cream" class="form-control volume-input" value="0.00">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Average buying price (Rs / Liter)</label>
-                            <input type="number" step="0.01" name="average_buying_price_lit" class="form-control" value="0.00">
+                        <div class="col-md-4">
+                            <label class="form-label">Ghee lit / month</label>
+                            <input type="number" step="0.01" name="ghee_lit_per_month" id="add_ghee" class="form-control volume-input" value="0.00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Other milk product lit / month</label>
+                            <input type="number" step="0.01" name="other_milk_product_lit_per_month" id="add_other" class="form-control volume-input" value="0.00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Total lit / month</label>
+                            <input type="number" step="0.01" name="total_lit_per_month" id="add_total" class="form-control bg-light" value="0.00" required>
                         </div>
                     </div>
                 </div>
@@ -395,56 +398,64 @@ require_once '../../../includes/sidebar.php';
 
 <!-- Modal: Edit Record -->
 <div class="modal fade" id="editCenterModal" tabindex="-1" aria-labelledby="editCenterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form method="POST">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" id="editCenterForm">
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="id" id="edit_id">
             <div class="modal-content">
                 <div class="modal-header" style="background-color: #370709; color: white;">
-                    <h5 class="modal-title" id="editCenterModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit Processing Center</h5>
+                    <h5 class="modal-title" id="editCenterModalLabel"><i class="bi bi-pencil-fill me-2"></i>Edit Milk Processing Centre</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Report Year</label>
-                            <input type="number" name="report_year" id="edit_report_year" class="form-control" required>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">VS Range</label>
+                            <input type="text" name="vs_range" id="edit_vs_range" class="form-control" required>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Processing Center Name</label>
-                            <input type="text" name="center_name" id="edit_center_name" class="form-control" required>
+                            <input type="text" name="processing_center_name" id="edit_center_name" class="form-control" required>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Owner / Proprietor</label>
-                            <input type="text" name="owner_proprietor" id="edit_owner_proprietor" class="form-control">
+                            <label class="form-label fw-bold">Address</label>
+                            <textarea name="address" id="edit_address" class="form-control" rows="2" required></textarea>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Pasteurised Volume (L/Day)</label>
-                            <input type="number" step="0.01" name="pasteurised_volume_day" id="edit_pasteurised_volume_day" class="form-control">
+                            <label class="form-label fw-bold">Contact No</label>
+                            <input type="text" name="contact_no" id="edit_contact_no" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Sterilised Volume (L/Day)</label>
-                            <input type="number" step="0.01" name="sterilised_volume_day" id="edit_sterilised_volume_day" class="form-control">
+                            <label class="form-label fw-bold text-success">Income Rs / month</label>
+                            <input type="number" step="0.01" name="income_rs_per_month" id="edit_income" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Yoghurt Production (Cups/Day)</label>
-                            <input type="number" name="yoghurt_cups_day" id="edit_yoghurt_cups_day" class="form-control">
+
+                        <div class="col-12 mt-4">
+                            <h6 class="fw-bold border-bottom pb-2 text-secondary">Milk Processing Volume (lit / month)</h6>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Curd Production (Pots/Day)</label>
-                            <input type="number" name="curd_pots_day" id="edit_curd_pots_day" class="form-control">
+                        <div class="col-md-4">
+                            <label class="form-label">Yoghurt lit / month</label>
+                            <input type="number" step="0.01" name="yoghurt_lit_per_month" id="edit_yoghurt" class="form-control edit-volume-input">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Ghee Production (L/Day)</label>
-                            <input type="number" step="0.01" name="ghee_lit_day" id="edit_ghee_lit_day" class="form-control">
+                        <div class="col-md-4">
+                            <label class="form-label">Curd lit / month</label>
+                            <input type="number" step="0.01" name="curd_lit_per_month" id="edit_curd" class="form-control edit-volume-input">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Ice Cream Production (Cups/Day)</label>
-                            <input type="number" name="ice_cream_cups_day" id="edit_ice_cream_cups_day" class="form-control">
+                        <div class="col-md-4">
+                            <label class="form-label">Ice cream lit / month</label>
+                            <input type="number" step="0.01" name="ice_cream_lit_per_month" id="edit_ice_cream" class="form-control edit-volume-input">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Average buying price (Rs / Liter)</label>
-                            <input type="number" step="0.01" name="average_buying_price_lit" id="edit_average_buying_price_lit" class="form-control">
+                        <div class="col-md-4">
+                            <label class="form-label">Ghee lit / month</label>
+                            <input type="number" step="0.01" name="ghee_lit_per_month" id="edit_ghee" class="form-control edit-volume-input">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Other milk product lit / month</label>
+                            <input type="number" step="0.01" name="other_milk_product_lit_per_month" id="edit_other" class="form-control edit-volume-input">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Total lit / month</label>
+                            <input type="number" step="0.01" name="total_lit_per_month" id="edit_total" class="form-control bg-light" required>
                         </div>
                     </div>
                 </div>
@@ -457,6 +468,71 @@ require_once '../../../includes/sidebar.php';
     </div>
 </div>
 
+<!-- Modal: View Record -->
+<div class="modal fade" id="viewCenterModal" tabindex="-1" aria-labelledby="viewCenterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #370709; color: white;">
+                <h5 class="modal-title" id="viewCenterModalLabel"><i class="bi bi-eye-fill me-2"></i>Milk Processing Center Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered table-striped">
+                    <tbody>
+                        <tr>
+                            <th style="width: 35%;">VS Range</th>
+                            <td id="view_vs_range"></td>
+                        </tr>
+                        <tr>
+                            <th>Processing Center Name</th>
+                            <td id="view_center_name"></td>
+                        </tr>
+                        <tr>
+                            <th>Address</th>
+                            <td id="view_address"></td>
+                        </tr>
+                        <tr>
+                            <th>Contact No</th>
+                            <td id="view_contact_no"></td>
+                        </tr>
+                        <tr>
+                            <th>Yoghurt lit / month</th>
+                            <td id="view_yoghurt" class="font-monospace"></td>
+                        </tr>
+                        <tr>
+                            <th>Curd lit / month</th>
+                            <td id="view_curd" class="font-monospace"></td>
+                        </tr>
+                        <tr>
+                            <th>Ice cream lit / month</th>
+                            <td id="view_ice_cream" class="font-monospace"></td>
+                        </tr>
+                        <tr>
+                            <th>Ghee lit / month</th>
+                            <td id="view_ghee" class="font-monospace"></td>
+                        </tr>
+                        <tr>
+                            <th>Other milk product lit / month</th>
+                            <td id="view_other" class="font-monospace"></td>
+                        </tr>
+                        <tr>
+                            <th>Total lit / month</th>
+                            <td id="view_total" class="font-monospace fw-bold bg-light"></td>
+                        </tr>
+                        <tr>
+                            <th>Income Rs / month</th>
+                            <td id="view_income" class="font-monospace fw-bold text-success"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php
 $pageScripts = '
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -466,6 +542,9 @@ $(document).ready(function() {
         "order": [[0, "asc"]],
         "pageLength": 10,
         "dom": "Bfrtip",
+        "language": {
+            "emptyTable": "No records located for this range."
+        },
         "buttons": [
             {
                 extend: "csv",
@@ -484,6 +563,30 @@ $(document).ready(function() {
             }
         ]
     });
+
+    // Helper functions to auto calculate sum
+    function calculateAddTotal() {
+        var yoghurt = parseFloat($("#add_yoghurt").val()) || 0;
+        var curd = parseFloat($("#add_curd").val()) || 0;
+        var ice_cream = parseFloat($("#add_ice_cream").val()) || 0;
+        var ghee = parseFloat($("#add_ghee").val()) || 0;
+        var other = parseFloat($("#add_other").val()) || 0;
+        var total = yoghurt + curd + ice_cream + ghee + other;
+        $("#add_total").val(total.toFixed(2));
+    }
+    
+    function calculateEditTotal() {
+        var yoghurt = parseFloat($("#edit_yoghurt").val()) || 0;
+        var curd = parseFloat($("#edit_curd").val()) || 0;
+        var ice_cream = parseFloat($("#edit_ice_cream").val()) || 0;
+        var ghee = parseFloat($("#edit_ghee").val()) || 0;
+        var other = parseFloat($("#edit_other").val()) || 0;
+        var total = yoghurt + curd + ice_cream + ghee + other;
+        $("#edit_total").val(total.toFixed(2));
+    }
+
+    $(".volume-input").on("input", calculateAddTotal);
+    $(".edit-volume-input").on("input", calculateEditTotal);
 
     var urlParams = new URLSearchParams(window.location.search);
     var status = urlParams.get(\'status\');
@@ -507,19 +610,46 @@ $(document).ready(function() {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
+    $(document).on(\'click\', \'.btn-view\', function() {
+        var $row = $(this).closest(\'tr\');
+        $(\'#view_vs_range\').text($row.data(\'vs_range\'));
+        $(\'#view_center_name\').text($row.data(\'center_name\'));
+        $(\'#view_address\').html(($row.data(\'address\') || \'\').replace(/\\n/g, \'<br>\'));
+        $(\'#view_contact_no\').text($row.data(\'contact_no\') || \'N/A\');
+        
+        var yoghurt = parseFloat($row.data(\'yoghurt\')) || 0;
+        var curd = parseFloat($row.data(\'curd\')) || 0;
+        var ice_cream = parseFloat($row.data(\'ice_cream\')) || 0;
+        var ghee = parseFloat($row.data(\'ghee\')) || 0;
+        var other = parseFloat($row.data(\'other_product\')) || 0;
+        var total = parseFloat($row.data(\'total\')) || 0;
+        var income = parseFloat($row.data(\'income\')) || 0;
+        
+        $(\'#view_yoghurt\').text(yoghurt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $(\'#view_curd\').text(curd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $(\'#view_ice_cream\').text(ice_cream.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $(\'#view_ghee\').text(ghee.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $(\'#view_other\').text(other.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $(\'#view_total\').text(total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $(\'#view_income\').text("Rs. " + income.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+        new bootstrap.Modal(document.getElementById(\'viewCenterModal\')).show();
+    });
+
     $(document).on(\'click\', \'.btn-edit\', function() {
         var $row = $(this).closest(\'tr\');
         $(\'#edit_id\').val($row.data(\'id\'));
-        $(\'#edit_report_year\').val($row.data(\'year\'));
+        $(\'#edit_vs_range\').val($row.data(\'vs_range\'));
         $(\'#edit_center_name\').val($row.data(\'center_name\'));
-        $(\'#edit_owner_proprietor\').val($row.data(\'owner_proprietor\'));
-        $(\'#edit_pasteurised_volume_day\').val($row.data(\'pasteurised_volume_day\'));
-        $(\'#edit_sterilised_volume_day\').val($row.data(\'sterilised_volume_day\'));
-        $(\'#edit_yoghurt_cups_day\').val($row.data(\'yoghurt_cups_day\'));
-        $(\'#edit_curd_pots_day\').val($row.data(\'curd_pots_day\'));
-        $(\'#edit_ghee_lit_day\').val($row.data(\'ghee_lit_day\'));
-        $(\'#edit_ice_cream_cups_day\').val($row.data(\'ice_cream_cups_day\'));
-        $(\'#edit_average_buying_price_lit\').val($row.data(\'average_buying_price_lit\'));
+        $(\'#edit_address\').val($row.data(\'address\'));
+        $(\'#edit_contact_no\').val($row.data(\'contact_no\'));
+        $(\'#edit_yoghurt\').val($row.data(\'yoghurt\'));
+        $(\'#edit_curd\').val($row.data(\'curd\'));
+        $(\'#edit_ice_cream\').val($row.data(\'ice_cream\'));
+        $(\'#edit_ghee\').val($row.data(\'ghee\'));
+        $(\'#edit_other\').val($row.data(\'other_product\'));
+        $(\'#edit_total\').val($row.data(\'total\'));
+        $(\'#edit_income\').val($row.data(\'income\'));
 
         new bootstrap.Modal(document.getElementById(\'editCenterModal\')).show();
     });
@@ -528,12 +658,12 @@ $(document).ready(function() {
         e.preventDefault();
         var deleteUrl = $(this).attr(\'href\');
         var $row = $(this).closest(\'tr\');
-        var name = $row.data(\'center_name\');
+        var id = $row.data(\'id\');
 
         Swal.fire({
             icon: \'warning\',
             title: \'Delete Processing Center?\',
-            html: \'Are you sure you want to permanently delete the center <strong>\' + name + \'</strong>?<br>This action cannot be undone.\',
+            html: \'Are you sure you want to permanently delete the center record <strong>#\' + id + \'</strong>?<br>This action cannot be undone.\',
             showCancelButton: true,
             confirmButtonColor: \'#d33\',
             cancelButtonColor: \'#6c757d\',

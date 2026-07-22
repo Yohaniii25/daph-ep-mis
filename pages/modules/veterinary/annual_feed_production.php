@@ -63,8 +63,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // produced_qty_mt_month format: d
                 // raw_materials_source, market_outlets format: s s
                 // created_by format: i
-                $stmt->bind_param("iiisssdssi", $district_id, $range_id, $year, $mill_name, $prop_details, 
-                                  $category, $qty, $raw_source, $outlets, $user_id);
+                $stmt->bind_param(
+                    "iiisssdssi",
+                    $district_id,
+                    $range_id,
+                    $year,
+                    $mill_name,
+                    $prop_details,
+                    $category,
+                    $qty,
+                    $raw_source,
+                    $outlets,
+                    $user_id
+                );
                 if ($stmt->execute()) {
                     header("Location: annual_feed_production.php?year=$year&status=success&msg=" . urlencode("Feed mill added successfully."));
                 } else {
@@ -75,7 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: annual_feed_production.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
-
         } elseif ($_POST['action'] === 'edit') {
             $id = intval($_POST['id']);
             $year = intval($_POST['report_year']);
@@ -94,8 +104,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ";
             $stmt = $mysqli->prepare($update_query);
             if ($stmt) {
-                $stmt->bind_param("isssdssii", $year, $mill_name, $prop_details, $category, $qty, 
-                                  $raw_source, $outlets, $id, $range_id);
+                $stmt->bind_param(
+                    "isssdssii",
+                    $year,
+                    $mill_name,
+                    $prop_details,
+                    $category,
+                    $qty,
+                    $raw_source,
+                    $outlets,
+                    $id,
+                    $range_id
+                );
                 if ($stmt->execute()) {
                     header("Location: annual_feed_production.php?year=$year&status=success&msg=" . urlencode("Feed mill updated successfully."));
                 } else {
@@ -173,7 +193,7 @@ require_once '../../../includes/sidebar.php';
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Annual Feed Production</h2>
                 <p class="text-muted small mb-0">Record and track feed mills and production metrics for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
-            
+
             <div class="d-flex align-items-center gap-2">
                 <form method="GET" class="d-flex align-items-center gap-2">
                     <label class="small fw-bold text-muted mb-0">Year:</label>
@@ -272,39 +292,30 @@ require_once '../../../includes/sidebar.php';
                             </tr>
                         </thead>
                         <tbody class="small">
-                            <?php if (empty($records)): ?>
-                                <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">
-                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                        No records located for the selected year <?= $selected_year ?>.
+                            <?php foreach ($records as $row): ?>
+                                <tr
+                                    data-id="<?= $row['id'] ?>"
+                                    data-year="<?= htmlspecialchars($row['report_year']) ?>"
+                                    data-mill_name="<?= htmlspecialchars($row['feed_mill_name']) ?>"
+                                    data-proprietor_details="<?= htmlspecialchars($row['proprietor_details']) ?>"
+                                    data-category_type="<?= htmlspecialchars($row['category_type']) ?>"
+                                    data-qty="<?= htmlspecialchars($row['produced_qty_mt_month']) ?>"
+                                    data-raw_source="<?= htmlspecialchars($row['raw_materials_source']) ?>"
+                                    data-outlets="<?= htmlspecialchars($row['market_outlets']) ?>">
+                                    <td class="fw-bold"><?= htmlspecialchars($row['feed_mill_name']) ?></td>
+                                    <td><?= nl2br(htmlspecialchars($row['proprietor_details'])) ?></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary text-capitalize"><?= htmlspecialchars($row['category_type']) ?></span>
+                                    </td>
+                                    <td class="text-end font-monospace"><?= number_format($row['produced_qty_mt_month'], 2) ?></td>
+                                    <td><?= htmlspecialchars($row['raw_materials_source']) ?></td>
+                                    <td><?= htmlspecialchars($row['market_outlets']) ?></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                                        <a href="annual_feed_production.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
                                     </td>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($records as $row): ?>
-                                    <tr 
-                                        data-id="<?= $row['id'] ?>"
-                                        data-year="<?= htmlspecialchars($row['report_year']) ?>"
-                                        data-mill_name="<?= htmlspecialchars($row['feed_mill_name']) ?>"
-                                        data-proprietor_details="<?= htmlspecialchars($row['proprietor_details']) ?>"
-                                        data-category_type="<?= htmlspecialchars($row['category_type']) ?>"
-                                        data-qty="<?= htmlspecialchars($row['produced_qty_mt_month']) ?>"
-                                        data-raw_source="<?= htmlspecialchars($row['raw_materials_source']) ?>"
-                                        data-outlets="<?= htmlspecialchars($row['market_outlets']) ?>">
-                                        <td class="fw-bold"><?= htmlspecialchars($row['feed_mill_name']) ?></td>
-                                        <td><?= nl2br(htmlspecialchars($row['proprietor_details'])) ?></td>
-                                        <td class="text-center">
-                                            <span class="badge bg-secondary text-capitalize"><?= htmlspecialchars($row['category_type']) ?></span>
-                                        </td>
-                                        <td class="text-end font-monospace"><?= number_format($row['produced_qty_mt_month'], 2) ?></td>
-                                        <td><?= htmlspecialchars($row['raw_materials_source']) ?></td>
-                                        <td><?= htmlspecialchars($row['market_outlets']) ?></td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                            <a href="annual_feed_production.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -436,6 +447,9 @@ $(document).ready(function() {
         "order": [[0, "asc"]],
         "pageLength": 10,
         "dom": "Bfrtip",
+        "language": {
+            "emptyTable": "No records located for the selected year."
+        },
         "buttons": [
             {
                 extend: "csv",

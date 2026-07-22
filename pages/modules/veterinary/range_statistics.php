@@ -303,13 +303,13 @@ require_once '../../../includes/sidebar.php';
                     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                         <a href="annual_milk_processing.php" class="btn btn-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
                             <i class="bi bi-gear-wide-connected fs-3 mb-2"></i>
-                            <span class="fw-semibold small text-center">Milk Processing Centers</span>
+                            <span class="text-center">Milk Processing Centers</span>
                         </a>
                     </div>
                     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                         <a href="annual_milk_sales.php" class="btn btn-success w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
                             <i class="bi bi-shop fs-3 mb-2"></i>
-                            <span class="fw-semibold small text-center">Milk Sales Centers</span>
+                            <span class="text-center">Milk Sales Centers</span>
                         </a>
                     </div>
                 </div>

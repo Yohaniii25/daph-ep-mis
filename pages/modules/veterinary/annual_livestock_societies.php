@@ -35,81 +35,102 @@ if (!empty($range_id)) {
     }
 }
 
-// Handle GET year filter
-$selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
-
 // Inline CRUD actions:
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'add') {
-            $year = intval($_POST['report_year']);
-            $soc_name = trim($_POST['society_name']);
-            $pres = trim($_POST['president_details']);
-            $sec = trim($_POST['secretary_details']);
-            $treas = trim($_POST['treasurer_details']);
-            $members = intval($_POST['active_members_count']);
-            $shares = floatval($_POST['shares_value_rs']);
-            $savings = floatval($_POST['current_savings_balance_rs']);
-            $loans = floatval($_POST['outstanding_loan_balance_rs']);
+            $vs_range = trim($_POST['vs_range']);
+            $gn_division = trim($_POST['gn_division']);
+            $name_address = trim($_POST['name_address']);
+            $overall_objective = trim($_POST['overall_objective']);
+            $total_members = intval($_POST['total_members']);
+            $reg_no = trim($_POST['reg_no']);
+            $reg_department = trim($_POST['reg_department']);
+            $major_activities = trim($_POST['major_activities']);
+            $financial_records_availability = trim($_POST['financial_records_availability']);
+            $regulated_by = trim($_POST['regulated_by']);
+            $tp_no = trim($_POST['tp_no']);
 
             $insert_query = "
-                INSERT INTO annual_livestock_societies 
-                (district_id, range_id, report_year, society_name, president_details, secretary_details, 
-                 treasurer_details, active_members_count, shares_value_rs, current_savings_balance_rs, 
-                 outstanding_loan_balance_rs, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO livestock_societies 
+                (vs_range, gn_division, name_address, overall_objective, total_members, 
+                 reg_no, reg_department, major_activities, financial_records_availability, 
+                 regulated_by, tp_no)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $mysqli->prepare($insert_query);
             if ($stmt) {
-                // district_id, range_id, report_year format: i i i
-                // society_name, president_details, secretary_details, treasurer_details format: s s s s
-                // active_members_count format: i
-                // shares_value_rs, current_savings_balance_rs, outstanding_loan_balance_rs format: d d d
-                // created_by format: i
-                $stmt->bind_param("iiissssidddi", $district_id, $range_id, $year, $soc_name, $pres, $sec, 
-                                  $treas, $members, $shares, $savings, $loans, $user_id);
+                $stmt->bind_param(
+                    "ssssissssss",
+                    $vs_range,
+                    $gn_division,
+                    $name_address,
+                    $overall_objective,
+                    $total_members,
+                    $reg_no,
+                    $reg_department,
+                    $major_activities,
+                    $financial_records_availability,
+                    $regulated_by,
+                    $tp_no
+                );
                 if ($stmt->execute()) {
-                    header("Location: annual_livestock_societies.php?year=$year&status=success&msg=" . urlencode("Society added successfully."));
+                    header("Location: annual_livestock_societies.php?status=success&msg=" . urlencode("Livestock society added successfully."));
                 } else {
-                    header("Location: annual_livestock_societies.php?year=$selected_year&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
+                    header("Location: annual_livestock_societies.php?status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_livestock_societies.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_livestock_societies.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
             }
             exit();
-
         } elseif ($_POST['action'] === 'edit') {
             $id = intval($_POST['id']);
-            $year = intval($_POST['report_year']);
-            $soc_name = trim($_POST['society_name']);
-            $pres = trim($_POST['president_details']);
-            $sec = trim($_POST['secretary_details']);
-            $treas = trim($_POST['treasurer_details']);
-            $members = intval($_POST['active_members_count']);
-            $shares = floatval($_POST['shares_value_rs']);
-            $savings = floatval($_POST['current_savings_balance_rs']);
-            $loans = floatval($_POST['outstanding_loan_balance_rs']);
+            $vs_range = trim($_POST['vs_range']);
+            $gn_division = trim($_POST['gn_division']);
+            $name_address = trim($_POST['name_address']);
+            $overall_objective = trim($_POST['overall_objective']);
+            $total_members = intval($_POST['total_members']);
+            $reg_no = trim($_POST['reg_no']);
+            $reg_department = trim($_POST['reg_department']);
+            $major_activities = trim($_POST['major_activities']);
+            $financial_records_availability = trim($_POST['financial_records_availability']);
+            $regulated_by = trim($_POST['regulated_by']);
+            $tp_no = trim($_POST['tp_no']);
 
             $update_query = "
-                UPDATE annual_livestock_societies 
-                SET report_year = ?, society_name = ?, president_details = ?, secretary_details = ?, 
-                    treasurer_details = ?, active_members_count = ?, shares_value_rs = ?, 
-                    current_savings_balance_rs = ?, outstanding_loan_balance_rs = ?
-                WHERE id = ? AND range_id = ?
+                UPDATE livestock_societies 
+                SET vs_range = ?, gn_division = ?, name_address = ?, overall_objective = ?, total_members = ?, 
+                    reg_no = ?, reg_department = ?, major_activities = ?, financial_records_availability = ?, 
+                    regulated_by = ?, tp_no = ?
+                WHERE id = ? AND vs_range = ?
             ";
             $stmt = $mysqli->prepare($update_query);
             if ($stmt) {
-                $stmt->bind_param("issssiddidii", $year, $soc_name, $pres, $sec, $treas, $members, 
-                                  $shares, $savings, $loans, $id, $range_id);
+                $stmt->bind_param(
+                    "ssssissssssis",
+                    $vs_range,
+                    $gn_division,
+                    $name_address,
+                    $overall_objective,
+                    $total_members,
+                    $reg_no,
+                    $reg_department,
+                    $major_activities,
+                    $financial_records_availability,
+                    $regulated_by,
+                    $tp_no,
+                    $id,
+                    $range_name
+                );
                 if ($stmt->execute()) {
-                    header("Location: annual_livestock_societies.php?year=$year&status=success&msg=" . urlencode("Society updated successfully."));
+                    header("Location: annual_livestock_societies.php?status=success&msg=" . urlencode("Livestock society updated successfully."));
                 } else {
-                    header("Location: annual_livestock_societies.php?year=$selected_year&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+                    header("Location: annual_livestock_societies.php?status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_livestock_societies.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_livestock_societies.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
             }
             exit();
         }
@@ -118,25 +139,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
-    $stmt = $mysqli->prepare("DELETE FROM annual_livestock_societies WHERE id = ? AND range_id = ?");
+    $stmt = $mysqli->prepare("DELETE FROM livestock_societies WHERE id = ? AND vs_range = ?");
     if ($stmt) {
-        $stmt->bind_param("ii", $id, $range_id);
+        $stmt->bind_param("is", $id, $range_name);
         if ($stmt->execute()) {
-            header("Location: annual_livestock_societies.php?year=$selected_year&status=success&msg=" . urlencode("Record deleted successfully."));
+            header("Location: annual_livestock_societies.php?status=success&msg=" . urlencode("Record deleted successfully."));
         } else {
-            header("Location: annual_livestock_societies.php?year=$selected_year&status=error&msg=" . urlencode("Failed to delete record."));
+            header("Location: annual_livestock_societies.php?status=error&msg=" . urlencode("Failed to delete record."));
         }
         $stmt->close();
     }
     exit();
 }
 
-// Fetch records matching year filter and range
+// Fetch records matching VS range
 $records = [];
-if (!empty($range_id)) {
-    $stmt = $mysqli->prepare("SELECT * FROM annual_livestock_societies WHERE range_id = ? AND report_year = ? ORDER BY id DESC");
+if (!empty($range_name)) {
+    $stmt = $mysqli->prepare("SELECT * FROM livestock_societies WHERE vs_range = ? ORDER BY id DESC");
     if ($stmt) {
-        $stmt->bind_param("ii", $range_id, $selected_year);
+        $stmt->bind_param("s", $range_name);
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) {
@@ -149,14 +170,10 @@ if (!empty($range_id)) {
 // Summary stats
 $summary = [
     'soc_count' => count($records),
-    'total_members' => 0,
-    'total_savings' => 0,
-    'total_loans' => 0
+    'total_members' => 0
 ];
 foreach ($records as $r) {
-    $summary['total_members'] += $r['active_members_count'];
-    $summary['total_savings'] += $r['current_savings_balance_rs'];
-    $summary['total_loans'] += $r['outstanding_loan_balance_rs'];
+    $summary['total_members'] += intval($r['total_members']);
 }
 
 require_once '../../../includes/header.php';
@@ -174,37 +191,14 @@ require_once '../../../includes/sidebar.php';
 
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Annual Livestock Societies</h2>
-                <p class="text-muted small mb-0">Record and monitor livestock cooperative societies and balances for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
-            </div>
-            
-            <div class="d-flex align-items-center gap-2">
-                <form method="GET" class="d-flex align-items-center gap-2">
-                    <label class="small fw-bold text-muted mb-0">Year:</label>
-                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
-                        <?php
-                        $curr_year = intval(date('Y'));
-                        for ($y = $curr_year - 5; $y <= $curr_year + 5; $y++) {
-                            $sel = ($y === $selected_year) ? 'selected' : '';
-                            echo "<option value=\"$y\" $sel>$y</option>";
-                        }
-                        ?>
-                    </select>
-                </form>
+                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Details of Livestock Societies</h2>
+                <p class="text-muted small mb-0">Record and monitor livestock cooperative societies for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
         </div>
 
         <!-- STATS CARD GROUP -->
         <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
-                    <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Active Year</span>
-                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= $selected_year ?></h4>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-6 col-lg-6">
                 <div class="card shadow-sm border-0 border-start border-success border-4 text-center">
                     <div class="card-body py-3">
                         <span class="text-muted small text-uppercase fw-bold">Active Societies</span>
@@ -212,19 +206,11 @@ require_once '../../../includes/sidebar.php';
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-6 col-lg-6">
                 <div class="card shadow-sm border-0 border-start border-info border-4 text-center">
                     <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Total Members</span>
+                        <span class="text-muted small text-uppercase fw-bold">Total Members Registered</span>
                         <h4 class="mb-0 fw-bold text-info mt-1"><?= number_format($summary['total_members']) ?></h4>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-start border-warning border-4 text-center">
-                    <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Co-op Savings</span>
-                        <h4 class="mb-0 fw-bold text-warning mt-1">LKR <?= number_format($summary['total_savings'], 2) ?></h4>
                     </div>
                 </div>
             </div>
@@ -241,7 +227,7 @@ require_once '../../../includes/sidebar.php';
                             <div class="col-md-3">
                                 <button class="btn btn-primary w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addSocModal">
                                     <i class="bi bi-plus-circle fs-3 mb-1"></i>
-                                    <span class="small fw-bold text-uppercase">Add Co-op Society</span>
+                                    <span class="small fw-bold text-uppercase">Add Livestock Society</span>
                                 </button>
                             </div>
                             <div class="col-md-3">
@@ -259,60 +245,66 @@ require_once '../../../includes/sidebar.php';
         <!-- RECORDS LIST TABLE -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Societies Directory - <?= $selected_year ?></h5>
+                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Societies Log Directory</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="socTable" style="min-width: 1400px;">
+                    <table class="table table-hover align-middle mb-0" id="socTable" style="min-width: 1600px;">
                         <thead class="table-light text-secondary small uppercase">
                             <tr>
-                                <th>Society Name</th>
-                                <th>President details</th>
-                                <th>Secretary details</th>
-                                <th>Treasurer details</th>
-                                <th class="text-end">Active Members</th>
-                                <th class="text-end">Share Capital (LKR)</th>
-                                <th class="text-end">Savings Balance (LKR)</th>
-                                <th class="text-end">Loans Outstanding (LKR)</th>
-                                <th class="text-center" style="width: 10%">Actions</th>
+                                <th>S.no</th>
+                                <th>VS Range</th>
+                                <th>G N Division</th>
+                                <th>Name & Address</th>
+                                <th>Overall Objective</th>
+                                <th class="text-end">Total Members</th>
+                                <th>Reg. No</th>
+                                <th>Reg. Department</th>
+                                <th>Major Activities</th>
+                                <th>Availability of Financial Records</th>
+                                <th>Regulated By</th>
+                                <th>T.P.No</th>
+                                <th class="text-center" style="width: 12%">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="small">
-                            <?php if (empty($records)): ?>
-                                <tr>
-                                    <td colspan="9" class="text-center py-4 text-muted">
-                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                        No records located for the selected year <?= $selected_year ?>.
+                            <?php foreach ($records as $row): ?>
+                                <tr
+                                    data-id="<?= $row['id'] ?>"
+                                    data-vs_range="<?= htmlspecialchars($row['vs_range']) ?>"
+                                    data-gn_division="<?= htmlspecialchars($row['gn_division']) ?>"
+                                    data-name_address="<?= htmlspecialchars($row['name_address']) ?>"
+                                    data-overall_objective="<?= htmlspecialchars($row['overall_objective']) ?>"
+                                    data-total_members="<?= htmlspecialchars($row['total_members']) ?>"
+                                    data-reg_no="<?= htmlspecialchars($row['reg_no']) ?>"
+                                    data-reg_department="<?= htmlspecialchars($row['reg_department']) ?>"
+                                    data-major_activities="<?= htmlspecialchars($row['major_activities']) ?>"
+                                    data-financial_records_availability="<?= htmlspecialchars($row['financial_records_availability']) ?>"
+                                    data-regulated_by="<?= htmlspecialchars($row['regulated_by']) ?>"
+                                    data-tp_no="<?= htmlspecialchars($row['tp_no']) ?>">
+                                    <td class="fw-bold text-center"><?= htmlspecialchars($row['id']) ?></td>
+                                    <td><?= htmlspecialchars($row['vs_range']) ?></td>
+                                    <td><?= htmlspecialchars($row['gn_division']) ?></td>
+                                    <td><?= nl2br(htmlspecialchars($row['name_address'])) ?></td>
+                                    <td><?= nl2br(htmlspecialchars($row['overall_objective'])) ?></td>
+                                    <td class="text-end font-monospace"><?= number_format($row['total_members']) ?></td>
+                                    <td><?= htmlspecialchars($row['reg_no']) ?></td>
+                                    <td><?= htmlspecialchars($row['reg_department']) ?></td>
+                                    <td><?= nl2br(htmlspecialchars($row['major_activities'])) ?></td>
+                                    <td class="text-center">
+                                        <span class="badge <?= $row['financial_records_availability'] === 'Yes' ? 'bg-success' : ($row['financial_records_availability'] === 'No' ? 'bg-danger' : 'bg-secondary') ?>">
+                                            <?= htmlspecialchars($row['financial_records_availability']) ?>
+                                        </span>
+                                    </td>
+                                    <td><?= htmlspecialchars($row['regulated_by']) ?></td>
+                                    <td><?= htmlspecialchars($row['tp_no']) ?></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-info btn-view" title="View"><i class="bi bi-eye"></i></button>
+                                        <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                                        <a href="annual_livestock_societies.php?action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
                                     </td>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($records as $row): ?>
-                                    <tr 
-                                        data-id="<?= $row['id'] ?>"
-                                        data-year="<?= htmlspecialchars($row['report_year']) ?>"
-                                        data-society_name="<?= htmlspecialchars($row['society_name']) ?>"
-                                        data-president_details="<?= htmlspecialchars($row['president_details']) ?>"
-                                        data-secretary_details="<?= htmlspecialchars($row['secretary_details']) ?>"
-                                        data-treasurer_details="<?= htmlspecialchars($row['treasurer_details']) ?>"
-                                        data-members="<?= htmlspecialchars($row['active_members_count']) ?>"
-                                        data-shares="<?= htmlspecialchars($row['shares_value_rs']) ?>"
-                                        data-savings="<?= htmlspecialchars($row['current_savings_balance_rs']) ?>"
-                                        data-loans="<?= htmlspecialchars($row['outstanding_loan_balance_rs']) ?>">
-                                        <td class="fw-bold"><?= htmlspecialchars($row['society_name']) ?></td>
-                                        <td><?= nl2br(htmlspecialchars($row['president_details'])) ?></td>
-                                        <td><?= nl2br(htmlspecialchars($row['secretary_details'])) ?></td>
-                                        <td><?= nl2br(htmlspecialchars($row['treasurer_details'])) ?></td>
-                                        <td class="text-end font-monospace"><?= number_format($row['active_members_count']) ?></td>
-                                        <td class="text-end font-monospace"><?= number_format($row['shares_value_rs'], 2) ?></td>
-                                        <td class="text-end font-monospace text-success"><?= number_format($row['current_savings_balance_rs'], 2) ?></td>
-                                        <td class="text-end font-monospace text-danger"><?= number_format($row['outstanding_loan_balance_rs'], 2) ?></td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                            <a href="annual_livestock_societies.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -335,40 +327,52 @@ require_once '../../../includes/sidebar.php';
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Report Year</label>
-                            <input type="number" name="report_year" class="form-control" value="<?= date('Y') ?>" required>
+                            <label class="form-label fw-bold">VS Range</label>
+                            <input type="text" name="vs_range" class="form-control" value="<?= htmlspecialchars($range_name) ?>" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Society Name</label>
-                            <input type="text" name="society_name" class="form-control" placeholder="e.g. Balapitiya Diary Cooperative" required>
+                            <label class="form-label fw-bold">G N Division</label>
+                            <input type="text" name="gn_division" class="form-control" placeholder="e.g. GN Division name">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Name & Address</label>
+                            <textarea name="name_address" class="form-control" rows="2" placeholder="Society Name and Registered Address" required></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Overall Objective</label>
+                            <textarea name="overall_objective" class="form-control" rows="2" placeholder="e.g. Elevating dairy production standards"></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">President Details (Name, Tel, Addr)</label>
-                            <textarea name="president_details" class="form-control" rows="2"></textarea>
+                            <label class="form-label fw-bold">Total Members</label>
+                            <input type="number" name="total_members" class="form-control" value="0" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Secretary Details (Name, Tel, Addr)</label>
-                            <textarea name="secretary_details" class="form-control" rows="2"></textarea>
+                            <label class="form-label fw-bold">Reg. No</label>
+                            <input type="text" name="reg_no" class="form-control" placeholder="Registration number">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Treasurer Details (Name, Tel, Addr)</label>
-                            <textarea name="treasurer_details" class="form-control" rows="2"></textarea>
+                            <label class="form-label">Reg. Department</label>
+                            <input type="text" name="reg_department" class="form-control" placeholder="e.g. Dept of Cooperatives">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Active Members Count</label>
-                            <input type="number" name="active_members_count" class="form-control" value="0">
+                        <div class="col-md-12">
+                            <label class="form-label">Major Activities</label>
+                            <textarea name="major_activities" class="form-control" rows="2" placeholder="Collection of Deposits, Granting Loans, member welfare, etc."></textarea>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Shares Value (Rs.)</label>
-                            <input type="number" step="0.01" name="shares_value_rs" class="form-control" value="0.00">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Financial Records Availability</label>
+                            <select name="financial_records_availability" class="form-select" required>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                                <option value="N/A" selected>N/A</option>
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Current Savings Balance (Rs.)</label>
-                            <input type="number" step="0.01" name="current_savings_balance_rs" class="form-control" value="0.00">
+                        <div class="col-md-4">
+                            <label class="form-label">Regulated By</label>
+                            <input type="text" name="regulated_by" class="form-control" placeholder="Regulating authority name">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Outstanding Loan Balance (Rs.)</label>
-                            <input type="number" step="0.01" name="outstanding_loan_balance_rs" class="form-control" value="0.00">
+                        <div class="col-md-4">
+                            <label class="form-label">T.P. No</label>
+                            <input type="text" name="tp_no" class="form-control" placeholder="Telephone Number">
                         </div>
                     </div>
                 </div>
@@ -395,40 +399,52 @@ require_once '../../../includes/sidebar.php';
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Report Year</label>
-                            <input type="number" name="report_year" id="edit_report_year" class="form-control" required>
+                            <label class="form-label fw-bold">VS Range</label>
+                            <input type="text" name="vs_range" id="edit_vs_range" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Society Name</label>
-                            <input type="text" name="society_name" id="edit_society_name" class="form-control" required>
+                            <label class="form-label fw-bold">G N Division</label>
+                            <input type="text" name="gn_division" id="edit_gn_division" class="form-control">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Name & Address</label>
+                            <textarea name="name_address" id="edit_name_address" class="form-control" rows="2" required></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Overall Objective</label>
+                            <textarea name="overall_objective" id="edit_overall_objective" class="form-control" rows="2"></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">President Details</label>
-                            <textarea name="president_details" id="edit_president_details" class="form-control" rows="2"></textarea>
+                            <label class="form-label fw-bold">Total Members</label>
+                            <input type="number" name="total_members" id="edit_total_members" class="form-control" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Secretary Details</label>
-                            <textarea name="secretary_details" id="edit_secretary_details" class="form-control" rows="2"></textarea>
+                            <label class="form-label fw-bold">Reg. No</label>
+                            <input type="text" name="reg_no" id="edit_reg_no" class="form-control">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Treasurer Details</label>
-                            <textarea name="treasurer_details" id="edit_treasurer_details" class="form-control" rows="2"></textarea>
+                            <label class="form-label">Reg. Department</label>
+                            <input type="text" name="reg_department" id="edit_reg_department" class="form-control">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Active Members Count</label>
-                            <input type="number" name="active_members_count" id="edit_members" class="form-control">
+                        <div class="col-md-12">
+                            <label class="form-label">Major Activities</label>
+                            <textarea name="major_activities" id="edit_major_activities" class="form-control" rows="2"></textarea>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Shares Value (Rs.)</label>
-                            <input type="number" step="0.01" name="shares_value_rs" id="edit_shares" class="form-control">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Financial Records Availability</label>
+                            <select name="financial_records_availability" id="edit_financial_records_availability" class="form-select" required>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                                <option value="N/A">N/A</option>
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Current Savings Balance (Rs.)</label>
-                            <input type="number" step="0.01" name="current_savings_balance_rs" id="edit_savings" class="form-control">
+                        <div class="col-md-4">
+                            <label class="form-label">Regulated By</label>
+                            <input type="text" name="regulated_by" id="edit_regulated_by" class="form-control">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Outstanding Loan Balance (Rs.)</label>
-                            <input type="number" step="0.01" name="outstanding_loan_balance_rs" id="edit_loans" class="form-control">
+                        <div class="col-md-4">
+                            <label class="form-label">T.P. No</label>
+                            <input type="text" name="tp_no" id="edit_tp_no" class="form-control">
                         </div>
                     </div>
                 </div>
@@ -441,6 +457,71 @@ require_once '../../../includes/sidebar.php';
     </div>
 </div>
 
+<!-- Modal: View Record -->
+<div class="modal fade" id="viewSocModal" tabindex="-1" aria-labelledby="viewSocModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #370709; color: white;">
+                <h5 class="modal-title" id="viewSocModalLabel"><i class="bi bi-eye me-2"></i>View Livestock Society Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered table-striped">
+                    <tbody>
+                        <tr>
+                            <th style="width: 35%;">VS Range</th>
+                            <td id="view_vs_range"></td>
+                        </tr>
+                        <tr>
+                            <th>G N Division</th>
+                            <td id="view_gn_division"></td>
+                        </tr>
+                        <tr>
+                            <th>Name & Address</th>
+                            <td id="view_name_address"></td>
+                        </tr>
+                        <tr>
+                            <th>Overall Objective</th>
+                            <td id="view_overall_objective"></td>
+                        </tr>
+                        <tr>
+                            <th>Total Members</th>
+                            <td id="view_total_members"></td>
+                        </tr>
+                        <tr>
+                            <th>Reg. No</th>
+                            <td id="view_reg_no"></td>
+                        </tr>
+                        <tr>
+                            <th>Reg. Department</th>
+                            <td id="view_reg_department"></td>
+                        </tr>
+                        <tr>
+                            <th>Major Activities</th>
+                            <td id="view_major_activities"></td>
+                        </tr>
+                        <tr>
+                            <th>Availability of Financial Records</th>
+                            <td id="view_financial_records_availability"></td>
+                        </tr>
+                        <tr>
+                            <th>Regulated By</th>
+                            <td id="view_regulated_by"></td>
+                        </tr>
+                        <tr>
+                            <th>T.P. No</th>
+                            <td id="view_tp_no"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php
 $pageScripts = '
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -450,6 +531,9 @@ $(document).ready(function() {
         "order": [[0, "asc"]],
         "pageLength": 10,
         "dom": "Bfrtip",
+        "language": {
+            "emptyTable": "No records located for this range."
+        },
         "buttons": [
             {
                 extend: "csv",
@@ -491,18 +575,37 @@ $(document).ready(function() {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
+    $(document).on(\'click\', \'.btn-view\', function() {
+        var $row = $(this).closest(\'tr\');
+        $(\'#view_vs_range\').text($row.data(\'vs_range\'));
+        $(\'#view_gn_division\').text($row.data(\'gn_division\') || \'N/A\');
+        $(\'#view_name_address\').html(($row.data(\'name_address\') || \'\').replace(/\\n/g, \'<br>\'));
+        $(\'#view_overall_objective\').html(($row.data(\'overall_objective\') || \'\').replace(/\\n/g, \'<br>\'));
+        $(\'#view_total_members\').text($row.data(\'total_members\'));
+        $(\'#view_reg_no\').text($row.data(\'reg_no\') || \'N/A\');
+        $(\'#view_reg_department\').text($row.data(\'reg_department\') || \'N/A\');
+        $(\'#view_major_activities\').html(($row.data(\'major_activities\') || \'\').replace(/\\n/g, \'<br>\'));
+        $(\'#view_financial_records_availability\').text($row.data(\'financial_records_availability\'));
+        $(\'#view_regulated_by\').text($row.data(\'regulated_by\') || \'N/A\');
+        $(\'#view_tp_no\').text($row.data(\'tp_no\') || \'N/A\');
+
+        new bootstrap.Modal(document.getElementById(\'viewSocModal\')).show();
+    });
+
     $(document).on(\'click\', \'.btn-edit\', function() {
         var $row = $(this).closest(\'tr\');
         $(\'#edit_id\').val($row.data(\'id\'));
-        $(\'#edit_report_year\').val($row.data(\'year\'));
-        $(\'#edit_society_name\').val($row.data(\'society_name\'));
-        $(\'#edit_president_details\').val($row.data(\'president_details\'));
-        $(\'#edit_secretary_details\').val($row.data(\'secretary_details\'));
-        $(\'#edit_treasurer_details\').val($row.data(\'treasurer_details\'));
-        $(\'#edit_members\').val($row.data(\'members\'));
-        $(\'#edit_shares\').val($row.data(\'shares\'));
-        $(\'#edit_savings\').val($row.data(\'savings\'));
-        $(\'#edit_loans\').val($row.data(\'loans\'));
+        $(\'#edit_vs_range\').val($row.data(\'vs_range\'));
+        $(\'#edit_gn_division\').val($row.data(\'gn_division\'));
+        $(\'#edit_name_address\').val($row.data(\'name_address\'));
+        $(\'#edit_overall_objective\').val($row.data(\'overall_objective\'));
+        $(\'#edit_total_members\').val($row.data(\'total_members\'));
+        $(\'#edit_reg_no\').val($row.data(\'reg_no\'));
+        $(\'#edit_reg_department\').val($row.data(\'reg_department\'));
+        $(\'#edit_major_activities\').val($row.data(\'major_activities\'));
+        $(\'#edit_financial_records_availability\').val($row.data(\'financial_records_availability\'));
+        $(\'#edit_regulated_by\').val($row.data(\'regulated_by\'));
+        $(\'#edit_tp_no\').val($row.data(\'tp_no\'));
 
         new bootstrap.Modal(document.getElementById(\'editSocModal\')).show();
     });
@@ -511,12 +614,12 @@ $(document).ready(function() {
         e.preventDefault();
         var deleteUrl = $(this).attr(\'href\');
         var $row = $(this).closest(\'tr\');
-        var socName = $row.data(\'society_name\');
+        var id = $row.data(\'id\');
 
         Swal.fire({
             icon: \'warning\',
             title: \'Delete Society Record?\',
-            html: \'Are you sure you want to permanently delete the society <strong>\' + socName + \'</strong>?<br>This action cannot be undone.\',
+            html: \'Are you sure you want to permanently delete the society record <strong>#\' + id + \'</strong>?<br>This action cannot be undone.\',
             showCancelButton: true,
             confirmButtonColor: \'#d33\',
             cancelButtonColor: \'#6c757d\',

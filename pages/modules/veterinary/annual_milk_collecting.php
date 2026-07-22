@@ -35,73 +35,87 @@ if (!empty($range_id)) {
     }
 }
 
-// Handle GET year filter
-$selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
-
 // Inline CRUD actions:
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'add') {
-            $year = intval($_POST['report_year']);
-            $center_name = trim($_POST['center_name']);
-            $owner = trim($_POST['owner_proprietor']);
-            $category = trim($_POST['type_or_category']);
-            $volume = floatval($_POST['average_volume_lit_day']);
-            $producers = intval($_POST['no_of_producers']);
+            $vs_range = trim($_POST['vs_range']);
+            $collecting_center_name = trim($_POST['collecting_center_name']);
+            $address = trim($_POST['address']);
+            $contact_no = trim($_POST['contact_no']);
+            $milk_collection_lit_per_month = floatval($_POST['milk_collection_lit_per_month']);
+            $milk_chilling_capacity = floatval($_POST['milk_chilling_capacity']);
+            $milk_supply_to = trim($_POST['milk_supply_to']);
 
             $insert_query = "
-                INSERT INTO annual_milk_collecting_centers 
-                (district_id, range_id, report_year, center_name, owner_proprietor, type_or_category, 
-                 average_volume_lit_day, no_of_producers, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO milk_collecting_centers 
+                (vs_range, collecting_center_name, address, contact_no, 
+                 milk_collection_lit_per_month, milk_chilling_capacity, milk_supply_to)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $mysqli->prepare($insert_query);
             if ($stmt) {
-                // district_id, range_id, report_year format: i i i
-                // center_name, owner_proprietor, type_or_category format: s s s
-                // average_volume_lit_day format: d
-                // no_of_producers format: i
-                // created_by format: i
-                $stmt->bind_param("iiisssdii", $district_id, $range_id, $year, $center_name, $owner, $category, 
-                                  $volume, $producers, $user_id);
+                $stmt->bind_param(
+                    "ssssdds",
+                    $vs_range,
+                    $collecting_center_name,
+                    $address,
+                    $contact_no,
+                    $milk_collection_lit_per_month,
+                    $milk_chilling_capacity,
+                    $milk_supply_to
+                );
                 if ($stmt->execute()) {
-                    header("Location: annual_milk_collecting.php?year=$year&status=success&msg=" . urlencode("Collecting center added successfully."));
+                    header("Location: annual_milk_collecting.php?status=success&msg=" . urlencode("Collecting center added successfully."));
                 } else {
-                    header("Location: annual_milk_collecting.php?year=$selected_year&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
+                    header("Location: annual_milk_collecting.php?status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_milk_collecting.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_milk_collecting.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
             }
             exit();
-
         } elseif ($_POST['action'] === 'edit') {
             $id = intval($_POST['id']);
-            $year = intval($_POST['report_year']);
-            $center_name = trim($_POST['center_name']);
-            $owner = trim($_POST['owner_proprietor']);
-            $category = trim($_POST['type_or_category']);
-            $volume = floatval($_POST['average_volume_lit_day']);
-            $producers = intval($_POST['no_of_producers']);
+            $vs_range = trim($_POST['vs_range']);
+            $collecting_center_name = trim($_POST['collecting_center_name']);
+            $address = trim($_POST['address']);
+            $contact_no = trim($_POST['contact_no']);
+            $milk_collection_lit_per_month = floatval($_POST['milk_collection_lit_per_month']);
+            $milk_chilling_capacity = floatval($_POST['milk_chilling_capacity']);
+            $milk_supply_to = trim($_POST['milk_supply_to']);
 
             $update_query = "
-                UPDATE annual_milk_collecting_centers 
-                SET report_year = ?, center_name = ?, owner_proprietor = ?, type_or_category = ?, 
-                    average_volume_lit_day = ?, no_of_producers = ?
-                WHERE id = ? AND range_id = ?
+                UPDATE milk_collecting_centers 
+                SET vs_range = ?, collecting_center_name = ?, address = ?, contact_no = ?, 
+                    milk_collection_lit_per_month = ?, milk_chilling_capacity = ?, milk_supply_to = ?
+                WHERE id = ? AND vs_range = ?
             ";
             $stmt = $mysqli->prepare($update_query);
             if ($stmt) {
-                $stmt->bind_param("isssdiii", $year, $center_name, $owner, $category, $volume, 
-                                  $producers, $id, $range_id);
+                // vs_range (s), collecting_center_name (s), address (s), contact_no (s), 
+                // milk_collection_lit_per_month (d), milk_chilling_capacity (d), milk_supply_to (s), 
+                // id (i), vs_range (s) -> ssssddsis (9 placeholders)
+                $stmt->bind_param(
+                    "ssssddsis",
+                    $vs_range,
+                    $collecting_center_name,
+                    $address,
+                    $contact_no,
+                    $milk_collection_lit_per_month,
+                    $milk_chilling_capacity,
+                    $milk_supply_to,
+                    $id,
+                    $range_name
+                );
                 if ($stmt->execute()) {
-                    header("Location: annual_milk_collecting.php?year=$year&status=success&msg=" . urlencode("Collecting center updated successfully."));
+                    header("Location: annual_milk_collecting.php?status=success&msg=" . urlencode("Collecting center updated successfully."));
                 } else {
-                    header("Location: annual_milk_collecting.php?year=$selected_year&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+                    header("Location: annual_milk_collecting.php?status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_milk_collecting.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_milk_collecting.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
             }
             exit();
         }
@@ -110,25 +124,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
-    $stmt = $mysqli->prepare("DELETE FROM annual_milk_collecting_centers WHERE id = ? AND range_id = ?");
+    $stmt = $mysqli->prepare("DELETE FROM milk_collecting_centers WHERE id = ? AND vs_range = ?");
     if ($stmt) {
-        $stmt->bind_param("ii", $id, $range_id);
+        $stmt->bind_param("is", $id, $range_name);
         if ($stmt->execute()) {
-            header("Location: annual_milk_collecting.php?year=$selected_year&status=success&msg=" . urlencode("Record deleted successfully."));
+            header("Location: annual_milk_collecting.php?status=success&msg=" . urlencode("Record deleted successfully."));
         } else {
-            header("Location: annual_milk_collecting.php?year=$selected_year&status=error&msg=" . urlencode("Failed to delete record."));
+            header("Location: annual_milk_collecting.php?status=error&msg=" . urlencode("Failed to delete record."));
         }
         $stmt->close();
     }
     exit();
 }
 
-// Fetch records matching year filter and range
+// Fetch records matching VS range
 $records = [];
-if (!empty($range_id)) {
-    $stmt = $mysqli->prepare("SELECT * FROM annual_milk_collecting_centers WHERE range_id = ? AND report_year = ? ORDER BY id DESC");
+if (!empty($range_name)) {
+    $stmt = $mysqli->prepare("SELECT * FROM milk_collecting_centers WHERE vs_range = ? ORDER BY id DESC");
     if ($stmt) {
-        $stmt->bind_param("ii", $range_id, $selected_year);
+        $stmt->bind_param("s", $range_name);
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) {
@@ -141,12 +155,10 @@ if (!empty($range_id)) {
 // Summary stats
 $summary = [
     'center_count' => count($records),
-    'total_producers' => 0,
-    'total_volume' => 0
+    'total_collection' => 0
 ];
 foreach ($records as $r) {
-    $summary['total_producers'] += $r['no_of_producers'];
-    $summary['total_volume'] += $r['average_volume_lit_day'];
+    $summary['total_collection'] += floatval($r['milk_collection_lit_per_month']);
 }
 
 require_once '../../../includes/header.php';
@@ -164,37 +176,14 @@ require_once '../../../includes/sidebar.php';
 
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Milk Collecting Centers</h2>
-                <p class="text-muted small mb-0">Record and track milk collection volumes and producers for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
-            </div>
-            
-            <div class="d-flex align-items-center gap-2">
-                <form method="GET" class="d-flex align-items-center gap-2">
-                    <label class="small fw-bold text-muted mb-0">Year:</label>
-                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
-                        <?php
-                        $curr_year = intval(date('Y'));
-                        for ($y = $curr_year - 5; $y <= $curr_year + 5; $y++) {
-                            $sel = ($y === $selected_year) ? 'selected' : '';
-                            echo "<option value=\"$y\" $sel>$y</option>";
-                        }
-                        ?>
-                    </select>
-                </form>
+                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Details of Milk Collecting Centers</h2>
+                <p class="text-muted small mb-0">Record and track milk collection volumes and capacities for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
         </div>
 
         <!-- STATS CARD GROUP -->
         <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
-                    <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Active Year</span>
-                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= $selected_year ?></h4>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
+            <div class="col-6 col-lg-6">
                 <div class="card shadow-sm border-0 border-start border-success border-4 text-center">
                     <div class="card-body py-3">
                         <span class="text-muted small text-uppercase fw-bold">Total Centers</span>
@@ -202,19 +191,11 @@ require_once '../../../includes/sidebar.php';
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-start border-info border-4 text-center">
+            <div class="col-6 col-lg-6">
+                <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
                     <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Total Volume (Daily)</span>
-                        <h4 class="mb-0 fw-bold text-info mt-1"><?= number_format($summary['total_volume'], 2) ?> Liters</h4>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-start border-warning border-4 text-center">
-                    <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Total Producers Connected</span>
-                        <h4 class="mb-0 fw-bold text-warning mt-1"><?= number_format($summary['total_producers']) ?></h4>
+                        <span class="text-muted small text-uppercase fw-bold">Total Collection (Litre/Month)</span>
+                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= number_format($summary['total_collection'], 2) ?> Litres</h4>
                     </div>
                 </div>
             </div>
@@ -231,7 +212,7 @@ require_once '../../../includes/sidebar.php';
                             <div class="col-md-3">
                                 <button class="btn btn-primary w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addCenterModal">
                                     <i class="bi bi-plus-circle fs-3 mb-1"></i>
-                                    <span class="small fw-bold text-uppercase">Add Center</span>
+                                    <span class="small fw-bold text-uppercase">Add Collecting Center</span>
                                 </button>
                             </div>
                             <div class="col-md-3">
@@ -249,51 +230,50 @@ require_once '../../../includes/sidebar.php';
         <!-- RECORDS LIST TABLE -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Collecting Centers - <?= $selected_year ?></h5>
+                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Milk Collecting Centers Directory</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="centerTable">
+                    <table class="table table-hover align-middle mb-0" id="centerTable" style="min-width: 1400px;">
                         <thead class="table-light text-secondary small uppercase">
                             <tr>
-                                <th>Center Name</th>
-                                <th>Owner / Proprietor</th>
-                                <th>Category / Type</th>
-                                <th class="text-end">Average Volume (Lit/Day)</th>
-                                <th class="text-end">No. of Producers</th>
-                                <th class="text-center" style="width: 15%">Actions</th>
+                                <th>S.no</th>
+                                <th>VS Range</th>
+                                <th>Collcting Center Name</th>
+                                <th>Address</th>
+                                <th>Contact No</th>
+                                <th class="text-end">Milk Collection lit / Month</th>
+                                <th class="text-end">Milk Chilling Capacity</th>
+                                <th>Milk Supply to</th>
+                                <th class="text-center" style="width: 12%">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="small">
-                            <?php if (empty($records)): ?>
-                                <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">
-                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                        No records located for the selected year <?= $selected_year ?>.
+                            <?php foreach ($records as $row): ?>
+                                <tr
+                                    data-id="<?= $row['id'] ?>"
+                                    data-vs_range="<?= htmlspecialchars($row['vs_range']) ?>"
+                                    data-center_name="<?= htmlspecialchars($row['collecting_center_name']) ?>"
+                                    data-address="<?= htmlspecialchars($row['address']) ?>"
+                                    data-contact_no="<?= htmlspecialchars($row['contact_no']) ?>"
+                                    data-collection="<?= htmlspecialchars($row['milk_collection_lit_per_month']) ?>"
+                                    data-capacity="<?= htmlspecialchars($row['milk_chilling_capacity']) ?>"
+                                    data-supply_to="<?= htmlspecialchars($row['milk_supply_to']) ?>">
+                                    <td class="fw-bold text-center"><?= htmlspecialchars($row['id']) ?></td>
+                                    <td><?= htmlspecialchars($row['vs_range']) ?></td>
+                                    <td class="fw-bold"><?= htmlspecialchars($row['collecting_center_name']) ?></td>
+                                    <td><?= nl2br(htmlspecialchars($row['address'])) ?></td>
+                                    <td><?= htmlspecialchars($row['contact_no']) ?></td>
+                                    <td class="text-end font-monospace text-primary fw-bold"><?= number_format($row['milk_collection_lit_per_month'], 2) ?></td>
+                                    <td class="text-end font-monospace"><?= number_format($row['milk_chilling_capacity'], 2) ?></td>
+                                    <td><?= htmlspecialchars($row['milk_supply_to']) ?></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-info btn-view" title="View"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+                                        <a href="annual_milk_collecting.php?action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash-fill"></i></a>
                                     </td>
                                 </tr>
-                            <?php else: ?>
-                                <?php foreach ($records as $row): ?>
-                                    <tr 
-                                        data-id="<?= $row['id'] ?>"
-                                        data-year="<?= htmlspecialchars($row['report_year']) ?>"
-                                        data-center_name="<?= htmlspecialchars($row['center_name']) ?>"
-                                        data-owner_proprietor="<?= htmlspecialchars($row['owner_proprietor']) ?>"
-                                        data-type_or_category="<?= htmlspecialchars($row['type_or_category']) ?>"
-                                        data-average_volume_lit_day="<?= htmlspecialchars($row['average_volume_lit_day']) ?>"
-                                        data-no_of_producers="<?= htmlspecialchars($row['no_of_producers']) ?>">
-                                        <td class="fw-bold"><?= htmlspecialchars($row['center_name']) ?></td>
-                                        <td><?= htmlspecialchars($row['owner_proprietor']) ?></td>
-                                        <td><span class="badge bg-secondary"><?= htmlspecialchars($row['type_or_category']) ?></span></td>
-                                        <td class="text-end font-monospace text-primary fw-bold"><?= number_format($row['average_volume_lit_day'], 2) ?></td>
-                                        <td class="text-end font-monospace"><?= number_format($row['no_of_producers']) ?></td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                            <a href="annual_milk_collecting.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -305,39 +285,43 @@ require_once '../../../includes/sidebar.php';
 
 <!-- Modal: Add Record -->
 <div class="modal fade" id="addCenterModal" tabindex="-1" aria-labelledby="addCenterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <form method="POST">
             <input type="hidden" name="action" value="add">
             <div class="modal-content">
                 <div class="modal-header" style="background-color: #370709; color: white;">
-                    <h5 class="modal-title" id="addCenterModalLabel"><i class="bi bi-plus-circle me-2"></i>Add Collecting Center</h5>
+                    <h5 class="modal-title" id="addCenterModalLabel"><i class="bi bi-plus-circle me-2"></i>Add Milk Collecting Center</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Report Year</label>
-                            <input type="number" name="report_year" class="form-control" value="<?= date('Y') ?>" required>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">VS Range</label>
+                            <input type="text" name="vs_range" class="form-control" value="<?= htmlspecialchars($range_name) ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Collcting Center Name</label>
+                            <input type="text" name="collecting_center_name" class="form-control" placeholder="e.g. MILCO Hub Balapitiya" required>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label fw-bold">Collecting Center Name</label>
-                            <input type="text" name="center_name" class="form-control" placeholder="e.g. MILCO Collecting Hub" required>
+                            <label class="form-label fw-bold">Address</label>
+                            <textarea name="address" class="form-control" rows="2" placeholder="Detail Address of Center" required></textarea>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Owner / Proprietor</label>
-                            <input type="text" name="owner_proprietor" class="form-control" placeholder="Owner or Company name">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Contact No</label>
+                            <input type="text" name="contact_no" class="form-control" placeholder="Telephone/Mobile">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Type / Category</label>
-                            <input type="text" name="type_or_category" class="form-control" placeholder="e.g. Coop, Private, MILCO, Nestlé">
+                        <div class="col-md-6">
+                            <label class="form-label">Milk Supply to</label>
+                            <input type="text" name="milk_supply_to" class="form-control" placeholder="e.g. MILCO, Nestlé, Cargills">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Average Volume (Liters / Day)</label>
-                            <input type="number" step="0.01" name="average_volume_lit_day" class="form-control" value="0.00">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Milk Collection lit / Month</label>
+                            <input type="number" step="0.01" name="milk_collection_lit_per_month" class="form-control" value="0.00" required>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Number of Producers</label>
-                            <input type="number" name="no_of_producers" class="form-control" value="0">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Milk Chilling Capacity</label>
+                            <input type="number" step="0.01" name="milk_chilling_capacity" class="form-control" value="0.00" required>
                         </div>
                     </div>
                 </div>
@@ -352,40 +336,44 @@ require_once '../../../includes/sidebar.php';
 
 <!-- Modal: Edit Record -->
 <div class="modal fade" id="editCenterModal" tabindex="-1" aria-labelledby="editCenterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <form method="POST">
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="id" id="edit_id">
             <div class="modal-content">
                 <div class="modal-header" style="background-color: #370709; color: white;">
-                    <h5 class="modal-title" id="editCenterModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit Collecting Center</h5>
+                    <h5 class="modal-title" id="editCenterModalLabel"><i class="bi bi-pencil-fill me-2"></i>Edit Milk Collecting Center</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Report Year</label>
-                            <input type="number" name="report_year" id="edit_report_year" class="form-control" required>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">VS Range</label>
+                            <input type="text" name="vs_range" id="edit_vs_range" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Collcting Center Name</label>
+                            <input type="text" name="collecting_center_name" id="edit_center_name" class="form-control" required>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label fw-bold">Collecting Center Name</label>
-                            <input type="text" name="center_name" id="edit_center_name" class="form-control" required>
+                            <label class="form-label fw-bold">Address</label>
+                            <textarea name="address" id="edit_address" class="form-control" rows="2" required></textarea>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Owner / Proprietor</label>
-                            <input type="text" name="owner_proprietor" id="edit_owner_proprietor" class="form-control">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Contact No</label>
+                            <input type="text" name="contact_no" id="edit_contact_no" class="form-control">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Type / Category</label>
-                            <input type="text" name="type_or_category" id="edit_type_or_category" class="form-control">
+                        <div class="col-md-6">
+                            <label class="form-label">Milk Supply to</label>
+                            <input type="text" name="milk_supply_to" id="edit_supply_to" class="form-control">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Average Volume (Liters / Day)</label>
-                            <input type="number" step="0.01" name="average_volume_lit_day" id="edit_average_volume_lit_day" class="form-control">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Milk Collection lit / Month</label>
+                            <input type="number" step="0.01" name="milk_collection_lit_per_month" id="edit_collection" class="form-control" required>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Number of Producers</label>
-                            <input type="number" name="no_of_producers" id="edit_no_of_producers" class="form-control">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Milk Chilling Capacity</label>
+                            <input type="number" step="0.01" name="milk_chilling_capacity" id="edit_capacity" class="form-control" required>
                         </div>
                     </div>
                 </div>
@@ -398,6 +386,55 @@ require_once '../../../includes/sidebar.php';
     </div>
 </div>
 
+<!-- Modal: View Record -->
+<div class="modal fade" id="viewCenterModal" tabindex="-1" aria-labelledby="viewCenterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #370709; color: white;">
+                <h5 class="modal-title" id="viewCenterModalLabel"><i class="bi bi-eye-fill me-2"></i>Milk Collecting Center Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered table-striped">
+                    <tbody>
+                        <tr>
+                            <th style="width: 35%;">VS Range</th>
+                            <td id="view_vs_range"></td>
+                        </tr>
+                        <tr>
+                            <th>Collcting Center Name</th>
+                            <td id="view_center_name"></td>
+                        </tr>
+                        <tr>
+                            <th>Address</th>
+                            <td id="view_address"></td>
+                        </tr>
+                        <tr>
+                            <th>Contact No</th>
+                            <td id="view_contact_no"></td>
+                        </tr>
+                        <tr>
+                            <th>Milk Collection lit / Month</th>
+                            <td id="view_collection" class="font-monospace fw-bold text-primary"></td>
+                        </tr>
+                        <tr>
+                            <th>Milk Chilling Capacity</th>
+                            <td id="view_capacity" class="font-monospace"></td>
+                        </tr>
+                        <tr>
+                            <th>Milk Supply to</th>
+                            <td id="view_supply_to"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php
 $pageScripts = '
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -407,6 +444,9 @@ $(document).ready(function() {
         "order": [[0, "asc"]],
         "pageLength": 10,
         "dom": "Bfrtip",
+        "language": {
+            "emptyTable": "No records located for this range."
+        },
         "buttons": [
             {
                 extend: "csv",
@@ -448,15 +488,33 @@ $(document).ready(function() {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
+    $(document).on(\'click\', \'.btn-view\', function() {
+        var $row = $(this).closest(\'tr\');
+        $(\'#view_vs_range\').text($row.data(\'vs_range\'));
+        $(\'#view_center_name\').text($row.data(\'center_name\'));
+        $(\'#view_address\').html(($row.data(\'address\') || \'\').replace(/\\n/g, \'<br>\'));
+        $(\'#view_contact_no\').text($row.data(\'contact_no\') || \'N/A\');
+        
+        var collection = parseFloat($row.data(\'collection\')) || 0;
+        var capacity = parseFloat($row.data(\'capacity\')) || 0;
+        
+        $(\'#view_collection\').text(collection.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " Litres");
+        $(\'#view_capacity\').text(capacity.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $(\'#view_supply_to\').text($row.data(\'supply_to\') || \'N/A\');
+
+        new bootstrap.Modal(document.getElementById(\'viewCenterModal\')).show();
+    });
+
     $(document).on(\'click\', \'.btn-edit\', function() {
         var $row = $(this).closest(\'tr\');
         $(\'#edit_id\').val($row.data(\'id\'));
-        $(\'#edit_report_year\').val($row.data(\'year\'));
+        $(\'#edit_vs_range\').val($row.data(\'vs_range\'));
         $(\'#edit_center_name\').val($row.data(\'center_name\'));
-        $(\'#edit_owner_proprietor\').val($row.data(\'owner_proprietor\'));
-        $(\'#edit_type_or_category\').val($row.data(\'type_or_category\'));
-        $(\'#edit_average_volume_lit_day\').val($row.data(\'average_volume_lit_day\'));
-        $(\'#edit_no_of_producers\').val($row.data(\'no_of_producers\'));
+        $(\'#edit_address\').val($row.data(\'address\'));
+        $(\'#edit_contact_no\').val($row.data(\'contact_no\'));
+        $(\'#edit_collection\').val($row.data(\'collection\'));
+        $(\'#edit_capacity\').val($row.data(\'capacity\'));
+        $(\'#edit_supply_to\').val($row.data(\'supply_to\'));
 
         new bootstrap.Modal(document.getElementById(\'editCenterModal\')).show();
     });
@@ -465,12 +523,12 @@ $(document).ready(function() {
         e.preventDefault();
         var deleteUrl = $(this).attr(\'href\');
         var $row = $(this).closest(\'tr\');
-        var name = $row.data(\'center_name\');
+        var id = $row.data(\'id\');
 
         Swal.fire({
             icon: \'warning\',
             title: \'Delete Collecting Center?\',
-            html: \'Are you sure you want to permanently delete the center <strong>\' + name + \'</strong>?<br>This action cannot be undone.\',
+            html: \'Are you sure you want to permanently delete the center record <strong>#\' + id + \'</strong>?<br>This action cannot be undone.\',
             showCancelButton: true,
             confirmButtonColor: \'#d33\',
             cancelButtonColor: \'#6c757d\',

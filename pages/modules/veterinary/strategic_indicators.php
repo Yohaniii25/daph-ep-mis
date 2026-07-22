@@ -71,7 +71,7 @@ require_once '../../../includes/header.php';
                         <option value="2025" <?= $selected_year == 2025 ? 'selected' : '' ?>>2025</option>
                         <option value="2024" <?= $selected_year == 2024 ? 'selected' : '' ?>>2024</option>
                     </select>
-                    <button class="btn text-white fw-bold text-nowrap" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addIndicatorModal">
+                    <button class="btn text-light fw-bold text-nowrap" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addIndicatorModal">
                         <i class="bi bi-plus-circle me-1"></i> Log New Indicator
                     </button>
                 </div>
@@ -149,7 +149,7 @@ require_once '../../../includes/header.php';
 <div class="modal fade" id="addIndicatorModal" tabindex="-1" aria-labelledby="addIndicatorLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header text-white py-2" style="background-color: #370709;">
+            <div class="modal-header text-light py-2" style="background-color: #370709;">
                 <h6 class="modal-title" id="addIndicatorLabel"><i class="bi bi-patch-plus me-2"></i> Log New Strategic Pillar Marker</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -189,7 +189,7 @@ require_once '../../../includes/header.php';
                 </div>
                 <div class="modal-footer py-2 border-top-0">
                     <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-white btn-sm px-4 shadow-sm" style="background-color: #820100;">Save Indicator Bounds</button>
+                    <button type="submit" class="btn text-light btn-sm px-4 shadow-sm" style="background-color: #820100;">Save Indicator Bounds</button>
                 </div>
             </form>
         </div>

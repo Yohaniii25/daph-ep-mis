@@ -83,9 +83,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // org_fert_fam is 'i'
                 // org_fert_mt, org_fert_sale, org_fert_own, org_fert_price are 'dddd'
                 // created_by is 'i'
-                $stmt->bind_param("iiiiiiididdiidddi", $district_id, $range_id, $year, $chick_prod_cnt, $chicks_prod_m, 
-                                  $feed_prod_cnt, $feed_prod_mt, $poultry_proc_cnt, $chick_sale_live, $chick_sale_dressed, 
-                                  $org_fert_fam, $org_fert_mt, $org_fert_sale, $org_fert_own, $org_fert_price, $user_id);
+                $stmt->bind_param(
+                    "iiiiiididdiddddi",
+                    $district_id,
+                    $range_id,
+                    $year,
+                    $chick_prod_cnt,
+                    $chicks_prod_m,
+                    $feed_prod_cnt,
+                    $feed_prod_mt,
+                    $poultry_proc_cnt,
+                    $chick_sale_live,
+                    $chick_sale_dressed,
+                    $org_fert_fam,
+                    $org_fert_mt,
+                    $org_fert_sale,
+                    $org_fert_own,
+                    $org_fert_price,
+                    $user_id
+                );
                 if ($stmt->execute()) {
                     header("Location: annual_producers_processors.php?year=$year&status=success&msg=" . urlencode("Data added successfully."));
                 } else {
@@ -96,7 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: annual_producers_processors.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
-
         } elseif ($_POST['action'] === 'edit') {
             $id = intval($_POST['id']);
             $year = intval($_POST['report_year']);
@@ -123,10 +138,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ";
             $stmt = $mysqli->prepare($update_query);
             if ($stmt) {
-                $stmt->bind_param("iiiiididdiidddii", $year, $chick_prod_cnt, $chicks_prod_m, $feed_prod_cnt, 
-                                  $feed_prod_mt, $poultry_proc_cnt, $chick_sale_live, $chick_sale_dressed, 
-                                  $org_fert_fam, $org_fert_mt, $org_fert_sale, $org_fert_own, $org_fert_price, 
-                                  $id, $range_id);
+                $stmt->bind_param(
+                    "iiiididdiddddii",
+                    $year,
+                    $chick_prod_cnt,
+                    $chicks_prod_m,
+                    $feed_prod_cnt,
+                    $feed_prod_mt,
+                    $poultry_proc_cnt,
+                    $chick_sale_live,
+                    $chick_sale_dressed,
+                    $org_fert_fam,
+                    $org_fert_mt,
+                    $org_fert_sale,
+                    $org_fert_own,
+                    $org_fert_price,
+                    $id,
+                    $range_id
+                );
                 if ($stmt->execute()) {
                     header("Location: annual_producers_processors.php?year=$year&status=success&msg=" . urlencode("Data updated successfully."));
                 } else {
@@ -203,7 +232,7 @@ require_once '../../../includes/sidebar.php';
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Annual Producers & Processors</h2>
                 <p class="text-muted small mb-0">Monitor animal feed, chick production, poultry processing, and organic fertilizer stats for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
-            
+
             <div class="d-flex align-items-center gap-2">
                 <form method="GET" class="d-flex align-items-center gap-2">
                     <label class="small fw-bold text-muted mb-0">Year:</label>
@@ -324,7 +353,7 @@ require_once '../../../includes/sidebar.php';
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($records as $row): ?>
-                                    <tr 
+                                    <tr
                                         data-id="<?= $row['id'] ?>"
                                         data-year="<?= htmlspecialchars($row['report_year']) ?>"
                                         data-chick_producers_count="<?= htmlspecialchars($row['chick_producers_count']) ?>"
@@ -340,22 +369,22 @@ require_once '../../../includes/sidebar.php';
                                         data-organic_fert_own_use_kg_month="<?= htmlspecialchars($row['organic_fert_own_use_kg_month']) ?>"
                                         data-organic_fert_price_rs_kg="<?= htmlspecialchars($row['organic_fert_price_rs_kg']) ?>">
                                         <td class="text-center fw-bold"><?= htmlspecialchars($row['report_year']) ?></td>
-                                        
+
                                         <td class="text-end font-monospace"><?= number_format($row['chick_producers_count']) ?></td>
                                         <td class="text-end font-monospace"><?= number_format($row['chicks_produced_month']) ?></td>
                                         <td class="text-end font-monospace"><?= number_format($row['feed_producers_count']) ?></td>
                                         <td class="text-end font-monospace bg-light"><?= number_format($row['feed_production_mt_month'], 2) ?></td>
-                                        
+
                                         <td class="text-end font-monospace"><?= number_format($row['poultry_processors_count']) ?></td>
                                         <td class="text-end font-monospace"><?= number_format($row['chicken_sale_live_kg_month'], 2) ?></td>
                                         <td class="text-end font-monospace"><?= number_format($row['chicken_sale_dressed_kg_month'], 2) ?></td>
-                                        
+
                                         <td class="text-end font-monospace"><?= number_format($row['organic_fert_farm_families']) ?></td>
                                         <td class="text-end font-monospace bg-light"><?= number_format($row['organic_fert_prod_mt_year'], 2) ?></td>
                                         <td class="text-end font-monospace"><?= number_format($row['organic_fert_sale_kg_month'], 2) ?></td>
                                         <td class="text-end font-monospace"><?= number_format($row['organic_fert_own_use_kg_month'], 2) ?></td>
                                         <td class="text-end font-monospace text-success fw-bold">LKR <?= number_format($row['organic_fert_price_rs_kg'], 2) ?></td>
-                                        
+
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
                                             <a href="annual_producers_processors.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
@@ -388,7 +417,7 @@ require_once '../../../includes/sidebar.php';
                             <label class="form-label fw-bold">Report Year</label>
                             <input type="number" name="report_year" class="form-control" value="<?= date('Y') ?>" required>
                         </div>
-                        
+
                         <div class="col-md-6 border-end">
                             <h6 class="fw-bold text-primary mb-3">Chick Producers</h6>
                             <div class="mb-2">
@@ -399,7 +428,7 @@ require_once '../../../includes/sidebar.php';
                                 <label class="form-label">Avg Chicks Produced / month</label>
                                 <input type="number" name="chicks_produced_month" class="form-control" value="0">
                             </div>
-                            
+
                             <h6 class="fw-bold text-success mb-3 mt-4">Feed Producers</h6>
                             <div class="mb-2">
                                 <label class="form-label">No. of Producers</label>
@@ -409,7 +438,7 @@ require_once '../../../includes/sidebar.php';
                                 <label class="form-label">Monthly Production (MT)</label>
                                 <input type="number" step="0.01" name="feed_production_mt_month" class="form-control" value="0.00">
                             </div>
-                            
+
                             <h6 class="fw-bold text-danger mb-3 mt-4">Poultry Processing & Sales</h6>
                             <div class="mb-2">
                                 <label class="form-label">No. of Processors</label>
@@ -476,7 +505,7 @@ require_once '../../../includes/sidebar.php';
                             <label class="form-label fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="edit_report_year" class="form-control" required>
                         </div>
-                        
+
                         <div class="col-md-6 border-end">
                             <h6 class="fw-bold text-primary mb-3">Chick Producers</h6>
                             <div class="mb-2">
@@ -487,7 +516,7 @@ require_once '../../../includes/sidebar.php';
                                 <label class="form-label">Avg Chicks Produced / month</label>
                                 <input type="number" name="chicks_produced_month" id="edit_chicks_produced_month" class="form-control">
                             </div>
-                            
+
                             <h6 class="fw-bold text-success mb-3 mt-4">Feed Producers</h6>
                             <div class="mb-2">
                                 <label class="form-label">No. of Producers</label>
@@ -497,7 +526,7 @@ require_once '../../../includes/sidebar.php';
                                 <label class="form-label">Monthly Production (MT)</label>
                                 <input type="number" step="0.01" name="feed_production_mt_month" id="edit_feed_production_mt_month" class="form-control">
                             </div>
-                            
+
                             <h6 class="fw-bold text-danger mb-3 mt-4">Poultry Processing & Sales</h6>
                             <div class="mb-2">
                                 <label class="form-label">No. of Processors</label>

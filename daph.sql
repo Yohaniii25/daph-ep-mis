@@ -149,25 +149,21 @@ INSERT INTO `animal_populations` (`id`, `range_id`, `year`, `animal_type`, `quan
 --
 
 CREATE TABLE `annual_feed_production` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `district_id` int(11) NOT NULL,
   `range_id` int(11) NOT NULL,
   `report_year` year(4) NOT NULL,
-  `pasture_farm_families` int(11) DEFAULT 0,
-  `pasture_prod_kg_month` decimal(12,2) DEFAULT 0.00,
-  `pasture_sales_kg_month` decimal(12,2) DEFAULT 0.00,
-  `pasture_price_rs` decimal(10,2) DEFAULT 0.00,
-  `fodder_farm_families` int(11) DEFAULT 0,
-  `fodder_prod_kg_month` decimal(12,2) DEFAULT 0.00,
-  `fodder_sales_kg_month` decimal(12,2) DEFAULT 0.00,
-  `fodder_price_rs` decimal(10,2) DEFAULT 0.00,
-  `silage_farm_families` int(11) DEFAULT 0,
-  `silage_prod_kg_year` decimal(12,2) DEFAULT 0.00,
-  `paddy_straw_families` int(11) DEFAULT 0,
-  `paddy_straw_storage_sqft` decimal(12,2) DEFAULT 0.00,
-  `paddy_straw_capacity_ton` decimal(10,2) DEFAULT 0.00,
+  `feed_mill_name` varchar(255) NOT NULL,
+  `proprietor_details` text DEFAULT NULL,
+  `category_type` varchar(50) NOT NULL,
+  `produced_qty_mt_month` decimal(12,2) DEFAULT 0.00,
+  `raw_materials_source` varchar(255) DEFAULT NULL,
+  `market_outlets` text DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `range_id` (`range_id`),
+  CONSTRAINT `fk_feed_prod_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -300,6 +296,32 @@ INSERT INTO `annual_pasture_fodder_lands` (`id`, `district_id`, `range_id`, `rep
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `pasture_fodder_lands`
+--
+
+CREATE TABLE `pasture_fodder_lands` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `vs_range` varchar(255) NOT NULL,
+  `pasture_families_quarter_ac` int(11) DEFAULT 0 COMMENT '1/4 Ac',
+  `pasture_families_half_ac` int(11) DEFAULT 0 COMMENT '1/2 Ac',
+  `pasture_families_one_ac` int(11) DEFAULT 0 COMMENT '1 Ac',
+  `pasture_families_gt_one_ac` int(11) DEFAULT 0 COMMENT '> 1Ac',
+  `pasture_total_acre` decimal(10,2) DEFAULT 0.00,
+  `pasture_total_families` int(11) DEFAULT 0,
+  `fodder_families_quarter_ac` int(11) DEFAULT 0 COMMENT '1/4 Ac',
+  `fodder_families_half_ac` int(11) DEFAULT 0 COMMENT '1/2 Ac',
+  `fodder_families_one_ac` int(11) DEFAULT 0 COMMENT '1 Ac',
+  `fodder_families_gt_one_ac` int(11) DEFAULT 0 COMMENT '> 1Ac',
+  `fodder_total_acre` decimal(10,2) DEFAULT 0.00,
+  `fodder_total_families` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+
 -- Table structure for table `annual_pasture_yields`
 --
 
@@ -3300,6 +3322,83 @@ ALTER TABLE `section_e`
   ADD CONSTRAINT `fk_prod_rec_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_prod_rec_item` FOREIGN KEY (`item_id`) REFERENCES `production_items` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_prod_rec_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE;
+--
+-- Table structure for table `livestock_societies`
+--
+
+CREATE TABLE `livestock_societies` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `vs_range` VARCHAR(255) NOT NULL,
+  `gn_division` VARCHAR(255),
+  `name_address` TEXT,
+  `overall_objective` TEXT,
+  `total_members` INT,
+  `reg_no` VARCHAR(100),
+  `reg_department` VARCHAR(255),
+  `major_activities` TEXT,
+  `financial_records_availability` VARCHAR(50),
+  `regulated_by` VARCHAR(255),
+  `tp_no` VARCHAR(20),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Table structure for table `milk_collecting_centers`
+--
+
+CREATE TABLE `milk_collecting_centers` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `vs_range` VARCHAR(255) NOT NULL,
+  `collecting_center_name` VARCHAR(255),
+  `address` TEXT,
+  `contact_no` VARCHAR(50),
+  `milk_collection_lit_per_month` DECIMAL(10,2),
+  `milk_chilling_capacity` DECIMAL(10,2),
+  `milk_supply_to` VARCHAR(255),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Table structure for table `milk_processing_centers`
+--
+
+CREATE TABLE `milk_processing_centers` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `vs_range` VARCHAR(255) NOT NULL,
+  `processing_center_name` VARCHAR(255),
+  `address` TEXT,
+  `contact_no` VARCHAR(50),
+  `yoghurt_lit_per_month` DECIMAL(10,2),
+  `curd_lit_per_month` DECIMAL(10,2),
+  `ice_cream_lit_per_month` DECIMAL(10,2),
+  `ghee_lit_per_month` DECIMAL(10,2),
+  `other_milk_product_lit_per_month` DECIMAL(10,2),
+  `total_lit_per_month` DECIMAL(10,2),
+  `income_rs_per_month` DECIMAL(15,2),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Table structure for table `milk_product_sales_centers`
+--
+
+CREATE TABLE `milk_product_sales_centers` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `vs_range` VARCHAR(255) NOT NULL,
+  `sales_center_name` VARCHAR(255),
+  `address` TEXT,
+  `contact_no` VARCHAR(50),
+  `fresh_milk_lit_per_month` DECIMAL(10,2),
+  `yoghurt_lit_per_month` DECIMAL(10,2),
+  `curd_lit_per_month` DECIMAL(10,2),
+  `ice_cream_lit_per_month` DECIMAL(10,2),
+  `ghee_lit_per_month` DECIMAL(10,2),
+  `other_milk_product_lit_per_month` DECIMAL(10,2),
+  `total_lit_per_month` DECIMAL(10,2),
+  `income_rs_per_month` DECIMAL(15,2),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
