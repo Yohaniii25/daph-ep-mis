@@ -35,8 +35,15 @@ if (!empty($range_id)) {
     }
 }
 
-// Handle GET year filter
-$selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
+// Handle GET year filter (default to 'all' so all records for the range are displayed)
+$selected_year = 'all';
+if (isset($_GET['year'])) {
+    if ($_GET['year'] === 'all' || $_GET['year'] === '') {
+        $selected_year = 'all';
+    } else {
+        $selected_year = intval($_GET['year']);
+    }
+}
 
 // Inline CRUD actions:
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -56,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $check_stmt->bind_param("ii", $range_id, $year);
             $check_stmt->execute();
             if ($check_stmt->get_result()->num_rows > 0) {
-                header("Location: annual_pasture_yields.php?year=$selected_year&status=error&msg=" . urlencode("A record for the year $year already exists."));
+                header("Location: annual_pasture_yields.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("A record for the year $year already exists."));
                 exit();
             }
             $check_stmt->close();
@@ -72,13 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("iiidddddddi", $district_id, $range_id, $year, $co3, $co4, $co5, 
                                   $aus_red, $sup_nep, $sampoorna, $other, $user_id);
                 if ($stmt->execute()) {
-                    header("Location: annual_pasture_yields.php?year=$year&status=success&msg=" . urlencode("Pasture yields added successfully."));
+                    header("Location: annual_pasture_yields.php?year=all&status=success&msg=" . urlencode("Pasture yields added successfully."));
                 } else {
-                    header("Location: annual_pasture_yields.php?year=$selected_year&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
+                    header("Location: annual_pasture_yields.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_pasture_yields.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_pasture_yields.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
 
@@ -105,13 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("idddddddii", $year, $co3, $co4, $co5, $aus_red, $sup_nep, 
                                   $sampoorna, $other, $id, $range_id);
                 if ($stmt->execute()) {
-                    header("Location: annual_pasture_yields.php?year=$year&status=success&msg=" . urlencode("Pasture yields updated successfully."));
+                    header("Location: annual_pasture_yields.php?year=all&status=success&msg=" . urlencode("Pasture yields updated successfully."));
                 } else {
-                    header("Location: annual_pasture_yields.php?year=$selected_year&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+                    header("Location: annual_pasture_yields.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_pasture_yields.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_pasture_yields.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
         }
@@ -124,9 +131,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     if ($stmt) {
         $stmt->bind_param("ii", $id, $range_id);
         if ($stmt->execute()) {
-            header("Location: annual_pasture_yields.php?year=$selected_year&status=success&msg=" . urlencode("Record deleted successfully."));
+            header("Location: annual_pasture_yields.php?year=" . urlencode($selected_year) . "&status=success&msg=" . urlencode("Record deleted successfully."));
         } else {
-            header("Location: annual_pasture_yields.php?year=$selected_year&status=error&msg=" . urlencode("Failed to delete record."));
+            header("Location: annual_pasture_yields.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Failed to delete record."));
         }
         $stmt->close();
     }
@@ -136,15 +143,28 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
 // Fetch records matching year filter and range
 $records = [];
 if (!empty($range_id)) {
-    $stmt = $mysqli->prepare("SELECT * FROM annual_pasture_yields WHERE range_id = ? AND report_year = ? ORDER BY id DESC");
-    if ($stmt) {
-        $stmt->bind_param("ii", $range_id, $selected_year);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        while ($row = $res->fetch_assoc()) {
-            $records[] = $row;
+    if ($selected_year === 'all') {
+        $stmt = $mysqli->prepare("SELECT * FROM annual_pasture_yields WHERE range_id = ? ORDER BY report_year DESC, id DESC");
+        if ($stmt) {
+            $stmt->bind_param("i", $range_id);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $records[] = $row;
+            }
+            $stmt->close();
         }
-        $stmt->close();
+    } else {
+        $stmt = $mysqli->prepare("SELECT * FROM annual_pasture_yields WHERE range_id = ? AND report_year = ? ORDER BY report_year DESC, id DESC");
+        if ($stmt) {
+            $stmt->bind_param("ii", $range_id, $selected_year);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $records[] = $row;
+            }
+            $stmt->close();
+        }
     }
 }
 
@@ -197,11 +217,12 @@ require_once '../../../includes/sidebar.php';
             <div class="d-flex align-items-center gap-2">
                 <form method="GET" class="d-flex align-items-center gap-2">
                     <label class="small fw-bold text-muted mb-0">Year:</label>
-                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
+                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 110px;">
+                        <option value="all" <?= ($selected_year === 'all') ? 'selected' : '' ?>>All Years</option>
                         <?php
                         $curr_year = intval(date('Y'));
                         for ($y = $curr_year - 5; $y <= $curr_year + 5; $y++) {
-                            $sel = ($y === $selected_year) ? 'selected' : '';
+                            $sel = ($selected_year !== 'all' && $y === intval($selected_year)) ? 'selected' : '';
                             echo "<option value=\"$y\" $sel>$y</option>";
                         }
                         ?>
@@ -216,14 +237,14 @@ require_once '../../../includes/sidebar.php';
                 <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
                     <div class="card-body py-3">
                         <span class="text-muted small text-uppercase fw-bold">Active Year</span>
-                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= $selected_year ?></h4>
+                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= ($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year) ?></h4>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-lg-3">
                 <div class="card shadow-sm border-0 border-start border-success border-4 text-center">
                     <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Total Yield (Year)</span>
+                        <span class="text-muted small text-uppercase fw-bold">Total Yield</span>
                         <h4 class="mb-0 fw-bold text-success mt-1"><?= number_format($summary['total_yield_kg'], 2) ?> Kg</h4>
                     </div>
                 </div>
@@ -275,7 +296,7 @@ require_once '../../../includes/sidebar.php';
         <!-- RECORDS LIST TABLE -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Pasture Yields Log - <?= $selected_year ?></h5>
+                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Pasture Yields Log - <?= ($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year) ?></h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -298,7 +319,7 @@ require_once '../../../includes/sidebar.php';
                                 <tr>
                                     <td colspan="9" class="text-center py-4 text-muted">
                                         <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                        No records located for the selected year <?= $selected_year ?>.
+                                        No records located <?= ($selected_year === 'all') ? 'in the database.' : 'for the selected year ' . htmlspecialchars($selected_year) . '.' ?>
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -323,7 +344,7 @@ require_once '../../../includes/sidebar.php';
                                         <td class="text-end font-monospace"><?= number_format($row['other_varieties_kg_year'], 2) ?></td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                            <a href="annual_pasture_yields.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
+                                            <a href="annual_pasture_yields.php?year=<?= urlencode($selected_year) ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

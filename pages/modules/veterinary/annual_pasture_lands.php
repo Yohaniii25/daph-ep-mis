@@ -16,6 +16,7 @@ $table_init_sql = "
 CREATE TABLE IF NOT EXISTS pasture_fodder_lands (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vs_range VARCHAR(255) NOT NULL,
+    report_year INT DEFAULT 2024,
     
     -- Pasture Land Fields
     pasture_families_quarter_ac INT DEFAULT 0 COMMENT '1/4 Ac',
@@ -37,12 +38,29 @@ CREATE TABLE IF NOT EXISTS pasture_fodder_lands (
 );";
 $mysqli->query($table_init_sql);
 
+// Auto-migrate: add report_year column if missing
+$chk_col = $mysqli->query("SHOW COLUMNS FROM pasture_fodder_lands LIKE 'report_year'");
+if ($chk_col && $chk_col->num_rows == 0) {
+    $mysqli->query("ALTER TABLE pasture_fodder_lands ADD COLUMN report_year INT DEFAULT 2024 AFTER vs_range");
+}
+
+// Handle GET year filter (default to 'all' so all records are displayed)
+$selected_year = 'all';
+if (isset($_GET['year'])) {
+    if ($_GET['year'] === 'all' || $_GET['year'] === '') {
+        $selected_year = 'all';
+    } else {
+        $selected_year = intval($_GET['year']);
+    }
+}
+
 // Handle POST submissions (INSERT and UPDATE)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'add') {
             $vs_range = trim($_POST['vs_range'] ?? '');
-            
+            $report_year = intval($_POST['report_year'] ?? date('Y'));
+
             // Pasture fields
             $pasture_families_quarter_ac = intval($_POST['pasture_families_quarter_ac'] ?? 0);
             $pasture_families_half_ac = intval($_POST['pasture_families_half_ac'] ?? 0);
@@ -50,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pasture_families_gt_one_ac = intval($_POST['pasture_families_gt_one_ac'] ?? 0);
             $pasture_total_acre = floatval($_POST['pasture_total_acre'] ?? 0);
             $pasture_total_families = intval($_POST['pasture_total_families'] ?? 0);
-            
+
             // Fodder fields
             $fodder_families_quarter_ac = intval($_POST['fodder_families_quarter_ac'] ?? 0);
             $fodder_families_half_ac = intval($_POST['fodder_families_half_ac'] ?? 0);
@@ -61,36 +79,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $insert_query = "
                 INSERT INTO pasture_fodder_lands 
-                (vs_range, 
+                (vs_range, report_year, 
                  pasture_families_quarter_ac, pasture_families_half_ac, pasture_families_one_ac, pasture_families_gt_one_ac, pasture_total_acre, pasture_total_families,
                  fodder_families_quarter_ac, fodder_families_half_ac, fodder_families_one_ac, fodder_families_gt_one_ac, fodder_total_acre, fodder_total_families)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $mysqli->prepare($insert_query);
             if ($stmt) {
-                // Type string: "siiiidiiiiidi" (1 string, 4 ints, 1 double, 1 int, 4 ints, 1 double, 1 int) - 13 total parameters
                 $stmt->bind_param(
-                    "siiiidiiiiidi", 
-                    $vs_range, 
-                    $pasture_families_quarter_ac, $pasture_families_half_ac, $pasture_families_one_ac, $pasture_families_gt_one_ac, $pasture_total_acre, $pasture_total_families,
-                    $fodder_families_quarter_ac, $fodder_families_half_ac, $fodder_families_one_ac, $fodder_families_gt_one_ac, $fodder_total_acre, $fodder_total_families
+                    "siiiiidiiiiidi",
+                    $vs_range,
+                    $report_year,
+                    $pasture_families_quarter_ac,
+                    $pasture_families_half_ac,
+                    $pasture_families_one_ac,
+                    $pasture_families_gt_one_ac,
+                    $pasture_total_acre,
+                    $pasture_total_families,
+                    $fodder_families_quarter_ac,
+                    $fodder_families_half_ac,
+                    $fodder_families_one_ac,
+                    $fodder_families_gt_one_ac,
+                    $fodder_total_acre,
+                    $fodder_total_families
                 );
-                
+
                 if ($stmt->execute()) {
-                    header("Location: annual_pasture_lands.php?status=success&msg=" . urlencode("Pasture & Fodder land record added successfully."));
+                    header("Location: annual_pasture_lands.php?year=all&status=success&msg=" . urlencode("Pasture & Fodder land record added successfully."));
                 } else {
-                    header("Location: annual_pasture_lands.php?status=error&msg=" . urlencode("Database insert failed: " . $stmt->error));
+                    header("Location: annual_pasture_lands.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Database insert failed: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_pasture_lands.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
+                header("Location: annual_pasture_lands.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
             }
             exit();
-
         } elseif ($_POST['action'] === 'edit') {
             $id = intval($_POST['id'] ?? 0);
             $vs_range = trim($_POST['vs_range'] ?? '');
-            
+            $report_year = intval($_POST['report_year'] ?? date('Y'));
+
             // Pasture fields
             $pasture_families_quarter_ac = intval($_POST['pasture_families_quarter_ac'] ?? 0);
             $pasture_families_half_ac = intval($_POST['pasture_families_half_ac'] ?? 0);
@@ -98,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pasture_families_gt_one_ac = intval($_POST['pasture_families_gt_one_ac'] ?? 0);
             $pasture_total_acre = floatval($_POST['pasture_total_acre'] ?? 0);
             $pasture_total_families = intval($_POST['pasture_total_families'] ?? 0);
-            
+
             // Fodder fields
             $fodder_families_quarter_ac = intval($_POST['fodder_families_quarter_ac'] ?? 0);
             $fodder_families_half_ac = intval($_POST['fodder_families_half_ac'] ?? 0);
@@ -110,28 +138,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_query = "
                 UPDATE pasture_fodder_lands SET 
                     vs_range = ?,
+                    report_year = ?,
                     pasture_families_quarter_ac = ?, pasture_families_half_ac = ?, pasture_families_one_ac = ?, pasture_families_gt_one_ac = ?, pasture_total_acre = ?, pasture_total_families = ?,
                     fodder_families_quarter_ac = ?, fodder_families_half_ac = ?, fodder_families_one_ac = ?, fodder_families_gt_one_ac = ?, fodder_total_acre = ?, fodder_total_families = ?
                 WHERE id = ?
             ";
             $stmt = $mysqli->prepare($update_query);
             if ($stmt) {
-                // Type string: "siiiidiiiiidii" (1 string, 4 ints, 1 double, 1 int, 4 ints, 1 double, 1 int, 1 int id)
                 $stmt->bind_param(
-                    "siiiidiiiiidii", 
-                    $vs_range, 
-                    $pasture_families_quarter_ac, $pasture_families_half_ac, $pasture_families_one_ac, $pasture_families_gt_one_ac, $pasture_total_acre, $pasture_total_families,
-                    $fodder_families_quarter_ac, $fodder_families_half_ac, $fodder_families_one_ac, $fodder_families_gt_one_ac, $fodder_total_acre, $fodder_total_families,
+                    "siiiiidiiiiidii",
+                    $vs_range,
+                    $report_year,
+                    $pasture_families_quarter_ac,
+                    $pasture_families_half_ac,
+                    $pasture_families_one_ac,
+                    $pasture_families_gt_one_ac,
+                    $pasture_total_acre,
+                    $pasture_total_families,
+                    $fodder_families_quarter_ac,
+                    $fodder_families_half_ac,
+                    $fodder_families_one_ac,
+                    $fodder_families_gt_one_ac,
+                    $fodder_total_acre,
+                    $fodder_total_families,
                     $id
                 );
                 if ($stmt->execute()) {
-                    header("Location: annual_pasture_lands.php?status=success&msg=" . urlencode("Pasture & Fodder land record updated successfully."));
+                    header("Location: annual_pasture_lands.php?year=all&status=success&msg=" . urlencode("Pasture & Fodder land record updated successfully."));
                 } else {
-                    header("Location: annual_pasture_lands.php?status=error&msg=" . urlencode("Database update failed: " . $stmt->error));
+                    header("Location: annual_pasture_lands.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Database update failed: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_pasture_lands.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
+                header("Location: annual_pasture_lands.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
             }
             exit();
         }
@@ -145,18 +184,27 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     if ($stmt) {
         $stmt->bind_param("i", $id);
         if ($stmt->execute()) {
-            header("Location: annual_pasture_lands.php?status=success&msg=" . urlencode("Record deleted successfully."));
+            header("Location: annual_pasture_lands.php?year=" . urlencode($selected_year) . "&status=success&msg=" . urlencode("Record deleted successfully."));
         } else {
-            header("Location: annual_pasture_lands.php?status=error&msg=" . urlencode("Failed to delete record: " . $stmt->error));
+            header("Location: annual_pasture_lands.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Failed to delete record: " . $stmt->error));
         }
         $stmt->close();
     }
     exit();
 }
 
-// Fetch all records from database
+// Fetch records from database with year filter support
 $records = [];
-$result = $mysqli->query("SELECT * FROM pasture_fodder_lands ORDER BY id DESC");
+if ($selected_year === 'all') {
+    $result = $mysqli->query("SELECT * FROM pasture_fodder_lands ORDER BY report_year DESC, id DESC");
+} else {
+    $stmt = $mysqli->prepare("SELECT * FROM pasture_fodder_lands WHERE report_year = ? ORDER BY id DESC");
+    if ($stmt) {
+        $stmt->bind_param("i", $selected_year);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    }
+}
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $records[] = $row;
@@ -201,18 +249,23 @@ require_once '../../../includes/sidebar.php';
     .card-header-gradient {
         color: black;
     }
+
     .section-pasture-header {
         color: black;
     }
+
     .section-fodder-header {
         color: black;
     }
+
     .border-pasture {
         border-left: 4px solid #3b82f6 !important;
     }
+
     .border-fodder {
         border-left: 4px solid #10b981 !important;
     }
+
     .table-nested-header th {
         vertical-align: middle !important;
         text-align: center !important;
@@ -223,6 +276,7 @@ require_once '../../../includes/sidebar.php';
         background-color: #ffffff !important;
         color: #000000 !important;
     }
+
     .badge-auto-calc {
         font-size: 0.7rem;
         padding: 0.2em 0.5em;
@@ -230,6 +284,7 @@ require_once '../../../includes/sidebar.php';
         background-color: #e0e7ff;
         color: #3730a3;
     }
+
     #pastureFodderTable,
     #pastureFodderTable th,
     #pastureFodderTable td {
@@ -246,10 +301,23 @@ require_once '../../../includes/sidebar.php';
             <div class="card-body p-4 card-header-gradient d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
                     <span class="badge bg-warning text-dark fw-bold mb-2">Annexure : 07</span>
-                    <h3 class="h4 fw-bold mb-1">Data of Pasture and Fodder land & farm families - 2024</h3>
+                    <h3 class="h4 fw-bold mb-1">Data of Pasture and Fodder land & farm families - <?= ($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year) ?></h3>
                     <p class="mb-0 text-white-50 small">Manage and track pasture land allocations, fodder cultivation, and beneficiary farm families by VS Range.</p>
                 </div>
-                <div>
+                <div class="d-flex align-items-center gap-3">
+                    <form method="GET" class="d-flex align-items-center gap-2">
+                        <label class="small fw-bold text-dark mb-0">Year:</label>
+                        <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 110px;">
+                            <option value="all" <?= ($selected_year === 'all') ? 'selected' : '' ?>>All Years</option>
+                            <?php
+                            $curr_year = intval(date('Y'));
+                            for ($y = $curr_year - 5; $y <= $curr_year + 5; $y++) {
+                                $sel = ($selected_year !== 'all' && $y === intval($selected_year)) ? 'selected' : '';
+                                echo "<option value=\"$y\" $sel>$y</option>";
+                            }
+                            ?>
+                        </select>
+                    </form>
                     <a href="range_statistics.php" class="btn btn-light text-dark fw-bold btn-sm shadow-sm">
                         <i class="bi bi-arrow-left-circle me-1"></i> Range Statistics
                     </a>
@@ -306,8 +374,8 @@ require_once '../../../includes/sidebar.php';
             <div class="card-body p-4">
                 <form method="POST" action="annual_pasture_lands.php" id="dataEntryForm">
                     <input type="hidden" name="action" value="add">
-                    
-                    <!-- VS RANGE INPUT -->
+
+                    <!-- VS RANGE & REPORT YEAR INPUT -->
                     <div class="row mb-4">
                         <div class="col-md-6 col-lg-4">
                             <label for="vs_range" class="form-label fw-bold text-dark">VS Range <span class="text-danger">*</span></label>
@@ -321,11 +389,18 @@ require_once '../../../includes/sidebar.php';
                                 </datalist>
                             </div>
                         </div>
+                        <div class="col-md-6 col-lg-4">
+                            <label for="report_year" class="form-label fw-bold text-dark">Report Year <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-calendar-event text-primary"></i></span>
+                                <input type="number" name="report_year" id="report_year" class="form-control" value="<?= date('Y') ?>" required>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- TWO VISUALLY DISTINCT SECTIONS FOR PASTURE LAND & FODDER LAND -->
                     <div class="row g-4 mb-4">
-                        
+
                         <!-- SECTION 1: PASTURE LAND -->
                         <div class="col-lg-6">
                             <div class="card border-0 shadow-sm h-100 border-pasture">
@@ -439,20 +514,21 @@ require_once '../../../includes/sidebar.php';
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                 <h5 class="card-title mb-0 fw-bold text-dark">
-                    <i class="bi bi-table me-2 text-primary"></i>Pasture & Fodder Lands Records Table
+                    <i class="bi bi-table me-2 text-primary"></i>Pasture & Fodder Lands Records Table - <?= ($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year) ?>
                 </h5>
                 <span class="badge bg-secondary"><?= count($records) ?> Entries</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle mb-0 text-center bg-white text-dark" id="pastureFodderTable" style="width: 100%; min-width: 1200px;">
-                        
+
                         <!-- 3-ROW NESTED COMPLEX HEADER matching document specifications -->
                         <thead class="table-light table-nested-header bg-white text-dark">
                             <!-- ROW 1 -->
                             <tr>
                                 <th rowspan="3" class="align-middle bg-white text-dark" style="width: 50px;">S.No</th>
-                                <th rowspan="3" class="align-middle bg-white text-dark" style="min-width: 160px;">VS Range</th>
+                                <th rowspan="3" class="align-middle bg-white text-dark" style="min-width: 150px;">VS Range</th>
+                                <th rowspan="3" class="align-middle bg-white text-dark" style="width: 80px;">Year</th>
                                 <th colspan="6" class="bg-white text-dark py-2">Pasture Land</th>
                                 <th colspan="6" class="bg-white text-dark py-2">Fodder Land</th>
                                 <th rowspan="3" class="align-middle bg-white text-dark" style="width: 110px;">Actions</th>
@@ -472,7 +548,7 @@ require_once '../../../includes/sidebar.php';
                                 <th class="bg-white text-dark py-1" style="width: 65px;">1/2 Ac</th>
                                 <th class="bg-white text-dark py-1" style="width: 65px;">1 Ac</th>
                                 <th class="bg-white text-dark py-1" style="width: 65px;">&gt; 1Ac</th>
-                                
+
                                 <th class="bg-white text-dark py-1" style="width: 65px;">1/4 Ac</th>
                                 <th class="bg-white text-dark py-1" style="width: 65px;">1/2 Ac</th>
                                 <th class="bg-white text-dark py-1" style="width: 65px;">1 Ac</th>
@@ -483,18 +559,20 @@ require_once '../../../includes/sidebar.php';
                         <tbody class="small bg-white text-dark">
                             <?php if (empty($records)): ?>
                                 <tr>
-                                    <td colspan="15" class="text-center py-5 text-dark bg-white">
+                                    <td colspan="16" class="text-center py-5 text-dark bg-white">
                                         <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
                                         No pasture & fodder land records found in the database.
                                         <br><span class="small">Use the form above to add a new record.</span>
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php $sno = 1; foreach ($records as $row): ?>
+                                <?php $sno = 1;
+                                foreach ($records as $row): ?>
                                     <tr data-row='<?= json_encode($row, JSON_HEX_APOS | JSON_HEX_QUOT) ?>' class="bg-white text-dark">
                                         <td class="fw-bold text-dark bg-white"><?= $sno++ ?></td>
                                         <td class="fw-bold text-start text-dark bg-white"><?= htmlspecialchars($row['vs_range']) ?></td>
-                                        
+                                        <td class="bg-white"><span class="badge bg-secondary"><?= htmlspecialchars($row['report_year'] ?? '2024') ?></span></td>
+
                                         <!-- Pasture Land Fields -->
                                         <td class="font-monospace text-dark bg-white"><?= number_format($row['pasture_families_quarter_ac']) ?></td>
                                         <td class="font-monospace text-dark bg-white"><?= number_format($row['pasture_families_half_ac']) ?></td>
@@ -502,7 +580,7 @@ require_once '../../../includes/sidebar.php';
                                         <td class="font-monospace text-dark bg-white"><?= number_format($row['pasture_families_gt_one_ac']) ?></td>
                                         <td class="font-monospace fw-bold text-dark bg-white"><?= number_format($row['pasture_total_acre'], 2) ?></td>
                                         <td class="font-monospace fw-bold text-dark bg-white"><?= number_format($row['pasture_total_families']) ?></td>
-                                        
+
                                         <!-- Fodder Land Fields -->
                                         <td class="font-monospace text-dark bg-white"><?= number_format($row['fodder_families_quarter_ac']) ?></td>
                                         <td class="font-monospace text-dark bg-white"><?= number_format($row['fodder_families_half_ac']) ?></td>
@@ -510,7 +588,7 @@ require_once '../../../includes/sidebar.php';
                                         <td class="font-monospace text-dark bg-white"><?= number_format($row['fodder_families_gt_one_ac']) ?></td>
                                         <td class="font-monospace fw-bold text-dark bg-white"><?= number_format($row['fodder_total_acre'], 2) ?></td>
                                         <td class="font-monospace fw-bold text-dark bg-white"><?= number_format($row['fodder_total_families']) ?></td>
-                                        
+
                                         <!-- Action Buttons: bi-eye-fill, bi-pencil-fill, bi-trash-fill -->
                                         <td class="text-center bg-white">
                                             <div class="btn-group btn-group-sm" role="group">
@@ -520,7 +598,7 @@ require_once '../../../includes/sidebar.php';
                                                 <button type="button" class="btn btn-outline-primary btn-edit" title="Edit Record">
                                                     <i class="bi bi-pencil-fill text-primary"></i>
                                                 </button>
-                                                <a href="annual_pasture_lands.php?action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-delete" title="Delete Record">
+                                                <a href="annual_pasture_lands.php?year=<?= urlencode($selected_year) ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-outline-danger btn-delete" title="Delete Record">
                                                     <i class="bi bi-trash-fill text-danger"></i>
                                                 </a>
                                             </div>
@@ -544,7 +622,7 @@ require_once '../../../includes/sidebar.php';
         <div class="modal-content border-0 shadow">
             <div class="modal-header card-header-gradient">
                 <h5 class="modal-title fw-bold" id="viewModalLabel">
-                    <i class="bi bi-eye-fill me-2"></i>View Land Data - <span id="v_vs_range"></span>
+                    <i class="bi bi-eye-fill me-2"></i>View Land Data - <span id="v_vs_range"></span> (<span id="v_report_year"></span>)
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -630,18 +708,24 @@ require_once '../../../includes/sidebar.php';
             <form method="POST" action="annual_pasture_lands.php" id="editDataForm">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="e_id">
-                
+
                 <div class="modal-header card-header-gradient">
                     <h5 class="modal-title fw-bold" id="editModalLabel">
                         <i class="bi bi-pencil-fill me-2"></i>Edit Land Record
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
+
                 <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label for="e_vs_range" class="form-label fw-bold">VS Range <span class="text-danger">*</span></label>
-                        <input type="text" name="vs_range" id="e_vs_range" class="form-control" required>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="e_vs_range" class="form-label fw-bold">VS Range <span class="text-danger">*</span></label>
+                            <input type="text" name="vs_range" id="e_vs_range" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="e_report_year" class="form-label fw-bold">Report Year <span class="text-danger">*</span></label>
+                            <input type="number" name="report_year" id="e_report_year" class="form-control" required>
+                        </div>
                     </div>
 
                     <div class="row g-4 mb-3">
@@ -742,11 +826,16 @@ $pageScripts = '
 <script>
 $(document).ready(function() {
 
-    // Initialize DataTable
+    // Initialize DataTable with orderCellsTop: true to resolve multi-row header column count warnings
     $("#pastureFodderTable").DataTable({
+        "orderCellsTop": true,
+        "autoWidth": false,
         "order": [[0, "asc"]],
         "pageLength": 10,
         "dom": "Bfrtip",
+        "columnDefs": [
+            { "orderable": false, "targets": -1 }
+        ],
         "buttons": [
             {
                 extend: "csv",
@@ -832,6 +921,7 @@ $(document).ready(function() {
         var rowData = $(this).closest("tr").data("row");
         if (rowData) {
             $("#v_vs_range").text(rowData.vs_range);
+            $("#v_report_year").text(rowData.report_year || 2024);
             
             $("#v_p_quarter").text(rowData.pasture_families_quarter_ac);
             $("#v_p_half").text(rowData.pasture_families_half_ac);
@@ -857,6 +947,7 @@ $(document).ready(function() {
         if (rowData) {
             $("#e_id").val(rowData.id);
             $("#e_vs_range").val(rowData.vs_range);
+            $("#e_report_year").val(rowData.report_year || 2024);
             
             $("#e_p_quarter").val(rowData.pasture_families_quarter_ac);
             $("#e_p_half").val(rowData.pasture_families_half_ac);
