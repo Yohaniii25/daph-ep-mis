@@ -16,10 +16,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $collection_date = $mysqli->real_escape_string($_POST['collection_date']);
     $pullets = intval($_POST['pullets']);
     $cockerels = intval($_POST['cockerels']);
-    $total_eggs = intval($_POST['total_eggs']);
     $hatchable = intval($_POST['hatchable_eggs']);
     $table_eggs = intval($_POST['table_eggs']);
     $cracked = intval($_POST['cracked_eggs']);
+    $total_eggs = $hatchable + $table_eggs + $cracked;
+
+    // Hatchery Operations Fields
+    $loading_date = !empty($_POST['loading_date']) ? $_POST['loading_date'] : null;
+    $hatchery_name = !empty($_POST['hatchery_name']) ? trim($_POST['hatchery_name']) : null;
+    $eggs_loaded = isset($_POST['eggs_loaded']) ? intval($_POST['eggs_loaded']) : 0;
+    $hatching_date = !empty($_POST['hatching_date']) ? $_POST['hatching_date'] : null;
+    $hatched_eggs = isset($_POST['hatched_eggs']) ? intval($_POST['hatched_eggs']) : 0;
+
+    // Auto-calculate Hatchability %
+    $hatchability_percentage = 0.00;
+    if ($eggs_loaded > 0) {
+        $hatchability_percentage = round(($hatched_eggs / $eggs_loaded) * 100, 2);
+    }
 
     // Check ownership of the selected batch in vaccine_batches
     $chk = $mysqli->prepare("SELECT id FROM vaccine_batches WHERE id = ? AND user_id = ?");
@@ -33,20 +46,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $chk->close();
 
-    // Check eggs count validation
-    if ($total_eggs !== ($hatchable + $table_eggs + $cracked)) {
-        header("Location: ../parent_stock_operations.php?status=error&msg=Total eggs must equal sum of hatchable, table, and cracked eggs.");
-        exit();
-    }
-
     if ($action === 'create') {
-        $stmt = $mysqli->prepare("INSERT INTO daily_egg_production (batch_id, cage_id, collection_date, pullets, cockerels, total_eggs, hatchable_eggs, table_eggs, cracked_eggs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("iissiiiii", $batch_id, $cage_id, $collection_date, $pullets, $cockerels, $total_eggs, $hatchable, $table_eggs, $cracked);
+        $stmt = $mysqli->prepare("INSERT INTO daily_egg_production (batch_id, cage_id, collection_date, pullets, cockerels, total_eggs, hatchable_eggs, table_eggs, cracked_eggs, loading_date, hatchery_name, eggs_loaded, hatching_date, hatched_eggs, hatchability_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        // 15 params: i i s i i i i i i s s i s i d
+        $stmt->bind_param(
+            "iisiiiiisisisdi",
+            $batch_id,
+            $cage_id,
+            $collection_date,
+            $pullets,
+            $cockerels,
+            $total_eggs,
+            $hatchable,
+            $table_eggs,
+            $cracked,
+            $loading_date,
+            $hatchery_name,
+            $eggs_loaded,
+            $hatching_date,
+            $hatched_eggs,
+            $hatchability_percentage
+        );
 
         if ($stmt->execute()) {
-            header("Location: ../parent_stock_operations.php?status=success&msg=Daily egg collection recorded.");
+            header("Location: ../parent_stock_operations.php?status=success&msg=Daily egg collection recorded successfully.");
         } else {
-            header("Location: ../parent_stock_operations.php?status=error&msg=Failed to save collection detail.");
+            header("Location: ../parent_stock_operations.php?status=error&msg=Failed to save collection detail: " . urlencode($stmt->error));
         }
         $stmt->close();
     } elseif ($action === 'update') {
@@ -64,13 +90,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $chk_record->close();
 
-        $stmt = $mysqli->prepare("UPDATE daily_egg_production SET batch_id = ?, cage_id = ?, collection_date = ?, pullets = ?, cockerels = ?, total_eggs = ?, hatchable_eggs = ?, table_eggs = ?, cracked_eggs = ? WHERE id = ?");
-        $stmt->bind_param("iissiiiiii", $batch_id, $cage_id, $collection_date, $pullets, $cockerels, $total_eggs, $hatchable, $table_eggs, $cracked, $id);
+        $stmt = $mysqli->prepare("UPDATE daily_egg_production SET batch_id = ?, cage_id = ?, collection_date = ?, pullets = ?, cockerels = ?, total_eggs = ?, hatchable_eggs = ?, table_eggs = ?, cracked_eggs = ?, loading_date = ?, hatchery_name = ?, eggs_loaded = ?, hatching_date = ?, hatched_eggs = ?, hatchability_percentage = ? WHERE id = ?");
+
+        // 16 params: i i s i i i i i i s s i s i d i
+        $stmt->bind_param(
+            "iisiiiiisisisdii",
+            $batch_id,
+            $cage_id,
+            $collection_date,
+            $pullets,
+            $cockerels,
+            $total_eggs,
+            $hatchable,
+            $table_eggs,
+            $cracked,
+            $loading_date,
+            $hatchery_name,
+            $eggs_loaded,
+            $hatching_date,
+            $hatched_eggs,
+            $hatchability_percentage,
+            $id
+        );
 
         if ($stmt->execute()) {
-            header("Location: ../parent_stock_operations.php?status=success&msg=Daily egg collection updated.");
+            header("Location: ../parent_stock_operations.php?status=success&msg=Daily egg collection updated successfully.");
         } else {
-            header("Location: ../parent_stock_operations.php?status=error&msg=Failed to update collection.");
+            header("Location: ../parent_stock_operations.php?status=error&msg=Failed to update collection: " . urlencode($stmt->error));
         }
         $stmt->close();
     }
@@ -93,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
-        header("Location: ../parent_stock_operations.php?status=success&msg=Daily egg collection deleted.");
+        header("Location: ../parent_stock_operations.php?status=success&msg=Daily egg collection deleted successfully.");
     } else {
         header("Location: ../parent_stock_operations.php?status=error&msg=Failed to delete collection record.");
     }

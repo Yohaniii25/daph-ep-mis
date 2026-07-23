@@ -68,22 +68,59 @@
                         </div>
                     </div>
 
-                    <!-- Egg Counts Details -->
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold text-success">Total No. of Eggs</label>
-                        <input type="number" id="edit_egg_count" name="total_eggs" class="form-control" min="0" required>
+                    <!-- Egg Details (CPRS-21 (B)) -->
+                    <div class="col-12">
+                        <hr class="my-2">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-egg-fried me-1"></i>Egg Details (CPRS-21 (B))</h6>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Hatchable Eggs</label>
-                        <input type="number" id="edit_hatchable_eggs" name="hatchable_eggs" class="form-control" min="0" required>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Hatch Eggs</label>
+                        <input type="number" id="edit_hatchable_eggs" name="hatchable_eggs" class="form-control edit-egg-calc" placeholder="Hatch eggs" min="0" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold">Table Eggs</label>
-                        <input type="number" id="edit_table_eggs" name="table_eggs" class="form-control" min="0" required>
+                        <input type="number" id="edit_table_eggs" name="table_eggs" class="form-control edit-egg-calc" placeholder="Table eggs" min="0" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold">Cracked Eggs</label>
-                        <input type="number" id="edit_cracked_eggs" name="cracked_eggs" class="form-control" min="0" required>
+                        <input type="number" id="edit_cracked_eggs" name="cracked_eggs" class="form-control edit-egg-calc" placeholder="Cracked eggs" min="0" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-success">Total Eggs</label>
+                        <input type="number" id="edit_egg_count" name="total_eggs" class="form-control bg-light fw-bold text-success" placeholder="Total" min="0" readonly required>
+                    </div>
+
+                    <!-- Hatchery Operations Section -->
+                    <div class="col-12">
+                        <hr class="my-2">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-building me-1 text-warning"></i>Hatchery Operations</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Loading Date</label>
+                        <input type="date" id="edit_loading_date" name="loading_date" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Hatchery Name</label>
+                        <input type="text" id="edit_hatchery_name" name="hatchery_name" class="form-control" placeholder="Hatchery Name">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Eggs Loaded</label>
+                        <input type="number" id="edit_eggs_loaded" name="eggs_loaded" class="form-control edit-hatch-calc" placeholder="No. of eggs loaded" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Hatching Date</label>
+                        <input type="date" id="edit_hatching_date" name="hatching_date" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Hatched Eggs</label>
+                        <input type="number" id="edit_hatched_eggs" name="hatched_eggs" class="form-control edit-hatch-calc" placeholder="No. of hatched eggs" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-primary">Hatchability %</label>
+                        <div class="input-group">
+                            <input type="number" id="edit_hatchability_percentage" name="hatchability_percentage" class="form-control bg-light fw-bold text-primary" placeholder="0.00" step="0.01" min="0" max="100" readonly>
+                            <span class="input-group-text fw-bold">%</span>
+                        </div>
                     </div>
                 </div>
             </div>

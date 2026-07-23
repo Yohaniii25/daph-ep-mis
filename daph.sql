@@ -944,6 +944,12 @@ CREATE TABLE `daily_egg_production` (
   `hatchable_eggs` int(11) DEFAULT 0,
   `table_eggs` int(11) DEFAULT 0,
   `cracked_eggs` int(11) DEFAULT 0,
+  `loading_date` date DEFAULT NULL,
+  `hatchery_name` varchar(255) DEFAULT NULL,
+  `eggs_loaded` int(11) DEFAULT 0,
+  `hatching_date` date DEFAULT NULL,
+  `hatched_eggs` int(11) DEFAULT 0,
+  `hatchability_percentage` decimal(5,2) DEFAULT 0.00,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
