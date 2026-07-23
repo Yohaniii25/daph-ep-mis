@@ -16,10 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $collection_date = $mysqli->real_escape_string($_POST['collection_date']);
     $pullets = intval($_POST['pullets']);
     $cockerels = intval($_POST['cockerels']);
+    
+    // Egg Counts & Weights
     $hatchable = intval($_POST['hatchable_eggs']);
+    $hatchable_kg = floatval($_POST['hatchable_eggs_kg'] ?? 0);
+    
     $table_eggs = intval($_POST['table_eggs']);
+    $table_eggs_kg = floatval($_POST['table_eggs_kg'] ?? 0);
+    
     $cracked = intval($_POST['cracked_eggs']);
+    $cracked_kg = floatval($_POST['cracked_eggs_kg'] ?? 0);
+    
     $total_eggs = $hatchable + $table_eggs + $cracked;
+    $total_eggs_kg = round($hatchable_kg + $table_eggs_kg + $cracked_kg, 2);
 
     // Hatchery Operations Fields
     $loading_date = !empty($_POST['loading_date']) ? $_POST['loading_date'] : null;
@@ -47,20 +56,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $chk->close();
 
     if ($action === 'create') {
-        $stmt = $mysqli->prepare("INSERT INTO daily_egg_production (batch_id, cage_id, collection_date, pullets, cockerels, total_eggs, hatchable_eggs, table_eggs, cracked_eggs, loading_date, hatchery_name, eggs_loaded, hatching_date, hatched_eggs, hatchability_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $mysqli->prepare("INSERT INTO daily_egg_production (batch_id, cage_id, collection_date, pullets, cockerels, total_eggs, total_eggs_kg, hatchable_eggs, hatchable_eggs_kg, table_eggs, table_eggs_kg, cracked_eggs, cracked_eggs_kg, loading_date, hatchery_name, eggs_loaded, hatching_date, hatched_eggs, hatchability_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        // 15 params: i i s i i i i i i s s i s i d
+        // 19 params: i i s i i i d i d i d i d s s i s i d
         $stmt->bind_param(
-            "iisiiiiisisisdi",
+            "iisiiiiddiiddisisisd",
             $batch_id,
             $cage_id,
             $collection_date,
             $pullets,
             $cockerels,
             $total_eggs,
+            $total_eggs_kg,
             $hatchable,
+            $hatchable_kg,
             $table_eggs,
+            $table_eggs_kg,
             $cracked,
+            $cracked_kg,
             $loading_date,
             $hatchery_name,
             $eggs_loaded,
@@ -90,20 +103,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $chk_record->close();
 
-        $stmt = $mysqli->prepare("UPDATE daily_egg_production SET batch_id = ?, cage_id = ?, collection_date = ?, pullets = ?, cockerels = ?, total_eggs = ?, hatchable_eggs = ?, table_eggs = ?, cracked_eggs = ?, loading_date = ?, hatchery_name = ?, eggs_loaded = ?, hatching_date = ?, hatched_eggs = ?, hatchability_percentage = ? WHERE id = ?");
+        $stmt = $mysqli->prepare("UPDATE daily_egg_production SET batch_id = ?, cage_id = ?, collection_date = ?, pullets = ?, cockerels = ?, total_eggs = ?, total_eggs_kg = ?, hatchable_eggs = ?, hatchable_eggs_kg = ?, table_eggs = ?, table_eggs_kg = ?, cracked_eggs = ?, cracked_eggs_kg = ?, loading_date = ?, hatchery_name = ?, eggs_loaded = ?, hatching_date = ?, hatched_eggs = ?, hatchability_percentage = ? WHERE id = ?");
 
-        // 16 params: i i s i i i i i i s s i s i d i
+        // 20 params: i i s i i i d i d i d i d s s i s i d i
         $stmt->bind_param(
-            "iisiiiiisisisdii",
+            "iisiiiiddiiddisisisdi",
             $batch_id,
             $cage_id,
             $collection_date,
             $pullets,
             $cockerels,
             $total_eggs,
+            $total_eggs_kg,
             $hatchable,
+            $hatchable_kg,
             $table_eggs,
+            $table_eggs_kg,
             $cracked,
+            $cracked_kg,
             $loading_date,
             $hatchery_name,
             $eggs_loaded,

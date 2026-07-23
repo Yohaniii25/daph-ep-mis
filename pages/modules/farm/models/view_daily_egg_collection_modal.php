@@ -48,30 +48,34 @@
                     <!-- Egg Details CPRS-21(B) -->
                     <div class="col-12">
                         <hr class="my-2">
-                        <h6 class="fw-bold text-primary"><i class="bi bi-egg-fried me-1"></i>Egg Details (CPRS-21 (B))</h6>
+                        <h6 class="fw-bold text-primary"><i class="bi bi-egg-fried me-1"></i>Egg Details (CPRS-21 (B)) - Quantities & Weights</h6>
                     </div>
                     <div class="col-md-3">
                         <div class="p-3 bg-light rounded">
                             <small class="text-muted d-block fw-bold">Hatch Eggs</small>
-                            <span id="view_hatchable_eggs" class="fs-6 fw-bold text-dark">0</span>
+                            <span id="view_hatchable_eggs" class="fs-6 fw-bold text-dark">0 NO</span>
+                            <small id="view_hatchable_eggs_kg" class="d-block text-muted">0.00 Kg</small>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="p-3 bg-light rounded">
                             <small class="text-muted d-block fw-bold">Table Eggs</small>
-                            <span id="view_table_eggs" class="fs-6 fw-bold text-dark">0</span>
+                            <span id="view_table_eggs" class="fs-6 fw-bold text-dark">0 NO</span>
+                            <small id="view_table_eggs_kg" class="d-block text-muted">0.00 Kg</small>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="p-3 bg-light rounded">
                             <small class="text-muted d-block fw-bold">Cracked Eggs</small>
-                            <span id="view_cracked_eggs" class="fs-6 fw-bold text-dark">0</span>
+                            <span id="view_cracked_eggs" class="fs-6 fw-bold text-dark">0 NO</span>
+                            <small id="view_cracked_eggs_kg" class="d-block text-muted">0.00 Kg</small>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="p-3 bg-success-subtle rounded border border-success">
-                            <small class="text-success d-block fw-bold">Total Eggs</small>
-                            <span id="view_total_eggs" class="fs-5 fw-bold text-success">0</span>
+                            <small class="text-success d-block fw-bold">Total Production</small>
+                            <span id="view_total_eggs" class="fs-5 fw-bold text-success">0 NO</span>
+                            <small id="view_total_eggs_kg" class="d-block fw-bold text-success">0.00 Kg</small>
                         </div>
                     </div>
 

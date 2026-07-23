@@ -941,9 +941,13 @@ CREATE TABLE `daily_egg_production` (
   `pullets` int(11) DEFAULT 0,
   `cockerels` int(11) DEFAULT 0,
   `total_eggs` int(11) DEFAULT 0,
+  `total_eggs_kg` decimal(10,2) DEFAULT 0.00,
   `hatchable_eggs` int(11) DEFAULT 0,
+  `hatchable_eggs_kg` decimal(10,2) DEFAULT 0.00,
   `table_eggs` int(11) DEFAULT 0,
+  `table_eggs_kg` decimal(10,2) DEFAULT 0.00,
   `cracked_eggs` int(11) DEFAULT 0,
+  `cracked_eggs_kg` decimal(10,2) DEFAULT 0.00,
   `loading_date` date DEFAULT NULL,
   `hatchery_name` varchar(255) DEFAULT NULL,
   `eggs_loaded` int(11) DEFAULT 0,
@@ -952,6 +956,28 @@ CREATE TABLE `daily_egg_production` (
   `hatchability_percentage` decimal(5,2) DEFAULT 0.00,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+CREATE TABLE `daily_egg_sales_returns` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `record_date` date NOT NULL UNIQUE,
+  `hatchery_return_no` int(11) DEFAULT 0,
+  `hatchery_return_kg` decimal(10,2) DEFAULT 0.00,
+  `total_sales_no` int(11) DEFAULT 0,
+  `total_sales_kg` decimal(10,2) DEFAULT 0.00,
+  `balance_no` int(11) DEFAULT 0,
+  `balance_kg` decimal(10,2) DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `chicks_death_details` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `record_month` date NOT NULL COMMENT 'Store the first day of the month, e.g., 2026-05-01 for May 2026',
+  `batch_no` varchar(255) NOT NULL COMMENT 'e.g., Kadaknath 10, CPRS-19, 817',
+  `deaths` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `daily_egg_production`

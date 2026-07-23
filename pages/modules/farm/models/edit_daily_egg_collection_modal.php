@@ -71,23 +71,51 @@
                     <!-- Egg Details (CPRS-21 (B)) -->
                     <div class="col-12">
                         <hr class="my-2">
-                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-egg-fried me-1"></i>Egg Details (CPRS-21 (B))</h6>
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-egg-fried me-1"></i>Egg Details (CPRS-21 (B)) - Quantities & Weights</h6>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-bold">Hatch Eggs</label>
-                        <input type="number" id="edit_hatchable_eggs" name="hatchable_eggs" class="form-control edit-egg-calc" placeholder="Hatch eggs" min="0" required>
+                        <label class="form-label fw-bold">Hatch Eggs (NO & Kg)</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text small">NO</span>
+                            <input type="number" id="edit_hatchable_eggs" name="hatchable_eggs" class="form-control edit-egg-calc" placeholder="0" min="0" required>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text small">Kg</span>
+                            <input type="number" id="edit_hatchable_eggs_kg" name="hatchable_eggs_kg" class="form-control edit-egg-kg-calc" placeholder="0.00" step="0.01" min="0" required>
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-bold">Table Eggs</label>
-                        <input type="number" id="edit_table_eggs" name="table_eggs" class="form-control edit-egg-calc" placeholder="Table eggs" min="0" required>
+                        <label class="form-label fw-bold">Table Eggs (NO & Kg)</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text small">NO</span>
+                            <input type="number" id="edit_table_eggs" name="table_eggs" class="form-control edit-egg-calc" placeholder="0" min="0" required>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text small">Kg</span>
+                            <input type="number" id="edit_table_eggs_kg" name="table_eggs_kg" class="form-control edit-egg-kg-calc" placeholder="0.00" step="0.01" min="0" required>
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-bold">Cracked Eggs</label>
-                        <input type="number" id="edit_cracked_eggs" name="cracked_eggs" class="form-control edit-egg-calc" placeholder="Cracked eggs" min="0" required>
+                        <label class="form-label fw-bold">Cracked Eggs (NO & Kg)</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text small">NO</span>
+                            <input type="number" id="edit_cracked_eggs" name="cracked_eggs" class="form-control edit-egg-calc" placeholder="0" min="0" required>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text small">Kg</span>
+                            <input type="number" id="edit_cracked_eggs_kg" name="cracked_eggs_kg" class="form-control edit-egg-kg-calc" placeholder="0.00" step="0.01" min="0" required>
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-bold text-success">Total Eggs</label>
-                        <input type="number" id="edit_egg_count" name="total_eggs" class="form-control bg-light fw-bold text-success" placeholder="Total" min="0" readonly required>
+                        <label class="form-label fw-bold text-success">Total Production (NO & Kg)</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text small">NO</span>
+                            <input type="number" id="edit_egg_count" name="total_eggs" class="form-control bg-light fw-bold text-success" placeholder="0" min="0" readonly required>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text small">Kg</span>
+                            <input type="number" id="edit_total_eggs_kg" name="total_eggs_kg" class="form-control bg-light fw-bold text-success" placeholder="0.00" step="0.01" min="0" readonly required>
+                        </div>
                     </div>
 
                     <!-- Hatchery Operations Section -->

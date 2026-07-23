@@ -24,7 +24,20 @@ require_once __DIR__ . '/../config/constants.php';
     <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
-    <link rel="icon" type="image/png" href="https://sltdigital.site/daph-ep-mis/assets/img/favicon.png"> 
+    <?php
+    $farm_css_path = 'assets/css/farm.css';
+    if (!file_exists($farm_css_path)) {
+        if (file_exists('../assets/css/farm.css')) {
+            $farm_css_path = '../assets/css/farm.css';
+        } elseif (file_exists('../../assets/css/farm.css')) {
+            $farm_css_path = '../../assets/css/farm.css';
+        } else {
+            $farm_css_path = '../../../assets/css/farm.css';
+        }
+    }
+    ?>
+    <link href="<?= $farm_css_path ?>" rel="stylesheet">
+    <link rel="icon" type="image/png" href="https://sltdigital.site/daph-ep-mis/assets/img/favicon.png">
     <style>
         body {
             overflow-x: hidden;
@@ -119,7 +132,7 @@ require_once __DIR__ . '/../config/constants.php';
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0,0,0,0.5);
+                background: rgba(0, 0, 0, 0.5);
                 z-index: 1025;
                 display: none;
             }
@@ -183,7 +196,7 @@ require_once __DIR__ . '/../config/constants.php';
     <!-- Bootstrap Bundle + Toggle Script -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('sidebarToggle').addEventListener('click', function () {
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
             const sidebar = document.getElementById('layoutSidenav_nav');
             const topbar = document.querySelector('.top-bar');
             const content = document.getElementById('layoutSidbienav_content');
@@ -199,7 +212,7 @@ require_once __DIR__ . '/../config/constants.php';
                 if (!overlay) {
                     overlay = document.createElement('div');
                     overlay.className = 'sidebar-overlay';
-                    overlay.onclick = function () {
+                    overlay.onclick = function() {
                         sidebar.classList.remove('open');
                         overlay.classList.remove('open');
                     };
@@ -211,4 +224,5 @@ require_once __DIR__ . '/../config/constants.php';
     </script>
 
 </body>
+
 </html>
