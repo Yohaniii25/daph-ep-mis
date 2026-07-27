@@ -51,12 +51,17 @@ if ($hatch_res = $mysqli->query($hatch_query)) {
 // 4. Current Month Chick Mortality Total
 $cur_year = date('Y');
 $cur_month = date('m');
-$mortality_query = "SELECT IFNULL(SUM(deaths), 0) AS total_deaths 
-                    FROM chicks_death_details 
-                    WHERE YEAR(record_month) = $cur_year AND MONTH(record_month) = $cur_month";
+$mortality_query = "SELECT IFNULL(SUM(no_of_deaths), 0) AS total_deaths 
+                    FROM chick_growth_log 
+                    WHERE YEAR(record_date) = $cur_year AND MONTH(record_date) = $cur_month";
 $monthly_deaths = 0;
 if ($mort_res = $mysqli->query($mortality_query)) {
     $monthly_deaths = (int)$mort_res->fetch_assoc()['total_deaths'];
+} else {
+    // Fallback to legacy chicks_death_details if present
+    if ($mort_res_legacy = $mysqli->query("SELECT IFNULL(SUM(deaths), 0) AS total_deaths FROM chicks_death_details WHERE YEAR(record_month) = $cur_year AND MONTH(record_month) = $cur_month")) {
+        $monthly_deaths = (int)$mort_res_legacy->fetch_assoc()['total_deaths'];
+    }
 }
 
 // ================= CHART DATA PREPARATION =================
@@ -111,14 +116,15 @@ if (empty($hatch_dates)) {
     $hatch_rates = [0];
 }
 
-// Chart 3: Chick Mortality by Batch (Pie / Doughnut Chart)
+// Chart 3: Chick Mortality by Cage / Batch (Pie / Doughnut Chart)
 $pie_batches = [];
 $pie_deaths = [];
 
-$pie_query = "SELECT batch_no, SUM(deaths) AS total_deaths 
-              FROM chicks_death_details 
-              WHERE YEAR(record_month) = $cur_year AND MONTH(record_month) = $cur_month 
-              GROUP BY batch_no 
+$pie_query = "SELECT c.cage_name AS batch_no, SUM(g.no_of_deaths) AS total_deaths 
+              FROM chick_growth_log g
+              JOIN cages c ON g.cage_id = c.id
+              WHERE YEAR(g.record_date) = $cur_year AND MONTH(g.record_date) = $cur_month 
+              GROUP BY g.cage_id 
               ORDER BY total_deaths DESC";
 $pie_res = $mysqli->query($pie_query);
 if ($pie_res && $pie_res->num_rows > 0) {
@@ -127,9 +133,9 @@ if ($pie_res && $pie_res->num_rows > 0) {
         $pie_deaths[] = (int)$row['total_deaths'];
     }
 } else {
-    // Fallback if current month has no data: fetch all available mortality data
-    $pie_all = $mysqli->query("SELECT batch_no, SUM(deaths) AS total_deaths FROM chicks_death_details GROUP BY batch_no ORDER BY total_deaths DESC LIMIT 7");
-    if ($pie_all) {
+    // Fallback query if current month has no data or to legacy table
+    $pie_all = $mysqli->query("SELECT c.cage_name AS batch_no, SUM(g.no_of_deaths) AS total_deaths FROM chick_growth_log g JOIN cages c ON g.cage_id = c.id GROUP BY g.cage_id ORDER BY total_deaths DESC LIMIT 7");
+    if ($pie_all && $pie_all->num_rows > 0) {
         while ($row = $pie_all->fetch_assoc()) {
             $pie_batches[] = $row['batch_no'];
             $pie_deaths[] = (int)$row['total_deaths'];

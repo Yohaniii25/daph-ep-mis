@@ -205,10 +205,12 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/parent_stock_operations.php">
                             Parent Stock Operations
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/chicks_death_details.php">
-                            Chicks Death Details
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/hatchery_register.php">
+                            Hatchery Register
                         </a>
-
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/chick_details.php">
+                            Chick Details
+                        </a>
                     <?php endif; ?>
                     <?php if ($is_training_officer): ?>
                         <!-- Training Officer Menu -->

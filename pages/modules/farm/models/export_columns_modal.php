@@ -2,7 +2,7 @@
 <div class="modal fade" id="exportColumnsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form class="modal-content border-0 shadow" action="processors/export_egg_collections.php" method="POST">
-            <div class="modal-header bg-dark text-white">
+            <div class="modal-header bg-dark text-light">
                 <h5 class="modal-title fw-bold">
                     <i class="bi bi-file-earmark-spreadsheet-fill me-2 text-success"></i>Export Custom CSV Report
                 </h5>
