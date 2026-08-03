@@ -10,7 +10,7 @@ if ($_SESSION['role'] !== 'farms_dd') {
 $user_id = $_SESSION['user_id'] ?? 1;
 
 // Active tab determination
-$active_tab = $_GET['tab'] ?? 'growth'; // 'growth', 'day_old', 'month_old'
+$active_tab = $_GET['tab'] ?? 'day_old'; // 'day_old', 'growth', 'month_old'
 
 // Selected filter month (default to current month YYYY-MM)
 $selected_month = $_GET['month'] ?? date('Y-m');
@@ -159,13 +159,13 @@ require_once '../../../includes/sidebar.php';
         <!-- Main 3-Tab Scenario Navigation Bar -->
         <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm border" id="chickModuleTabs" role="tablist">
             <li class="nav-item me-2" role="presentation">
-                <button class="nav-link <?= ($active_tab === 'growth') ? 'active' : '' ?> fw-bold py-3 px-4" id="growth-tab" data-bs-toggle="pill" data-bs-target="#growth-pane" type="button" role="tab" aria-controls="growth-pane" aria-selected="<?= ($active_tab === 'growth') ? 'true' : 'false' ?>" style="--bs-nav-pills-link-active-bg: #370709;">
-                    <i class="bi bi-activity me-2"></i>Scenario A: Month-Old Chicks Growth Log
+                <button class="nav-link <?= ($active_tab === 'day_old') ? 'active' : '' ?> fw-bold py-3 px-4" id="day-old-tab" data-bs-toggle="pill" data-bs-target="#day-old-pane" type="button" role="tab" aria-controls="day-old-pane" aria-selected="<?= ($active_tab === 'day_old') ? 'true' : 'false' ?>" style="--bs-nav-pills-link-active-bg: #0d6efd;">
+                    <i class="bi bi-box-arrow-up-right me-2"></i>Scenario A: Day-Old Chicks Distribution
                 </button>
             </li>
             <li class="nav-item me-2" role="presentation">
-                <button class="nav-link <?= ($active_tab === 'day_old') ? 'active' : '' ?> fw-bold py-3 px-4" id="day-old-tab" data-bs-toggle="pill" data-bs-target="#day-old-pane" type="button" role="tab" aria-controls="day-old-pane" aria-selected="<?= ($active_tab === 'day_old') ? 'true' : 'false' ?>" style="--bs-nav-pills-link-active-bg: #0d6efd;">
-                    <i class="bi bi-box-arrow-up-right me-2"></i>Scenario B: Day-Old Chicks Distribution
+                <button class="nav-link <?= ($active_tab === 'growth') ? 'active' : '' ?> fw-bold py-3 px-4" id="growth-tab" data-bs-toggle="pill" data-bs-target="#growth-pane" type="button" role="tab" aria-controls="growth-pane" aria-selected="<?= ($active_tab === 'growth') ? 'true' : 'false' ?>" style="--bs-nav-pills-link-active-bg: #370709;">
+                    <i class="bi bi-activity me-2"></i>Scenario B: Month-Old Chicks Growth Log
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -178,10 +178,100 @@ require_once '../../../includes/sidebar.php';
         <div class="tab-content" id="chickModuleTabContent">
 
             <!-- ========================================================= -->
-            <!-- TAB 1: SCENARIO A - MONTH-OLD CHICKS GROWTH LOG -->
+            <!-- TAB 1: SCENARIO B - DAY-OLD CHICKS DISTRIBUTION -->
+            <!-- ========================================================= -->
+            <div class="tab-pane fade <?= ($active_tab === 'day_old') ? 'show active' : '' ?>" id="day-old-pane" role="tabpanel" aria-labelledby="day-old-tab" tabindex="0">
+
+                <!-- KPI Summary Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 5px solid #0d6efd !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted fw-bold uppercase d-block">Total Day-Old Chicks Sent</small>
+                                    <span class="fs-3 fw-bold text-primary"><?= number_format($day_old_total_sent) ?></span>
+                                </div>
+                                <div class="p-3 bg-primary-subtle rounded-circle text-primary">
+                                    <i class="bi bi-box-arrow-up-right fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 5px solid #198754 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted fw-bold uppercase d-block">Total Revenue (Rs.)</small>
+                                    <span class="fs-3 fw-bold text-success">Rs. <?= number_format($day_old_total_amount, 2) ?></span>
+                                </div>
+                                <div class="p-3 bg-success-subtle rounded-circle text-success">
+                                    <i class="bi bg-currency-dollar fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-dark m-0"><i class="bi bi-box-arrow-up-right me-2 text-primary"></i>Day-Old Chicks Distribution & Sales Log</h5>
+                        <button class="btn btn-primary fw-bold px-4" data-bs-toggle="modal" data-bs-target="#addDayOldModal">
+                            <i class="bi bi-plus-circle me-1"></i>Log Day-Old Distribution
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border" id="dayOldTable">
+                                <thead class="table-dark" style="background-color: #0d6efd;">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Chicks Produced</th>
+                                        <th>Destination / Place</th>
+                                        <th>Chicks Sent</th>
+                                        <th>Price Per Chick (Rs.)</th>
+                                        <th>Total Amount (Rs.)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($day_old_records as $r): ?>
+                                        <tr>
+                                            <td><?= date('d M Y', strtotime($r['record_date'])) ?></td>
+                                            <td class="fw-bold text-secondary"><?= number_format($r['no_of_chicks_produced']) ?></td>
+                                            <td><span class="badge bg-light text-dark border fs-6"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($r['sent_to_place']) ?></span></td>
+                                            <td class="fw-bold text-primary"><?= number_format($r['no_of_chicks_sent']) ?></td>
+                                            <td>Rs. <?= number_format($r['price_per_chick'], 2) ?></td>
+                                            <td class="fw-bold text-success">Rs. <?= number_format($r['total_amount'], 2) ?></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-day-old"
+                                                    data-id="<?= $r['id'] ?>"
+                                                    data-record_date="<?= $r['record_date'] ?>"
+                                                    data-no_of_chicks_produced="<?= $r['no_of_chicks_produced'] ?>"
+                                                    data-sent_to_place="<?= htmlspecialchars($r['sent_to_place']) ?>"
+                                                    data-no_of_chicks_sent="<?= $r['no_of_chicks_sent'] ?>"
+                                                    data-price_per_chick="<?= $r['price_per_chick'] ?>"
+                                                    data-total_amount="<?= $r['total_amount'] ?>"
+                                                    data-bs-toggle="modal" data-bs-target="#editDayOldModal">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                                <a href="processors/day_old_distribution_crud.php?action=delete&id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- TAB 2: SCENARIO A - MONTH-OLD CHICKS GROWTH LOG -->
             <!-- ========================================================= -->
             <div class="tab-pane fade <?= ($active_tab === 'growth') ? 'show active' : '' ?>" id="growth-pane" role="tabpanel" aria-labelledby="growth-tab" tabindex="0">
-                
+
                 <!-- KPI Summary Cards -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
@@ -250,7 +340,7 @@ require_once '../../../includes/sidebar.php';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($growth_records as $r): 
+                                    <?php foreach ($growth_records as $r):
                                         $surviving = max(0, intval($r['opening_chicks_count']) - intval($r['no_of_deaths']));
                                     ?>
                                         <tr>
@@ -262,19 +352,19 @@ require_once '../../../includes/sidebar.php';
                                             <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($r['feed_type'] ?? '-') ?></span></td>
                                             <td><?= number_format($r['feed_amount_to_be_given'], 2) ?></td>
                                             <td class="fw-bold"><?= number_format($r['feed_amount_given'], 2) ?></td>
-                                            <td class="small"><?= htmlspecialchars($r['vaccination_treatment'] ?? '-') ?></td>
+                                            <td><span class="small"><?= htmlspecialchars($r['vaccination_treatment'] ?? '-') ?></span></td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-growth" 
-                                                        data-id="<?= $r['id'] ?>"
-                                                        data-record_date="<?= $r['record_date'] ?>"
-                                                        data-cage_id="<?= $r['cage_id'] ?>"
-                                                        data-opening_chicks_count="<?= $r['opening_chicks_count'] ?>"
-                                                        data-no_of_deaths="<?= $r['no_of_deaths'] ?>"
-                                                        data-feed_type="<?= htmlspecialchars($r['feed_type'] ?? '') ?>"
-                                                        data-feed_amount_to_be_given="<?= $r['feed_amount_to_be_given'] ?>"
-                                                        data-feed_amount_given="<?= $r['feed_amount_given'] ?>"
-                                                        data-vaccination_treatment="<?= htmlspecialchars($r['vaccination_treatment'] ?? '') ?>"
-                                                        data-bs-toggle="modal" data-bs-target="#editGrowthModal">
+                                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-growth"
+                                                    data-id="<?= $r['id'] ?>"
+                                                    data-record_date="<?= $r['record_date'] ?>"
+                                                    data-cage_id="<?= $r['cage_id'] ?>"
+                                                    data-opening_chicks_count="<?= $r['opening_chicks_count'] ?>"
+                                                    data-no_of_deaths="<?= $r['no_of_deaths'] ?>"
+                                                    data-feed_type="<?= htmlspecialchars($r['feed_type'] ?? '') ?>"
+                                                    data-feed_amount_to_be_given="<?= $r['feed_amount_to_be_given'] ?>"
+                                                    data-feed_amount_given="<?= $r['feed_amount_given'] ?>"
+                                                    data-vaccination_treatment="<?= htmlspecialchars($r['vaccination_treatment'] ?? '') ?>"
+                                                    data-bs-toggle="modal" data-bs-target="#editGrowthModal">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </button>
                                                 <a href="processors/chick_growth_log_crud.php?action=delete&id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete">
@@ -291,100 +381,10 @@ require_once '../../../includes/sidebar.php';
             </div>
 
             <!-- ========================================================= -->
-            <!-- TAB 2: SCENARIO B - DAY-OLD CHICKS DISTRIBUTION -->
-            <!-- ========================================================= -->
-            <div class="tab-pane fade <?= ($active_tab === 'day_old') ? 'show active' : '' ?>" id="day-old-pane" role="tabpanel" aria-labelledby="day-old-tab" tabindex="0">
-                
-                <!-- KPI Summary Cards -->
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 5px solid #0d6efd !important;">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <small class="text-muted fw-bold uppercase d-block">Total Day-Old Chicks Sent</small>
-                                    <span class="fs-3 fw-bold text-primary"><?= number_format($day_old_total_sent) ?></span>
-                                </div>
-                                <div class="p-3 bg-primary-subtle rounded-circle text-primary">
-                                    <i class="bi bi-box-arrow-up-right fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 5px solid #198754 !important;">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <small class="text-muted fw-bold uppercase d-block">Total Revenue (Rs.)</small>
-                                    <span class="fs-3 fw-bold text-success">Rs. <?= number_format($day_old_total_amount, 2) ?></span>
-                                </div>
-                                <div class="p-3 bg-success-subtle rounded-circle text-success">
-                                    <i class="bi bg-currency-dollar fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold text-dark m-0"><i class="bi bi-box-arrow-up-right me-2 text-primary"></i>Day-Old Chicks Distribution & Sales Log</h5>
-                        <button class="btn btn-primary fw-bold px-4" data-bs-toggle="modal" data-bs-target="#addDayOldModal">
-                            <i class="bi bi-plus-circle me-1"></i>Log Day-Old Distribution
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle border" id="dayOldTable">
-                                <thead class="table-dark" style="background-color: #0d6efd;">
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Chicks Produced</th>
-                                        <th>Destination / Place</th>
-                                        <th>Chicks Sent</th>
-                                        <th>Price Per Chick (Rs.)</th>
-                                        <th>Total Amount (Rs.)</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($day_old_records as $r): ?>
-                                        <tr>
-                                            <td><?= date('d M Y', strtotime($r['record_date'])) ?></td>
-                                            <td class="fw-bold text-secondary"><?= number_format($r['no_of_chicks_produced']) ?></td>
-                                            <td><span class="badge bg-light text-dark border fs-6"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($r['sent_to_place']) ?></span></td>
-                                            <td class="fw-bold text-primary"><?= number_format($r['no_of_chicks_sent']) ?></td>
-                                            <td>Rs. <?= number_format($r['price_per_chick'], 2) ?></td>
-                                            <td class="fw-bold text-success">Rs. <?= number_format($r['total_amount'], 2) ?></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-day-old" 
-                                                        data-id="<?= $r['id'] ?>"
-                                                        data-record_date="<?= $r['record_date'] ?>"
-                                                        data-no_of_chicks_produced="<?= $r['no_of_chicks_produced'] ?>"
-                                                        data-sent_to_place="<?= htmlspecialchars($r['sent_to_place']) ?>"
-                                                        data-no_of_chicks_sent="<?= $r['no_of_chicks_sent'] ?>"
-                                                        data-price_per_chick="<?= $r['price_per_chick'] ?>"
-                                                        data-total_amount="<?= $r['total_amount'] ?>"
-                                                        data-bs-toggle="modal" data-bs-target="#editDayOldModal">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
-                                                <a href="processors/day_old_distribution_crud.php?action=delete&id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========================================================= -->
             <!-- TAB 3: SCENARIO C - MONTH-OLD CHICKS DISTRIBUTION -->
             <!-- ========================================================= -->
             <div class="tab-pane fade <?= ($active_tab === 'month_old') ? 'show active' : '' ?>" id="month-old-pane" role="tabpanel" aria-labelledby="month-old-tab" tabindex="0">
-                
+
                 <!-- KPI Summary Cards -->
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
@@ -448,16 +448,16 @@ require_once '../../../includes/sidebar.php';
                                             <td>Rs. <?= number_format($r['price_per_chick'], 2) ?></td>
                                             <td class="fw-bold text-success">Rs. <?= number_format($r['total_amount'], 2) ?></td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-month-old" 
-                                                        data-id="<?= $r['id'] ?>"
-                                                        data-record_date="<?= $r['record_date'] ?>"
-                                                        data-cage_id="<?= $r['cage_id'] ?>"
-                                                        data-no_of_chicks_produced="<?= $r['no_of_chicks_produced'] ?>"
-                                                        data-sent_to_place="<?= htmlspecialchars($r['sent_to_place']) ?>"
-                                                        data-no_of_chicks_sent="<?= $r['no_of_chicks_sent'] ?>"
-                                                        data-price_per_chick="<?= $r['price_per_chick'] ?>"
-                                                        data-total_amount="<?= $r['total_amount'] ?>"
-                                                        data-bs-toggle="modal" data-bs-target="#editMonthOldModal">
+                                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-month-old"
+                                                    data-id="<?= $r['id'] ?>"
+                                                    data-record_date="<?= $r['record_date'] ?>"
+                                                    data-cage_id="<?= $r['cage_id'] ?>"
+                                                    data-no_of_chicks_produced="<?= $r['no_of_chicks_produced'] ?>"
+                                                    data-sent_to_place="<?= htmlspecialchars($r['sent_to_place']) ?>"
+                                                    data-no_of_chicks_sent="<?= $r['no_of_chicks_sent'] ?>"
+                                                    data-price_per_chick="<?= $r['price_per_chick'] ?>"
+                                                    data-total_amount="<?= $r['total_amount'] ?>"
+                                                    data-bs-toggle="modal" data-bs-target="#editMonthOldModal">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </button>
                                                 <a href="processors/month_old_distribution_crud.php?action=delete&id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete">
@@ -850,192 +850,205 @@ require_once '../../../includes/sidebar.php';
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
 <script>
-$(document).ready(function() {
-    // Helper function for DataTables export button configuration
-    function createButtonsConfig(orientation = 'portrait') {
-        return [
-            { 
-                extend: 'csv', 
-                text: '<i class="bi bi-filetype-csv me-1"></i> CSV', 
-                className: 'btn btn-sm btn-success me-1 rounded font-weight-bold',
-                exportOptions: { columns: ':not(:last-child)' }
-            },
-            { 
-                extend: 'pdf', 
-                text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF', 
-                className: 'btn btn-sm btn-danger me-1 rounded font-weight-bold',
-                orientation: orientation,
-                pageSize: 'A4',
-                exportOptions: { columns: ':not(:last-child)' }
-            },
-            { 
-                extend: 'print', 
-                text: '<i class="bi bi-printer me-1"></i> Print', 
-                className: 'btn btn-sm btn-dark rounded font-weight-bold',
-                exportOptions: { columns: ':not(:last-child)' }
-            }
-        ];
-    }
-
-    const commonDom = '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>';
-
-    // Initialize DataTables with CSV, PDF, and Print export support
-    $('#growthTable').DataTable({
-        order: [[0, 'desc']],
-        pageLength: 25,
-        dom: commonDom,
-        buttons: createButtonsConfig('landscape')
-    });
-
-    $('#dayOldTable').DataTable({
-        order: [[0, 'desc']],
-        pageLength: 25,
-        dom: commonDom,
-        buttons: createButtonsConfig('portrait')
-    });
-
-    $('#monthOldTable').DataTable({
-        order: [[0, 'desc']],
-        pageLength: 25,
-        dom: commonDom,
-        buttons: createButtonsConfig('portrait')
-    });
-
-    // Month filter action
-    $('#btnFilter').on('click', function() {
-        const mVal = $('#month_filter').val();
-        const activeTabPane = $('.nav-link.active').attr('id').replace('-tab', '');
-        if (mVal) {
-            window.location.href = 'chick_details.php?month=' + encodeURIComponent(mVal) + '&tab=' + encodeURIComponent(activeTabPane);
-        }
-    });
-
-    // -------------------------------------------------------------
-    // Scenario A: Auto-fetch Opening Balance for Growth Log
-    // -------------------------------------------------------------
-    function fetchOpeningBalance() {
-        const cageId = $('#add_growth_cage_id').val();
-        const recordDate = $('#add_growth_date').val();
-        if (cageId) {
-            $.getJSON('processors/chick_growth_log_crud.php', {
-                action: 'get_opening_balance',
-                cage_id: cageId,
-                record_date: recordDate
-            }, function(res) {
-                if (res.success) {
-                    $('#add_growth_opening').val(res.opening_chicks_count);
+    $(document).ready(function() {
+        // Helper function for DataTables export button configuration
+        function createButtonsConfig(orientation = 'portrait') {
+            return [{
+                    extend: 'csv',
+                    text: '<i class="bi bi-filetype-csv me-1"></i> CSV',
+                    className: 'btn btn-sm btn-success me-1 rounded font-weight-bold',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF',
+                    className: 'btn btn-sm btn-danger me-1 rounded font-weight-bold',
+                    orientation: orientation,
+                    pageSize: 'A4',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="bi bi-printer me-1"></i> Print',
+                    className: 'btn btn-sm btn-dark rounded font-weight-bold',
+                    exportOptions: {
+                        columns: ':not(:last-child)'
+                    }
                 }
-            });
+            ];
         }
-    }
 
-    $('#add_growth_cage_id, #add_growth_date').on('change', fetchOpeningBalance);
-    $('#btn_auto_calc_opening').on('click', fetchOpeningBalance);
+        const commonDom = '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>';
 
-    // Populate Edit Growth Modal
-    $(document).on('click', '.btn-edit-growth', function() {
-        const btn = $(this);
-        $('#edit_growth_id').val(btn.data('id'));
-        $('#edit_growth_record_date').val(btn.data('record_date'));
-        $('#edit_growth_cage_id').val(btn.data('cage_id'));
-        $('#edit_growth_opening').val(btn.data('opening_chicks_count'));
-        $('#edit_growth_deaths').val(btn.data('no_of_deaths'));
-        $('#edit_growth_feed_type').val(btn.data('feed_type'));
-        $('#edit_growth_feed_to_be_given').val(btn.data('feed_amount_to_be_given'));
-        $('#edit_growth_feed_given').val(btn.data('feed_amount_given'));
-        $('#edit_growth_vaccination').val(btn.data('vaccination_treatment'));
-    });
+        // Initialize DataTables with CSV, PDF, and Print export support
+        $('#growthTable').DataTable({
+            order: [
+                [0, 'desc']
+            ],
+            pageLength: 25,
+            dom: commonDom,
+            buttons: createButtonsConfig('landscape')
+        });
 
-    // -------------------------------------------------------------
-    // Scenario B: Live Total Calculation (Day-Old Distribution)
-    // -------------------------------------------------------------
-    function calcDayOldAddTotal() {
-        const sent = parseFloat($('#add_day_old_sent').val()) || 0;
-        const price = parseFloat($('#add_day_old_price').val()) || 0;
-        $('#add_day_old_total').val((sent * price).toFixed(2));
-    }
-    function calcDayOldEditTotal() {
-        const sent = parseFloat($('#edit_day_old_sent').val()) || 0;
-        const price = parseFloat($('#edit_day_old_price').val()) || 0;
-        $('#edit_day_old_total').val((sent * price).toFixed(2));
-    }
-    $('.calc-day-old').on('input change', calcDayOldAddTotal);
-    $('.edit-calc-day-old').on('input change', calcDayOldEditTotal);
+        $('#dayOldTable').DataTable({
+            order: [
+                [0, 'desc']
+            ],
+            pageLength: 25,
+            dom: commonDom,
+            buttons: createButtonsConfig('portrait')
+        });
 
-    // Populate Edit Day-Old Modal
-    $(document).on('click', '.btn-edit-day-old', function() {
-        const btn = $(this);
-        $('#edit_day_old_id').val(btn.data('id'));
-        $('#edit_day_old_date').val(btn.data('record_date'));
-        $('#edit_day_old_produced').val(btn.data('no_of_chicks_produced'));
-        $('#edit_day_old_place').val(btn.data('sent_to_place'));
-        $('#edit_day_old_sent').val(btn.data('no_of_chicks_sent'));
-        $('#edit_day_old_price').val(btn.data('price_per_chick'));
-        calcDayOldEditTotal();
-    });
+        $('#monthOldTable').DataTable({
+            order: [
+                [0, 'desc']
+            ],
+            pageLength: 25,
+            dom: commonDom,
+            buttons: createButtonsConfig('portrait')
+        });
 
-    // -------------------------------------------------------------
-    // Scenario C: Data Linking & Live Total Calculation (Month-Old Distribution)
-    // -------------------------------------------------------------
-    $('#add_month_old_cage_id').on('change', function() {
-        const cageId = $(this).val();
-        if (cageId) {
-            $.getJSON('processors/month_old_distribution_crud.php', {
-                action: 'get_surviving_balance',
-                cage_id: cageId
-            }, function(res) {
-                if (res.success) {
-                    $('#add_month_old_produced').val(res.surviving_balance);
-                }
-            });
-        }
-    });
-
-    function calcMonthOldAddTotal() {
-        const sent = parseFloat($('#add_month_old_sent').val()) || 0;
-        const price = parseFloat($('#add_month_old_price').val()) || 0;
-        $('#add_month_old_total').val((sent * price).toFixed(2));
-    }
-    function calcMonthOldEditTotal() {
-        const sent = parseFloat($('#edit_month_old_sent').val()) || 0;
-        const price = parseFloat($('#edit_month_old_price').val()) || 0;
-        $('#edit_month_old_total').val((sent * price).toFixed(2));
-    }
-    $('.calc-month-old').on('input change', calcMonthOldAddTotal);
-    $('.edit-calc-month-old').on('input change', calcMonthOldEditTotal);
-
-    // Populate Edit Month-Old Modal
-    $(document).on('click', '.btn-edit-month-old', function() {
-        const btn = $(this);
-        $('#edit_month_old_id').val(btn.data('id'));
-        $('#edit_month_old_date').val(btn.data('record_date'));
-        $('#edit_month_old_cage_id').val(btn.data('cage_id'));
-        $('#edit_month_old_produced').val(btn.data('no_of_chicks_produced'));
-        $('#edit_month_old_place').val(btn.data('sent_to_place'));
-        $('#edit_month_old_sent').val(btn.data('no_of_chicks_sent'));
-        $('#edit_month_old_price').val(btn.data('price_per_chick'));
-        calcMonthOldEditTotal();
-    });
-
-    // Delete confirmation SweetAlert
-    $(document).on('click', '.btn-delete', function(e) {
-        e.preventDefault();
-        const deleteUrl = $(this).attr('href');
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "This record will be permanently deleted!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = deleteUrl;
+        // Month filter action
+        $('#btnFilter').on('click', function() {
+            const mVal = $('#month_filter').val();
+            const activeTabPane = $('.nav-link.active').attr('id').replace('-tab', '');
+            if (mVal) {
+                window.location.href = 'chick_details.php?month=' + encodeURIComponent(mVal) + '&tab=' + encodeURIComponent(activeTabPane);
             }
         });
+
+        // -------------------------------------------------------------
+        // Scenario A: Auto-fetch Opening Balance for Growth Log
+        // -------------------------------------------------------------
+        function fetchOpeningBalance() {
+            const cageId = $('#add_growth_cage_id').val();
+            const recordDate = $('#add_growth_date').val();
+            if (cageId) {
+                $.getJSON('processors/chick_growth_log_crud.php', {
+                    action: 'get_opening_balance',
+                    cage_id: cageId,
+                    record_date: recordDate
+                }, function(res) {
+                    if (res.success) {
+                        $('#add_growth_opening').val(res.opening_chicks_count);
+                    }
+                });
+            }
+        }
+
+        $('#add_growth_cage_id, #add_growth_date').on('change', fetchOpeningBalance);
+        $('#btn_auto_calc_opening').on('click', fetchOpeningBalance);
+
+        // Populate Edit Growth Modal
+        $(document).on('click', '.btn-edit-growth', function() {
+            const btn = $(this);
+            $('#edit_growth_id').val(btn.data('id'));
+            $('#edit_growth_record_date').val(btn.data('record_date'));
+            $('#edit_growth_cage_id').val(btn.data('cage_id'));
+            $('#edit_growth_opening').val(btn.data('opening_chicks_count'));
+            $('#edit_growth_deaths').val(btn.data('no_of_deaths'));
+            $('#edit_growth_feed_type').val(btn.data('feed_type'));
+            $('#edit_growth_feed_to_be_given').val(btn.data('feed_amount_to_be_given'));
+            $('#edit_growth_feed_given').val(btn.data('feed_amount_given'));
+            $('#edit_growth_vaccination').val(btn.data('vaccination_treatment'));
+        });
+
+        // -------------------------------------------------------------
+        // Scenario B: Live Total Calculation (Day-Old Distribution)
+        // -------------------------------------------------------------
+        function calcDayOldAddTotal() {
+            const sent = parseFloat($('#add_day_old_sent').val()) || 0;
+            const price = parseFloat($('#add_day_old_price').val()) || 0;
+            $('#add_day_old_total').val((sent * price).toFixed(2));
+        }
+
+        function calcDayOldEditTotal() {
+            const sent = parseFloat($('#edit_day_old_sent').val()) || 0;
+            const price = parseFloat($('#edit_day_old_price').val()) || 0;
+            $('#edit_day_old_total').val((sent * price).toFixed(2));
+        }
+        $('.calc-day-old').on('input change', calcDayOldAddTotal);
+        $('.edit-calc-day-old').on('input change', calcDayOldEditTotal);
+
+        // Populate Edit Day-Old Modal
+        $(document).on('click', '.btn-edit-day-old', function() {
+            const btn = $(this);
+            $('#edit_day_old_id').val(btn.data('id'));
+            $('#edit_day_old_date').val(btn.data('record_date'));
+            $('#edit_day_old_produced').val(btn.data('no_of_chicks_produced'));
+            $('#edit_day_old_place').val(btn.data('sent_to_place'));
+            $('#edit_day_old_sent').val(btn.data('no_of_chicks_sent'));
+            $('#edit_day_old_price').val(btn.data('price_per_chick'));
+            calcDayOldEditTotal();
+        });
+
+        // -------------------------------------------------------------
+        // Scenario C: Data Linking & Live Total Calculation (Month-Old Distribution)
+        // -------------------------------------------------------------
+        $('#add_month_old_cage_id').on('change', function() {
+            const cageId = $(this).val();
+            if (cageId) {
+                $.getJSON('processors/month_old_distribution_crud.php', {
+                    action: 'get_surviving_balance',
+                    cage_id: cageId
+                }, function(res) {
+                    if (res.success) {
+                        $('#add_month_old_produced').val(res.surviving_balance);
+                    }
+                });
+            }
+        });
+
+        function calcMonthOldAddTotal() {
+            const sent = parseFloat($('#add_month_old_sent').val()) || 0;
+            const price = parseFloat($('#add_month_old_price').val()) || 0;
+            $('#add_month_old_total').val((sent * price).toFixed(2));
+        }
+
+        function calcMonthOldEditTotal() {
+            const sent = parseFloat($('#edit_month_old_sent').val()) || 0;
+            const price = parseFloat($('#edit_month_old_price').val()) || 0;
+            $('#edit_month_old_total').val((sent * price).toFixed(2));
+        }
+        $('.calc-month-old').on('input change', calcMonthOldAddTotal);
+        $('.edit-calc-month-old').on('input change', calcMonthOldEditTotal);
+
+        // Populate Edit Month-Old Modal
+        $(document).on('click', '.btn-edit-month-old', function() {
+            const btn = $(this);
+            $('#edit_month_old_id').val(btn.data('id'));
+            $('#edit_month_old_date').val(btn.data('record_date'));
+            $('#edit_month_old_cage_id').val(btn.data('cage_id'));
+            $('#edit_month_old_produced').val(btn.data('no_of_chicks_produced'));
+            $('#edit_month_old_place').val(btn.data('sent_to_place'));
+            $('#edit_month_old_sent').val(btn.data('no_of_chicks_sent'));
+            $('#edit_month_old_price').val(btn.data('price_per_chick'));
+            calcMonthOldEditTotal();
+        });
+
+        // Delete confirmation SweetAlert
+        $(document).on('click', '.btn-delete', function(e) {
+            e.preventDefault();
+            const deleteUrl = $(this).attr('href');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This record will be permanently deleted!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
     });
-});
 </script>
 
 <?php require_once '../../../includes/footer.php'; ?>
