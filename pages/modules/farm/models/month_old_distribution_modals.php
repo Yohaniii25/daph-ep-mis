@@ -1,3 +1,16 @@
+<?php
+if (!isset($cages) || !is_array($cages)) {
+    $cages = [];
+    if (isset($mysqli)) {
+        $cages_res = $mysqli->query("SELECT id, cage_name FROM cages ORDER BY cage_name");
+        if ($cages_res) {
+            while ($row = $cages_res->fetch_assoc()) {
+                $cages[] = $row;
+            }
+        }
+    }
+}
+?>
 <!-- pages/modules/farm/models/month_old_distribution_modals.php -->
 
 <!-- Add Month-Old Distribution Modal -->

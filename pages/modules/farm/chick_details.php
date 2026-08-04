@@ -121,7 +121,15 @@ if ($res_issuing) {
         $issuing_total_hatched += intval($r['no_of_eggs_hatched']);
         $issuing_total_live += (intval($r['live_chicks_pullets']) + intval($r['live_chicks_cockerels']));
         $issuing_total_deaths_sexing += (intval($r['deaths_sexing_pullets']) + intval($r['deaths_sexing_cockerels']) + intval($r['deaths_sexing_unsexed']));
-        $issuing_total_issued += (intval($r['issue_cockerels_pullets']) + intval($r['issue_day_old_unsex']) + intval($r['issue_day_old_cockerel']) + intval($r['issue_month_old_unsexed']));
+        
+        $sum_9 = intval($r['do_pullets'] ?? 0) + intval($r['do_cockerels'] ?? 0) + intval($r['do_unsexed'] ?? 0)
+               + intval($r['wo_pullets'] ?? 0) + intval($r['wo_cockerels'] ?? 0) + intval($r['wo_unsexed'] ?? 0)
+               + intval($r['mo_pullets'] ?? 0) + intval($r['mo_cockerels'] ?? 0) + intval($r['mo_unsexed'] ?? 0);
+        if ($sum_9 > 0) {
+            $issuing_total_issued += $sum_9;
+        } else {
+            $issuing_total_issued += (intval($r['issue_cockerels_pullets']) + intval($r['issue_day_old_unsex']) + intval($r['issue_day_old_cockerel']) + intval($r['issue_month_old_unsexed']));
+        }
     }
 }
 $stmt_issuing->close();
@@ -574,57 +582,85 @@ require_once '../../../includes/sidebar.php';
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover align-middle" id="issuingTable">
-                                <thead class="table-light" style="background-color: #8d170e;">
+                            <table class="table table-bordered table-hover align-middle text-center" id="issuingTable" style="font-size: 0.85rem;">
+                                <thead class="table-light align-middle" style="background-color: #6f42c1; color: white;">
                                     <tr>
-                                        <th rowspan="2" class="align-middle text-center">Month</th>
-                                        <th rowspan="2" class="align-middle text-center">Batch No</th>
-                                        <th colspan="4" class="text-center bg-secondary">Hatchery & Monthly Stock</th>
-                                        <th colspan="2" class="text-center bg-primary">No. of Live Chicks</th>
-                                        <th colspan="3" class="text-center bg-danger">Total Deaths (Sexing To Issue)</th>
-                                        <th colspan="4" class="text-center bg-success">No. of Live Chicks Up To Issue</th>
-                                        <th rowspan="2" class="align-middle text-center">Remarks</th>
-                                        <th rowspan="2" class="align-middle text-center">Actions</th>
+                                        <th rowspan="3" class="align-middle">Month</th>
+                                        <th rowspan="3" class="align-middle">Issue Date</th>
+                                        <th rowspan="3" class="align-middle">Range Name</th>
+                                        <th rowspan="3" class="align-middle">Batch No</th>
+                                        <th colspan="4" class="bg-secondary text-white">Hatchery & Monthly Stock</th>
+                                        <th colspan="2" class="bg-primary text-white">No. of Live Chicks</th>
+                                        <th colspan="3" class="bg-danger text-white">Total Deaths (Sexing To Issue)</th>
+                                        <th colspan="9" class="bg-success text-white">Live Chicks Issued Categories</th>
+                                        <th rowspan="3" class="align-middle">Rate (Rs.)</th>
+                                        <th rowspan="3" class="align-middle">Total Amount (Rs.)</th>
+                                        <th rowspan="3" class="align-middle">Remarks</th>
+                                        <th rowspan="3" class="align-middle">Actions</th>
                                     </tr>
                                     <tr>
-                                        <th class="small text-center">Eggs Hatched</th>
-                                        <th class="small text-center">Starting Bal.</th>
-                                        <th class="small text-center">Deaths (Pre-Sex)</th>
-                                        <th class="small text-center">Received</th>
-                                        <th class="small text-center">Pullets</th>
-                                        <th class="small text-center">Cockerels</th>
-                                        <th class="small text-center">Pullets</th>
-                                        <th class="small text-center">Cockerels</th>
-                                        <th class="small text-center">Unsexed</th>
-                                        <th class="small text-center">Cock./Pullet</th>
-                                        <th class="small text-center">Day-Old Unsex</th>
-                                        <th class="small text-center">Day-Old Cock.</th>
-                                        <th class="small text-center">Month-Old Unsex</th>
+                                        <th rowspan="2" class="small">Eggs Hatched</th>
+                                        <th rowspan="2" class="small">Starting Bal.</th>
+                                        <th rowspan="2" class="small">Deaths (Pre-Sex)</th>
+                                        <th rowspan="2" class="small">Received</th>
+                                        <th rowspan="2" class="small">Pullets</th>
+                                        <th rowspan="2" class="small">Cockerels</th>
+                                        <th rowspan="2" class="small">Pullets</th>
+                                        <th rowspan="2" class="small">Cockerels</th>
+                                        <th rowspan="2" class="small">Unsexed</th>
+                                        <th colspan="3" class="small bg-warning text-dark">Day Old (D/O)</th>
+                                        <th colspan="3" class="small bg-info text-dark">Week Old</th>
+                                        <th colspan="3" class="small bg-dark text-white">Month Old</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="small bg-warning text-dark">Pullets</th>
+                                        <th class="small bg-warning text-dark">Cockerels</th>
+                                        <th class="small bg-warning text-dark">Unsexed</th>
+                                        <th class="small bg-info text-dark">Pullets</th>
+                                        <th class="small bg-info text-dark">Cockerels</th>
+                                        <th class="small bg-info text-dark">Unsexed</th>
+                                        <th class="small bg-dark text-white">Pullets</th>
+                                        <th class="small bg-dark text-white">Cockerels</th>
+                                        <th class="small bg-dark text-white">Unsexed</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($issuing_records as $r): ?>
                                         <tr>
-                                            <td class="fw-bold"><?= date('M Y', strtotime($r['record_month'])) ?></td>
+                                            <td class="fw-bold text-nowrap"><?= date('M Y', strtotime($r['record_month'])) ?></td>
+                                            <td class="text-nowrap"><?= !empty($r['issue_date']) ? date('Y-m-d', strtotime($r['issue_date'])) : '-' ?></td>
+                                            <td><?= htmlspecialchars($r['name_of_range'] ?? '-') ?></td>
                                             <td><span class="badge text-white" style="background-color: #6f42c1;"><?= htmlspecialchars($r['batch_no']) ?></span></td>
-                                            <td class="text-center"><?= number_format($r['no_of_eggs_hatched']) ?></td>
-                                            <td class="text-center"><?= number_format($r['starting_balance_of_month']) ?></td>
-                                            <td class="text-center text-danger"><?= number_format($r['deaths_before_sexing']) ?></td>
-                                            <td class="text-center"><?= number_format($r['received']) ?></td>
-                                            <td class="text-center fw-bold text-primary"><?= number_format($r['live_chicks_pullets']) ?></td>
-                                            <td class="text-center fw-bold text-primary"><?= number_format($r['live_chicks_cockerels']) ?></td>
-                                            <td class="text-center text-danger"><?= number_format($r['deaths_sexing_pullets']) ?></td>
-                                            <td class="text-center text-danger"><?= number_format($r['deaths_sexing_cockerels']) ?></td>
-                                            <td class="text-center text-danger"><?= number_format($r['deaths_sexing_unsexed']) ?></td>
-                                            <td class="text-center fw-bold text-success"><?= number_format($r['issue_cockerels_pullets']) ?></td>
-                                            <td class="text-center fw-bold text-success"><?= number_format($r['issue_day_old_unsex']) ?></td>
-                                            <td class="text-center fw-bold text-success"><?= number_format($r['issue_day_old_cockerel']) ?></td>
-                                            <td class="text-center fw-bold text-success"><?= number_format($r['issue_month_old_unsexed']) ?></td>
+                                            <td><?= number_format($r['no_of_eggs_hatched']) ?></td>
+                                            <td><?= number_format($r['starting_balance_of_month']) ?></td>
+                                            <td class="text-danger"><?= number_format($r['deaths_before_sexing']) ?></td>
+                                            <td><?= number_format($r['received']) ?></td>
+                                            <td class="fw-bold text-primary"><?= number_format($r['live_chicks_pullets']) ?></td>
+                                            <td class="fw-bold text-primary"><?= number_format($r['live_chicks_cockerels']) ?></td>
+                                            <td class="text-danger"><?= number_format($r['deaths_sexing_pullets']) ?></td>
+                                            <td class="text-danger"><?= number_format($r['deaths_sexing_cockerels']) ?></td>
+                                            <td class="text-danger"><?= number_format($r['deaths_sexing_unsexed']) ?></td>
+
+                                            <!-- 9 Categories -->
+                                            <td class="fw-bold text-success"><?= number_format($r['do_pullets'] ?? 0) ?></td>
+                                            <td class="fw-bold text-success"><?= number_format($r['do_cockerels'] ?? 0) ?></td>
+                                            <td class="fw-bold text-success"><?= number_format($r['do_unsexed'] ?? 0) ?></td>
+                                            <td class="fw-bold text-success"><?= number_format($r['wo_pullets'] ?? 0) ?></td>
+                                            <td class="fw-bold text-success"><?= number_format($r['wo_cockerels'] ?? 0) ?></td>
+                                            <td class="fw-bold text-success"><?= number_format($r['wo_unsexed'] ?? 0) ?></td>
+                                            <td class="fw-bold text-success"><?= number_format($r['mo_pullets'] ?? 0) ?></td>
+                                            <td class="fw-bold text-success"><?= number_format($r['mo_cockerels'] ?? 0) ?></td>
+                                            <td class="fw-bold text-success"><?= number_format($r['mo_unsexed'] ?? 0) ?></td>
+
+                                            <td class="fw-bold">Rs. <?= number_format($r['rate'] ?? 0, 2) ?></td>
+                                            <td class="fw-bold text-primary">Rs. <?= number_format($r['total_amount'] ?? 0, 2) ?></td>
                                             <td class="small"><?= htmlspecialchars($r['remarks'] ?? '-') ?></td>
                                             <td class="text-nowrap">
                                                 <button class="btn btn-sm btn-outline-primary me-1 btn-edit-issuing" 
                                                         data-id="<?= $r['id'] ?>"
                                                         data-record_month="<?= date('Y-m', strtotime($r['record_month'])) ?>"
+                                                        data-issue_date="<?= htmlspecialchars($r['issue_date'] ?? '') ?>"
+                                                        data-name_of_range="<?= htmlspecialchars($r['name_of_range'] ?? '') ?>"
                                                         data-batch_no="<?= htmlspecialchars($r['batch_no']) ?>"
                                                         data-no_of_eggs_hatched="<?= $r['no_of_eggs_hatched'] ?>"
                                                         data-starting_balance_of_month="<?= $r['starting_balance_of_month'] ?>"
@@ -635,10 +671,17 @@ require_once '../../../includes/sidebar.php';
                                                         data-deaths_sexing_pullets="<?= $r['deaths_sexing_pullets'] ?>"
                                                         data-deaths_sexing_cockerels="<?= $r['deaths_sexing_cockerels'] ?>"
                                                         data-deaths_sexing_unsexed="<?= $r['deaths_sexing_unsexed'] ?>"
-                                                        data-issue_cockerels_pullets="<?= $r['issue_cockerels_pullets'] ?>"
-                                                        data-issue_day_old_unsex="<?= $r['issue_day_old_unsex'] ?>"
-                                                        data-issue_day_old_cockerel="<?= $r['issue_day_old_cockerel'] ?>"
-                                                        data-issue_month_old_unsexed="<?= $r['issue_month_old_unsexed'] ?>"
+                                                        data-do_pullets="<?= $r['do_pullets'] ?? 0 ?>"
+                                                        data-do_cockerels="<?= $r['do_cockerels'] ?? 0 ?>"
+                                                        data-do_unsexed="<?= $r['do_unsexed'] ?? 0 ?>"
+                                                        data-wo_pullets="<?= $r['wo_pullets'] ?? 0 ?>"
+                                                        data-wo_cockerels="<?= $r['wo_cockerels'] ?? 0 ?>"
+                                                        data-wo_unsexed="<?= $r['wo_unsexed'] ?? 0 ?>"
+                                                        data-mo_pullets="<?= $r['mo_pullets'] ?? 0 ?>"
+                                                        data-mo_cockerels="<?= $r['mo_cockerels'] ?? 0 ?>"
+                                                        data-mo_unsexed="<?= $r['mo_unsexed'] ?? 0 ?>"
+                                                        data-rate="<?= $r['rate'] ?? 0 ?>"
+                                                        data-total_amount="<?= $r['total_amount'] ?? 0 ?>"
                                                         data-remarks="<?= htmlspecialchars($r['remarks'] ?? '') ?>"
                                                         data-bs-toggle="modal" data-bs-target="#editIssuingModal">
                                                     <i class="bi bi-pencil-square"></i>
@@ -880,6 +923,8 @@ include './models/chicks_issuing_modals.php';
             const btn = $(this);
             $('#edit_issuing_id').val(btn.data('id'));
             $('#edit_issuing_record_month').val(btn.data('record_month'));
+            $('#edit_issuing_issue_date').val(btn.data('issue_date'));
+            $('#edit_issuing_name_of_range').val(btn.data('name_of_range'));
             $('#edit_issuing_batch_no').val(btn.data('batch_no'));
             $('#edit_issuing_eggs_hatched').val(btn.data('no_of_eggs_hatched'));
             $('#edit_issuing_starting_bal').val(btn.data('starting_balance_of_month'));
@@ -890,11 +935,27 @@ include './models/chicks_issuing_modals.php';
             $('#edit_issuing_deaths_pullets').val(btn.data('deaths_sexing_pullets'));
             $('#edit_issuing_deaths_cockerels').val(btn.data('deaths_sexing_cockerels'));
             $('#edit_issuing_deaths_unsexed').val(btn.data('deaths_sexing_unsexed'));
-            $('#edit_issuing_issue_cock_pullets').val(btn.data('issue_cockerels_pullets'));
-            $('#edit_issuing_issue_day_unsex').val(btn.data('issue_day_old_unsex'));
-            $('#edit_issuing_issue_day_cock').val(btn.data('issue_day_old_cockerel'));
-            $('#edit_issuing_issue_month_unsex').val(btn.data('issue_month_old_unsexed'));
+
+            // 9 categories
+            $('#edit_do_pullets').val(btn.data('do_pullets'));
+            $('#edit_do_cockerels').val(btn.data('do_cockerels'));
+            $('#edit_do_unsexed').val(btn.data('do_unsexed'));
+
+            $('#edit_wo_pullets').val(btn.data('wo_pullets'));
+            $('#edit_wo_cockerels').val(btn.data('wo_cockerels'));
+            $('#edit_wo_unsexed').val(btn.data('wo_unsexed'));
+
+            $('#edit_mo_pullets').val(btn.data('mo_pullets'));
+            $('#edit_mo_cockerels').val(btn.data('mo_cockerels'));
+            $('#edit_mo_unsexed').val(btn.data('mo_unsexed'));
+
+            $('#edit_rate').val(btn.data('rate'));
+            $('#edit_total_amount').val(btn.data('total_amount'));
+
             $('#edit_issuing_remarks').val(btn.data('remarks'));
+
+            // Trigger input event to re-run JS calculation if needed
+            $('#edit_rate').trigger('input');
         });
 
         // Delete confirmation SweetAlert
