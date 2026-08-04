@@ -1089,6 +1089,44 @@ CREATE TABLE IF NOT EXISTS `daily_egg_sales` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_drug_items`
+--
+
+CREATE TABLE IF NOT EXISTS `farm_drug_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `item_name` varchar(255) NOT NULL,
+  `unit_of_measure` varchar(50) DEFAULT 'units',
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_drug_register_annex5`
+--
+
+CREATE TABLE IF NOT EXISTS `farm_drug_register_annex5` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `record_date` date NOT NULL,
+  `party_name` varchar(255) NOT NULL,
+  `ref_doc_no` varchar(255) DEFAULT NULL,
+  `received_qty` decimal(10,2) DEFAULT 0.00,
+  `issued_qty` decimal(10,2) DEFAULT 0.00,
+  `balance_qty` decimal(10,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `item_id` (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 --
 -- Dumping data for table `daily_egg_sales_returns`
 --

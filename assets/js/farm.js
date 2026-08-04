@@ -28,6 +28,16 @@ $(document).ready(function () {
         });
     }
 
+    if ($('#drugLedgerTable').length) {
+        $('#drugLedgerTable').DataTable({
+            responsive: true,
+            order: [[0, 'asc']],
+            language: {
+                emptyTable: "No stock movement entries found for this drug item. Click 'Log Stock Movement' to add one."
+            }
+        });
+    }
+
     // 2. Filter Month Apply Handler
     $('#btn_apply_filter').on('click', function () {
         const mVal = $('#filter_month').val();
@@ -90,7 +100,20 @@ $(document).ready(function () {
         $('#edit_egg_sale_remarks').val(btn.data('remarks'));
     });
 
-    // 6. Delete Confirmation SweetAlert
+    // 6. Edit Drug Stock Ledger Entry (Annex 5) Event Listener
+    $(document).on('click', '.btn-edit-drug-ledger', function () {
+        const btn = $(this);
+        $('#edit_drug_ledger_id').val(btn.data('id'));
+        $('#edit_record_date').val(btn.data('record_date'));
+        $('#edit_party_name').val(btn.data('party_name'));
+        $('#edit_ref_doc_no').val(btn.data('ref_doc_no'));
+        $('#edit_received_qty').val(btn.data('received_qty'));
+        $('#edit_issued_qty').val(btn.data('issued_qty'));
+        $('#edit_balance_qty').val(btn.data('balance_qty'));
+        $('#edit_remarks').val(btn.data('remarks'));
+    });
+
+    // 7. Delete Confirmation SweetAlert
     $(document).on('click', '.btn-delete', function (e) {
         e.preventDefault();
         const deleteUrl = $(this).attr('href');
@@ -116,7 +139,7 @@ $(document).ready(function () {
     });
 });
 
-// 7. Live Calculation Utilities
+// 8. Live Calculation Utilities
 document.addEventListener('DOMContentLoaded', function () {
     // Annex 4 Mash Balance Live Calculation
     function calcMashBalance() {
@@ -146,6 +169,26 @@ document.addEventListener('DOMContentLoaded', function () {
     if (mashModal) {
         mashModal.addEventListener('shown.bs.modal', calcMashBalance);
     }
+
+    // Annex 5 Drug Register Balance Live Calculation
+    function calcDrugLiveBalance() {
+        const recEl = document.getElementById('add_received_qty');
+        const issEl = document.getElementById('add_issued_qty');
+        const calcEl = document.getElementById('add_calculated_balance');
+
+        if (recEl && issEl && calcEl) {
+            const baseBal = (typeof currentItemBalance !== 'undefined') ? parseFloat(currentItemBalance) : 0;
+            const recVal = parseFloat(recEl.value) || 0;
+            const issVal = parseFloat(issEl.value) || 0;
+            const newBal = (baseBal + recVal) - issVal;
+            calcEl.value = newBal.toFixed(2);
+        }
+    }
+
+    const addRecInput = document.getElementById('add_received_qty');
+    const addIssInput = document.getElementById('add_issued_qty');
+    if (addRecInput) addRecInput.addEventListener('input', calcDrugLiveBalance);
+    if (addIssInput) addIssInput.addEventListener('input', calcDrugLiveBalance);
 
     // Egg Sales Frontend Live Auto-Calculations (Table & Cracked Eggs)
     function calcTableEggsSales(prefix) {

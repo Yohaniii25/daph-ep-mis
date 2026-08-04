@@ -217,6 +217,9 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/sales_of_eggs.php">
                             Sales of Eggs
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/drug_details.php">
+                            Drugs Details
+                        </a>
                     <?php endif; ?>
                     <?php if ($is_training_officer): ?>
                         <!-- Training Officer Menu -->

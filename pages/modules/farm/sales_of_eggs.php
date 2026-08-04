@@ -15,30 +15,6 @@ $first_day_of_month = date('Y-m-01', strtotime($selected_month . '-01'));
 $last_day_of_month = date('Y-m-t', strtotime($selected_month . '-01'));
 $month_label = date('F Y', strtotime($first_day_of_month));
 
-// Ensure daily_egg_sales table exists
-$mysqli->query("CREATE TABLE IF NOT EXISTS `daily_egg_sales` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `user_id` INT(11) NOT NULL,
-  `cage_id` INT(11) NOT NULL,
-  `batch_id` INT(11) NOT NULL,
-  `sale_date` DATE NOT NULL,
-  `table_eggs_no` INT(11) DEFAULT 0,
-  `table_eggs_kg` DECIMAL(10,2) DEFAULT 0.00,
-  `table_eggs_unit_price` DECIMAL(10,2) DEFAULT 0.00,
-  `table_eggs_total_sales` DECIMAL(12,2) DEFAULT 0.00,
-  `cracked_eggs_no` INT(11) DEFAULT 0,
-  `cracked_eggs_kg` DECIMAL(10,2) DEFAULT 0.00,
-  `cracked_eggs_unit_price` DECIMAL(10,2) DEFAULT 0.00,
-  `cracked_eggs_total_sales` DECIMAL(12,2) DEFAULT 0.00,
-  `grand_total_sales` DECIMAL(12,2) DEFAULT 0.00,
-  `remarks` TEXT DEFAULT NULL,
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `cage_id` (`cage_id`),
-  KEY `batch_id` (`batch_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
 // Fetch active Cages for dropdowns
 $cages_res = $mysqli->query("SELECT id, cage_name FROM cages ORDER BY cage_name");
 $cages = [];
