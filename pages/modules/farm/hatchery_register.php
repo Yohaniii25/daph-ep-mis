@@ -23,11 +23,21 @@ if ($cages_res) {
     }
 }
 
-// Fetch Hatchery Register Records for selected month
-$sql = "SELECT hr.*, c1.cage_name AS incubator_cage_name, c2.cage_name AS target_cage_name 
+// Fetch Parent Stock Batches for dropdowns
+$batches_res = $mysqli->query("SELECT id, batch_number AS batch_name FROM vaccine_batches ORDER BY id DESC");
+$batches = [];
+if ($batches_res) {
+    while ($row = $batches_res->fetch_assoc()) {
+        $batches[] = $row;
+    }
+}
+
+// Fetch Hatchery Register Records for selected month (with Batch and Cage Joins)
+$sql = "SELECT hr.*, c1.cage_name AS incubator_cage_name, c2.cage_name AS target_cage_name, vb.batch_number AS batch_name 
         FROM hatchery_register hr
         LEFT JOIN cages c1 ON hr.cage_id = c1.id
         LEFT JOIN cages c2 ON hr.loaded_to_cage_id = c2.id
+        LEFT JOIN vaccine_batches vb ON hr.batch_id = vb.id
         WHERE hr.record_date BETWEEN ? AND ?
         ORDER BY hr.record_date DESC, hr.id DESC";
 
@@ -39,6 +49,7 @@ $records = [];
 $total_eggs_loaded = 0;
 $total_hatched_eggs = 0;
 $total_healthy_chicks = 0;
+$total_net_viable_eggs = 0;
 
 if ($hatchery_res) {
     while ($row = $hatchery_res->fetch_assoc()) {
@@ -46,11 +57,15 @@ if ($hatchery_res) {
         $total_eggs_loaded += intval($row['no_of_eggs_loaded']);
         $total_hatched_eggs += intval($row['no_of_hatched_eggs']);
         $total_healthy_chicks += intval($row['no_of_good_chicks']);
+        
+        // Candling Deduction: Net Viable Eggs = Loaded Eggs - Candling Discards
+        $net_viable = max(0, intval($row['no_of_eggs_loaded']) - intval($row['discarded_during_candling']));
+        $total_net_viable_eggs += $net_viable;
     }
 }
 $stmt->close();
 
-$overall_hatching_pct = $total_eggs_loaded > 0 ? round(($total_healthy_chicks / $total_eggs_loaded) * 100, 2) : 0.00;
+$overall_hatching_pct = $total_net_viable_eggs > 0 ? round(($total_healthy_chicks / $total_net_viable_eggs) * 100, 2) : 0.00;
 $month_label = date('F Y', strtotime($first_day_of_month));
 
 require_once '../../../includes/sidebar.php';
@@ -189,10 +204,12 @@ require_once '../../../includes/sidebar.php';
                         <thead class="table-dark" style="background-color: #370709;">
                             <tr>
                                 <th>Date</th>
+                                <th>Batch No</th>
                                 <th>Incubator Cage</th>
                                 <th>Eggs Loaded</th>
                                 <th>Candling Date</th>
                                 <th>Discarded (Candling)</th>
+                                <th>Net Viable Eggs</th>
                                 <th>Hatching Date</th>
                                 <th>Hatched Eggs</th>
                                 <th>Deaths</th>
@@ -205,12 +222,15 @@ require_once '../../../includes/sidebar.php';
                         </thead>
                         <tbody>
                             <?php foreach ($records as $r): ?>
+                                <?php $net_viable_row = max(0, intval($r['no_of_eggs_loaded']) - intval($r['discarded_during_candling'])); ?>
                                 <tr>
                                     <td><?= date('d M Y', strtotime($r['record_date'])) ?></td>
+                                    <td><span class="badge bg-purple" style="background-color: #6f42c1;"><?= htmlspecialchars($r['batch_name'] ?? 'N/A') ?></span></td>
                                     <td><span class="badge bg-secondary"><?= htmlspecialchars($r['incubator_cage_name'] ?? 'N/A') ?></span></td>
                                     <td class="fw-bold text-primary"><?= number_format($r['no_of_eggs_loaded']) ?></td>
                                     <td><?= !empty($r['date_of_candling']) ? date('d M Y', strtotime($r['date_of_candling'])) : '-' ?></td>
                                     <td class="text-danger"><?= number_format($r['discarded_during_candling']) ?></td>
+                                    <td class="fw-bold text-info"><?= number_format($net_viable_row) ?></td>
                                     <td><?= !empty($r['date_of_hatching']) ? date('d M Y', strtotime($r['date_of_hatching'])) : '-' ?></td>
                                     <td class="fw-bold text-warning"><?= number_format($r['no_of_hatched_eggs']) ?></td>
                                     <td class="text-danger"><?= number_format($r['no_of_deaths']) ?></td>
@@ -222,6 +242,7 @@ require_once '../../../includes/sidebar.php';
                                         <button class="btn btn-sm btn-outline-primary me-1 btn-edit" 
                                                 data-id="<?= $r['id'] ?>"
                                                 data-record_date="<?= $r['record_date'] ?>"
+                                                data-batch_id="<?= $r['batch_id'] ?? '' ?>"
                                                 data-cage_id="<?= $r['cage_id'] ?>"
                                                 data-no_of_eggs_loaded="<?= $r['no_of_eggs_loaded'] ?>"
                                                 data-date_of_candling="<?= $r['date_of_candling'] ?>"
@@ -265,7 +286,16 @@ require_once '../../../includes/sidebar.php';
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Record Date <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                            <input type="date" name="record_date" id="add_record_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Parent Stock Batch <span class="badge bg-info text-dark">Auto-Link</span></label>
+                            <select name="batch_id" id="add_batch_id" class="form-select">
+                                <option value="">-- Select Parent Stock Batch --</option>
+                                <?php foreach ($batches as $b): ?>
+                                    <option value="<?= $b['id'] ?>"><?= htmlspecialchars($b['batch_name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Incubator Cage <span class="text-danger">*</span></label>
@@ -277,24 +307,27 @@ require_once '../../../includes/sidebar.php';
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">No. of Eggs Loaded <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_eggs_loaded" id="add_no_of_eggs_loaded" class="form-control calc-trigger" min="0" value="0" required>
+                            <label class="form-label fw-bold">No. of Eggs Loaded <span class="badge bg-secondary">Auto-pulled</span> <span class="text-danger">*</span></label>
+                            <input type="number" name="no_of_eggs_loaded" id="add_no_of_eggs_loaded" class="form-control bg-light fw-bold calc-trigger" min="0" value="0" readonly required>
+                            <small class="text-muted">Pulled automatically from Parent Stock Operations</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Date of Candling</label>
                             <input type="date" name="date_of_candling" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Discarded During Candling</label>
-                            <input type="number" name="discarded_during_candling" class="form-control" min="0" value="0">
+                            <label class="form-label fw-bold text-danger">Discarded During Candling (Minus)</label>
+                            <input type="number" name="discarded_during_candling" id="add_discarded_during_candling" class="form-control border-danger calc-trigger" min="0" value="0">
+                            <small class="text-muted d-block mt-1">Net Viable Eggs after Candling: <strong id="add_net_viable_display" class="text-primary">0</strong></small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Date of Hatching</label>
                             <input type="date" name="date_of_hatching" class="form-control">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">No. of Hatched Eggs</label>
-                            <input type="number" name="no_of_hatched_eggs" class="form-control" min="0" value="0">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">No. of Hatched Eggs <span class="badge bg-secondary">Auto-pulled</span></label>
+                            <input type="number" name="no_of_hatched_eggs" id="add_no_of_hatched_eggs" class="form-control bg-light fw-bold" min="0" value="0" readonly>
+                            <small class="text-muted">Pulled automatically from Parent Stock Operations</small>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">No. of Deaths</label>
@@ -304,7 +337,7 @@ require_once '../../../includes/sidebar.php';
                             <label class="form-label fw-bold text-success">Healthy Chicks <span class="text-danger">*</span></label>
                             <input type="number" name="no_of_good_chicks" id="add_no_of_good_chicks" class="form-control border-success calc-trigger fw-bold" min="0" value="0" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Hatching Percentage (%)</label>
                             <div class="input-group">
                                 <input type="text" id="add_hatching_percentage" class="form-control bg-light fw-bold" readonly value="0.00%">
@@ -353,6 +386,15 @@ require_once '../../../includes/sidebar.php';
                             <input type="date" name="record_date" id="edit_record_date" class="form-control" required>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label fw-bold">Parent Stock Batch <span class="badge bg-info text-dark">Auto-Link</span></label>
+                            <select name="batch_id" id="edit_batch_id" class="form-select">
+                                <option value="">-- Select Parent Stock Batch --</option>
+                                <?php foreach ($batches as $b): ?>
+                                    <option value="<?= $b['id'] ?>"><?= htmlspecialchars($b['batch_name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Incubator Cage <span class="text-danger">*</span></label>
                             <select name="cage_id" id="edit_cage_id" class="form-select" required>
                                 <option value="">-- Select Cage --</option>
@@ -362,24 +404,27 @@ require_once '../../../includes/sidebar.php';
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">No. of Eggs Loaded <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_eggs_loaded" id="edit_no_of_eggs_loaded" class="form-control edit-calc-trigger" min="0" required>
+                            <label class="form-label fw-bold">No. of Eggs Loaded <span class="badge bg-secondary">Auto-pulled</span> <span class="text-danger">*</span></label>
+                            <input type="number" name="no_of_eggs_loaded" id="edit_no_of_eggs_loaded" class="form-control bg-light fw-bold edit-calc-trigger" min="0" readonly required>
+                            <small class="text-muted">Pulled automatically from Parent Stock Operations</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Date of Candling</label>
                             <input type="date" name="date_of_candling" id="edit_date_of_candling" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Discarded During Candling</label>
-                            <input type="number" name="discarded_during_candling" id="edit_discarded_during_candling" class="form-control" min="0">
+                            <label class="form-label fw-bold text-danger">Discarded During Candling (Minus)</label>
+                            <input type="number" name="discarded_during_candling" id="edit_discarded_during_candling" class="form-control border-danger edit-calc-trigger" min="0">
+                            <small class="text-muted d-block mt-1">Net Viable Eggs after Candling: <strong id="edit_net_viable_display" class="text-primary">0</strong></small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Date of Hatching</label>
                             <input type="date" name="date_of_hatching" id="edit_date_of_hatching" class="form-control">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">No. of Hatched Eggs</label>
-                            <input type="number" name="no_of_hatched_eggs" id="edit_no_of_hatched_eggs" class="form-control" min="0">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">No. of Hatched Eggs <span class="badge bg-secondary">Auto-pulled</span></label>
+                            <input type="number" name="no_of_hatched_eggs" id="edit_no_of_hatched_eggs" class="form-control bg-light fw-bold" min="0" readonly>
+                            <small class="text-muted">Pulled automatically from Parent Stock Operations</small>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">No. of Deaths</label>
@@ -389,7 +434,7 @@ require_once '../../../includes/sidebar.php';
                             <label class="form-label fw-bold text-success">Healthy Chicks <span class="text-danger">*</span></label>
                             <input type="number" name="no_of_good_chicks" id="edit_no_of_good_chicks" class="form-control border-success edit-calc-trigger fw-bold" min="0" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Hatching Percentage (%)</label>
                             <div class="input-group">
                                 <input type="text" id="edit_hatching_percentage" class="form-control bg-light fw-bold" readonly value="0.00%">
@@ -412,6 +457,13 @@ require_once '../../../includes/sidebar.php';
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold" style="background-color: #370709; border-color: #370709;">Update Hatchery Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
                     <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary fw-bold" style="background-color: #370709; border-color: #370709;">Update Hatchery Record</button>
                 </div>
@@ -469,12 +521,50 @@ $(document).ready(function() {
         }
     });
 
-    // Calculate Hatching Percentage: (Healthy Chicks / Eggs Loaded) * 100
+    // Auto-fetch Eggs Loaded & Hatched Eggs from parent_stock_operations.php
+    function fetchParentStockData(batchId, recordDate, isEdit = false) {
+        if (!batchId) return;
+        $.getJSON('processors/get_parent_stock_hatchery_data.php', {
+            batch_id: batchId,
+            record_date: recordDate
+        }, function(res) {
+            if (res && res.success) {
+                const loadedInput = isEdit ? '#edit_no_of_eggs_loaded' : '#add_no_of_eggs_loaded';
+                const hatchedInput = isEdit ? '#edit_no_of_hatched_eggs' : '#add_no_of_hatched_eggs';
+                $(loadedInput).val(res.eggs_loaded);
+                $(hatchedInput).val(res.hatched_eggs);
+                if (isEdit) {
+                    updateEditPercentage();
+                } else {
+                    updateAddPercentage();
+                }
+            }
+        });
+    }
+
+    $('#add_batch_id, #add_record_date').on('change', function() {
+        const bId = $('#add_batch_id').val();
+        const rDate = $('#add_record_date').val();
+        fetchParentStockData(bId, rDate, false);
+    });
+
+    $('#edit_batch_id, #edit_record_date').on('change', function() {
+        const bId = $('#edit_batch_id').val();
+        const rDate = $('#edit_record_date').val();
+        fetchParentStockData(bId, rDate, true);
+    });
+
+    // Calculate Hatching Percentage with Candling Deduction: (Healthy Chicks / (Loaded Eggs - Candling Discards)) * 100
     function updateAddPercentage() {
         const eggs = parseFloat($('#add_no_of_eggs_loaded').val()) || 0;
+        const candling = parseFloat($('#add_discarded_during_candling').val()) || 0;
         const healthy = parseFloat($('#add_no_of_good_chicks').val()) || 0;
-        if (eggs > 0) {
-            const pct = ((healthy / eggs) * 100).toFixed(2);
+        
+        const netViable = Math.max(0, eggs - candling);
+        $('#add_net_viable_display').text(netViable);
+
+        if (netViable > 0) {
+            const pct = ((healthy / netViable) * 100).toFixed(2);
             $('#add_hatching_percentage').val(pct + '%');
         } else {
             $('#add_hatching_percentage').val('0.00%');
@@ -483,9 +573,14 @@ $(document).ready(function() {
 
     function updateEditPercentage() {
         const eggs = parseFloat($('#edit_no_of_eggs_loaded').val()) || 0;
+        const candling = parseFloat($('#edit_discarded_during_candling').val()) || 0;
         const healthy = parseFloat($('#edit_no_of_good_chicks').val()) || 0;
-        if (eggs > 0) {
-            const pct = ((healthy / eggs) * 100).toFixed(2);
+        
+        const netViable = Math.max(0, eggs - candling);
+        $('#edit_net_viable_display').text(netViable);
+
+        if (netViable > 0) {
+            const pct = ((healthy / netViable) * 100).toFixed(2);
             $('#edit_hatching_percentage').val(pct + '%');
         } else {
             $('#edit_hatching_percentage').val('0.00%');
@@ -500,6 +595,7 @@ $(document).ready(function() {
         const btn = $(this);
         $('#edit_id').val(btn.data('id'));
         $('#edit_record_date').val(btn.data('record_date'));
+        $('#edit_batch_id').val(btn.data('batch_id'));
         $('#edit_cage_id').val(btn.data('cage_id'));
         $('#edit_no_of_eggs_loaded').val(btn.data('no_of_eggs_loaded'));
         $('#edit_date_of_candling').val(btn.data('date_of_candling'));

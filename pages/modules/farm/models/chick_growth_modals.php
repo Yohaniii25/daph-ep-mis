@@ -37,7 +37,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-danger">No. of Deaths <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_deaths" class="form-control border-danger fw-bold" min="0" value="0" required>
+                            <input type="number" name="no_of_deaths" id="add_growth_deaths" class="form-control border-danger fw-bold" min="0" value="0" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Feed Type</label>

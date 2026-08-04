@@ -12,6 +12,7 @@ $action = $_POST['action'] ?? $_GET['action'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
     $record_date = trim($_POST['record_date'] ?? '');
+    $batch_id = !empty($_POST['batch_id']) ? intval($_POST['batch_id']) : NULL;
     $cage_id = intval($_POST['cage_id'] ?? 0);
     $no_of_eggs_loaded = intval($_POST['no_of_eggs_loaded'] ?? 0);
     $date_of_candling = !empty($_POST['date_of_candling']) ? trim($_POST['date_of_candling']) : NULL;
@@ -23,10 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $loaded_to_cage_id = intval($_POST['loaded_to_cage_id'] ?? 0);
     $remark = trim($_POST['remark'] ?? '');
 
-    // Auto-calculate Hatching Percentage: (No. of Healthy Chicks / No. of Eggs Loaded) * 100
+    // Candling Deduction Logic:
+    // Subtract candling discards from loaded eggs to get Net Viable Eggs
+    $net_viable_eggs = max(0, $no_of_eggs_loaded - $discarded_during_candling);
+
+    // Auto-calculate Hatching Percentage: (No. of Healthy Chicks / Net Viable Eggs) * 100
     $hatching_percentage = 0.00;
-    if ($no_of_eggs_loaded > 0) {
-        $hatching_percentage = round(($no_of_good_chicks / $no_of_eggs_loaded) * 100, 2);
+    if ($net_viable_eggs > 0) {
+        $hatching_percentage = round(($no_of_good_chicks / $net_viable_eggs) * 100, 2);
     }
 
     if (empty($record_date) || $cage_id <= 0 || $loaded_to_cage_id <= 0) {
@@ -35,9 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'create') {
-        $sql = "INSERT INTO hatchery_register (record_date, cage_id, no_of_eggs_loaded, date_of_candling, discarded_during_candling, date_of_hatching, no_of_hatched_eggs, no_of_deaths, no_of_good_chicks, hatching_percentage, loaded_to_cage_id, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO hatchery_register (record_date, batch_id, cage_id, no_of_eggs_loaded, date_of_candling, discarded_during_candling, date_of_hatching, no_of_hatched_eggs, no_of_deaths, no_of_good_chicks, hatching_percentage, loaded_to_cage_id, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $mysqli->prepare($sql);
-        $stmt->bind_param("siisisiiidis", $record_date, $cage_id, $no_of_eggs_loaded, $date_of_candling, $discarded_during_candling, $date_of_hatching, $no_of_hatched_eggs, $no_of_deaths, $no_of_good_chicks, $hatching_percentage, $loaded_to_cage_id, $remark);
+        $stmt->bind_param("siiisisiiidis", $record_date, $batch_id, $cage_id, $no_of_eggs_loaded, $date_of_candling, $discarded_during_candling, $date_of_hatching, $no_of_hatched_eggs, $no_of_deaths, $no_of_good_chicks, $hatching_percentage, $loaded_to_cage_id, $remark);
 
         if ($stmt->execute()) {
             header("Location: ../hatchery_register.php?status=success&msg=" . urlencode("Hatchery record added successfully."));
@@ -51,9 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        $sql = "UPDATE hatchery_register SET record_date = ?, cage_id = ?, no_of_eggs_loaded = ?, date_of_candling = ?, discarded_during_candling = ?, date_of_hatching = ?, no_of_hatched_eggs = ?, no_of_deaths = ?, no_of_good_chicks = ?, hatching_percentage = ?, loaded_to_cage_id = ?, remark = ? WHERE id = ?";
+        $sql = "UPDATE hatchery_register SET record_date = ?, batch_id = ?, cage_id = ?, no_of_eggs_loaded = ?, date_of_candling = ?, discarded_during_candling = ?, date_of_hatching = ?, no_of_hatched_eggs = ?, no_of_deaths = ?, no_of_good_chicks = ?, hatching_percentage = ?, loaded_to_cage_id = ?, remark = ? WHERE id = ?";
         $stmt = $mysqli->prepare($sql);
-        $stmt->bind_param("siisisiiidisi", $record_date, $cage_id, $no_of_eggs_loaded, $date_of_candling, $discarded_during_candling, $date_of_hatching, $no_of_hatched_eggs, $no_of_deaths, $no_of_good_chicks, $hatching_percentage, $loaded_to_cage_id, $remark, $id);
+        $stmt->bind_param("siiisisiiidisi", $record_date, $batch_id, $cage_id, $no_of_eggs_loaded, $date_of_candling, $discarded_during_candling, $date_of_hatching, $no_of_hatched_eggs, $no_of_deaths, $no_of_good_chicks, $hatching_percentage, $loaded_to_cage_id, $remark, $id);
 
         if ($stmt->execute()) {
             header("Location: ../hatchery_register.php?status=success&msg=" . urlencode("Hatchery record updated successfully."));

@@ -775,6 +775,9 @@ include './models/chicks_issuing_modals.php';
                 }, function(res) {
                     if (res.success) {
                         $('#add_growth_opening').val(res.opening_chicks_count);
+                        if (typeof res.no_of_deaths !== 'undefined') {
+                            $('#add_growth_deaths').val(res.no_of_deaths);
+                        }
                     }
                 });
             }

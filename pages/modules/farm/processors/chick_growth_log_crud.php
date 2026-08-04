@@ -35,7 +35,12 @@ if ($action === 'get_opening_balance') {
         $prev_opening = intval($row['opening_chicks_count']);
         $prev_deaths = intval($row['no_of_deaths']);
         $calc_opening = max(0, $prev_opening - $prev_deaths);
-        echo json_encode(['success' => true, 'opening_chicks_count' => $calc_opening, 'source' => 'previous_log']);
+        echo json_encode([
+            'success' => true, 
+            'opening_chicks_count' => $calc_opening, 
+            'no_of_deaths' => $prev_deaths,
+            'source' => 'previous_log'
+        ]);
         $stmt->close();
         exit();
     }
@@ -53,7 +58,12 @@ if ($action === 'get_opening_balance') {
     }
     $stmt2->close();
 
-    echo json_encode(['success' => true, 'opening_chicks_count' => $hatchery_chicks, 'source' => 'hatchery_register']);
+    echo json_encode([
+        'success' => true, 
+        'opening_chicks_count' => $hatchery_chicks, 
+        'no_of_deaths' => 0,
+        'source' => 'hatchery_register'
+    ]);
     exit();
 }
 
