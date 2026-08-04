@@ -68,16 +68,7 @@ $stmt->close();
 $overall_hatching_pct = $total_net_viable_eggs > 0 ? round(($total_healthy_chicks / $total_net_viable_eggs) * 100, 2) : 0.00;
 $month_label = date('F Y', strtotime($first_day_of_month));
 
-require_once '../../../includes/sidebar.php';
 ?>
-
-<!-- SweetAlert2 & DataTables CSS -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-
-<div id="layoutSidenav_content" class="bg-light">
-    <main class="container-fluid px-4 pt-4">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>

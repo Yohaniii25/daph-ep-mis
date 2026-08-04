@@ -1,4 +1,4 @@
-/* assets/css/farm.css - Farm Module Custom Styles */
+/* assets/css/farm.css - Farm Module Custom Styles & Theme Palette */
 
 :root {
     --farm-primary: #370709;
@@ -7,6 +7,19 @@
     --farm-success: #198754;
     --farm-info: #0dcaf0;
     --farm-danger: #dc3545;
+
+    /* Theme Color Palette from colors.txt */
+    --color-c1: #820100;
+    --color-c2: #003ddc;
+    --color-c3: #efbe2c;
+    --color-c4: #370709;
+    --color-c5: #689ccf;
+    --color-c6: #ef4016;
+    --color-c7: #d4c7b7;
+    --color-c8: #b08723;
+    --color-c9: #a07174;
+    --color-c10: #185dbd;
+    --color-c11: #8d170e;
 }
 
 /* Custom Farm Cards */
@@ -34,17 +47,160 @@
     color: #ffffff !important;
 }
 
+/* Filter Button */
+.btn-apply-filter {
+    background-color: var(--color-c4) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--color-c4);
+}
+.btn-apply-filter:hover {
+    background-color: var(--color-c1) !important;
+    border-color: var(--color-c1);
+}
+
+/* Feed Type Badges */
+.badge-feed-layer {
+    background-color: var(--color-c1) !important;
+    color: #ffffff !important;
+}
+.badge-feed-starter {
+    background-color: var(--color-c3) !important;
+    color: var(--color-c4) !important;
+}
+.badge-feed-grower {
+    background-color: var(--color-c2) !important;
+    color: #ffffff !important;
+}
+.badge-feed-cattle {
+    background-color: var(--color-c8) !important;
+    color: #ffffff !important;
+}
+
+/* Farm KPI Cards */
+.card-kpi-distributed {
+    border-left: 5px solid var(--color-c11) !important;
+}
+.text-color-c11 {
+    color: var(--color-c11) !important;
+}
+.bg-color-c11-light {
+    background-color: rgba(141, 23, 14, 0.12) !important;
+    color: var(--color-c11) !important;
+}
+
+.card-kpi-chicks {
+    border-left: 5px solid var(--color-c2) !important;
+}
+.text-color-c2 {
+    color: var(--color-c2) !important;
+}
+.bg-color-c2-light {
+    background-color: rgba(0, 61, 220, 0.12) !important;
+    color: var(--color-c2) !important;
+}
+
+.card-kpi-needed {
+    border-left: 5px solid var(--color-c3) !important;
+}
+.text-color-c8 {
+    color: var(--color-c8) !important;
+}
+.bg-color-c3-light {
+    background-color: rgba(239, 190, 44, 0.18) !important;
+    color: var(--color-c8) !important;
+}
+
+.card-kpi-opening {
+    border-left: 5px solid var(--color-c10) !important;
+}
+.text-color-c10 {
+    color: var(--color-c10) !important;
+}
+.bg-color-c10-light {
+    background-color: rgba(24, 93, 189, 0.12) !important;
+    color: var(--color-c10) !important;
+}
+
+.card-kpi-received {
+    border-left: 5px solid var(--color-c5) !important;
+}
+.bg-color-c5-light {
+    background-color: rgba(104, 156, 207, 0.18) !important;
+    color: var(--color-c10) !important;
+}
+
+.card-kpi-consumption {
+    border-left: 5px solid var(--color-c6) !important;
+}
+.text-color-c6 {
+    color: var(--color-c6) !important;
+}
+.bg-color-c6-light {
+    background-color: rgba(239, 64, 22, 0.12) !important;
+    color: var(--color-c6) !important;
+}
+
+.card-kpi-balance {
+    border-left: 5px solid var(--color-c8) !important;
+}
+
+/* Farm Tables */
+.table-header-dark {
+    background-color: var(--color-c4) !important;
+    color: #ffffff !important;
+}
+.table-header-consumption {
+    background-color: var(--color-c6) !important;
+    color: #ffffff !important;
+}
+.table-header-balance {
+    background-color: var(--color-c10) !important;
+    color: #ffffff !important;
+}
+
+.farm-table th {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.tfoot-summary {
+    background-color: var(--color-c7) !important;
+    color: var(--color-c4) !important;
+}
+
+/* Action Buttons */
+.btn-log-feed {
+    background-color: var(--color-c1) !important;
+    color: #ffffff !important;
+}
+.btn-log-feed:hover {
+    background-color: var(--color-c11) !important;
+    color: #ffffff !important;
+}
+
+.btn-edit-action {
+    border-color: var(--color-c10) !important;
+    color: var(--color-c10) !important;
+}
+.btn-edit-action:hover {
+    background-color: var(--color-c10) !important;
+    color: #ffffff !important;
+}
+
+.btn-delete-action {
+    border-color: var(--color-c6) !important;
+    color: var(--color-c6) !important;
+}
+.btn-delete-action:hover {
+    background-color: var(--color-c6) !important;
+    color: #ffffff !important;
+}
+
 /* Chart Canvas Containers */
 .farm-chart-container {
     position: relative;
     width: 100%;
     min-height: 260px;
-}
-
-/* Custom Table Styles */
-.farm-table th {
-    font-weight: 600;
-    letter-spacing: 0.02em;
 }
 
 /* Editable Cell Highlight */
