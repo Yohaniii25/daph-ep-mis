@@ -148,7 +148,6 @@ if (empty($pie_batches)) {
 }
 
 require_once 'includes/header.php';
-require_once 'includes/sidebar.php';
 
 // Detect local Chart.js path
 $chart_js_path = 'assets/js/chart.min.js';
@@ -165,9 +164,6 @@ if (!file_exists($chart_js_path)) {
 
 <!-- Locally Hosted Chart.js (NO CDN) -->
 <script src="<?= $chart_js_path ?>"></script>
-
-<div id="layoutSidenav_content" class="bg-light">
-    <main class="container-fluid px-4 pt-4">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -402,3 +398,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+<?php require_once 'includes/footer.php'; ?>

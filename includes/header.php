@@ -40,9 +40,10 @@ if ($project_root && $current_dir) {
     <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
-    <!-- Project External CSS -->
+    <!-- Dedicated Module CSS Files -->
     <link href="<?= $rel_path ?>assets/css/style.css" rel="stylesheet">
     <link href="<?= $rel_path ?>assets/css/farm.css" rel="stylesheet">
+    <link href="<?= $rel_path ?>assets/css/veterinary.css" rel="stylesheet">
 
     <link rel="icon" type="image/png" href="<?= $rel_path ?>assets/img/favicon.png">
 

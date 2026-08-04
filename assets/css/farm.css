@@ -36,125 +36,163 @@
 
 /* Primary Farm Brand Buttons */
 .btn-farm-primary {
-    background-color: var(--farm-primary) !important;
-    border-color: var(--farm-primary) !important;
+    background-color: #370709 !important;
+    background-color: var(--farm-primary, #370709) !important;
+    border-color: #370709 !important;
+    border-color: var(--farm-primary, #370709) !important;
     color: #ffffff !important;
 }
 
 .btn-farm-primary:hover, .btn-farm-primary:focus {
-    background-color: var(--farm-secondary) !important;
-    border-color: var(--farm-secondary) !important;
+    background-color: #5a1216 !important;
+    background-color: var(--farm-secondary, #5a1216) !important;
+    border-color: #5a1216 !important;
+    border-color: var(--farm-secondary, #5a1216) !important;
     color: #ffffff !important;
 }
 
 /* Filter Button */
 .btn-apply-filter {
-    background-color: var(--color-c4) !important;
+    background-color: #370709 !important;
+    background-color: var(--color-c4, #370709) !important;
     color: #ffffff !important;
-    border: 1px solid var(--color-c4);
+    border: 1px solid #370709 !important;
 }
 .btn-apply-filter:hover {
-    background-color: var(--color-c1) !important;
-    border-color: var(--color-c1);
+    background-color: #820100 !important;
+    background-color: var(--color-c1, #820100) !important;
+    border-color: #820100 !important;
 }
 
 /* Feed Type Badges */
 .badge-feed-layer {
-    background-color: var(--color-c1) !important;
+    background-color: #820100 !important;
+    background-color: var(--color-c1, #820100) !important;
     color: #ffffff !important;
 }
 .badge-feed-starter {
-    background-color: var(--color-c3) !important;
-    color: var(--color-c4) !important;
+    background-color: #efbe2c !important;
+    background-color: var(--color-c3, #efbe2c) !important;
+    color: #370709 !important;
+    color: var(--color-c4, #370709) !important;
 }
 .badge-feed-grower {
-    background-color: var(--color-c2) !important;
+    background-color: #003ddc !important;
+    background-color: var(--color-c2, #003ddc) !important;
     color: #ffffff !important;
 }
 .badge-feed-cattle {
-    background-color: var(--color-c8) !important;
+    background-color: #b08723 !important;
+    background-color: var(--color-c8, #b08723) !important;
     color: #ffffff !important;
 }
 
 /* Farm KPI Cards */
 .card-kpi-distributed {
-    border-left: 5px solid var(--color-c11) !important;
+    border-left: 5px solid #8d170e !important;
+    border-left: 5px solid var(--color-c11, #8d170e) !important;
 }
 .text-color-c11 {
-    color: var(--color-c11) !important;
+    color: #8d170e !important;
+    color: var(--color-c11, #8d170e) !important;
 }
 .bg-color-c11-light {
+    background-color: #fce8e6 !important;
     background-color: rgba(141, 23, 14, 0.12) !important;
-    color: var(--color-c11) !important;
+    color: #8d170e !important;
+    color: var(--color-c11, #8d170e) !important;
 }
 
 .card-kpi-chicks {
-    border-left: 5px solid var(--color-c2) !important;
+    border-left: 5px solid #003ddc !important;
+    border-left: 5px solid var(--color-c2, #003ddc) !important;
 }
 .text-color-c2 {
-    color: var(--color-c2) !important;
+    color: #003ddc !important;
+    color: var(--color-c2, #003ddc) !important;
 }
 .bg-color-c2-light {
+    background-color: #e6ecfc !important;
     background-color: rgba(0, 61, 220, 0.12) !important;
-    color: var(--color-c2) !important;
+    color: #003ddc !important;
+    color: var(--color-c2, #003ddc) !important;
 }
 
 .card-kpi-needed {
-    border-left: 5px solid var(--color-c3) !important;
+    border-left: 5px solid #efbe2c !important;
+    border-left: 5px solid var(--color-c3, #efbe2c) !important;
 }
 .text-color-c8 {
-    color: var(--color-c8) !important;
+    color: #b08723 !important;
+    color: var(--color-c8, #b08723) !important;
 }
 .bg-color-c3-light {
+    background-color: #fdf8e9 !important;
     background-color: rgba(239, 190, 44, 0.18) !important;
-    color: var(--color-c8) !important;
+    color: #b08723 !important;
+    color: var(--color-c8, #b08723) !important;
 }
 
 .card-kpi-opening {
-    border-left: 5px solid var(--color-c10) !important;
+    border-left: 5px solid #185dbd !important;
+    border-left: 5px solid var(--color-c10, #185dbd) !important;
 }
 .text-color-c10 {
-    color: var(--color-c10) !important;
+    color: #185dbd !important;
+    color: var(--color-c10, #185dbd) !important;
 }
 .bg-color-c10-light {
+    background-color: #e8f0fa !important;
     background-color: rgba(24, 93, 189, 0.12) !important;
-    color: var(--color-c10) !important;
+    color: #185dbd !important;
+    color: var(--color-c10, #185dbd) !important;
 }
 
 .card-kpi-received {
-    border-left: 5px solid var(--color-c5) !important;
+    border-left: 5px solid #689ccf !important;
+    border-left: 5px solid var(--color-c5, #689ccf) !important;
 }
 .bg-color-c5-light {
+    background-color: #eff5fa !important;
     background-color: rgba(104, 156, 207, 0.18) !important;
-    color: var(--color-c10) !important;
+    color: #185dbd !important;
+    color: var(--color-c10, #185dbd) !important;
 }
 
 .card-kpi-consumption {
-    border-left: 5px solid var(--color-c6) !important;
+    border-left: 5px solid #ef4016 !important;
+    border-left: 5px solid var(--color-c6, #ef4016) !important;
 }
 .text-color-c6 {
-    color: var(--color-c6) !important;
+    color: #ef4016 !important;
+    color: var(--color-c6, #ef4016) !important;
 }
 .bg-color-c6-light {
+    background-color: #fdece8 !important;
     background-color: rgba(239, 64, 22, 0.12) !important;
-    color: var(--color-c6) !important;
+    color: #ef4016 !important;
+    color: var(--color-c6, #ef4016) !important;
 }
 
 .card-kpi-balance {
-    border-left: 5px solid var(--color-c8) !important;
+    border-left: 5px solid #b08723 !important;
+    border-left: 5px solid var(--color-c8, #b08723) !important;
 }
 
 /* Farm Tables */
 .table-header-dark {
-    background-color: var(--color-c4) !important;
+    background-color: #370709 !important;
+    background-color: var(--color-c4, #370709) !important;
     color: #ffffff !important;
 }
 .table-header-consumption {
-    background-color: var(--color-c6) !important;
+    background-color: #ef4016 !important;
+    background-color: var(--color-c6, #ef4016) !important;
     color: #ffffff !important;
 }
 .table-header-balance {
-    background-color: var(--color-c10) !important;
+    background-color: #185dbd !important;
+    background-color: var(--color-c10, #185dbd) !important;
     color: #ffffff !important;
 }
 
@@ -164,35 +202,45 @@
 }
 
 .tfoot-summary {
-    background-color: var(--color-c7) !important;
-    color: var(--color-c4) !important;
+    background-color: #d4c7b7 !important;
+    background-color: var(--color-c7, #d4c7b7) !important;
+    color: #370709 !important;
+    color: var(--color-c4, #370709) !important;
 }
 
 /* Action Buttons */
 .btn-log-feed {
-    background-color: var(--color-c1) !important;
+    background-color: #820100 !important;
+    background-color: var(--color-c1, #820100) !important;
     color: #ffffff !important;
 }
 .btn-log-feed:hover {
-    background-color: var(--color-c11) !important;
+    background-color: #8d170e !important;
+    background-color: var(--color-c11, #8d170e) !important;
     color: #ffffff !important;
 }
 
 .btn-edit-action {
-    border-color: var(--color-c10) !important;
-    color: var(--color-c10) !important;
+    border-color: #185dbd !important;
+    border-color: var(--color-c10, #185dbd) !important;
+    color: #185dbd !important;
+    color: var(--color-c10, #185dbd) !important;
 }
 .btn-edit-action:hover {
-    background-color: var(--color-c10) !important;
+    background-color: #185dbd !important;
+    background-color: var(--color-c10, #185dbd) !important;
     color: #ffffff !important;
 }
 
 .btn-delete-action {
-    border-color: var(--color-c6) !important;
-    color: var(--color-c6) !important;
+    border-color: #ef4016 !important;
+    border-color: var(--color-c6, #ef4016) !important;
+    color: #ef4016 !important;
+    color: var(--color-c6, #ef4016) !important;
 }
 .btn-delete-action:hover {
-    background-color: var(--color-c6) !important;
+    background-color: #ef4016 !important;
+    background-color: var(--color-c6, #ef4016) !important;
     color: #ffffff !important;
 }
 

@@ -31,8 +31,9 @@
         }
     }
     ?>
-    <!-- Farm Module JS -->
+    <!-- Dedicated Module JS Files -->
     <script src="<?= $rel_path ?>assets/js/farm.js"></script>
+    <script src="<?= $rel_path ?>assets/js/veterinary.js"></script>
 
     <script>
         // Sidebar Toggle Script

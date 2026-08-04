@@ -1063,6 +1063,32 @@ CREATE TABLE `daily_egg_sales_returns` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `daily_egg_sales`
+--
+
+CREATE TABLE IF NOT EXISTS `daily_egg_sales` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `cage_id` int(11) NOT NULL,
+  `batch_id` int(11) NOT NULL,
+  `sale_date` date NOT NULL,
+  `table_eggs_no` int(11) DEFAULT 0,
+  `table_eggs_kg` decimal(10,2) DEFAULT 0.00,
+  `table_eggs_unit_price` decimal(10,2) DEFAULT 0.00,
+  `table_eggs_total_sales` decimal(12,2) DEFAULT 0.00,
+  `cracked_eggs_no` int(11) DEFAULT 0,
+  `cracked_eggs_kg` decimal(10,2) DEFAULT 0.00,
+  `cracked_eggs_unit_price` decimal(10,2) DEFAULT 0.00,
+  `cracked_eggs_total_sales` decimal(12,2) DEFAULT 0.00,
+  `grand_total_sales` decimal(12,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 --
 -- Dumping data for table `daily_egg_sales_returns`
 --

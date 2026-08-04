@@ -1,6 +1,6 @@
 /**
  * assets/js/farm.js - Farm Module Interactive Scripts
- * Handles DataTables initialization, modal population, live stock balance calculation, and SweetAlert dialogs.
+ * Handles DataTables initialization, modal population, live stock balance calculation, auto-calculations, and SweetAlert dialogs.
  */
 
 $(document).ready(function () {
@@ -18,6 +18,13 @@ $(document).ready(function () {
             paging: false,
             searching: false,
             info: false
+        });
+    }
+
+    if ($('#eggSalesTable').length) {
+        $('#eggSalesTable').DataTable({
+            responsive: true,
+            order: [[0, 'desc']]
         });
     }
 
@@ -62,7 +69,28 @@ $(document).ready(function () {
         $('#edit_mash_remarks').val(btn.data('remarks'));
     });
 
-    // 5. Delete Confirmation SweetAlert
+    // 5. Edit Egg Sales Modal Population Event Listener
+    $(document).on('click', '.btn-edit-egg-sale', function () {
+        const btn = $(this);
+        $('#edit_egg_sale_id').val(btn.data('id'));
+        $('#edit_egg_sale_date').val(btn.data('sale_date'));
+        $('#edit_egg_sale_cage_id').val(btn.data('cage_id'));
+        $('#edit_egg_sale_batch_id').val(btn.data('batch_id'));
+
+        $('#edit_table_eggs_no').val(btn.data('table_eggs_no'));
+        $('#edit_table_eggs_kg').val(btn.data('table_eggs_kg'));
+        $('#edit_table_eggs_unit_price').val(btn.data('table_eggs_unit_price'));
+        $('#edit_table_eggs_total_sales').val(btn.data('table_eggs_total_sales'));
+
+        $('#edit_cracked_eggs_no').val(btn.data('cracked_eggs_no'));
+        $('#edit_cracked_eggs_kg').val(btn.data('cracked_eggs_kg'));
+        $('#edit_cracked_eggs_unit_price').val(btn.data('cracked_eggs_unit_price'));
+        $('#edit_cracked_eggs_total_sales').val(btn.data('cracked_eggs_total_sales'));
+
+        $('#edit_egg_sale_remarks').val(btn.data('remarks'));
+    });
+
+    // 6. Delete Confirmation SweetAlert
     $(document).on('click', '.btn-delete', function (e) {
         e.preventDefault();
         const deleteUrl = $(this).attr('href');
@@ -88,8 +116,9 @@ $(document).ready(function () {
     });
 });
 
-// 6. Annex 4 Mash Balance Live Calculation
+// 7. Live Calculation Utilities
 document.addEventListener('DOMContentLoaded', function () {
+    // Annex 4 Mash Balance Live Calculation
     function calcMashBalance() {
         const openingEl = document.getElementById('edit_mash_opening_stock_kg');
         const receivedEl = document.getElementById('edit_mash_received_kg');
@@ -117,4 +146,55 @@ document.addEventListener('DOMContentLoaded', function () {
     if (mashModal) {
         mashModal.addEventListener('shown.bs.modal', calcMashBalance);
     }
+
+    // Egg Sales Frontend Live Auto-Calculations (Table & Cracked Eggs)
+    function calcTableEggsSales(prefix) {
+        const noEl = document.getElementById(prefix + 'table_eggs_no');
+        const kgEl = document.getElementById(prefix + 'table_eggs_kg');
+        const priceEl = document.getElementById(prefix + 'table_eggs_unit_price');
+        const totalEl = document.getElementById(prefix + 'table_eggs_total_sales');
+
+        if (priceEl && totalEl) {
+            const noVal = parseFloat(noEl ? noEl.value : 0) || 0;
+            const kgVal = parseFloat(kgEl ? kgEl.value : 0) || 0;
+            const priceVal = parseFloat(priceEl.value) || 0;
+
+            const qty = (noVal > 0) ? noVal : kgVal;
+            const total = qty * priceVal;
+            totalEl.value = total.toFixed(2);
+        }
+    }
+
+    function calcCrackedEggsSales(prefix) {
+        const noEl = document.getElementById(prefix + 'cracked_eggs_no');
+        const kgEl = document.getElementById(prefix + 'cracked_eggs_kg');
+        const priceEl = document.getElementById(prefix + 'cracked_eggs_unit_price');
+        const totalEl = document.getElementById(prefix + 'cracked_eggs_total_sales');
+
+        if (priceEl && totalEl) {
+            const noVal = parseFloat(noEl ? noEl.value : 0) || 0;
+            const kgVal = parseFloat(kgEl ? kgEl.value : 0) || 0;
+            const priceVal = parseFloat(priceEl.value) || 0;
+
+            const qty = (noVal > 0) ? noVal : kgVal;
+            const total = qty * priceVal;
+            totalEl.value = total.toFixed(2);
+        }
+    }
+
+    // Add Modal Event Listeners
+    document.querySelectorAll('.calc-table-egg').forEach(function(el) {
+        el.addEventListener('input', function() { calcTableEggsSales('add_'); });
+    });
+    document.querySelectorAll('.calc-cracked-egg').forEach(function(el) {
+        el.addEventListener('input', function() { calcCrackedEggsSales('add_'); });
+    });
+
+    // Edit Modal Event Listeners
+    document.querySelectorAll('.edit-calc-table-egg').forEach(function(el) {
+        el.addEventListener('input', function() { calcTableEggsSales('edit_'); });
+    });
+    document.querySelectorAll('.edit-calc-cracked-egg').forEach(function(el) {
+        el.addEventListener('input', function() { calcCrackedEggsSales('edit_'); });
+    });
 });

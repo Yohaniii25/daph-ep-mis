@@ -103,31 +103,31 @@ $batch_stmt->close();
                     </div>
                     <div class="card-body pt-0 pb-4">
                         <div class="row g-3">
-                            <div class="col-md-4 col-lg">
+                            <div class="col-md-4">
                                 <button style="background-color: #370709; border-color: #370709;" class="btn btn-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#eggModal">
                                     <i class="bi bi-egg-fill fs-5 mb-1 d-block"></i>
                                     Add Daily Egg Collection
                                 </button>
                             </div>
-                            <div class="col-md-4 col-lg">
+                            <div class="col-md-4">
                                 <button class="btn btn-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#salesReturnsModal">
                                     <i class="bi bi-cart-check-fill fs-5 mb-1 d-block"></i>
                                     Log Sales & Returns
                                 </button>
                             </div>
-                            <div class="col-md-4 col-lg">
+                            <div class="col-md-4">
                                 <button class="btn btn-secondary w-100 py-3" data-bs-toggle="modal" data-bs-target="#addCageModal">
                                     <i class="bi bi-grid-3x3 fs-5 mb-1 d-block text-light"></i>
                                     Add Cage
                                 </button>
                             </div>
-                            <div class="col-md-4 col-lg">
+                            <div class="col-md-4">
                                 <button class="btn btn-warning w-100 py-3 text-dark" data-bs-toggle="modal" data-bs-target="#addBatchModal">
                                     <i class="bi bi-tags-fill fs-5 mb-1 d-block"></i>
                                     Add Batch
                                 </button>
                             </div>
-                            <div class="col-md-4 col-lg">
+                            <div class="col-md-4">
                                 <button class="btn btn-dark w-100 py-3 text-light" data-bs-toggle="modal" data-bs-target="#exportColumnsModal">
                                     <i class="bi bi-file-earmark-spreadsheet-fill fs-5 mb-1 d-block text-success"></i>
                                     Export Custom Report
@@ -159,7 +159,8 @@ $batch_stmt->close();
                 <div class="tab-content bg-white p-4 shadow-sm mb-5" style="border-radius: 0 12px 12px 12px; min-height: 400px;">
                     <!-- Sub-Tab 1: Collection Records -->
                     <div class="tab-pane fade show active" id="records-pane" role="tabpanel" aria-labelledby="records-tab" tabindex="0">
-                        <table id="eggCollectionTable" class="table table-striped align-middle row-border" style="width:100%">
+                        <div class="table-responsive">
+                            <table id="eggCollectionTable" class="table table-striped align-middle row-border" style="width:100%">
                             <thead class="table-light">
                                 <tr>
                                     <th>Date</th>
@@ -265,6 +266,7 @@ $batch_stmt->close();
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        </div>
                     </div>
 
                     <!-- Sub-Tab 2: Active Cages -->

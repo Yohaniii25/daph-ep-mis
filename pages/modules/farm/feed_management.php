@@ -135,26 +135,35 @@ $stmt_mash->close();
 <div class="row align-items-center mb-4">
     <div class="col-md-7">
         <h3 class="fw-bold text-dark m-0">
-            <i class="bi bi-basket-fill me-2" style="color: var(--color-c1);"></i>Daily Feed Distribution & Annex 4: Mash Details
+            <i class="bi bi-basket-fill me-2" style="color: #820100;"></i>Daily Feed Distribution & Annex 4: Mash Details
         </h3>
         <p class="text-muted mb-0 small">Manage daily feed distribution to cages and review monthly Mash inventory summaries.</p>
     </div>
     <div class="col-md-5 d-flex justify-content-end align-items-center gap-2">
         <label class="fw-bold mb-0 text-nowrap"><i class="bi bi-calendar3 me-1"></i>Select Month:</label>
         <input type="month" id="filter_month" class="form-control form-control-sm w-auto shadow-sm" value="<?= $selected_month ?>">
-        <button type="button" id="btn_apply_filter" class="btn btn-sm btn-apply-filter px-3 fw-bold">
+        <button type="button" id="btn_apply_filter" class="btn btn-sm btn-apply-filter px-3 fw-bold" style="background-color: #370709; color: #ffffff;">
             <i class="bi bi-funnel me-1"></i>Filter
         </button>
     </div>
 </div>
 
-<!-- Alert messages -->
+<!-- Notification Status SweetAlert -->
 <?php if (isset($_GET['status']) && isset($_GET['msg'])): ?>
-    <div class="alert alert-<?= ($_GET['status'] === 'success') ? 'success' : 'danger' ?> alert-dismissible fade show shadow-sm" role="alert">
-        <i class="bi bi-<?= ($_GET['status'] === 'success') ? 'check-circle-fill' : 'exclamation-triangle-fill' ?> me-2"></i>
-        <?= htmlspecialchars($_GET['msg']) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: '<?= ($_GET['status'] === 'success') ? 'success' : 'error' ?>',
+                    title: '<?= ($_GET['status'] === 'success') ? 'Success!' : 'Error!' ?>',
+                    text: <?= json_encode($_GET['msg'] ?? '') ?>,
+                    confirmButtonColor: '#820100',
+                    timer: 3500,
+                    timerProgressBar: true
+                });
+            }
+        });
+    </script>
 <?php endif; ?>
 
 <!-- Primary Navigation Tabs -->
@@ -162,14 +171,14 @@ $stmt_mash->close();
     <li class="nav-item" role="presentation">
         <button class="nav-link fw-bold <?= ($active_tab === 'daily') ? 'active text-light' : 'text-dark bg-white' ?> border-0 py-3 px-4" 
                 id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily-pane" type="button" role="tab" 
-                style="<?= ($active_tab === 'daily') ? 'background-color: var(--color-c1); border-radius: 8px 8px 0 0;' : 'border-radius: 8px 8px 0 0;' ?>">
+                style="<?= ($active_tab === 'daily') ? 'background-color: #820100; color: #ffffff; border-radius: 8px 8px 0 0;' : 'border-radius: 8px 8px 0 0;' ?>">
             <i class="bi bi-calendar-check me-2"></i>1. Daily Feed Distribution Log
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link fw-bold <?= ($active_tab === 'annex4') ? 'active text-light' : 'text-dark bg-white' ?> border-0 py-3 px-4" 
                 id="annex4-tab" data-bs-toggle="tab" data-bs-target="#annex4-pane" type="button" role="tab"
-                style="<?= ($active_tab === 'annex4') ? 'background-color: var(--color-c10); border-radius: 8px 8px 0 0;' : 'border-radius: 8px 8px 0 0;' ?>">
+                style="<?= ($active_tab === 'annex4') ? 'background-color: #185dbd; color: #ffffff; border-radius: 8px 8px 0 0;' : 'border-radius: 8px 8px 0 0;' ?>">
             <i class="bi bi-file-earmark-spreadsheet me-2"></i>2. Annex 4: Mash Details (Monthly Summary)
         </button>
     </li>
@@ -185,39 +194,39 @@ $stmt_mash->close();
         <!-- KPI Summary Cards -->
         <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-distributed" style="border-radius: 12px;">
+                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-distributed" style="border-radius: 12px; border-left: 5px solid #8d170e !important;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <small class="text-muted fw-bold uppercase d-block">Total Feed Distributed</small>
-                            <span class="fs-3 fw-bold text-color-c11"><?= number_format($total_feed_distributed, 2) ?> <small class="fs-6">kg</small></span>
+                            <span class="fs-3 fw-bold text-color-c11" style="color: #8d170e;"><?= number_format($total_feed_distributed, 2) ?> <small class="fs-6">kg</small></span>
                         </div>
-                        <div class="p-3 rounded-circle bg-color-c11-light">
+                        <div class="p-3 rounded-circle bg-color-c11-light" style="background-color: #fce8e6; color: #8d170e;">
                             <i class="bi bi-basket-fill fs-4"></i>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-chicks" style="border-radius: 12px;">
+                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-chicks" style="border-radius: 12px; border-left: 5px solid #003ddc !important;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <small class="text-muted fw-bold uppercase d-block">Total Chicks / Stock Fed</small>
-                            <span class="fs-3 fw-bold text-color-c2"><?= number_format($total_chicks_fed) ?></span>
+                            <span class="fs-3 fw-bold text-color-c2" style="color: #003ddc;"><?= number_format($total_chicks_fed) ?></span>
                         </div>
-                        <div class="p-3 rounded-circle bg-color-c2-light">
+                        <div class="p-3 rounded-circle bg-color-c2-light" style="background-color: #e6ecfc; color: #003ddc;">
                             <i class="bi bi-people-fill fs-4"></i>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-needed" style="border-radius: 12px;">
+                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-needed" style="border-radius: 12px; border-left: 5px solid #efbe2c !important;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <small class="text-muted fw-bold uppercase d-block">Total Feed Needed</small>
-                            <span class="fs-3 fw-bold text-color-c8"><?= number_format($total_feed_needed, 2) ?> <small class="fs-6">kg</small></span>
+                            <span class="fs-3 fw-bold text-color-c8" style="color: #b08723;"><?= number_format($total_feed_needed, 2) ?> <small class="fs-6">kg</small></span>
                         </div>
-                        <div class="p-3 rounded-circle bg-color-c3-light">
+                        <div class="p-3 rounded-circle bg-color-c3-light" style="background-color: #fdf8e9; color: #b08723;">
                             <i class="bi bi-calculator-fill fs-4"></i>
                         </div>
                     </div>
@@ -227,15 +236,15 @@ $stmt_mash->close();
 
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
             <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold text-dark m-0"><i class="bi bi-list-check me-2 text-color-c11"></i>Daily Feed Distribution Entries for <?= $month_label ?></h5>
-                <button class="btn btn-log-feed fw-bold px-4 text-light" data-bs-toggle="modal" data-bs-target="#addDailyFeedModal">
+                <h5 class="fw-bold text-dark m-0"><i class="bi bi-list-check me-2 text-color-c11" style="color: #8d170e;"></i>Daily Feed Distribution Entries for <?= $month_label ?></h5>
+                <button class="btn btn-log-feed fw-bold px-4 text-light" style="background-color: #820100; color: #ffffff;" data-bs-toggle="modal" data-bs-target="#addDailyFeedModal">
                     <i class="bi bi-plus-circle me-1"></i>Log Daily Feed
                 </button>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle text-center" id="dailyFeedTable">
-                        <thead class="table-header-dark">
+                        <thead class="table-header-dark" style="background-color: #370709; color: #ffffff;">
                             <tr>
                                 <th>Date</th>
                                 <th>Feed Type</th>
@@ -257,7 +266,13 @@ $stmt_mash->close();
                                             <?= ($r['feed_type'] === 'Layer') ? 'badge-feed-layer' : '' ?>
                                             <?= ($r['feed_type'] === 'Starter') ? 'badge-feed-starter' : '' ?>
                                             <?= ($r['feed_type'] === 'Grower') ? 'badge-feed-grower' : '' ?>
-                                            <?= ($r['feed_type'] === 'Cattle Feed') ? 'badge-feed-cattle' : '' ?>">
+                                            <?= ($r['feed_type'] === 'Cattle Feed') ? 'badge-feed-cattle' : '' ?>"
+                                            style="
+                                            <?= ($r['feed_type'] === 'Layer') ? 'background-color: #820100; color: #ffffff;' : '' ?>
+                                            <?= ($r['feed_type'] === 'Starter') ? 'background-color: #efbe2c; color: #370709;' : '' ?>
+                                            <?= ($r['feed_type'] === 'Grower') ? 'background-color: #003ddc; color: #ffffff;' : '' ?>
+                                            <?= ($r['feed_type'] === 'Cattle Feed') ? 'background-color: #b08723; color: #ffffff;' : '' ?>
+                                            ">
                                             <?= htmlspecialchars($r['feed_type']) ?>
                                         </span>
                                     </td>
@@ -265,10 +280,10 @@ $stmt_mash->close();
                                     <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($r['batch_no'] ?? '-') ?></span></td>
                                     <td><?= number_format($r['no_of_chicks']) ?></td>
                                     <td><?= number_format($r['amount_needed_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c11"><?= number_format($r['amount_distributed_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c11" style="color: #8d170e;"><?= number_format($r['amount_distributed_kg'], 2) ?></td>
                                     <td class="small"><?= htmlspecialchars($r['remarks'] ?? '-') ?></td>
                                     <td class="text-nowrap">
-                                        <button class="btn btn-sm btn-edit-action me-1 btn-edit-feed"
+                                        <button class="btn btn-sm btn-edit-action me-1 btn-edit-feed" style="border-color: #185dbd; color: #185dbd;"
                                                 data-id="<?= $r['id'] ?>"
                                                 data-distribution_date="<?= $r['distribution_date'] ?>"
                                                 data-cage_id="<?= $r['cage_id'] ?>"
@@ -281,7 +296,7 @@ $stmt_mash->close();
                                                 data-bs-toggle="modal" data-bs-target="#editDailyFeedModal">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
-                                        <a href="processors/daily_feed_distribution_crud.php?action=delete&id=<?= $r['id'] ?>" class="btn btn-sm btn-delete-action btn-delete">
+                                        <a href="processors/daily_feed_distribution_crud.php?action=delete&id=<?= $r['id'] ?>" class="btn btn-sm btn-delete-action btn-delete" style="border-color: #ef4016; color: #ef4016;">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </td>
@@ -303,46 +318,46 @@ $stmt_mash->close();
         <!-- Summary Cards -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-opening" style="border-radius: 12px;">
+                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-opening" style="border-radius: 12px; border-left: 5px solid #185dbd !important;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <small class="text-muted fw-bold uppercase d-block">Total Opening Stock</small>
-                            <span class="fs-4 fw-bold text-color-c10"><?= number_format($total_opening_stock, 2) ?> kg</span>
+                            <span class="fs-4 fw-bold text-color-c10" style="color: #185dbd;"><?= number_format($total_opening_stock, 2) ?> kg</span>
                         </div>
-                        <div class="p-3 bg-color-c10-light rounded-circle"><i class="bi bi-box-seam-fill fs-4"></i></div>
+                        <div class="p-3 bg-color-c10-light rounded-circle" style="background-color: #e8f0fa; color: #185dbd;"><i class="bi bi-box-seam-fill fs-4"></i></div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-received" style="border-radius: 12px;">
+                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-received" style="border-radius: 12px; border-left: 5px solid #689ccf !important;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <small class="text-muted fw-bold uppercase d-block">Total Received</small>
-                            <span class="fs-4 fw-bold text-color-c10"><?= number_format($total_received_stock, 2) ?> kg</span>
+                            <span class="fs-4 fw-bold text-color-c10" style="color: #185dbd;"><?= number_format($total_received_stock, 2) ?> kg</span>
                         </div>
-                        <div class="p-3 bg-color-c5-light rounded-circle"><i class="bi bi-arrow-down-left-circle-fill fs-4"></i></div>
+                        <div class="p-3 bg-color-c5-light rounded-circle" style="background-color: #eff5fa; color: #185dbd;"><i class="bi bi-arrow-down-left-circle-fill fs-4"></i></div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-consumption" style="border-radius: 12px;">
+                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-consumption" style="border-radius: 12px; border-left: 5px solid #ef4016 !important;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <small class="text-muted fw-bold uppercase d-block">Total Monthly Consumption</small>
-                            <span class="fs-4 fw-bold text-color-c6"><?= number_format($total_consumption, 2) ?> kg</span>
+                            <span class="fs-4 fw-bold text-color-c6" style="color: #ef4016;"><?= number_format($total_consumption, 2) ?> kg</span>
                         </div>
-                        <div class="p-3 bg-color-c6-light rounded-circle"><i class="bi bi-fire fs-4"></i></div>
+                        <div class="p-3 bg-color-c6-light rounded-circle" style="background-color: #fdece8; color: #ef4016;"><i class="bi bi-fire fs-4"></i></div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-balance" style="border-radius: 12px;">
+                <div class="card border-0 shadow-sm p-3 bg-white card-kpi-balance" style="border-radius: 12px; border-left: 5px solid #b08723 !important;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <small class="text-muted fw-bold uppercase d-block">Total Balance Stock</small>
-                            <span class="fs-4 fw-bold text-color-c8"><?= number_format($total_balance_stock, 2) ?> kg</span>
+                            <span class="fs-4 fw-bold text-color-c8" style="color: #b08723;"><?= number_format($total_balance_stock, 2) ?> kg</span>
                         </div>
-                        <div class="p-3 rounded-circle bg-color-c3-light"><i class="bi bi-pie-chart-fill fs-4"></i></div>
+                        <div class="p-3 rounded-circle bg-color-c3-light" style="background-color: #fdf8e9; color: #b08723;"><i class="bi bi-pie-chart-fill fs-4"></i></div>
                     </div>
                 </div>
             </div>
@@ -350,19 +365,19 @@ $stmt_mash->close();
 
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
             <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold text-dark m-0"><i class="bi bi-file-earmark-spreadsheet me-2 text-color-c10"></i>Annex 4: Mash Details Monthly Inventory Register (<?= $month_label ?>)</h5>
+                <h5 class="fw-bold text-dark m-0"><i class="bi bi-file-earmark-spreadsheet me-2 text-color-c10" style="color: #185dbd;"></i>Annex 4: Mash Details Monthly Inventory Register (<?= $month_label ?>)</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle text-center" id="mashTable">
-                        <thead class="table-header-dark">
+                        <thead class="table-header-dark" style="background-color: #370709; color: #ffffff;">
                             <tr>
                                 <th class="py-3">Feed Type</th>
                                 <th class="py-3">Opening Stock (kg)</th>
                                 <th class="py-3">Received (kg)</th>
-                                <th class="py-3 table-header-consumption">Consumption (Auto-Calculated kg)</th>
+                                <th class="py-3 table-header-consumption" style="background-color: #ef4016; color: #ffffff;">Consumption (Auto-Calculated kg)</th>
                                 <th class="py-3">Issued to Other Farm (kg)</th>
-                                <th class="py-3 table-header-balance">Balance Stock (Auto-Calculated kg)</th>
+                                <th class="py-3 table-header-balance" style="background-color: #185dbd; color: #ffffff;">Balance Stock (Auto-Calculated kg)</th>
                                 <th class="py-3">Remarks</th>
                                 <th class="py-3">Actions</th>
                             </tr>
@@ -371,16 +386,16 @@ $stmt_mash->close();
                             <?php foreach ($mash_records as $m): ?>
                                 <tr>
                                     <td class="fw-bold text-start fs-6">
-                                        <i class="bi bi-arrow-right-short text-color-c10 me-1"></i><?= htmlspecialchars($m['feed_type']) ?>
+                                        <i class="bi bi-arrow-right-short text-color-c10 me-1" style="color: #185dbd;"></i><?= htmlspecialchars($m['feed_type']) ?>
                                     </td>
                                     <td class="fw-bold"><?= number_format($m['opening_stock_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c10"><?= number_format($m['received_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c6 bg-color-c6-light"><?= number_format($m['consumption_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c8"><?= number_format($m['issued_other_farm_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c10 bg-color-c10-light"><?= number_format($m['balance_stock_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c10" style="color: #185dbd;"><?= number_format($m['received_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c6 bg-color-c6-light" style="color: #ef4016; background-color: #fdece8;"><?= number_format($m['consumption_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c8" style="color: #b08723;"><?= number_format($m['issued_other_farm_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c10 bg-color-c10-light" style="color: #185dbd; background-color: #e8f0fa;"><?= number_format($m['balance_stock_kg'], 2) ?></td>
                                     <td class="small"><?= htmlspecialchars($m['remarks'] ?? '-') ?></td>
                                     <td>
-                                        <button class="btn btn-sm btn-edit-action btn-edit-mash fw-bold px-3"
+                                        <button class="btn btn-sm btn-edit-action btn-edit-mash fw-bold px-3" style="border-color: #185dbd; color: #185dbd;"
                                                 data-id="<?= $m['id'] ?>"
                                                 data-feed_type="<?= htmlspecialchars($m['feed_type']) ?>"
                                                 data-opening_stock_kg="<?= $m['opening_stock_kg'] ?>"
@@ -396,14 +411,14 @@ $stmt_mash->close();
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
-                        <tfoot class="tfoot-summary fw-bold">
+                        <tfoot class="tfoot-summary fw-bold" style="background-color: #d4c7b7; color: #370709;">
                             <tr>
                                 <td class="text-start">TOTAL SUMMARY</td>
                                 <td><?= number_format($total_opening_stock, 2) ?> kg</td>
                                 <td><?= number_format($total_received_stock, 2) ?> kg</td>
-                                <td class="text-color-c6"><?= number_format($total_consumption, 2) ?> kg</td>
+                                <td class="text-color-c6" style="color: #ef4016;"><?= number_format($total_consumption, 2) ?> kg</td>
                                 <td><?= number_format($total_issued_other, 2) ?> kg</td>
-                                <td class="text-color-c10"><?= number_format($total_balance_stock, 2) ?> kg</td>
+                                <td class="text-color-c10" style="color: #185dbd;"><?= number_format($total_balance_stock, 2) ?> kg</td>
                                 <td colspan="2"></td>
                             </tr>
                         </tfoot>
