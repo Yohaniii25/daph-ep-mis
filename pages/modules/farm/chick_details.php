@@ -99,6 +99,32 @@ if ($res_c) {
     }
 }
 $stmt_c->close();
+// -------------------------------------------------------------
+// 4. Fetch Chicks Issuing Details (chicks_issuing_details)
+// -------------------------------------------------------------
+$sql_issuing = "SELECT * FROM chicks_issuing_details 
+                WHERE record_month BETWEEN ? AND ?
+                ORDER BY record_month DESC, id DESC";
+$stmt_issuing = $mysqli->prepare($sql_issuing);
+$stmt_issuing->bind_param("ss", $first_day_of_month, $last_day_of_month);
+$stmt_issuing->execute();
+$res_issuing = $stmt_issuing->get_result();
+$issuing_records = [];
+$issuing_total_hatched = 0;
+$issuing_total_live = 0;
+$issuing_total_deaths_sexing = 0;
+$issuing_total_issued = 0;
+
+if ($res_issuing) {
+    while ($r = $res_issuing->fetch_assoc()) {
+        $issuing_records[] = $r;
+        $issuing_total_hatched += intval($r['no_of_eggs_hatched']);
+        $issuing_total_live += (intval($r['live_chicks_pullets']) + intval($r['live_chicks_cockerels']));
+        $issuing_total_deaths_sexing += (intval($r['deaths_sexing_pullets']) + intval($r['deaths_sexing_cockerels']) + intval($r['deaths_sexing_unsexed']));
+        $issuing_total_issued += (intval($r['issue_cockerels_pullets']) + intval($r['issue_day_old_unsex']) + intval($r['issue_day_old_cockerel']) + intval($r['issue_month_old_unsexed']));
+    }
+}
+$stmt_issuing->close();
 
 require_once '../../../includes/sidebar.php';
 ?>
@@ -168,9 +194,14 @@ require_once '../../../includes/sidebar.php';
                     <i class="bi bi-activity me-2"></i>Scenario B: Month-Old Chicks Growth Log
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
+            <li class="nav-item me-2" role="presentation">
                 <button class="nav-link <?= ($active_tab === 'month_old') ? 'active' : '' ?> fw-bold py-3 px-4" id="month-old-tab" data-bs-toggle="pill" data-bs-target="#month-old-pane" type="button" role="tab" aria-controls="month-old-pane" aria-selected="<?= ($active_tab === 'month_old') ? 'true' : 'false' ?>" style="--bs-nav-pills-link-active-bg: #198754;">
                     <i class="bi bi-truck me-2"></i>Scenario C: Month-Old Chicks Distribution
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link <?= ($active_tab === 'issuing') ? 'active' : '' ?> fw-bold py-3 px-4" id="issuing-tab" data-bs-toggle="pill" data-bs-target="#issuing-pane" type="button" role="tab" aria-controls="issuing-pane" aria-selected="<?= ($active_tab === 'issuing') ? 'true' : 'false' ?>" style="--bs-nav-pills-link-active-bg: #8d170e;">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Chicks Issuing Summary Report
                 </button>
             </li>
         </ul>
@@ -473,370 +504,170 @@ require_once '../../../includes/sidebar.php';
                 </div>
             </div>
 
+            <!-- ========================================================= -->
+            <!-- TAB 4: CHICKS ISSUING DETAILS SUMMARY REPORT -->
+            <!-- ========================================================= -->
+            <div class="tab-pane fade <?= ($active_tab === 'issuing') ? 'show active' : '' ?>" id="issuing-pane" role="tabpanel" aria-labelledby="issuing-tab" tabindex="0">
+                
+                <!-- KPI Summary Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 5px solid #8d170e !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted fw-bold uppercase d-block">Total Eggs Hatched</small>
+                                    <span class="fs-3 fw-bold" style="color: #8d170e;"><?= number_format($issuing_total_hatched) ?></span>
+                                </div>
+                                <div class="p-3 rounded-circle" style="background-color: #f3ebf9; color: #8d170e;">
+                                    <i class="bi bi-egg-fill fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 5px solid #0d6efd !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted fw-bold uppercase d-block">Live Chicks Count</small>
+                                    <span class="fs-3 fw-bold text-primary"><?= number_format($issuing_total_live) ?></span>
+                                </div>
+                                <div class="p-3 bg-primary-subtle rounded-circle text-primary">
+                                    <i class="bi bi-check-circle-fill fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 5px solid #dc3545 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted fw-bold uppercase d-block">Post-Sexing Deaths</small>
+                                    <span class="fs-3 fw-bold text-danger"><?= number_format($issuing_total_deaths_sexing) ?></span>
+                                </div>
+                                <div class="p-3 bg-danger-subtle rounded-circle text-danger">
+                                    <i class="bi bi-x-circle-fill fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm p-3 bg-white" style="border-radius: 12px; border-left: 5px solid #198754 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted fw-bold uppercase d-block">Total Chicks Issued</small>
+                                    <span class="fs-3 fw-bold text-success"><?= number_format($issuing_total_issued) ?></span>
+                                </div>
+                                <div class="p-3 bg-success-subtle rounded-circle text-success">
+                                    <i class="bi bi-box-arrow-up-right fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-light m-0"><i class="bi bi-file-earmark-spreadsheet me-2" style="color: #8d170e;"></i>Chicks Issuing Monthly Summary Register</h5>
+                        <button class="btn fw-bold px-4 text-light" style="background-color: #8d170e;" data-bs-toggle="modal" data-bs-target="#addIssuingModal">
+                            <i class="bi bi-plus-circle me-1"></i>Log Chicks Issuing Record
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="issuingTable">
+                                <thead class="table-light" style="background-color: #8d170e;">
+                                    <tr>
+                                        <th rowspan="2" class="align-middle text-center">Month</th>
+                                        <th rowspan="2" class="align-middle text-center">Batch No</th>
+                                        <th colspan="4" class="text-center bg-secondary">Hatchery & Monthly Stock</th>
+                                        <th colspan="2" class="text-center bg-primary">No. of Live Chicks</th>
+                                        <th colspan="3" class="text-center bg-danger">Total Deaths (Sexing To Issue)</th>
+                                        <th colspan="4" class="text-center bg-success">No. of Live Chicks Up To Issue</th>
+                                        <th rowspan="2" class="align-middle text-center">Remarks</th>
+                                        <th rowspan="2" class="align-middle text-center">Actions</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="small text-center">Eggs Hatched</th>
+                                        <th class="small text-center">Starting Bal.</th>
+                                        <th class="small text-center">Deaths (Pre-Sex)</th>
+                                        <th class="small text-center">Received</th>
+                                        <th class="small text-center">Pullets</th>
+                                        <th class="small text-center">Cockerels</th>
+                                        <th class="small text-center">Pullets</th>
+                                        <th class="small text-center">Cockerels</th>
+                                        <th class="small text-center">Unsexed</th>
+                                        <th class="small text-center">Cock./Pullet</th>
+                                        <th class="small text-center">Day-Old Unsex</th>
+                                        <th class="small text-center">Day-Old Cock.</th>
+                                        <th class="small text-center">Month-Old Unsex</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($issuing_records as $r): ?>
+                                        <tr>
+                                            <td class="fw-bold"><?= date('M Y', strtotime($r['record_month'])) ?></td>
+                                            <td><span class="badge text-white" style="background-color: #6f42c1;"><?= htmlspecialchars($r['batch_no']) ?></span></td>
+                                            <td class="text-center"><?= number_format($r['no_of_eggs_hatched']) ?></td>
+                                            <td class="text-center"><?= number_format($r['starting_balance_of_month']) ?></td>
+                                            <td class="text-center text-danger"><?= number_format($r['deaths_before_sexing']) ?></td>
+                                            <td class="text-center"><?= number_format($r['received']) ?></td>
+                                            <td class="text-center fw-bold text-primary"><?= number_format($r['live_chicks_pullets']) ?></td>
+                                            <td class="text-center fw-bold text-primary"><?= number_format($r['live_chicks_cockerels']) ?></td>
+                                            <td class="text-center text-danger"><?= number_format($r['deaths_sexing_pullets']) ?></td>
+                                            <td class="text-center text-danger"><?= number_format($r['deaths_sexing_cockerels']) ?></td>
+                                            <td class="text-center text-danger"><?= number_format($r['deaths_sexing_unsexed']) ?></td>
+                                            <td class="text-center fw-bold text-success"><?= number_format($r['issue_cockerels_pullets']) ?></td>
+                                            <td class="text-center fw-bold text-success"><?= number_format($r['issue_day_old_unsex']) ?></td>
+                                            <td class="text-center fw-bold text-success"><?= number_format($r['issue_day_old_cockerel']) ?></td>
+                                            <td class="text-center fw-bold text-success"><?= number_format($r['issue_month_old_unsexed']) ?></td>
+                                            <td class="small"><?= htmlspecialchars($r['remarks'] ?? '-') ?></td>
+                                            <td class="text-nowrap">
+                                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-issuing" 
+                                                        data-id="<?= $r['id'] ?>"
+                                                        data-record_month="<?= date('Y-m', strtotime($r['record_month'])) ?>"
+                                                        data-batch_no="<?= htmlspecialchars($r['batch_no']) ?>"
+                                                        data-no_of_eggs_hatched="<?= $r['no_of_eggs_hatched'] ?>"
+                                                        data-starting_balance_of_month="<?= $r['starting_balance_of_month'] ?>"
+                                                        data-deaths_before_sexing="<?= $r['deaths_before_sexing'] ?>"
+                                                        data-received="<?= $r['received'] ?>"
+                                                        data-live_chicks_pullets="<?= $r['live_chicks_pullets'] ?>"
+                                                        data-live_chicks_cockerels="<?= $r['live_chicks_cockerels'] ?>"
+                                                        data-deaths_sexing_pullets="<?= $r['deaths_sexing_pullets'] ?>"
+                                                        data-deaths_sexing_cockerels="<?= $r['deaths_sexing_cockerels'] ?>"
+                                                        data-deaths_sexing_unsexed="<?= $r['deaths_sexing_unsexed'] ?>"
+                                                        data-issue_cockerels_pullets="<?= $r['issue_cockerels_pullets'] ?>"
+                                                        data-issue_day_old_unsex="<?= $r['issue_day_old_unsex'] ?>"
+                                                        data-issue_day_old_cockerel="<?= $r['issue_day_old_cockerel'] ?>"
+                                                        data-issue_month_old_unsexed="<?= $r['issue_month_old_unsexed'] ?>"
+                                                        data-remarks="<?= htmlspecialchars($r['remarks'] ?? '') ?>"
+                                                        data-bs-toggle="modal" data-bs-target="#editIssuingModal">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                                <a href="processors/chicks_issuing_crud.php?action=delete&id=<?= $r['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </main>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODALS FOR SCENARIO A: GROWTH LOG -->
-<!-- ========================================================================= -->
-
-<!-- Add Growth Modal -->
-<div class="modal fade" id="addGrowthModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="processors/chick_growth_log_crud.php" method="POST">
-                <input type="hidden" name="action" value="create">
-                <div class="modal-header text-light" style="background-color: #370709;">
-                    <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-activity me-2"></i>Log Daily Growth & Mortality</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Record Date <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="add_growth_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Select Cage <span class="text-danger">*</span></label>
-                            <select name="cage_id" id="add_growth_cage_id" class="form-select" required>
-                                <option value="">-- Select Cage --</option>
-                                <?php foreach ($cages as $c): ?>
-                                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['cage_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-primary">Opening Chicks Count <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="number" name="opening_chicks_count" id="add_growth_opening" class="form-control fw-bold border-primary" min="0" value="0" required>
-                                <button type="button" class="btn btn-outline-primary" id="btn_auto_calc_opening" title="Auto-fetch balance from previous log/hatchery">
-                                    <i class="bi bi-arrow-repeat"></i> Auto-Fetch
-                                </button>
-                            </div>
-                            <small class="text-muted">Calculated as Previous Day Opening - Deaths (or Hatchery Register if 1st entry).</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-danger">No. of Deaths <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_deaths" class="form-control border-danger fw-bold" min="0" value="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Feed Type</label>
-                            <input type="text" name="feed_type" class="form-control" placeholder="e.g. Starter Mesh, Grower Feed">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Feed To Be Given (kg)</label>
-                            <input type="number" step="0.01" name="feed_amount_to_be_given" class="form-control" min="0" value="0.00">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Feed Given (kg)</label>
-                            <input type="number" step="0.01" name="feed_amount_given" class="form-control" min="0" value="0.00">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Vaccination / Treatment Details</label>
-                            <textarea name="vaccination_treatment" class="form-control" rows="2" placeholder="e.g. ND Vaccine, Vitamins..."></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary fw-bold" style="background-color: #370709; border-color: #370709;">Save Growth Log</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Growth Modal -->
-<div class="modal fade" id="editGrowthModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="processors/chick_growth_log_crud.php" method="POST">
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" name="id" id="edit_growth_id">
-                <div class="modal-header text-white" style="background-color: #370709;">
-                    <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-pencil-square me-2"></i>Edit Growth Log Entry</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Record Date <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="edit_growth_record_date" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Select Cage <span class="text-danger">*</span></label>
-                            <select name="cage_id" id="edit_growth_cage_id" class="form-select" required>
-                                <option value="">-- Select Cage --</option>
-                                <?php foreach ($cages as $c): ?>
-                                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['cage_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-primary">Opening Chicks Count <span class="text-danger">*</span></label>
-                            <input type="number" name="opening_chicks_count" id="edit_growth_opening" class="form-control fw-bold border-primary" min="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-danger">No. of Deaths <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_deaths" id="edit_growth_deaths" class="form-control border-danger fw-bold" min="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Feed Type</label>
-                            <input type="text" name="feed_type" id="edit_growth_feed_type" class="form-control">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Feed To Be Given (kg)</label>
-                            <input type="number" step="0.01" name="feed_amount_to_be_given" id="edit_growth_feed_to_be_given" class="form-control" min="0">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Feed Given (kg)</label>
-                            <input type="number" step="0.01" name="feed_amount_given" id="edit_growth_feed_given" class="form-control" min="0">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Vaccination / Treatment Details</label>
-                            <textarea name="vaccination_treatment" id="edit_growth_vaccination" class="form-control" rows="2"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary fw-bold" style="background-color: #370709; border-color: #370709;">Update Growth Log</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ========================================================================= -->
-<!-- MODALS FOR SCENARIO B: DAY-OLD DISTRIBUTION -->
-<!-- ========================================================================= -->
-
-<!-- Add Day-Old Distribution Modal -->
-<div class="modal fade" id="addDayOldModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="processors/day_old_distribution_crud.php" method="POST">
-                <input type="hidden" name="action" value="create">
-                <div class="modal-header text-white" style="background-color: #0d6efd;">
-                    <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-box-arrow-up-right me-2"></i>Log Day-Old Chicks Distribution</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Record Date <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">No. of Chicks Produced</label>
-                            <input type="number" name="no_of_chicks_produced" class="form-control" min="0" value="0">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Sent to Place / Destination <span class="text-danger">*</span></label>
-                            <input type="text" name="sent_to_place" class="form-control" placeholder="e.g. Trincomalee, Colombo, Farm X" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-primary">No. of Chicks Sent <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_chicks_sent" id="add_day_old_sent" class="form-control calc-day-old fw-bold border-primary" min="0" value="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Price Per Chick (Rs.) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" name="price_per_chick" id="add_day_old_price" class="form-control calc-day-old fw-bold" min="0" value="0.00" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-success">Total Amount (Rs.)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-success text-white">Rs.</span>
-                                <input type="text" id="add_day_old_total" class="form-control bg-light fw-bold text-success" readonly value="0.00">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary fw-bold">Save Day-Old Distribution</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Day-Old Distribution Modal -->
-<div class="modal fade" id="editDayOldModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="processors/day_old_distribution_crud.php" method="POST">
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" name="id" id="edit_day_old_id">
-                <div class="modal-header text-white" style="background-color: #0d6efd;">
-                    <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-pencil-square me-2"></i>Edit Day-Old Chicks Distribution</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Record Date <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="edit_day_old_date" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">No. of Chicks Produced</label>
-                            <input type="number" name="no_of_chicks_produced" id="edit_day_old_produced" class="form-control" min="0">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Sent to Place / Destination <span class="text-danger">*</span></label>
-                            <input type="text" name="sent_to_place" id="edit_day_old_place" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-primary">No. of Chicks Sent <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_chicks_sent" id="edit_day_old_sent" class="form-control edit-calc-day-old fw-bold border-primary" min="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Price Per Chick (Rs.) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" name="price_per_chick" id="edit_day_old_price" class="form-control edit-calc-day-old fw-bold" min="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-success">Total Amount (Rs.)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-success text-white">Rs.</span>
-                                <input type="text" id="edit_day_old_total" class="form-control bg-light fw-bold text-success" readonly value="0.00">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary fw-bold">Update Day-Old Distribution</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ========================================================================= -->
-<!-- MODALS FOR SCENARIO C: MONTH-OLD DISTRIBUTION -->
-<!-- ========================================================================= -->
-
-<!-- Add Month-Old Distribution Modal -->
-<div class="modal fade" id="addMonthOldModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="processors/month_old_distribution_crud.php" method="POST">
-                <input type="hidden" name="action" value="create">
-                <div class="modal-header text-white" style="background-color: #198754;">
-                    <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-truck me-2"></i>Log Month-Old Chicks Distribution</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Record Date <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Source Cage (Data Link)</label>
-                            <select name="cage_id" id="add_month_old_cage_id" class="form-select">
-                                <option value="">-- Select Source Cage --</option>
-                                <?php foreach ($cages as $c): ?>
-                                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['cage_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-secondary">No. of Chicks Produced (Surviving Balance)</label>
-                            <input type="number" name="no_of_chicks_produced" id="add_month_old_produced" class="form-control" min="0" value="0">
-                            <small class="text-muted">Auto-populated from growth log surviving balance when cage is selected.</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Sent to Place / Destination <span class="text-danger">*</span></label>
-                            <input type="text" name="sent_to_place" class="form-control" placeholder="e.g. Trincomalee, Ampara, Batticaloa" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-success">No. of Chicks Sent <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_chicks_sent" id="add_month_old_sent" class="form-control calc-month-old fw-bold border-success" min="0" value="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Price Per Chick (Rs.) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" name="price_per_chick" id="add_month_old_price" class="form-control calc-month-old fw-bold" min="0" value="0.00" required>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold text-success">Total Amount (Rs.)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-success text-white">Rs.</span>
-                                <input type="text" id="add_month_old_total" class="form-control bg-light fw-bold text-success fs-5" readonly value="0.00">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success fw-bold">Save Month-Old Distribution</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Month-Old Distribution Modal -->
-<div class="modal fade" id="editMonthOldModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="processors/month_old_distribution_crud.php" method="POST">
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" name="id" id="edit_month_old_id">
-                <div class="modal-header text-white" style="background-color: #198754;">
-                    <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-pencil-square me-2"></i>Edit Month-Old Chicks Distribution</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Record Date <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="edit_month_old_date" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Source Cage</label>
-                            <select name="cage_id" id="edit_month_old_cage_id" class="form-select">
-                                <option value="">-- Select Source Cage --</option>
-                                <?php foreach ($cages as $c): ?>
-                                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['cage_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">No. of Chicks Produced</label>
-                            <input type="number" name="no_of_chicks_produced" id="edit_month_old_produced" class="form-control" min="0">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Sent to Place / Destination <span class="text-danger">*</span></label>
-                            <input type="text" name="sent_to_place" id="edit_month_old_place" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-success">No. of Chicks Sent <span class="text-danger">*</span></label>
-                            <input type="number" name="no_of_chicks_sent" id="edit_month_old_sent" class="form-control edit-calc-month-old fw-bold border-success" min="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Price Per Chick (Rs.) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" name="price_per_chick" id="edit_month_old_price" class="form-control edit-calc-month-old fw-bold" min="0" required>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold text-success">Total Amount (Rs.)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-success text-white">Rs.</span>
-                                <input type="text" id="edit_month_old_total" class="form-control bg-light fw-bold text-success fs-5" readonly value="0.00">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success fw-bold">Update Month-Old Distribution</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- Modal views -->
+<?php
+include './models/day_old_distribution_modals.php';
+include './models/chick_growth_modals.php';
+include './models/month_old_distribution_modals.php';
+include './models/chicks_issuing_modals.php';
+?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -910,6 +741,15 @@ require_once '../../../includes/sidebar.php';
             pageLength: 25,
             dom: commonDom,
             buttons: createButtonsConfig('portrait')
+        });
+
+        $('#issuingTable').DataTable({
+            order: [
+                [0, 'desc']
+            ],
+            pageLength: 25,
+            dom: commonDom,
+            buttons: createButtonsConfig('landscape')
         });
 
         // Month filter action
@@ -1028,6 +868,30 @@ require_once '../../../includes/sidebar.php';
             $('#edit_month_old_sent').val(btn.data('no_of_chicks_sent'));
             $('#edit_month_old_price').val(btn.data('price_per_chick'));
             calcMonthOldEditTotal();
+        });
+
+        // -------------------------------------------------------------
+        // Populate Edit Chicks Issuing Summary Modal
+        // -------------------------------------------------------------
+        $(document).on('click', '.btn-edit-issuing', function() {
+            const btn = $(this);
+            $('#edit_issuing_id').val(btn.data('id'));
+            $('#edit_issuing_record_month').val(btn.data('record_month'));
+            $('#edit_issuing_batch_no').val(btn.data('batch_no'));
+            $('#edit_issuing_eggs_hatched').val(btn.data('no_of_eggs_hatched'));
+            $('#edit_issuing_starting_bal').val(btn.data('starting_balance_of_month'));
+            $('#edit_issuing_deaths_before_sex').val(btn.data('deaths_before_sexing'));
+            $('#edit_issuing_received').val(btn.data('received'));
+            $('#edit_issuing_live_pullets').val(btn.data('live_chicks_pullets'));
+            $('#edit_issuing_live_cockerels').val(btn.data('live_chicks_cockerels'));
+            $('#edit_issuing_deaths_pullets').val(btn.data('deaths_sexing_pullets'));
+            $('#edit_issuing_deaths_cockerels').val(btn.data('deaths_sexing_cockerels'));
+            $('#edit_issuing_deaths_unsexed').val(btn.data('deaths_sexing_unsexed'));
+            $('#edit_issuing_issue_cock_pullets').val(btn.data('issue_cockerels_pullets'));
+            $('#edit_issuing_issue_day_unsex').val(btn.data('issue_day_old_unsex'));
+            $('#edit_issuing_issue_day_cock').val(btn.data('issue_day_old_cockerel'));
+            $('#edit_issuing_issue_month_unsex').val(btn.data('issue_month_old_unsexed'));
+            $('#edit_issuing_remarks').val(btn.data('remarks'));
         });
 
         // Delete confirmation SweetAlert
