@@ -56,7 +56,7 @@
         <div class="modal-content border-0 shadow">
             <div class="modal-header text-light" style="background-color: var(--color-c1, #820100);">
                 <h5 class="modal-title fw-bold">
-                    <i class="bi bi-file-earmark-plus me-2"></i>Log Stock Entry (Annex 5 - Drug Register)
+                    <i class="bi bi-file-earmark-plus me-2"></i>Log Stock Entry - Drug Register
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>

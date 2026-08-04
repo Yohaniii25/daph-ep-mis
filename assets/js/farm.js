@@ -38,6 +38,16 @@ $(document).ready(function () {
         });
     }
 
+    if ($('#produceRegisterTable').length) {
+        $('#produceRegisterTable').DataTable({
+            responsive: true,
+            order: [[0, 'desc']],
+            language: {
+                emptyTable: "No produce entries found for this commodity. Click 'Log Production & Disposal' to add one."
+            }
+        });
+    }
+
     // 2. Filter Month Apply Handler
     $('#btn_apply_filter').on('click', function () {
         const mVal = $('#filter_month').val();
@@ -113,7 +123,22 @@ $(document).ready(function () {
         $('#edit_remarks').val(btn.data('remarks'));
     });
 
-    // 7. Delete Confirmation SweetAlert
+    // 7. Edit Produce Register Entry (Annex 6) Event Listener
+    $(document).on('click', '.btn-edit-produce', function () {
+        const btn = $(this);
+        $('#edit_produce_id').val(btn.data('id'));
+        $('#edit_record_date').val(btn.data('record_date'));
+        $('#edit_plot_no').val(btn.data('plot_no'));
+        $('#edit_produce_qty').val(btn.data('quantity'));
+        $('#edit_disposal_method').val(btn.data('disposal_method'));
+        $('#edit_produce_unit_price').val(btn.data('unit_price'));
+        $('#edit_produce_full_sum').val(btn.data('full_sum_realized'));
+        $('#edit_receipt_no_or_page').val(btn.data('receipt_no_or_page'));
+        $('#edit_initials').val(btn.data('initials'));
+        $('#edit_remarks').val(btn.data('remarks'));
+    });
+
+    // 8. Delete Confirmation SweetAlert
     $(document).on('click', '.btn-delete', function (e) {
         e.preventDefault();
         const deleteUrl = $(this).attr('href');
@@ -139,7 +164,7 @@ $(document).ready(function () {
     });
 });
 
-// 8. Live Calculation Utilities
+// 9. Live Calculation Utilities
 document.addEventListener('DOMContentLoaded', function () {
     // Annex 4 Mash Balance Live Calculation
     function calcMashBalance() {
@@ -189,6 +214,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const addIssInput = document.getElementById('add_issued_qty');
     if (addRecInput) addRecInput.addEventListener('input', calcDrugLiveBalance);
     if (addIssInput) addIssInput.addEventListener('input', calcDrugLiveBalance);
+
+    // Annex 6 Produce Register Full Sum Realized Live Calculation (Quantity * Price per Unit)
+    function calcProduceFullSum(prefix) {
+        const qtyEl = document.getElementById(prefix + 'produce_qty');
+        const priceEl = document.getElementById(prefix + 'produce_unit_price');
+        const sumEl = document.getElementById(prefix + 'produce_full_sum');
+
+        if (qtyEl && priceEl && sumEl) {
+            const qtyVal = parseFloat(qtyEl.value) || 0;
+            const priceVal = parseFloat(priceEl.value) || 0;
+            const fullSum = qtyVal * priceVal;
+            sumEl.value = fullSum.toFixed(2);
+        }
+    }
+
+    document.querySelectorAll('.produce-calc').forEach(function (el) {
+        el.addEventListener('input', function () { calcProduceFullSum('add_'); });
+    });
+
+    document.querySelectorAll('.edit-produce-calc').forEach(function (el) {
+        el.addEventListener('input', function () { calcProduceFullSum('edit_'); });
+    });
 
     // Egg Sales Frontend Live Auto-Calculations (Table & Cracked Eggs)
     function calcTableEggsSales(prefix) {

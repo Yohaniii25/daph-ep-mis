@@ -68,7 +68,7 @@ $month_label = date('F Y', strtotime("$year-$month-01"));
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h4 class="fw-bold text-dark m-0">
-            <i class="bi bi-journal-check me-2 text-primary"></i>Annex 01 - Egg Register (<?= $month_label ?>)
+            <i class="bi bi-journal-check me-2 text-primary"></i> Egg Register (<?= $month_label ?>)
         </h4>
         <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Edit any cell directly in the table. Totals and Running Balances update live and auto-save!</small>
     </div>

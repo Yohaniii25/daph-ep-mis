@@ -1127,6 +1127,46 @@ CREATE TABLE IF NOT EXISTS `farm_drug_register_annex5` (
   KEY `item_id` (`item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_commodities`
+--
+
+CREATE TABLE IF NOT EXISTS `farm_commodities` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `commodity_name` varchar(255) NOT NULL,
+  `unit_of_measure` varchar(50) DEFAULT 'Kg',
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_produce_register_annex6`
+--
+
+CREATE TABLE IF NOT EXISTS `farm_produce_register_annex6` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `commodity_id` int(11) NOT NULL,
+  `record_date` date NOT NULL,
+  `plot_no` varchar(100) DEFAULT NULL,
+  `quantity` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `disposal_method` varchar(255) NOT NULL,
+  `unit_price` decimal(10,2) DEFAULT 0.00,
+  `full_sum_realized` decimal(12,2) DEFAULT 0.00,
+  `receipt_no_or_page` varchar(255) DEFAULT NULL,
+  `initials` varchar(100) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `commodity_id` (`commodity_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 --
 -- Dumping data for table `daily_egg_sales_returns`
 --
