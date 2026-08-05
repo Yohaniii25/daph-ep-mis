@@ -413,44 +413,49 @@ include './models/export_columns_modal.php';
 include './models/add_sales_returns_modal.php';
 ?>
 
-<!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-
 <script>
     $(document).ready(function() {
-        $('#eggCollectionTable').DataTable({
-            dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
-            buttons: [{
-                    text: '<i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Manage Columns Export',
-                    className: 'btn btn-sm btn-success px-3 me-1 rounded fw-bold',
-                    action: function(e, dt, node, config) {
-                        $('#exportColumnsModal').modal('show');
+        if (!$.fn.DataTable.isDataTable('#eggCollectionTable')) {
+            $('#eggCollectionTable').DataTable({
+                responsive: true,
+                dom: "<'row mb-3 align-items-center'<'col-md-8'B><'col-md-4 text-end'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row mt-3 align-items-center'<'col-md-4'l><'col-md-8 text-end'p>>",
+                buttons: [
+                    {
+                        extend: 'csvHtml5',
+                        text: '<i class="bi bi-file-earmark-csv me-1"></i>CSV',
+                        className: 'btn btn-sm btn-success me-1 shadow-sm fw-bold',
+                        exportOptions: { columns: ':not(:last-child)' }
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        text: '<i class="bi bi-file-earmark-pdf me-1"></i>PDF',
+                        className: 'btn btn-sm btn-danger me-1 shadow-sm fw-bold',
+                        orientation: 'landscape',
+                        pageSize: 'A4',
+                        exportOptions: { columns: ':not(:last-child)' }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="bi bi-printer me-1"></i>Print',
+                        className: 'btn btn-sm btn-secondary me-1 shadow-sm fw-bold',
+                        exportOptions: { columns: ':not(:last-child)' }
+                    },
+                    {
+                        text: '<i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Manage Columns Export',
+                        className: 'btn btn-sm btn-dark px-3 me-1 rounded fw-bold shadow-sm',
+                        action: function(e, dt, node, config) {
+                            $('#exportColumnsModal').modal('show');
+                        }
                     }
-                },
-                {
-                    extend: 'pdf',
-                    className: 'btn btn-sm btn-warning px-3 me-1 rounded text-dark'
-                },
-                {
-                    extend: 'print',
-                    className: 'btn btn-sm btn-danger px-3 rounded'
+                ],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search collections..."
                 }
-            ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search collections..."
-            }
-        });
+            });
+        }
 
         // Auto-Calculate Total Eggs (NO) in Add Modal
         $(document).on('input', '.egg-calc', function() {

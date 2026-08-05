@@ -463,46 +463,8 @@ $month_label = date('F Y', strtotime($first_day_of_month));
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-
 <script>
 $(document).ready(function() {
-    $('#hatcheryTable').DataTable({
-        order: [[0, 'desc']],
-        pageLength: 25,
-        dom: '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
-        buttons: [
-            { 
-                extend: 'csv', 
-                text: '<i class="bi bi-filetype-csv me-1"></i> CSV', 
-                className: 'btn btn-sm btn-success me-1 rounded font-weight-bold',
-                exportOptions: { columns: ':not(:last-child)' }
-            },
-            { 
-                extend: 'pdf', 
-                text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF', 
-                className: 'btn btn-sm btn-danger me-1 rounded font-weight-bold',
-                orientation: 'landscape',
-                pageSize: 'A4',
-                exportOptions: { columns: ':not(:last-child)' }
-            },
-            { 
-                extend: 'print', 
-                text: '<i class="bi bi-printer me-1"></i> Print', 
-                className: 'btn btn-sm btn-dark rounded font-weight-bold',
-                exportOptions: { columns: ':not(:last-child)' }
-            }
-        ]
-    });
 
     // Month filter action
     $('#btnFilter').on('click', function() {

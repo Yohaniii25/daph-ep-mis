@@ -103,7 +103,7 @@ $net_surplus = $total_income - $total_expense;
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle text-center">
+            <table id="accountsRegisterTable" class="table table-bordered table-hover align-middle text-center" style="width:100%">
                 <thead class="table-header-dark">
                     <tr>
                         <th style="width: 12%;">Date</th>

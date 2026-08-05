@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 19 params: i i s i i i d i d i d i d s s i s i d
         $stmt->bind_param(
-            "iisiiiiddiiddisisisd",
+            "iisiiididididssisid",
             $batch_id,
             $cage_id,
             $collection_date,
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 20 params: i i s i i i d i d i d i d s s i s i d i
         $stmt->bind_param(
-            "iisiiiiddiiddisisisdi",
+            "iisiiididididssisidi",
             $batch_id,
             $cage_id,
             $collection_date,

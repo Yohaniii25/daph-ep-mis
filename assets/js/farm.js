@@ -1,62 +1,102 @@
 /**
  * assets/js/farm.js - Farm Module Interactive Scripts
- * Handles DataTables initialization, modal population, live stock balance calculation, auto-calculations, and SweetAlert dialogs.
+ * Handles DataTables initialization with CSV/PDF/Print export support, modal population, live calculations, and SweetAlert dialogs.
  */
 
+/**
+ * Reusable Helper for Initializing DataTables in Farm Module with CSV, PDF, and Print export support.
+ * @param {string} selector - CSS selector of table
+ * @param {object} customOptions - Overriding options
+ */
+function initFarmDataTable(selector, customOptions = {}) {
+    if (!$(selector).length) return;
+
+    // Avoid reinitialization error by checking if DataTables is already initialized
+    if ($.fn.DataTable.isDataTable(selector)) {
+        $(selector).DataTable().destroy();
+    }
+
+    const defaultButtons = [
+        {
+            extend: 'csvHtml5',
+            text: '<i class="bi bi-file-earmark-csv me-1"></i>CSV',
+            className: 'btn btn-sm btn-success me-1 shadow-sm fw-bold',
+            exportOptions: { columns: ':visible:not(.no-export)' }
+        },
+        {
+            extend: 'pdfHtml5',
+            text: '<i class="bi bi-file-earmark-pdf me-1"></i>PDF',
+            className: 'btn btn-sm btn-danger me-1 shadow-sm fw-bold',
+            orientation: 'landscape',
+            pageSize: 'A4',
+            exportOptions: { columns: ':visible:not(.no-export)' }
+        },
+        {
+            extend: 'print',
+            text: '<i class="bi bi-printer me-1"></i>Print',
+            className: 'btn btn-sm btn-secondary me-1 shadow-sm fw-bold',
+            exportOptions: { columns: ':visible:not(.no-export)' }
+        }
+    ];
+
+    const defaultDom = "<'row mb-3 align-items-center'<'col-md-7'B><'col-md-5 text-end'f>>" +
+                       "<'row'<'col-sm-12'tr>>" +
+                       "<'row mt-3 align-items-center'<'col-md-4'l><'col-md-8 text-end'p>>";
+
+    const config = $.extend(true, {
+        responsive: true,
+        dom: defaultDom,
+        buttons: defaultButtons,
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search table..."
+        }
+    }, customOptions);
+
+    return $(selector).DataTable(config);
+}
+
 $(document).ready(function () {
-    // 1. Initialize DataTables for Farm Module Tables
-    if ($('#dailyFeedTable').length) {
-        $('#dailyFeedTable').DataTable({
-            responsive: true,
-            order: [[0, 'desc']]
-        });
-    }
+    // 1. Initialize DataTables for all Farm Module Tables
+    initFarmDataTable('#cattleDisposalTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#whiteCattleDisposalTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#buffaloDisposalTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#goatDisposalTable', { order: [[0, 'desc']] });
 
-    if ($('#mashTable').length) {
-        $('#mashTable').DataTable({
-            responsive: true,
-            paging: false,
-            searching: false,
-            info: false
-        });
-    }
+    initFarmDataTable('#dailyFeedTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#mashTable', { paging: false, searching: true, info: false });
 
-    if ($('#eggSalesTable').length) {
-        $('#eggSalesTable').DataTable({
-            responsive: true,
-            order: [[0, 'desc']]
-        });
-    }
+    initFarmDataTable('#eggSalesTable', { order: [[0, 'desc']] });
 
-    if ($('#drugLedgerTable').length) {
-        $('#drugLedgerTable').DataTable({
-            responsive: true,
-            order: [[0, 'asc']],
-            language: {
-                emptyTable: "No stock movement entries found for this drug item. Click 'Log Stock Movement' to add one."
-            }
-        });
-    }
+    initFarmDataTable('#drugLedgerTable', {
+        order: [[0, 'asc']],
+        language: {
+            emptyTable: "No stock movement entries found for this drug item. Click 'Log Stock Movement' to add one."
+        }
+    });
 
-    if ($('#produceRegisterTable').length) {
-        $('#produceRegisterTable').DataTable({
-            responsive: true,
-            order: [[0, 'desc']],
-            language: {
-                emptyTable: "No produce entries found for this commodity. Click 'Log Production & Disposal' to add one."
-            }
-        });
-    }
+    initFarmDataTable('#produceRegisterTable', {
+        order: [[0, 'desc']],
+        language: {
+            emptyTable: "No produce entries found for this commodity. Click 'Log Production & Disposal' to add one."
+        }
+    });
 
-    if ($('#fuelLedgerTable').length) {
-        $('#fuelLedgerTable').DataTable({
-            responsive: true,
-            order: [[0, 'asc']],
-            language: {
-                emptyTable: "No fuel stock entries found for this item. Click 'Log Fuel Movement' to add one."
-            }
-        });
-    }
+    initFarmDataTable('#fuelLedgerTable', {
+        order: [[0, 'asc']],
+        language: {
+            emptyTable: "No fuel stock entries found for this item. Click 'Log Fuel Movement' to add one."
+        }
+    });
+
+    initFarmDataTable('#fuelSummaryTable', { order: [[0, 'asc']] });
+    initFarmDataTable('#accountsRegisterTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#hatcheryTable', { order: [[0, 'desc']], pageLength: 25 });
+
+    initFarmDataTable('#dayOldTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#growthTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#monthOldTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#issuingTable', { order: [[0, 'desc']] });
 
     // 2. Filter Month Apply Handler
     $('#btn_apply_filter').on('click', function () {

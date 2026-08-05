@@ -1,10 +1,10 @@
 <?php
 // pages/modules/farm/processors/animal_disposal_crud.php
 session_start();
-require_once '../../../config/db_connect.php';
+require_once '../../../../config/db_connect.php';
 
 if (!isset($_SESSION['role'])) {
-    header("Location: ../../../index.php");
+    header("Location: ../../../../index.php");
     exit();
 }
 
