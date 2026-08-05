@@ -1167,6 +1167,63 @@ CREATE TABLE IF NOT EXISTS `farm_produce_register_annex6` (
   KEY `commodity_id` (`commodity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_fuel_items`
+--
+
+CREATE TABLE IF NOT EXISTS `farm_fuel_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `item_name` varchar(255) NOT NULL,
+  `unit_of_measure` varchar(50) DEFAULT 'Liters',
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_fuel_register`
+--
+
+CREATE TABLE IF NOT EXISTS `farm_fuel_register` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `record_date` date NOT NULL,
+  `party_name` varchar(255) NOT NULL,
+  `ref_doc_no` varchar(255) DEFAULT NULL,
+  `received_qty` decimal(10,2) DEFAULT 0.00,
+  `issued_qty` decimal(10,2) DEFAULT 0.00,
+  `balance_qty` decimal(10,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `item_id` (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `monthly_fuel_summary`
+--
+
+CREATE TABLE IF NOT EXISTS `monthly_fuel_summary` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `record_month` date NOT NULL,
+  `fuel_type` varchar(100) NOT NULL,
+  `opening_stock` decimal(10,2) DEFAULT 0.00,
+  `purchased` decimal(10,2) DEFAULT 0.00,
+  `consumption` decimal(10,2) DEFAULT 0.00,
+  `balance` decimal(10,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 --
 -- Dumping data for table `daily_egg_sales_returns`
 --

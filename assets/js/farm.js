@@ -48,6 +48,16 @@ $(document).ready(function () {
         });
     }
 
+    if ($('#fuelLedgerTable').length) {
+        $('#fuelLedgerTable').DataTable({
+            responsive: true,
+            order: [[0, 'asc']],
+            language: {
+                emptyTable: "No fuel stock entries found for this item. Click 'Log Fuel Movement' to add one."
+            }
+        });
+    }
+
     // 2. Filter Month Apply Handler
     $('#btn_apply_filter').on('click', function () {
         const mVal = $('#filter_month').val();
@@ -110,7 +120,7 @@ $(document).ready(function () {
         $('#edit_egg_sale_remarks').val(btn.data('remarks'));
     });
 
-    // 6. Edit Drug Stock Ledger Entry (Annex 5) Event Listener
+    // 6. Edit Drug Stock Ledger Entry Event Listener
     $(document).on('click', '.btn-edit-drug-ledger', function () {
         const btn = $(this);
         $('#edit_drug_ledger_id').val(btn.data('id'));
@@ -123,7 +133,7 @@ $(document).ready(function () {
         $('#edit_remarks').val(btn.data('remarks'));
     });
 
-    // 7. Edit Produce Register Entry (Annex 6) Event Listener
+    // 7. Edit Produce Register Entry Event Listener
     $(document).on('click', '.btn-edit-produce', function () {
         const btn = $(this);
         $('#edit_produce_id').val(btn.data('id'));
@@ -138,7 +148,32 @@ $(document).ready(function () {
         $('#edit_remarks').val(btn.data('remarks'));
     });
 
-    // 8. Delete Confirmation SweetAlert
+    // 8. Edit Fuel Stock Ledger Entry Event Listener
+    $(document).on('click', '.btn-edit-fuel-ledger', function () {
+        const btn = $(this);
+        $('#edit_fuel_ledger_id').val(btn.data('id'));
+        $('#edit_fuel_record_date').val(btn.data('record_date'));
+        $('#edit_fuel_party_name').val(btn.data('party_name'));
+        $('#edit_fuel_ref_doc_no').val(btn.data('ref_doc_no'));
+        $('#edit_fuel_received_qty').val(btn.data('received_qty'));
+        $('#edit_fuel_issued_qty').val(btn.data('issued_qty'));
+        $('#edit_fuel_balance_qty').val(btn.data('balance_qty'));
+        $('#edit_fuel_remarks').val(btn.data('remarks'));
+    });
+
+    // 9. Edit Monthly Fuel Summary Event Listener
+    $(document).on('click', '.btn-edit-fuel-summary', function () {
+        const btn = $(this);
+        $('#edit_fuel_summary_id').val(btn.data('id'));
+        $('#edit_fuel_type_display').val(btn.data('fuel_type'));
+        $('#edit_fuel_opening_stock').val(btn.data('opening_stock'));
+        $('#edit_fuel_purchased').val(btn.data('purchased'));
+        $('#edit_fuel_consumption').val(btn.data('consumption'));
+        $('#edit_fuel_summary_balance').val(btn.data('balance'));
+        $('#edit_fuel_summary_remarks').val(btn.data('remarks'));
+    });
+
+    // 10. Delete Confirmation SweetAlert
     $(document).on('click', '.btn-delete', function (e) {
         e.preventDefault();
         const deleteUrl = $(this).attr('href');
@@ -164,7 +199,7 @@ $(document).ready(function () {
     });
 });
 
-// 9. Live Calculation Utilities
+// 11. Live Calculation Utilities
 document.addEventListener('DOMContentLoaded', function () {
     // Annex 4 Mash Balance Live Calculation
     function calcMashBalance() {
@@ -195,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
         mashModal.addEventListener('shown.bs.modal', calcMashBalance);
     }
 
-    // Annex 5 Drug Register Balance Live Calculation
+    // Drug Register Balance Live Calculation
     function calcDrugLiveBalance() {
         const recEl = document.getElementById('add_received_qty');
         const issEl = document.getElementById('add_issued_qty');
@@ -215,7 +250,52 @@ document.addEventListener('DOMContentLoaded', function () {
     if (addRecInput) addRecInput.addEventListener('input', calcDrugLiveBalance);
     if (addIssInput) addIssInput.addEventListener('input', calcDrugLiveBalance);
 
-    // Annex 6 Produce Register Full Sum Realized Live Calculation (Quantity * Price per Unit)
+    // Fuel Register Balance Live Calculation
+    function calcFuelLiveBalance() {
+        const recEl = document.getElementById('add_fuel_received_qty');
+        const issEl = document.getElementById('add_fuel_issued_qty');
+        const calcEl = document.getElementById('add_fuel_calculated_balance');
+
+        if (recEl && issEl && calcEl) {
+            const baseBal = (typeof currentFuelBalance !== 'undefined') ? parseFloat(currentFuelBalance) : 0;
+            const recVal = parseFloat(recEl.value) || 0;
+            const issVal = parseFloat(issEl.value) || 0;
+            const newBal = (baseBal + recVal) - issVal;
+            calcEl.value = newBal.toFixed(2);
+        }
+    }
+
+    const addFuelRecInput = document.getElementById('add_fuel_received_qty');
+    const addFuelIssInput = document.getElementById('add_fuel_issued_qty');
+    if (addFuelRecInput) addFuelRecInput.addEventListener('input', calcFuelLiveBalance);
+    if (addFuelIssInput) addFuelIssInput.addEventListener('input', calcFuelLiveBalance);
+
+    // Monthly Fuel Summary Live Calculation: (Opening Stock + Purchased) - Consumption
+    function calcFuelSummaryLiveBalance() {
+        const openingEl = document.getElementById('edit_fuel_opening_stock');
+        const purchasedEl = document.getElementById('edit_fuel_purchased');
+        const consumptionEl = document.getElementById('edit_fuel_consumption');
+        const balanceEl = document.getElementById('edit_fuel_summary_balance');
+
+        if (openingEl && purchasedEl && consumptionEl && balanceEl) {
+            const opening = parseFloat(openingEl.value) || 0;
+            const purchased = parseFloat(purchasedEl.value) || 0;
+            const consumption = parseFloat(consumptionEl.value) || 0;
+            const balance = (opening + purchased) - consumption;
+            balanceEl.value = balance.toFixed(2);
+        }
+    }
+
+    document.querySelectorAll('.fuel-summary-calc').forEach(function (el) {
+        el.addEventListener('input', calcFuelSummaryLiveBalance);
+    });
+
+    const editFuelSummaryModal = document.getElementById('editMonthlyFuelModal');
+    if (editFuelSummaryModal) {
+        editFuelSummaryModal.addEventListener('shown.bs.modal', calcFuelSummaryLiveBalance);
+    }
+
+    // Produce Register Full Sum Realized Live Calculation (Quantity * Price per Unit)
     function calcProduceFullSum(prefix) {
         const qtyEl = document.getElementById(prefix + 'produce_qty');
         const priceEl = document.getElementById(prefix + 'produce_unit_price');

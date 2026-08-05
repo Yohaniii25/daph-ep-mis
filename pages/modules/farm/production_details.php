@@ -9,47 +9,10 @@ if ($_SESSION['role'] !== 'farms_dd') {
 
 $user_id = $_SESSION['user_id'] ?? 1;
 
-// Ensure tables exist
-$mysqli->query("CREATE TABLE IF NOT EXISTS `farm_commodities` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `commodity_name` VARCHAR(255) NOT NULL,
-  `unit_of_measure` VARCHAR(50) DEFAULT 'Kg',
-  `description` TEXT DEFAULT NULL,
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-$mysqli->query("CREATE TABLE IF NOT EXISTS `farm_produce_register_annex6` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `user_id` INT(11) NOT NULL,
-  `commodity_id` INT(11) NOT NULL,
-  `record_date` DATE NOT NULL,
-  `plot_no` VARCHAR(100) DEFAULT NULL,
-  `quantity` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  `disposal_method` VARCHAR(255) NOT NULL,
-  `unit_price` DECIMAL(10,2) DEFAULT 0.00,
-  `full_sum_realized` DECIMAL(12,2) DEFAULT 0.00,
-  `receipt_no_or_page` VARCHAR(255) DEFAULT NULL,
-  `initials` VARCHAR(100) DEFAULT NULL,
-  `remarks` TEXT DEFAULT NULL,
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `commodity_id` (`commodity_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
 // Seed default commodities if empty
 $count_com_res = $mysqli->query("SELECT COUNT(*) AS cnt FROM farm_commodities");
 $count_com = (int)($count_com_res->fetch_assoc()['cnt'] ?? 0);
-
-if ($count_com === 0) {
-    $mysqli->query("INSERT INTO farm_commodities (commodity_name, unit_of_measure, description) VALUES 
-        ('Cow Milk', 'Liters', 'Fresh raw milk production from dairy section'),
-        ('Fresh Eggs', 'Units', 'Table eggs and cracked eggs produced daily'),
-        ('Fodder Grass / Silage', 'Kg', 'Harvested green fodder and maize silage'),
-        ('Compost Manure', 'Bags', 'Processed organic farm compost manure'),
-        ('Broiler Meat', 'Kg', 'Processed poultry broiler meat for disposal')");
-}
 
 // Fetch all Commodities for dropdown
 $commodities_res = $mysqli->query("SELECT * FROM farm_commodities ORDER BY commodity_name ASC");
