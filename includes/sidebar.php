@@ -99,12 +99,14 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                 <!-- Main Menu Items -->
                 <div class="sidebar-menu">
-                    <a class="nav-link d-flex align-items-center px-4 py-3 <?= $is_dashboard ? 'bg-danger' : '' ?>" href="<?= $base_path ?>dashboard.php">
+                    <a class="nav-link d-flex align-items-center px-4 py-3 <?= $is_dashboard ? 'bg-danger' : '' ?>"
+                        href="<?= $base_path ?>dashboard.php">
                         Dashboard
                     </a>
                     <!-- Provincial Director Menu -->
                     <?php if ($is_pd): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/pd/animal_health_reports.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/pd/animal_health_reports.php">
                             Animal Health Log
                         </a>
 
@@ -135,143 +137,203 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                     <?php if ($is_hr_user): ?>
                         <!-- HR Management Menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/employee_managment.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/hr/employee_managment.php">
                             HR Management
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/leave_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/hr/leave_management.php">
                             Leave Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/inquiry_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/hr/inquiry_management.php">
                             Documents
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/todo_tasks.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/hr/todo_tasks.php">
                             To-Do Tasks
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/hr/rti_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/hr/rti_management.php">
                             RTI Management
                         </a>
                     <?php endif; ?>
 
                     <?php if ($is_finance_admin): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/assets_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/finance/assets_management.php">
                             Assets Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/procurement_plan.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/finance/procurement_plan.php">
                             Procurement Plan
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/finance_disbursementsources.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/finance/finance_disbursementsources.php">
                             Finance Disbursement
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/finance/veterinary_stores.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/finance/veterinary_stores.php">
                             Veterinary Stores
                         </a>
                     <?php endif; ?>
 
                     <?php if ($is_planning_officer): ?>
                         <!-- planning Officer Menu-->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/project/psdg_projects.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/project/psdg_projects.php">
                             Development Projects (PSDG/CBG/NGO)
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/project/progress_physical_financial.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/project/progress_physical_financial.php">
                             Progress Reports (Physical & Financial)
                         </a>
                     <?php endif; ?>
                     <?php if ($is_sms): ?>
                         <!-- Subject Matter Specialist Menu-->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/my_diary.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/sms/my_diary.php">
                             Diary and Advanced Programme
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/immunization.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/sms/immunization.php">
                             Immunization
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/mobile_clinics.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/sms/mobile_clinics.php">
                             Mobile Clinics
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/drug_maintenance.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/sms/drug_maintenance.php">
                             Drug Maintenance
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/outbreak_report.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/sms/outbreak_report.php">
                             Outbreak Report
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/sms/disease_control.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/sms/disease_control.php">
                             Disease Control
                         </a>
                     <?php endif; ?>
 
                     <?php if ($is_farms_dd): ?>
                         <!-- Farms Operations Menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/parent_stock_operations.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'parent_stock_operations.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/parent_stock_operations.php">
                             Parent Stock Operations
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/hatchery_register.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'hatchery_register.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/hatchery_register.php">
                             Hatchery Register
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/chick_details.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'chick_details.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/chick_details.php">
                             Chick Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/feed_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'feed_management.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/feed_management.php">
                             Feed Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/sales_of_eggs.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'sales_of_eggs.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/sales_of_eggs.php">
                             Sales of Eggs
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/drug_details.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'drug_details.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/drug_details.php">
                             Drugs Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/production_details.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'production_details.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/production_details.php">
                             Production Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/farm/fuel_register.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'fuel_register.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/fuel_register.php">
                             Fuel Register
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'cattle_register.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/cattle_register.php">
+                            Cattle
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'white_cattle_register.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/white_cattle_register.php">
+                            White Cattle
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'buffalo_register.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/buffalo_register.php">
+                            Buffalo
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'goat_register.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/goat_register.php">
+                            Goat
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'inventory_register.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/inventory_register.php">
+                            Inventory
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'accounts_register.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/accounts_register.php">
+                            Accounts
                         </a>
                     <?php endif; ?>
                     <?php if ($is_training_officer): ?>
                         <!-- Training Officer Menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/training/training_details.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/training/training_details.php">
                             Training Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/training/other_facilitation.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/training/other_facilitation.php">
                             Other Facilitation Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/training/production.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/training/production.php">
                             Production
                         </a>
                     <?php endif; ?>
                     <?php if ($is_district_dd): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/diary_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/district/diary_management.php">
                             Diary Management
                         </a>
                         <!-- <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/approval_diaries.php">
                             Approval of Diaries & Programmes
                         </a> -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/revenue_management.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/district/revenue_management.php">
                             Revenue Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/district_revenue_summary.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/district/district_revenue_summary.php">
                             District Revenue Summary
                         </a>
                     <?php endif; ?>
                     <?php if ($is_veterinary_surgeon): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
                             Office Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
                             Range Details
                         </a>
 
                     <?php endif; ?>
                     <!-- employee sidebar -->
                     <?php if ($is_employee): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/my_diary.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/employee/my_diary.php">
                             My Diary
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/leave_requests.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/employee/leave_requests.php">
                             Leave Requests
                         </a>
                         <!-- profile -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/employee/profile.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                            href="<?= $base_path ?>pages/modules/employee/profile.php">
                             Profile
                         </a>
 
@@ -283,7 +345,8 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
             <div class="px pb" style="flex-shrink: 0;">
 
-                <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>pages/settings.php">
+                <a class="nav-link d-flex align-items-center d-block py-3 px-3"
+                    href="<?= $base_path ?>pages/settings.php">
                     Settings
                 </a>
                 <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>logout.php">
@@ -292,7 +355,8 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                 <div class="user-info mt-4 px-4 pb-4">
                     <div style="color:#555;">Logged in as:</div>
-                    <strong style="color:#000;"><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User') ?></strong><br>
+                    <strong
+                        style="color:#000;"><?= htmlspecialchars($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User') ?></strong><br>
                     <small style="color:#777;"><?= ucwords(str_replace('_', ' ', $role)) ?></small>
                 </div>
             </div>
