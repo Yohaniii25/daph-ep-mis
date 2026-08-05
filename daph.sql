@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 02, 2026 at 09:49 AM
+-- Generation Time: Aug 05, 2026 at 07:42 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -670,7 +670,8 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (160, '2026-07-28 04:38:12', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
 (161, '2026-07-28 05:58:08', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
 (162, '2026-07-28 05:58:50', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(163, '2026-07-28 11:11:22', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms');
+(163, '2026-07-28 11:11:22', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
+(164, '2026-08-03 12:43:28', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms');
 
 -- --------------------------------------------------------
 
@@ -921,6 +922,46 @@ INSERT INTO `chicks_death_details` (`id`, `record_month`, `batch_no`, `deaths`, 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `chicks_issuing_details`
+--
+
+CREATE TABLE `chicks_issuing_details` (
+  `id` int(11) NOT NULL,
+  `record_month` date NOT NULL COMMENT 'Store as YYYY-MM-01 to track the specific month',
+  `issue_date` date DEFAULT NULL,
+  `name_of_range` varchar(255) DEFAULT NULL,
+  `batch_no` varchar(255) NOT NULL,
+  `no_of_eggs_hatched` int(11) DEFAULT 0,
+  `starting_balance_of_month` int(11) DEFAULT 0,
+  `deaths_before_sexing` int(11) DEFAULT 0,
+  `received` int(11) DEFAULT 0,
+  `live_chicks_pullets` int(11) DEFAULT 0,
+  `live_chicks_cockerels` int(11) DEFAULT 0,
+  `deaths_sexing_pullets` int(11) DEFAULT 0,
+  `deaths_sexing_cockerels` int(11) DEFAULT 0,
+  `deaths_sexing_unsexed` int(11) DEFAULT 0,
+  `issue_cockerels_pullets` int(11) DEFAULT 0,
+  `issue_day_old_unsex` int(11) DEFAULT 0,
+  `issue_day_old_cockerel` int(11) DEFAULT 0,
+  `issue_month_old_unsexed` int(11) DEFAULT 0,
+  `do_pullets` int(11) DEFAULT 0,
+  `do_cockerels` int(11) DEFAULT 0,
+  `do_unsexed` int(11) DEFAULT 0,
+  `wo_pullets` int(11) DEFAULT 0,
+  `wo_cockerels` int(11) DEFAULT 0,
+  `wo_unsexed` int(11) DEFAULT 0,
+  `mo_pullets` int(11) DEFAULT 0,
+  `mo_cockerels` int(11) DEFAULT 0,
+  `mo_unsexed` int(11) DEFAULT 0,
+  `rate` decimal(10,2) DEFAULT 0.00,
+  `total_amount` decimal(12,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `chick_growth_log`
 --
 
@@ -1032,18 +1073,37 @@ CREATE TABLE `daily_egg_production` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `daily_egg_production`
+-- Table structure for table `daily_egg_sales`
 --
 
-INSERT INTO `daily_egg_production` (`id`, `batch_id`, `cage_id`, `collection_date`, `pullets`, `cockerels`, `total_eggs`, `total_eggs_kg`, `hatchable_eggs`, `hatchable_eggs_kg`, `table_eggs`, `table_eggs_kg`, `cracked_eggs`, `cracked_eggs_kg`, `loading_date`, `hatchery_name`, `eggs_loaded`, `hatching_date`, `hatched_eggs`, `hatchability_percentage`, `created_at`) VALUES
-(4, 8, 2, '2026-07-01', 89, 60, 210, '2000.00', 70, '600.00', 70, '700.00', 70, '700.00', NULL, 'Test', 90, '2026-07-23', 80, '88.89', '2026-07-23 07:18:51'),
-(5, 8, 1, '2026-01-23', 90, 80, 20, '1900.00', 8, '700.00', 6, '600.00', 6, '600.00', NULL, 'Test', 8, '2026-07-24', 8, '100.00', '2026-07-23 08:34:12'),
-(6, 8, 3, '2026-01-23', 9, 9, 220, '2200.00', 60, '600.00', 80, '800.00', 80, '800.00', '0000-00-00', 'Test', 220, '2026-07-24', 200, '90.91', '2026-07-23 09:10:44'),
-(7, 8, 1, '2026-07-01', 0, 0, 100, '1000.00', 100, '1000.00', 0, '0.00', 0, '0.00', NULL, NULL, 0, NULL, 0, '0.00', '2026-07-23 10:26:51'),
-(8, 8, 3, '2026-07-01', 0, 0, 100, '1000.00', 100, '1000.00', 0, '0.00', 0, '0.00', NULL, NULL, 0, NULL, 0, '0.00', '2026-07-23 10:27:07'),
-(9, 8, 4, '2026-07-01', 0, 0, 80, '800.00', 80, '800.00', 0, '0.00', 0, '0.00', NULL, NULL, 0, NULL, 0, '0.00', '2026-07-23 10:27:14'),
-(10, 10, 1, '2026-07-27', 0, 0, 970, '9700.00', 80, '800.00', 90, '900.00', 800, '8000.00', NULL, NULL, 0, NULL, 0, '0.00', '2026-07-27 08:52:59');
+CREATE TABLE `daily_egg_sales` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `cage_id` int(11) NOT NULL,
+  `batch_id` int(11) NOT NULL,
+  `sale_date` date NOT NULL,
+  `table_eggs_no` int(11) DEFAULT 0,
+  `table_eggs_kg` decimal(10,2) DEFAULT 0.00,
+  `table_eggs_unit_price` decimal(10,2) DEFAULT 0.00,
+  `table_eggs_total_sales` decimal(12,2) DEFAULT 0.00,
+  `cracked_eggs_no` int(11) DEFAULT 0,
+  `cracked_eggs_kg` decimal(10,2) DEFAULT 0.00,
+  `cracked_eggs_unit_price` decimal(10,2) DEFAULT 0.00,
+  `cracked_eggs_total_sales` decimal(12,2) DEFAULT 0.00,
+  `grand_total_sales` decimal(12,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `daily_egg_sales`
+--
+
+INSERT INTO `daily_egg_sales` (`id`, `user_id`, `cage_id`, `batch_id`, `sale_date`, `table_eggs_no`, `table_eggs_kg`, `table_eggs_unit_price`, `table_eggs_total_sales`, `cracked_eggs_no`, `cracked_eggs_kg`, `cracked_eggs_unit_price`, `cracked_eggs_total_sales`, `grand_total_sales`, `remarks`, `created_at`) VALUES
+(1, 45, 1, 10, '2026-08-04', 90, '9000.00', '80.00', '7200.00', 90, '700.00', '80.00', '7200.00', '14400.00', '', '2026-08-04 08:59:54');
 
 -- --------------------------------------------------------
 
@@ -1063,167 +1123,6 @@ CREATE TABLE `daily_egg_sales_returns` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `daily_egg_sales`
---
-
-CREATE TABLE IF NOT EXISTS `daily_egg_sales` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `cage_id` int(11) NOT NULL,
-  `batch_id` int(11) NOT NULL,
-  `sale_date` date NOT NULL,
-  `table_eggs_no` int(11) DEFAULT 0,
-  `table_eggs_kg` decimal(10,2) DEFAULT 0.00,
-  `table_eggs_unit_price` decimal(10,2) DEFAULT 0.00,
-  `table_eggs_total_sales` decimal(12,2) DEFAULT 0.00,
-  `cracked_eggs_no` int(11) DEFAULT 0,
-  `cracked_eggs_kg` decimal(10,2) DEFAULT 0.00,
-  `cracked_eggs_unit_price` decimal(10,2) DEFAULT 0.00,
-  `cracked_eggs_total_sales` decimal(12,2) DEFAULT 0.00,
-  `grand_total_sales` decimal(12,2) DEFAULT 0.00,
-  `remarks` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `farm_drug_items`
---
-
-CREATE TABLE IF NOT EXISTS `farm_drug_items` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `item_name` varchar(255) NOT NULL,
-  `unit_of_measure` varchar(50) DEFAULT 'units',
-  `description` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `farm_drug_register_annex5`
---
-
-CREATE TABLE IF NOT EXISTS `farm_drug_register_annex5` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `item_id` int(11) NOT NULL,
-  `record_date` date NOT NULL,
-  `party_name` varchar(255) NOT NULL,
-  `ref_doc_no` varchar(255) DEFAULT NULL,
-  `received_qty` decimal(10,2) DEFAULT 0.00,
-  `issued_qty` decimal(10,2) DEFAULT 0.00,
-  `balance_qty` decimal(10,2) DEFAULT 0.00,
-  `remarks` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `item_id` (`item_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `farm_commodities`
---
-
-CREATE TABLE IF NOT EXISTS `farm_commodities` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `commodity_name` varchar(255) NOT NULL,
-  `unit_of_measure` varchar(50) DEFAULT 'Kg',
-  `description` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `farm_produce_register_annex6`
---
-
-CREATE TABLE IF NOT EXISTS `farm_produce_register_annex6` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `commodity_id` int(11) NOT NULL,
-  `record_date` date NOT NULL,
-  `plot_no` varchar(100) DEFAULT NULL,
-  `quantity` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `disposal_method` varchar(255) NOT NULL,
-  `unit_price` decimal(10,2) DEFAULT 0.00,
-  `full_sum_realized` decimal(12,2) DEFAULT 0.00,
-  `receipt_no_or_page` varchar(255) DEFAULT NULL,
-  `initials` varchar(100) DEFAULT NULL,
-  `remarks` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `commodity_id` (`commodity_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `farm_fuel_items`
---
-
-CREATE TABLE IF NOT EXISTS `farm_fuel_items` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `item_name` varchar(255) NOT NULL,
-  `unit_of_measure` varchar(50) DEFAULT 'Liters',
-  `description` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `farm_fuel_register`
---
-
-CREATE TABLE IF NOT EXISTS `farm_fuel_register` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `item_id` int(11) NOT NULL,
-  `record_date` date NOT NULL,
-  `party_name` varchar(255) NOT NULL,
-  `ref_doc_no` varchar(255) DEFAULT NULL,
-  `received_qty` decimal(10,2) DEFAULT 0.00,
-  `issued_qty` decimal(10,2) DEFAULT 0.00,
-  `balance_qty` decimal(10,2) DEFAULT 0.00,
-  `remarks` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `item_id` (`item_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `monthly_fuel_summary`
---
-
-CREATE TABLE IF NOT EXISTS `monthly_fuel_summary` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `record_month` date NOT NULL,
-  `fuel_type` varchar(100) NOT NULL,
-  `opening_stock` decimal(10,2) DEFAULT 0.00,
-  `purchased` decimal(10,2) DEFAULT 0.00,
-  `consumption` decimal(10,2) DEFAULT 0.00,
-  `balance` decimal(10,2) DEFAULT 0.00,
-  `remarks` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 --
 -- Dumping data for table `daily_egg_sales_returns`
 --
@@ -1233,6 +1132,33 @@ INSERT INTO `daily_egg_sales_returns` (`id`, `record_date`, `hatchery_return_no`
 (2, '2026-01-23', 80, '800.00', 10, '1000.00', 0, '0.00', '2026-07-23 09:07:59'),
 (3, '2026-07-01', 900, '9000.00', 800, '8000.00', 0, '0.00', '2026-07-23 09:08:46'),
 (5, '2026-07-27', 90, '900.00', 90, '1000.00', 0, '0.00', '2026-07-27 08:52:28');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `daily_feed_distribution`
+--
+
+CREATE TABLE `daily_feed_distribution` (
+  `id` int(11) NOT NULL,
+  `distribution_date` date NOT NULL,
+  `cage_id` int(11) DEFAULT NULL,
+  `batch_no` varchar(255) DEFAULT NULL,
+  `feed_type` varchar(50) NOT NULL,
+  `no_of_chicks` int(11) DEFAULT 0,
+  `amount_needed_kg` decimal(10,2) DEFAULT 0.00,
+  `amount_distributed_kg` decimal(10,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `daily_feed_distribution`
+--
+
+INSERT INTO `daily_feed_distribution` (`id`, `distribution_date`, `cage_id`, `batch_no`, `feed_type`, `no_of_chicks`, `amount_needed_kg`, `amount_distributed_kg`, `remarks`, `created_at`) VALUES
+(1, '2026-08-04', 5, '2025/03', 'Layer', 60, '800.00', '700.00', '', '2026-08-04 07:10:22'),
+(2, '2026-08-03', 4, '2025/03', 'Grower', 80, '8000.00', '7000.00', '', '2026-08-04 07:12:06');
 
 -- --------------------------------------------------------
 
@@ -1415,6 +1341,152 @@ INSERT INTO `ear_tag_usage` (`id`, `district_id`, `range_id`, `report_year`, `re
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `farm_commodities`
+--
+
+CREATE TABLE `farm_commodities` (
+  `id` int(11) NOT NULL,
+  `commodity_name` varchar(255) NOT NULL,
+  `unit_of_measure` varchar(50) DEFAULT 'Kg',
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `farm_commodities`
+--
+
+INSERT INTO `farm_commodities` (`id`, `commodity_name`, `unit_of_measure`, `description`, `created_at`) VALUES
+(1, 'Cow Milk', 'Liters', 'Fresh raw milk production from dairy section', '2026-08-04 11:06:20'),
+(2, 'Fresh Eggs', 'Units', 'Table eggs and cracked eggs produced daily', '2026-08-04 11:06:20'),
+(3, 'Fodder Grass / Silage', 'Kg', 'Harvested green fodder and maize silage', '2026-08-04 11:06:20'),
+(4, 'Compost Manure', 'Bags', 'Processed organic farm compost manure', '2026-08-04 11:06:20'),
+(5, 'Broiler Meat', 'Kg', 'Processed poultry broiler meat for disposal', '2026-08-04 11:06:20');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_drug_items`
+--
+
+CREATE TABLE `farm_drug_items` (
+  `id` int(11) NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `unit_of_measure` varchar(50) DEFAULT 'units',
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `farm_drug_items`
+--
+
+INSERT INTO `farm_drug_items` (`id`, `item_name`, `unit_of_measure`, `description`, `created_at`) VALUES
+(1, 'Amoxicillin 50% Powder', 'Packets', 'Antibiotic powder for poultry water medication', '2026-08-04 09:19:37'),
+(2, 'Oxytetracycline HCI Powder', 'Packets', 'Broad-spectrum antibiotic', '2026-08-04 09:19:37'),
+(3, 'Ivermectin 1% Injection', 'Vials', 'Antiparasitic injection for livestock/chicks', '2026-08-04 09:19:37'),
+(4, 'ND-IB Live Poultry Vaccine', 'Vials', 'Newcastle and Infectious Bronchitis vaccine', '2026-08-04 09:19:37'),
+(5, 'Vitamin AD3E + Selenium Solution', 'Bottles', 'Multivitamin supplement for growth and immunity', '2026-08-04 09:19:37'),
+(6, 'Disinfectant Concentrate (Virkon S)', 'Kg', 'Farm biosecurity disinfectant concentrate', '2026-08-04 09:19:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_drug_register_annex5`
+--
+
+CREATE TABLE `farm_drug_register_annex5` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `record_date` date NOT NULL,
+  `party_name` varchar(255) NOT NULL,
+  `ref_doc_no` varchar(255) DEFAULT NULL,
+  `received_qty` decimal(10,2) DEFAULT 0.00,
+  `issued_qty` decimal(10,2) DEFAULT 0.00,
+  `balance_qty` decimal(10,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_fuel_items`
+--
+
+CREATE TABLE `farm_fuel_items` (
+  `id` int(11) NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `unit_of_measure` varchar(50) DEFAULT 'Liters',
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `farm_fuel_items`
+--
+
+INSERT INTO `farm_fuel_items` (`id`, `item_name`, `unit_of_measure`, `description`, `created_at`) VALUES
+(1, 'Auto Diesel', 'Liters', 'Fuel for farm tractors, trucks, and heavy generators', '2026-08-04 11:37:07'),
+(2, 'Super Diesel', 'Liters', 'High-grade diesel for farm machinery', '2026-08-04 11:37:07'),
+(3, 'Petrol Octane 92', 'Liters', 'Fuel for farm two-wheelers, pumps, and light equipment', '2026-08-04 11:37:07'),
+(4, 'Petrol Octane 95', 'Liters', 'Fuel for farm utility vehicles', '2026-08-04 11:37:07'),
+(5, 'Kerosene', 'Liters', 'Kerosene for farm heating/burners', '2026-08-04 11:37:07'),
+(6, 'Engine Oil 15W-40', 'Liters', 'Lubricants and engine oil for farm machinery', '2026-08-04 11:37:07');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_fuel_register`
+--
+
+CREATE TABLE `farm_fuel_register` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `record_date` date NOT NULL,
+  `party_name` varchar(255) NOT NULL,
+  `ref_doc_no` varchar(255) DEFAULT NULL,
+  `received_qty` decimal(10,2) DEFAULT 0.00,
+  `issued_qty` decimal(10,2) DEFAULT 0.00,
+  `balance_qty` decimal(10,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `farm_fuel_register`
+--
+
+INSERT INTO `farm_fuel_register` (`id`, `user_id`, `item_id`, `record_date`, `party_name`, `ref_doc_no`, `received_qty`, `issued_qty`, `balance_qty`, `remarks`, `created_at`) VALUES
+(1, 45, 1, '2026-08-04', 'Supplier', '0', '60.00', '20.00', '40.00', '', '2026-08-04 11:54:39');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_produce_register_annex6`
+--
+
+CREATE TABLE `farm_produce_register_annex6` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `commodity_id` int(11) NOT NULL,
+  `record_date` date NOT NULL,
+  `plot_no` varchar(100) DEFAULT NULL,
+  `quantity` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `disposal_method` varchar(255) NOT NULL,
+  `unit_price` decimal(10,2) DEFAULT 0.00,
+  `full_sum_realized` decimal(12,2) DEFAULT 0.00,
+  `receipt_no_or_page` varchar(255) DEFAULT NULL,
+  `initials` varchar(100) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `furniture_assets`
 --
 
@@ -1480,6 +1552,7 @@ CREATE TABLE `hatchery_register` (
   `id` int(11) NOT NULL,
   `record_date` date NOT NULL,
   `cage_id` int(11) NOT NULL,
+  `batch_id` int(11) DEFAULT NULL,
   `no_of_eggs_loaded` int(11) NOT NULL DEFAULT 0,
   `date_of_candling` date DEFAULT NULL,
   `discarded_during_candling` int(11) NOT NULL DEFAULT 0,
@@ -1492,13 +1565,6 @@ CREATE TABLE `hatchery_register` (
   `remark` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Dumping data for table `hatchery_register`
---
-
-INSERT INTO `hatchery_register` (`id`, `record_date`, `cage_id`, `no_of_eggs_loaded`, `date_of_candling`, `discarded_during_candling`, `date_of_hatching`, `no_of_hatched_eggs`, `no_of_deaths`, `no_of_good_chicks`, `hatching_percentage`, `loaded_to_cage_id`, `remark`, `created_at`) VALUES
-(1, '2026-07-27', 1, 90, '2026-07-27', 40, '2026-07-28', 90, 10, 80, '88.89', 2, 'Test', '2026-07-27 09:01:09');
 
 -- --------------------------------------------------------
 
@@ -1958,6 +2024,64 @@ CREATE TABLE `milk_product_sales_centers` (
 
 INSERT INTO `milk_product_sales_centers` (`id`, `vs_range`, `sales_center_name`, `address`, `contact_no`, `fresh_milk_lit_per_month`, `yoghurt_lit_per_month`, `curd_lit_per_month`, `ice_cream_lit_per_month`, `ghee_lit_per_month`, `other_milk_product_lit_per_month`, `total_lit_per_month`, `income_rs_per_month`, `created_at`) VALUES
 (1, 'Ampara', 'Nestle', 'Test Address', '0712345678', '90.00', '60.00', '60.00', '60.00', '60.00', '60.00', '390.00', '700.00', '2026-07-22 09:14:56');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `monthly_fuel_summary`
+--
+
+CREATE TABLE `monthly_fuel_summary` (
+  `id` int(11) NOT NULL,
+  `record_month` date NOT NULL,
+  `fuel_type` varchar(100) NOT NULL,
+  `opening_stock` decimal(10,2) DEFAULT 0.00,
+  `purchased` decimal(10,2) DEFAULT 0.00,
+  `consumption` decimal(10,2) DEFAULT 0.00,
+  `balance` decimal(10,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `monthly_fuel_summary`
+--
+
+INSERT INTO `monthly_fuel_summary` (`id`, `record_month`, `fuel_type`, `opening_stock`, `purchased`, `consumption`, `balance`, `remarks`, `created_at`) VALUES
+(1, '2026-08-01', 'Petrol', '0.00', '0.00', '0.00', '0.00', NULL, '2026-08-04 11:42:52'),
+(2, '2026-08-01', 'Diesel', '0.00', '60.00', '20.00', '40.00', NULL, '2026-08-04 11:42:52'),
+(3, '2026-08-01', 'Kerosene', '0.00', '0.00', '0.00', '0.00', NULL, '2026-08-04 11:42:52'),
+(4, '2026-08-01', 'Oil', '0.00', '0.00', '0.00', '0.00', NULL, '2026-08-04 11:42:52'),
+(5, '2026-08-01', 'Coolant', '0.00', '0.00', '0.00', '0.00', NULL, '2026-08-04 11:42:52');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `monthly_mash_details`
+--
+
+CREATE TABLE `monthly_mash_details` (
+  `id` int(11) NOT NULL,
+  `record_month` date NOT NULL,
+  `feed_type` varchar(50) NOT NULL,
+  `opening_stock_kg` decimal(10,2) DEFAULT 0.00,
+  `received_kg` decimal(10,2) DEFAULT 0.00,
+  `consumption_kg` decimal(10,2) DEFAULT 0.00,
+  `issued_other_farm_kg` decimal(10,2) DEFAULT 0.00,
+  `balance_stock_kg` decimal(10,2) DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `monthly_mash_details`
+--
+
+INSERT INTO `monthly_mash_details` (`id`, `record_month`, `feed_type`, `opening_stock_kg`, `received_kg`, `consumption_kg`, `issued_other_farm_kg`, `balance_stock_kg`, `remarks`, `created_at`) VALUES
+(1, '2026-08-01', 'Layer', '0.00', '0.00', '700.00', '0.00', '-700.00', NULL, '2026-08-04 05:42:19'),
+(2, '2026-08-01', 'Starter', '0.00', '0.00', '0.00', '0.00', '0.00', NULL, '2026-08-04 05:42:19'),
+(3, '2026-08-01', 'Grower', '0.00', '0.00', '7000.00', '0.00', '-7000.00', NULL, '2026-08-04 05:42:19'),
+(4, '2026-08-01', 'Cattle Feed', '0.00', '0.00', '0.00', '0.00', '0.00', NULL, '2026-08-04 05:42:19');
 
 -- --------------------------------------------------------
 
@@ -2559,7 +2683,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (29, 'saththiyawan', 'saththiyawan.t@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. T. Saththiyawan', NULL, NULL, 'Driver', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
 (30, 'gaminiraj', 'gaminiraj.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Gaminiraj', NULL, NULL, 'Watcher', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL),
 (42, 'test', 'test@gmail.com', '0778439871', '$2y$10$dynlOJHtL.8fdGd0fcwNz.dZYr4FHzBsUxSUqBOxk9zgjySfr4n7y', 'test', '210', '210', 'Veterinary Surgeon', 'employee', 'test', 1, 1, NULL, '2026-07-09', '2026-07-09', '2026-07-09', NULL, NULL, 'Amparai', 0, NULL, '2026-07-09 06:32:57', NULL),
-(45, 'regionalfarms', 'regionalfarms@gmail.com', NULL, '$2y$10$k5hbQiiYpVp70ObCvcWTTecgRxgETgKmvSCs/.b/ENUMuwfceWMVS', 'Regional Farms User', NULL, NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 'Provincial', 1, '2026-07-28 16:41:22', '2026-07-20 07:29:39', NULL);
+(45, 'regionalfarms', 'regionalfarms@gmail.com', NULL, '$2y$10$k5hbQiiYpVp70ObCvcWTTecgRxgETgKmvSCs/.b/ENUMuwfceWMVS', 'Regional Farms User', NULL, NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 'Provincial', 1, '2026-08-03 18:13:28', '2026-07-20 07:29:39', NULL);
 
 -- --------------------------------------------------------
 
@@ -2916,6 +3040,12 @@ ALTER TABLE `chicks_death_details`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `chicks_issuing_details`
+--
+ALTER TABLE `chicks_issuing_details`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `chick_growth_log`
 --
 ALTER TABLE `chick_growth_log`
@@ -2949,11 +3079,26 @@ ALTER TABLE `daily_egg_production`
   ADD KEY `cage_id` (`cage_id`);
 
 --
+-- Indexes for table `daily_egg_sales`
+--
+ALTER TABLE `daily_egg_sales`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `cage_id` (`cage_id`),
+  ADD KEY `batch_id` (`batch_id`);
+
+--
 -- Indexes for table `daily_egg_sales_returns`
 --
 ALTER TABLE `daily_egg_sales_returns`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `record_date` (`record_date`);
+
+--
+-- Indexes for table `daily_feed_distribution`
+--
+ALTER TABLE `daily_feed_distribution`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `dairy_hub_records`
@@ -3002,6 +3147,48 @@ ALTER TABLE `ear_tag_usage`
   ADD KEY `fk_ear_tags_district` (`district_id`),
   ADD KEY `fk_ear_tags_range` (`range_id`),
   ADD KEY `fk_ear_tags_user` (`created_by`);
+
+--
+-- Indexes for table `farm_commodities`
+--
+ALTER TABLE `farm_commodities`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `farm_drug_items`
+--
+ALTER TABLE `farm_drug_items`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `farm_drug_register_annex5`
+--
+ALTER TABLE `farm_drug_register_annex5`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `item_id` (`item_id`);
+
+--
+-- Indexes for table `farm_fuel_items`
+--
+ALTER TABLE `farm_fuel_items`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `farm_fuel_register`
+--
+ALTER TABLE `farm_fuel_register`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `item_id` (`item_id`);
+
+--
+-- Indexes for table `farm_produce_register_annex6`
+--
+ALTER TABLE `farm_produce_register_annex6`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `commodity_id` (`commodity_id`);
 
 --
 -- Indexes for table `furniture_assets`
@@ -3143,6 +3330,19 @@ ALTER TABLE `milk_processing_centers`
 --
 ALTER TABLE `milk_product_sales_centers`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `monthly_fuel_summary`
+--
+ALTER TABLE `monthly_fuel_summary`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `monthly_mash_details`
+--
+ALTER TABLE `monthly_mash_details`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_month_feed` (`record_month`,`feed_type`);
 
 --
 -- Indexes for table `monthly_vaccine_balances`
@@ -3435,7 +3635,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=164;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
 
 --
 -- AUTO_INCREMENT for table `breeding_ai_performance`
@@ -3492,6 +3692,12 @@ ALTER TABLE `chicks_death_details`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `chicks_issuing_details`
+--
+ALTER TABLE `chicks_issuing_details`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `chick_growth_log`
 --
 ALTER TABLE `chick_growth_log`
@@ -3516,10 +3722,22 @@ ALTER TABLE `daily_egg_production`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `daily_egg_sales`
+--
+ALTER TABLE `daily_egg_sales`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `daily_egg_sales_returns`
 --
 ALTER TABLE `daily_egg_sales_returns`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `daily_feed_distribution`
+--
+ALTER TABLE `daily_feed_distribution`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `dairy_hub_records`
@@ -3564,6 +3782,42 @@ ALTER TABLE `ear_tag_usage`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `farm_commodities`
+--
+ALTER TABLE `farm_commodities`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `farm_drug_items`
+--
+ALTER TABLE `farm_drug_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `farm_drug_register_annex5`
+--
+ALTER TABLE `farm_drug_register_annex5`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `farm_fuel_items`
+--
+ALTER TABLE `farm_fuel_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `farm_fuel_register`
+--
+ALTER TABLE `farm_fuel_register`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `farm_produce_register_annex6`
+--
+ALTER TABLE `farm_produce_register_annex6`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `furniture_assets`
 --
 ALTER TABLE `furniture_assets`
@@ -3579,7 +3833,7 @@ ALTER TABLE `hatchery_batches`
 -- AUTO_INCREMENT for table `hatchery_register`
 --
 ALTER TABLE `hatchery_register`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `hatchery_sales`
@@ -3676,6 +3930,18 @@ ALTER TABLE `milk_processing_centers`
 --
 ALTER TABLE `milk_product_sales_centers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `monthly_fuel_summary`
+--
+ALTER TABLE `monthly_fuel_summary`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `monthly_mash_details`
+--
+ALTER TABLE `monthly_mash_details`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `monthly_vaccine_balances`
