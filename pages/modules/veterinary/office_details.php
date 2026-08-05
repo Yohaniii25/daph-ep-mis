@@ -90,7 +90,6 @@ $mov_stmt->execute();
 $movable_assets = $mov_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
 <style>
@@ -130,9 +129,6 @@ require_once '../../../includes/sidebar.php';
         transform: translateY(-2px);
     }
 </style>
-
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
 
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
@@ -253,9 +249,6 @@ require_once '../../../includes/sidebar.php';
         </div>
 
         <?php include 'models/asset_modals.php'; ?>
-
-    </main>
-</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

@@ -221,59 +221,59 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                     <?php if ($is_farms_dd): ?>
                         <!-- Farms Operations Menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'parent_stock_operations.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'parent_stock_operations.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/parent_stock_operations.php">
                             Parent Stock Operations
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'hatchery_register.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'hatchery_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/hatchery_register.php">
                             Hatchery Register
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'chick_details.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'chick_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/chick_details.php">
                             Chick Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'feed_management.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'feed_management.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/feed_management.php">
                             Feed Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'sales_of_eggs.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'sales_of_eggs.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/sales_of_eggs.php">
                             Sales of Eggs
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'drug_details.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/drug_details.php">
                             Drugs Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'production_details.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'production_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/production_details.php">
                             Production Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'fuel_register.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'fuel_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/fuel_register.php">
                             Fuel Register
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'cattle_register.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'cattle_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/cattle_register.php">
                             Cattle
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'white_cattle_register.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'white_cattle_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/white_cattle_register.php">
                             White Cattle
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'buffalo_register.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'buffalo_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/buffalo_register.php">
                             Buffalo
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'goat_register.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'goat_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/goat_register.php">
                             Goat
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'inventory_register.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'inventory_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/inventory_register.php">
                             Inventory
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($_SERVER['REQUEST_URI'], 'accounts_register.php') !== false) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'accounts_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/accounts_register.php">
                             Accounts
                         </a>

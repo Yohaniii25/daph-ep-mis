@@ -9,7 +9,7 @@ $count_res = $mysqli->query($count_query);
 $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
 ?>
 
-<?php require_once '../../../includes/sidebar.php'; ?>
+<?php  ?>
 
 <style>
     .metric-card-custom {
@@ -39,8 +39,7 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-<div id="layoutSidenav_content" class="bg-light">
-    <main class="container-fluid px-4 pt-4">
+
         <h2 class="mb-4">Drug Maintenance</h2>
 
         <div class="row g-4 mb-4">

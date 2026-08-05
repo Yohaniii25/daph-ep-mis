@@ -13,7 +13,7 @@ if ($total_batches_res) {
 }
 ?>
 
-<?php require_once '../../../includes/sidebar.php'; ?>
+<?php  ?>
 
 <style>
     .metric-card-custom {
@@ -32,8 +32,7 @@ if ($total_batches_res) {
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-<div id="layoutSidenav_content" class="bg-light">
-    <main class="container-fluid px-4 pt-4">
+
         <h2 class="mb-4">Immunization - Vaccine Batches Register</h2>
 
         <div class="row g-4 mb-4">

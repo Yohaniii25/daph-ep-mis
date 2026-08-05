@@ -80,10 +80,9 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 
-<?php require_once '../../../includes/sidebar.php'; ?>
+<?php  ?>
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>

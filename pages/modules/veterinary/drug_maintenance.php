@@ -87,7 +87,6 @@ if ($stats_res && $row = $stats_res->fetch_assoc()) {
 }
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 
 ?>
 
@@ -97,8 +96,7 @@ require_once '../../../includes/sidebar.php';
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <link rel="stylesheet" href="../../../assets/css/veterinary.css">
 
-<div id="layoutSidenav_content" class="bg-light">
-    <main class="container-fluid px-4 pt-4">
+
         
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>

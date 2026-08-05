@@ -91,11 +91,9 @@ $result = $stmt->get_result();
 $treatments = $result->fetch_all(MYSQLI_ASSOC);
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
 
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -194,8 +192,4 @@ require_once '../../../includes/sidebar.php';
 
         include 'models/add_health_record.php';
         ?>
-    </main>
-</div>
-
-
-<?php require_once '../../../includes/footer.php'; ?>
+    <?php require_once '../../../includes/footer.php'; ?>

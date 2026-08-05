@@ -74,7 +74,6 @@ if (!empty($range_id)) {
 }
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -83,8 +82,7 @@ require_once '../../../includes/sidebar.php';
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <link rel="stylesheet" href="../../../assets/css/veterinary.css">
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
 
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>

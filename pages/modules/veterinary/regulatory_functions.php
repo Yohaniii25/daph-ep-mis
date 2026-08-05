@@ -19,11 +19,9 @@ $stats = [
 ];
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
         
         <div class="mb-4">
             <h2 class="h4 fw-bold text-dark">Regulatory & Enforcement Dashboard</h2>
@@ -112,7 +110,4 @@ require_once '../../../includes/sidebar.php';
             </div>
         </div>
 
-    </main>
-</div>
-
-<?php require_once '../../../includes/footer.php'; ?>
+    <?php require_once '../../../includes/footer.php'; ?>

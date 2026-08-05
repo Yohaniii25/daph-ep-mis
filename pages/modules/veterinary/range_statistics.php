@@ -48,15 +48,10 @@ if ($range_id) {
 
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <link rel="stylesheet" href="../../../assets/css/veterinary.css">
-
-
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
 
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -250,6 +245,9 @@ require_once '../../../includes/sidebar.php';
 
                     </div>
                 </div>
+            </div>
+        </div>
+
         <!-- Annual Returns & Inventories Quick Actions -->
         <div class="card gov-card mb-5">
             <div class="card-header bg-white pt-4 px-4 border-0">
@@ -316,23 +314,8 @@ require_once '../../../includes/sidebar.php';
             </div>
         </div>
 
-        <?php
-
-        include 'models/add_health_record.php';
-        ?>
-    </main>
-</div>
-
-<script src="../../../assets/js/veterinary.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<?php require_once '../../../includes/footer.php'; ?>
+<?php
+include 'models/add_health_record.php';
+$pageScripts = '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
+require_once '../../../includes/footer.php';
+?>

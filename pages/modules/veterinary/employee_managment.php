@@ -96,13 +96,11 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="fw-bold">Employee Management</h3>

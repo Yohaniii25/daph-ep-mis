@@ -86,16 +86,6 @@ if (!empty($_SESSION['range_id'])) {
         $health_q->close();
     }
 
-    // 2. Animal Breeding Progress Logs
-    $breeding_q = $mysqli->prepare("SELECT COUNT(*) as total FROM breeding_progress WHERE range_id = ?");
-    if ($breeding_q) {
-        $breeding_q->bind_param("i", $range_id);
-        $breeding_q->execute();
-        if ($res = $breeding_q->get_result()->fetch_assoc()) {
-            $stats['breeding'] = $res['total'];
-        }
-        $breeding_q->close();
-    }
 
     // 3. Office Details (Units/Staff Allocated)
     $office_q = $mysqli->prepare("SELECT COUNT(*) as total FROM users WHERE range_id = ?");

@@ -19,11 +19,9 @@ if ($range_id) {
 }
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="h4 mb-0 fw-bold">Compounding Records</h2>
             <small class="text-muted"><?= htmlspecialchars($range_name) ?> | Regulatory Functions</small>
@@ -65,7 +63,4 @@ require_once '../../../includes/sidebar.php';
                 </div>
             </div>
         </div>
-    </main>
-</div>
-
-<?php require_once '../../../includes/footer.php'; ?>
+    <?php require_once '../../../includes/footer.php'; ?>

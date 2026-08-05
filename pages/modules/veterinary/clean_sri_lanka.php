@@ -74,14 +74,12 @@ $sanitation_tasks = [
 ];
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
 <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold mb-0 text-success"><i class="bi bi-leaf me-2"></i>Clean Sri Lanka Initiative</h4>

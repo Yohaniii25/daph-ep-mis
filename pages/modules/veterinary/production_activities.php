@@ -53,11 +53,10 @@ require_once '../../../includes/header.php';
 
 <div class="d-flex w-100 align-items-stretch min-vh-100">
     <div class="flex-shrink-0" style="background-color: #370709;">
-        <?php require_once '../../../includes/sidebar.php'; ?>
+        <?php  ?>
     </div>
 
-    <div id="layoutSidenav_content" class="w-100">
-        <main class="container-fluid px-4 pt-4">
+    
             
             <div class="mb-4 d-flex justify-content-between align-items-center">
                 <div>

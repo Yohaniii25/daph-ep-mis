@@ -236,7 +236,6 @@ if ($range_res) {
 }
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -293,8 +292,7 @@ require_once '../../../includes/sidebar.php';
     }
 </style>
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4 pb-5">
+
 
         <!-- PAGE TITLE CARD -->
         <div class="card shadow-sm border-0 mb-4 overflow-hidden">

@@ -87,11 +87,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 ]);
 
                 // Sync data rows seamlessly into your existing DataTables instance
-                if (humanDatasetTableInstance) {
-                    humanDatasetTableInstance.clear().rows.add(processedTableRows).draw();
-                } else {
-                    const tableEl = $('#humanPopulationTable');
-                    if (tableEl.length) {
+                const tableEl = $('#humanPopulationTable');
+                if (tableEl.length) {
+                    if ($.fn.DataTable.isDataTable('#humanPopulationTable')) {
+                        humanDatasetTableInstance = tableEl.DataTable();
+                        humanDatasetTableInstance.clear().rows.add(processedTableRows).draw();
+                    } else {
                         humanDatasetTableInstance = tableEl.DataTable({
                             data: processedTableRows,
                             responsive: true,
@@ -277,12 +278,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     runningTotalSum.toLocaleString()
                 ]);
 
-                if (animalDatasetTableInstance) {
-                    animalDatasetTableInstance.clear().rows.add(processedTableRows).draw();
-                } else {
-                    const tableEl = $('#animalPopulationTable');
-                    if (tableEl.length) {
-                        animalDatasetTableInstance = tableEl.DataTable({
+                const animalTableEl = $('#animalPopulationTable');
+                if (animalTableEl.length) {
+                    if ($.fn.DataTable.isDataTable('#animalPopulationTable')) {
+                        animalDatasetTableInstance = animalTableEl.DataTable();
+                        animalDatasetTableInstance.clear().rows.add(processedTableRows).draw();
+                    } else {
+                        animalDatasetTableInstance = animalTableEl.DataTable({
                             data: processedTableRows,
                             responsive: true,
                             dom: "<'row mb-2'<'col-sm-12 col-md-6'B><'col-sm-12 col-md-6'f>>" +

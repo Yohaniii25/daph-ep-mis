@@ -6,11 +6,9 @@ $records = [
     ['date' => '2026-03-20', 'farmer' => 'K. Selvam', 'reg_no' => 'TR/VET/405', 'animal_type' => 'Buffalo', 'brand_mark' => 'EP/TR/45', 'qty' => 05]
 ];
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 ?>
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
         <div class="d-flex justify-content-between mb-4">
             <h2 class="h4 fw-bold text-dark">Animal Branding & ID Registry</h2>
             <button class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i> Register New Brand</button>

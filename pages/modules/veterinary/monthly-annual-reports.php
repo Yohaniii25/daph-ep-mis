@@ -58,7 +58,6 @@ if (!empty($range_id)) {
 }
 
 require_once '../../../includes/header.php';
-require_once '../../../includes/sidebar.php';
 
 ?>
 
@@ -67,8 +66,7 @@ require_once '../../../includes/sidebar.php';
 
 
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
+
 
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
