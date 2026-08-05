@@ -15,6 +15,33 @@
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         
+                        <!-- Import / Auto-fill from Parent Stock Daily Collection -->
+                        <div class="col-12">
+                            <div class="card border-primary-subtle bg-primary-subtle p-3 rounded-3 mb-2">
+                                <label class="form-label fw-bold text-primary mb-1">
+                                    <i class="bi bi-box-arrow-in-down me-1"></i>Import Eggs from Parent Stock Collection (Daily Egg Register)
+                                </label>
+                                <select id="add_select_collection" class="form-select border-primary fw-bold shadow-sm">
+                                    <option value="" selected>-- Select Daily Collection Entry (Optional Auto-Fill) --</option>
+                                    <?php if (!empty($collections_data)): ?>
+                                        <?php foreach ($collections_data as $col): ?>
+                                            <option value="<?= $col['id'] ?>"
+                                                    data-date="<?= htmlspecialchars($col['collection_date']) ?>"
+                                                    data-cage="<?= $col['cage_id'] ?>"
+                                                    data-batch="<?= $col['batch_id'] ?>"
+                                                    data-table-no="<?= $col['table_eggs'] ?>"
+                                                    data-table-kg="<?= $col['table_eggs_kg'] ?>"
+                                                    data-cracked-no="<?= $col['cracked_eggs'] ?>"
+                                                    data-cracked-kg="<?= $col['cracked_eggs_kg'] ?>">
+                                                [<?= date('d-M-Y', strtotime($col['collection_date'])) ?>] Batch: <?= htmlspecialchars($col['batch_name']) ?> | Cage: <?= htmlspecialchars($col['cage_name']) ?> &mdash; Table Eggs: <?= number_format($col['table_eggs']) ?> NO (<?= number_format($col['table_eggs_kg'], 2) ?> Kg), Cracked: <?= number_format($col['cracked_eggs']) ?> NO (<?= number_format($col['cracked_eggs_kg'], 2) ?> Kg)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Selecting an entry populates the date, cage, batch, table eggs count & weight, and cracked eggs count & weight from Parent Stock Operations.</small>
+                            </div>
+                        </div>
+
                         <!-- General Info -->
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Date <span class="text-danger">*</span></label>

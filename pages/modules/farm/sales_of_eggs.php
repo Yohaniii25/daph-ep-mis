@@ -37,6 +37,27 @@ if ($batch_res) {
 }
 $batch_stmt->close();
 
+// Fetch Daily Egg Collections from Parent Stock Operations for importing into Sales
+$collections_sql = "SELECT dep.id, dep.collection_date, dep.batch_id, dep.cage_id, 
+                           dep.table_eggs, dep.table_eggs_kg, dep.cracked_eggs, dep.cracked_eggs_kg,
+                           c.cage_name, b.batch_number AS batch_name
+                    FROM daily_egg_production dep
+                    JOIN vaccine_batches b ON dep.batch_id = b.id
+                    JOIN cages c ON dep.cage_id = c.id
+                    WHERE b.user_id = ?
+                    ORDER BY dep.collection_date DESC, dep.id DESC";
+$stmt_col = $mysqli->prepare($collections_sql);
+$stmt_col->bind_param("i", $user_id);
+$stmt_col->execute();
+$collections_res = $stmt_col->get_result();
+$collections_data = [];
+if ($collections_res) {
+    while ($row = $collections_res->fetch_assoc()) {
+        $collections_data[] = $row;
+    }
+}
+$stmt_col->close();
+
 // Fetch Egg Sales Records for Selected Month
 $egg_sales_sql = "SELECT es.*, c.cage_name, b.batch_number AS batch_name 
                   FROM daily_egg_sales es

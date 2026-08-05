@@ -407,4 +407,31 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.edit-calc-cracked-egg').forEach(function(el) {
         el.addEventListener('input', function() { calcCrackedEggsSales('edit_'); });
     });
+
+    // Auto-fill Egg Sales from Parent Stock Operations Daily Collection
+    $(document).on('change', '#add_select_collection', function () {
+        const opt = $(this).find(':selected');
+        if (!opt.val()) return;
+
+        const date = opt.data('date');
+        const cage = opt.data('cage');
+        const batch = opt.data('batch');
+        const tableNo = opt.data('table-no') || 0;
+        const tableKg = opt.data('table-kg') || 0;
+        const crackedNo = opt.data('cracked-no') || 0;
+        const crackedKg = opt.data('cracked-kg') || 0;
+
+        if (date) $('#addEggSalesModal input[name="sale_date"]').val(date);
+        if (cage) $('#addEggSalesModal select[name="cage_id"]').val(cage);
+        if (batch) $('#addEggSalesModal select[name="batch_id"]').val(batch);
+
+        $('#add_table_eggs_no').val(tableNo);
+        $('#add_table_eggs_kg').val(parseFloat(tableKg).toFixed(2));
+        $('#add_cracked_eggs_no').val(crackedNo);
+        $('#add_cracked_eggs_kg').val(parseFloat(crackedKg).toFixed(2));
+
+        // Trigger live auto-calculate revenue
+        calcTableEggsSales('add_');
+        calcCrackedEggsSales('add_');
+    });
 });
