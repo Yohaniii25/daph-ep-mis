@@ -147,7 +147,7 @@ $stmt_summary->close();
         <h3 class="fw-bold text-dark m-0">
             <i class="bi bi-fuel-pump me-2" style="color: #820100;"></i>Fuel Register & Monthly Details Summary
         </h3>
-        <p class="text-muted mb-0 small">Daily fuel stock movement ledger (Annex 7) and monthly fuel summary report.</p>
+        <p class="text-muted mb-0 small">Daily fuel stock movement ledger and monthly fuel summary report.</p>
     </div>
     <div class="col-md-5 d-flex justify-content-end align-items-center gap-2">
         <label class="fw-bold mb-0 text-nowrap"><i class="bi bi-calendar3 me-1"></i>Select Month:</label>
@@ -182,7 +182,7 @@ $stmt_summary->close();
         <button class="nav-link fw-bold <?= ($active_tab === 'daily') ? 'active text-light' : 'text-dark bg-white' ?> border-0 py-3 px-4" 
                 id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily-pane" type="button" role="tab"
                 style="<?= ($active_tab === 'daily') ? 'background-color: #820100; color: #ffffff; border-radius: 8px 8px 0 0;' : 'border-radius: 8px 8px 0 0;' ?>">
-            <i class="bi bi-fuel-pump-diesel me-2"></i>1. Daily Fuel Register (Annex 7)
+            <i class="bi bi-fuel-pump-diesel me-2"></i>1. Daily Fuel Register
         </button>
     </li>
     <li class="nav-item shadow-sm" role="presentation">

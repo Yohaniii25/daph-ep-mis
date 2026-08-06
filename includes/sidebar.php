@@ -332,8 +332,8 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             Leave Requests
                         </a>
                         <!-- profile -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
-                            href="<?= $base_path ?>pages/modules/employee/profile.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'profile.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/profile.php">
                             Profile
                         </a>
 
@@ -345,12 +345,12 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
             <div class="px pb" style="flex-shrink: 0;">
 
-                <a class="nav-link d-flex align-items-center d-block py-3 px-3"
-                    href="<?= $base_path ?>pages/settings.php">
-                    Settings
+                <a class="nav-link d-flex align-items-center d-block py-3 px-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'profile.php' || basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'settings.php') ? 'active' : '' ?>"
+                    href="<?= $base_path ?>pages/profile.php">
+                    <i class="bi bi-person-circle me-2"></i> Profile
                 </a>
                 <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>logout.php">
-                    Logout
+                    <i class="bi bi-box-arrow-right me-2"></i> Logout
                 </a>
 
                 <div class="user-info mt-4 px-4 pb-4">
