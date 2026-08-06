@@ -57,6 +57,7 @@ $cnt_furniture   = getAssetCount($mysqli, 'furniture_assets', $farm_id, $user_id
 $cnt_machinery   = getAssetCount($mysqli, 'machinery_assets', $farm_id, $user_id);
 $cnt_instruments = getAssetCount($mysqli, 'instrument_assets', $farm_id, $user_id);
 $cnt_counterfoil = getAssetCount($mysqli, 'counterfoil_assets', $farm_id, $user_id);
+$cnt_staff       = getAssetCount($mysqli, 'users', $farm_id, $user_id);
 ?>
 
 <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -216,6 +217,19 @@ $cnt_counterfoil = getAssetCount($mysqli, 'counterfoil_assets', $farm_id, $user_
                             <small class="text-light-50">Receipt &amp; voucher books</small>
                         </div>
                         <i class="bi bi-file-earmark-text-fill fs-1 text-light-50"></i>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4 col-lg-4">
+                <a href="employee_managment.php" class="card text-decoration-none text-light h-100 shadow-sm p-3 farm-card border-0" style="background-color: #820100;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-white text-dark mb-2"><?= $cnt_staff ?> Staff Officers</span>
+                            <h5 class="fw-bold m-0">Human Resource (HR)</h5>
+                            <small class="text-light-50">Farm staff details, designations &amp; roles</small>
+                        </div>
+                        <i class="bi bi-people-fill fs-1 text-light-50"></i>
                     </div>
                 </a>
             </div>

@@ -111,6 +111,7 @@ $(document).ready(function () {
     initFarmDataTable('#machineryTable', { order: [[0, 'asc']] });
     initFarmDataTable('#instrumentsTable', { order: [[0, 'asc']] });
     initFarmDataTable('#counterfoilTable', { order: [[0, 'asc']] });
+    initFarmDataTable('#employeeTable', { order: [[0, 'asc']] });
 
     // Filter Land Status on #landsTable (Column index 3)
     $('#filterLandStatus').on('change', function () {

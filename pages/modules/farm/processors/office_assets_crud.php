@@ -507,5 +507,108 @@ if ($action === 'delete_counterfoil') {
     }
 }
 
+// -------------------------------------------------------------
+// 7. EMPLOYEE / HR CRUD (DATA ISOLATED BY FARM_ID)
+// -------------------------------------------------------------
+if ($action === 'save_employee') {
+    $service_number = trim($_POST['service_number'] ?? '');
+    $officer_name   = trim($_POST['officer_name'] ?? '');
+    $designation    = trim($_POST['designation'] ?? '');
+    $user_role      = trim($_POST['user_role'] ?? 'employee');
+    $service_cat    = trim($_POST['service_category'] ?? '');
+    $email          = trim($_POST['email'] ?? '');
+    $contact_number = trim($_POST['contact_number'] ?? '');
+    $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : date('Y-m-d');
+    $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : date('Y-m-d');
+
+    if (empty($officer_name) || empty($service_number) || empty($email)) {
+        respondJsonOrRedirect($is_ajax, false, 'Officer Name, Service Number and Email are required.', '../employee_managment.php');
+    }
+
+    $username = strtolower(explode('@', $email)[0]);
+    $default_password = password_hash("Daph1234", PASSWORD_BCRYPT);
+
+    $stmt = $mysqli->prepare("
+        INSERT INTO users (
+            username, password, email, phone, full_name, 
+            emp_id, service_number, designation, role, service_category, 
+            district_id, range_id, farm_id, registered_date, appointment_date, 
+            appointment_date_current_position, is_active
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, CURDATE(), ?, ?, 1)
+    ");
+
+    if ($stmt) {
+        $stmt->bind_param(
+            "ssssssssssisss",
+            $username,
+            $default_password,
+            $email,
+            $contact_number,
+            $officer_name,
+            $service_number,
+            $service_number,
+            $designation,
+            $user_role,
+            $service_cat,
+            $district_id,
+            $farm_id,
+            $app_date,
+            $app_current
+        );
+
+        if ($stmt->execute()) {
+            respondJsonOrRedirect($is_ajax, true, 'Officer record successfully created under your farm profile.', '../employee_managment.php');
+        } else {
+            respondJsonOrRedirect($is_ajax, false, 'Database error creating officer account: ' . $stmt->error, '../employee_managment.php');
+        }
+        $stmt->close();
+    }
+}
+
+if ($action === 'update_employee') {
+    $id             = intval($_POST['id'] ?? 0);
+    $service_number = trim($_POST['service_number'] ?? '');
+    $officer_name   = trim($_POST['officer_name'] ?? '');
+    $designation    = trim($_POST['designation'] ?? '');
+    $user_role      = trim($_POST['user_role'] ?? 'employee');
+    $service_cat    = trim($_POST['service_category'] ?? '');
+    $email          = trim($_POST['email'] ?? '');
+    $contact_number = trim($_POST['contact_number'] ?? '');
+    $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : date('Y-m-d');
+    $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : date('Y-m-d');
+
+    if ($id <= 0 || empty($officer_name) || empty($email)) {
+        respondJsonOrRedirect($is_ajax, false, 'Invalid officer ID or missing mandatory attributes.', '../employee_managment.php');
+    }
+
+    $stmt = $mysqli->prepare("
+        UPDATE users SET 
+            service_number = ?, full_name = ?, designation = ?, role = ?, 
+            service_category = ?, email = ?, phone = ?, appointment_date = ?, 
+            appointment_date_current_position = ? 
+        WHERE id = ? AND (farm_id = ? OR id = ?)
+    ");
+    $stmt->bind_param("sssssssssiii", $service_number, $officer_name, $designation, $user_role, $service_cat, $email, $contact_number, $app_date, $app_current, $id, $farm_id, $user_id);
+
+    if ($stmt->execute()) {
+        respondJsonOrRedirect($is_ajax, true, 'Officer details updated successfully.', '../employee_managment.php');
+    } else {
+        respondJsonOrRedirect($is_ajax, false, 'Failed to update officer details: ' . $stmt->error, '../employee_managment.php');
+    }
+}
+
+if ($action === 'delete_employee') {
+    $id = intval($_GET['id'] ?? 0);
+    if ($id > 0) {
+        $stmt = $mysqli->prepare("UPDATE users SET is_active = 0 WHERE id = ? AND (farm_id = ? OR id = ?)");
+        $stmt->bind_param("iii", $id, $farm_id, $user_id);
+        if ($stmt->execute()) {
+            respondJsonOrRedirect(false, true, 'Officer record removed successfully.', '../employee_managment.php');
+        } else {
+            respondJsonOrRedirect(false, false, 'Failed to delete officer record: ' . $stmt->error, '../employee_managment.php');
+        }
+    }
+}
+
 $mysqli->close();
 ?>
