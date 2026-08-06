@@ -80,9 +80,11 @@ $(document).ready(function () {
     initFarmDataTable('#produceRegisterTable', {
         order: [[0, 'desc']],
         language: {
-            emptyTable: "No produce entries found for this commodity. Click 'Log Production & Disposal' to add one."
+            emptyTable: "No produce entries found for this commodity. Click 'Receive Produce' or 'Issue Produce' to add one."
         }
     });
+
+    initFarmDataTable('#manageCommoditiesTable', { order: [[0, 'asc']] });
 
     initFarmDataTable('#fuelLedgerTable', {
         order: [[0, 'asc']],
@@ -226,7 +228,11 @@ $(document).ready(function () {
         const btn = $(this);
         $('#edit_produce_id').val(btn.data('id'));
         $('#edit_record_date').val(btn.data('record_date'));
+        $('#edit_received_from').val(btn.data('received_from'));
+        $('#edit_issued_to').val(btn.data('issued_to'));
         $('#edit_plot_no').val(btn.data('plot_no'));
+        $('#edit_received_qty').val(btn.data('received_qty'));
+        $('#edit_issued_qty').val(btn.data('issued_qty'));
         $('#edit_produce_qty').val(btn.data('quantity'));
         $('#edit_disposal_method').val(btn.data('disposal_method'));
         $('#edit_produce_unit_price').val(btn.data('unit_price'));
@@ -234,6 +240,15 @@ $(document).ready(function () {
         $('#edit_receipt_no_or_page').val(btn.data('receipt_no_or_page'));
         $('#edit_initials').val(btn.data('initials'));
         $('#edit_remarks').val(btn.data('remarks'));
+    });
+
+    // 7b. Edit Master Commodity Item Event Listener
+    $(document).on('click', '.btn-edit-master-commodity', function () {
+        const btn = $(this);
+        $('#edit_commodity_id').val(btn.data('id'));
+        $('#edit_commodity_name').val(btn.data('commodity_name'));
+        $('#edit_commodity_unit').val(btn.data('unit_of_measure'));
+        $('#edit_commodity_desc').val(btn.data('description'));
     });
 
     // 8. Edit Fuel Stock Ledger Entry Event Listener
@@ -421,6 +436,41 @@ document.addEventListener('DOMContentLoaded', function () {
             sumEl.value = fullSum.toFixed(2);
         }
     }
+
+    function calcReceiveProduceBalance() {
+        const qtyEl = document.getElementById('receive_produce_qty');
+        const calcEl = document.getElementById('receive_produce_calc_balance');
+        if (qtyEl && calcEl) {
+            const baseBal = (typeof currentCommodityBalance !== 'undefined') ? parseFloat(currentCommodityBalance) : 0;
+            const recVal = parseFloat(qtyEl.value) || 0;
+            calcEl.value = (baseBal + recVal).toFixed(2);
+        }
+    }
+
+    function calcIssueProduceBalance() {
+        const qtyEl = document.getElementById('issue_produce_qty');
+        const priceEl = document.getElementById('issue_produce_unit_price');
+        const sumEl = document.getElementById('issue_produce_full_sum');
+        const calcEl = document.getElementById('issue_produce_calc_balance');
+
+        if (qtyEl && calcEl) {
+            const baseBal = (typeof currentCommodityBalance !== 'undefined') ? parseFloat(currentCommodityBalance) : 0;
+            const issVal = parseFloat(qtyEl.value) || 0;
+            const priceVal = (priceEl) ? (parseFloat(priceEl.value) || 0) : 0;
+
+            calcEl.value = Math.max(0, baseBal - issVal).toFixed(2);
+            if (sumEl) {
+                sumEl.value = (issVal * priceVal).toFixed(2);
+            }
+        }
+    }
+
+    const recProduceInput = document.getElementById('receive_produce_qty');
+    if (recProduceInput) recProduceInput.addEventListener('input', calcReceiveProduceBalance);
+
+    document.querySelectorAll('.produce-issue-calc').forEach(function (el) {
+        el.addEventListener('input', calcIssueProduceBalance);
+    });
 
     document.querySelectorAll('.produce-calc').forEach(function (el) {
         el.addEventListener('input', function () { calcProduceFullSum('add_'); });
