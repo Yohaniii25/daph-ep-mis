@@ -18,7 +18,7 @@ $vehicles_list = $veh_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $veh_stmt->close();
 
 // Fetch Vehicle Repairs for current Regional Farm
-$rep_stmt = $mysqli->prepare("SELECT vr.*, v.vehicle_number, v.vehicle_type FROM registered_vehicle_repairs vr LEFT JOIN registered_vehicles v ON vr.vehicle_id = v.id WHERE (vr.farm_id = ? OR vr.user_id = ?) ORDER BY vr.id DESC");
+$rep_stmt = $mysqli->prepare("SELECT vr.*, v.vehicle_number, v.vehicle_type FROM vehicle_repairs vr LEFT JOIN registered_vehicles v ON vr.vehicle_id = v.id WHERE (vr.farm_id = ? OR vr.user_id = ?) ORDER BY vr.id DESC");
 $rep_stmt->bind_param("ii", $farm_id, $user_id);
 $rep_stmt->execute();
 $repairs_list = $rep_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -155,28 +155,33 @@ $active_tab = $_GET['tab'] ?? 'fleet';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($repairs_list as $rep): ?>
+                            <?php foreach ($repairs_list as $rep): 
+                                $r_nature = !empty($rep['repair_nature']) ? $rep['repair_nature'] : ($rep['repair_done'] ?? '');
+                                $r_cost = isset($rep['cost_lkr']) ? $rep['cost_lkr'] : ($rep['amount'] ?? 0);
+                                $r_by = !empty($rep['repaired_by']) ? $rep['repaired_by'] : ($rep['place_of_repair'] ?? '');
+                                $r_remarks = !empty($rep['remarks']) ? $rep['remarks'] : ($rep['repair_description'] ?? '');
+                            ?>
                                 <tr>
                                     <td class="fw-bold text-nowrap"><?= date('Y-m-d', strtotime($rep['repair_date'])) ?></td>
                                     <td class="fw-bold text-dark">
                                         <?= htmlspecialchars($rep['vehicle_number'] ?: 'Vehicle #' . $rep['vehicle_id']) ?>
                                         <small class="d-block text-muted"><?= htmlspecialchars($rep['vehicle_type'] ?? '') ?></small>
                                     </td>
-                                    <td class="fw-semibold text-primary"><?= htmlspecialchars($rep['repair_nature']) ?></td>
-                                    <td class="fw-bold text-danger fs-6">LKR <?= number_format($rep['cost_lkr'], 2) ?></td>
-                                    <td><?= htmlspecialchars($rep['repaired_by'] ?: '-') ?></td>
+                                    <td class="fw-semibold text-primary"><?= htmlspecialchars($r_nature) ?></td>
+                                    <td class="fw-bold text-danger fs-6">LKR <?= number_format(floatval($r_cost), 2) ?></td>
+                                    <td><?= htmlspecialchars($r_by ?: '-') ?></td>
                                     <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($rep['invoice_ref'] ?: '-') ?></span></td>
-                                    <td class="small text-muted"><?= htmlspecialchars($rep['remarks'] ?: '-') ?></td>
+                                    <td class="small text-muted"><?= htmlspecialchars($r_remarks ?: '-') ?></td>
                                     <td class="text-center text-nowrap">
                                         <button class="btn btn-sm btn-outline-primary me-1 btn-edit-repair"
                                             data-id="<?= $rep['id'] ?>"
                                             data-vehicle_id="<?= $rep['vehicle_id'] ?>"
                                             data-repair_date="<?= htmlspecialchars($rep['repair_date']) ?>"
-                                            data-repair_nature="<?= htmlspecialchars($rep['repair_nature']) ?>"
-                                            data-cost_lkr="<?= $rep['cost_lkr'] ?>"
-                                            data-repaired_by="<?= htmlspecialchars($rep['repaired_by'] ?? '') ?>"
+                                            data-repair_nature="<?= htmlspecialchars($r_nature) ?>"
+                                            data-cost_lkr="<?= $r_cost ?>"
+                                            data-repaired_by="<?= htmlspecialchars($r_by) ?>"
                                             data-invoice_ref="<?= htmlspecialchars($rep['invoice_ref'] ?? '') ?>"
-                                            data-remarks="<?= htmlspecialchars($rep['remarks'] ?? '') ?>"
+                                            data-remarks="<?= htmlspecialchars($r_remarks) ?>"
                                             data-bs-toggle="modal" data-bs-target="#editRepairModal"
                                             title="Edit Repair Log">
                                             <i class="bi bi-pencil-square"></i> Edit

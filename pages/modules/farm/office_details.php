@@ -36,7 +36,7 @@ if ($user_query) {
 // Asset Counters with strict data isolation
 function getAssetCount($mysqli, $table, $farm_id, $user_id) {
     $where = "is_active = 1";
-    if (in_array($table, ['registered_vehicles', 'registered_vehicle_repairs', 'furniture_assets', 'machinery_assets', 'instrument_assets', 'counterfoil_assets'])) {
+    if (in_array($table, ['registered_vehicles', 'vehicle_repairs', 'registered_vehicle_repairs', 'furniture_assets', 'machinery_assets', 'instrument_assets', 'counterfoil_assets'])) {
         $where = "1=1";
     }
     $stmt = $mysqli->prepare("SELECT COUNT(*) AS cnt FROM `$table` WHERE $where AND (farm_id = ? OR user_id = ?)");
@@ -143,79 +143,79 @@ $cnt_counterfoil = getAssetCount($mysqli, 'counterfoil_assets', $farm_id, $user_
     <div class="card-body p-4">
         <div class="row g-3">
             <div class="col-md-4 col-lg-4">
-                <a href="lands_buildings.php" class="card text-decoration-none text-white h-100 shadow-sm p-3 farm-card border-0" style="background-color: #370709;">
+                <a href="lands_buildings.php" class="card text-decoration-none text-light h-100 shadow-sm p-3 farm-card border-0" style="background-color: #370709;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="badge bg-white text-dark mb-2"><?= $cnt_lands ?> Lands / <?= $cnt_buildings ?> Items</span>
                             <h5 class="fw-bold m-0">Lands &amp; Buildings</h5>
-                            <small class="text-white-50">Property deeds &amp; building inventory</small>
+                            <small class="text-light-50">Property deeds &amp; building inventory</small>
                         </div>
-                        <i class="bi bi-building-fill fs-1 text-white-50"></i>
+                        <i class="bi bi-building-fill fs-1 text-light-50"></i>
                     </div>
                 </a>
             </div>
 
             <div class="col-md-4 col-lg-4">
-                <a href="vehicles.php" class="card text-decoration-none text-white h-100 shadow-sm p-3 farm-card border-0" style="background-color: #b08723;">
+                <a href="vehicles.php" class="card text-decoration-none text-light h-100 shadow-sm p-3 farm-card border-0" style="background-color: #b08723;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="badge bg-white text-dark mb-2"><?= $cnt_vehicles ?> Fleet Vehicles</span>
                             <h5 class="fw-bold m-0">Vehicles Management</h5>
-                            <small class="text-white-50">Vehicles, tractors &amp; repair logs</small>
+                            <small class="text-light-50">Vehicles, tractors &amp; repair logs</small>
                         </div>
-                        <i class="bi bi-car-front-fill fs-1 text-white-50"></i>
+                        <i class="bi bi-car-front-fill fs-1 text-light-50"></i>
                     </div>
                 </a>
             </div>
 
             <div class="col-md-4 col-lg-4">
-                <a href="furniture.php" class="card text-decoration-none text-white h-100 shadow-sm p-3 farm-card border-0" style="background-color: #a07174;">
+                <a href="furniture.php" class="card text-decoration-none text-light h-100 shadow-sm p-3 farm-card border-0" style="background-color: #a07174;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="badge bg-white text-dark mb-2"><?= $cnt_furniture ?> Furniture Items</span>
                             <h5 class="fw-bold m-0">Furniture Management</h5>
-                            <small class="text-white-50">Office desks, chairs &amp; fittings</small>
+                            <small class="text-light-50">Office desks, chairs &amp; fittings</small>
                         </div>
-                        <i class="bi bi-file-earmark-plus fs-1 text-white-50"></i>
+                        <i class="bi bi-file-earmark-plus fs-1 text-light-50"></i>
                     </div>
                 </a>
             </div>
 
             <div class="col-md-4 col-lg-4">
-                <a href="machineries.php" class="card text-decoration-none text-white h-100 shadow-sm p-3 farm-card border-0" style="background-color: #689ccf;">
+                <a href="machineries.php" class="card text-decoration-none text-light h-100 shadow-sm p-3 farm-card border-0" style="background-color: #689ccf;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="badge bg-white text-dark mb-2"><?= $cnt_machinery ?> Machines</span>
                             <h5 class="fw-bold m-0">Machineries Management</h5>
-                            <small class="text-white-50">Cutters, pumps, milking equipment</small>
+                            <small class="text-light-50">Cutters, pumps, milking equipment</small>
                         </div>
-                        <i class="bi bi-gear-fill fs-1 text-white-50"></i>
+                        <i class="bi bi-gear-fill fs-1 text-light-50"></i>
                     </div>
                 </a>
             </div>
 
             <div class="col-md-4 col-lg-4">
-                <a href="instruments.php" class="card text-decoration-none text-white h-100 shadow-sm p-3 farm-card border-0" style="background-color: #2e7d32;">
+                <a href="instruments.php" class="card text-decoration-none text-light h-100 shadow-sm p-3 farm-card border-0" style="background-color: #2e7d32;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="badge bg-white text-dark mb-2"><?= $cnt_instruments ?> Instruments</span>
                             <h5 class="fw-bold m-0">Instruments Management</h5>
-                            <small class="text-white-50">Clinical, AI &amp; lab tools</small>
+                            <small class="text-light-50">Clinical, AI &amp; lab tools</small>
                         </div>
-                        <i class="bi bi-tools fs-1 text-white-50"></i>
+                        <i class="bi bi-tools fs-1 text-light-50"></i>
                     </div>
                 </a>
             </div>
 
             <div class="col-md-4 col-lg-4">
-                <a href="counter_foilage.php" class="card text-decoration-none text-white h-100 shadow-sm p-3 farm-card border-0" style="background-color: #e65100;">
+                <a href="counter_foilage.php" class="card text-decoration-none text-light h-100 shadow-sm p-3 farm-card border-0" style="background-color: #e65100;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <span class="badge bg-white text-dark mb-2"><?= $cnt_counterfoil ?> Counter Foils</span>
                             <h5 class="fw-bold m-0">Counter Foil Management</h5>
-                            <small class="text-white-50">Receipt &amp; voucher books</small>
+                            <small class="text-light-50">Receipt &amp; voucher books</small>
                         </div>
-                        <i class="bi bi-file-earmark-text-fill fs-1 text-white-50"></i>
+                        <i class="bi bi-file-earmark-text-fill fs-1 text-light-50"></i>
                     </div>
                 </a>
             </div>

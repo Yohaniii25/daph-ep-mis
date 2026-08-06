@@ -224,7 +224,7 @@ if ($action === 'save_vehicle_repair') {
         respondJsonOrRedirect($is_ajax, false, 'Vehicle selection and Repair Nature are required.', '../vehicles.php?tab=repairs');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO registered_vehicle_repairs (vehicle_id, user_id, farm_id, user_category, repair_date, repair_nature, cost_lkr, repaired_by, invoice_ref, remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $mysqli->prepare("INSERT INTO vehicle_repairs (vehicle_id, user_id, farm_id, user_category, repair_date, repair_done, amount, place_of_repair, invoice_ref, repair_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("iiisssdsss", $vehicle_id, $user_id, $farm_id, $user_category, $repair_date, $repair_nature, $cost_lkr, $repaired_by, $invoice_ref, $remarks);
 
     if ($stmt->execute()) {
@@ -248,7 +248,7 @@ if ($action === 'update_vehicle_repair') {
         respondJsonOrRedirect($is_ajax, false, 'Invalid repair log ID or missing description.', '../vehicles.php?tab=repairs');
     }
 
-    $stmt = $mysqli->prepare("UPDATE registered_vehicle_repairs SET vehicle_id = ?, repair_date = ?, repair_nature = ?, cost_lkr = ?, repaired_by = ?, invoice_ref = ?, remarks = ? WHERE id = ? AND (farm_id = ? OR user_id = ?)");
+    $stmt = $mysqli->prepare("UPDATE vehicle_repairs SET vehicle_id = ?, repair_date = ?, repair_done = ?, amount = ?, place_of_repair = ?, invoice_ref = ?, repair_description = ? WHERE id = ? AND (farm_id = ? OR user_id = ?)");
     $stmt->bind_param("issdsssiii", $vehicle_id, $repair_date, $repair_nature, $cost_lkr, $repaired_by, $invoice_ref, $remarks, $id, $farm_id, $user_id);
 
     if ($stmt->execute()) {
@@ -261,7 +261,7 @@ if ($action === 'update_vehicle_repair') {
 if ($action === 'delete_vehicle_repair') {
     $id = intval($_GET['id'] ?? 0);
     if ($id > 0) {
-        $stmt = $mysqli->prepare("DELETE FROM registered_vehicle_repairs WHERE id = ? AND (farm_id = ? OR user_id = ?)");
+        $stmt = $mysqli->prepare("DELETE FROM vehicle_repairs WHERE id = ? AND (farm_id = ? OR user_id = ?)");
         $stmt->bind_param("iii", $id, $farm_id, $user_id);
         if ($stmt->execute()) {
             respondJsonOrRedirect(false, true, 'Vehicle repair log deleted successfully.', '../vehicles.php?tab=repairs');
