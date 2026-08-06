@@ -1,4 +1,35 @@
 <!-- pages/modules/farm/models/egg_sales_modals.php -->
+<?php
+if (!isset($cages)) {
+    $cages = [];
+    if (isset($mysqli)) {
+        $cages_res = $mysqli->query("SELECT id, cage_name FROM cages ORDER BY cage_name");
+        if ($cages_res) {
+            while ($row = $cages_res->fetch_assoc()) {
+                $cages[] = $row;
+            }
+        }
+    }
+}
+
+if (!isset($batches)) {
+    $batches = [];
+    if (isset($mysqli) && isset($user_id)) {
+        $batch_stmt = $mysqli->prepare("SELECT id, batch_number AS batch_name, created_at FROM vaccine_batches WHERE user_id = ? ORDER BY id DESC");
+        if ($batch_stmt) {
+            $batch_stmt->bind_param("i", $user_id);
+            $batch_stmt->execute();
+            $batch_res = $batch_stmt->get_result();
+            if ($batch_res) {
+                while ($row = $batch_res->fetch_assoc()) {
+                    $batches[] = $row;
+                }
+            }
+            $batch_stmt->close();
+        }
+    }
+}
+?>
 
 <!-- Add Sales of Eggs Modal -->
 <div class="modal fade" id="addEggSalesModal" tabindex="-1" aria-hidden="true">
@@ -15,52 +46,36 @@
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         
-                        <!-- Import / Auto-fill from Parent Stock Daily Collection -->
+                        <!-- Automatic Collection Data Fetch Banner -->
                         <div class="col-12">
-                            <div class="card border-primary-subtle bg-primary-subtle p-3 rounded-3 mb-2">
-                                <label class="form-label fw-bold text-primary mb-1">
-                                    <i class="bi bi-box-arrow-in-down me-1"></i>Import Eggs from Parent Stock Collection (Daily Egg Register)
-                                </label>
-                                <select id="add_select_collection" class="form-select border-primary fw-bold shadow-sm">
-                                    <option value="" selected>-- Select Daily Collection Entry (Optional Auto-Fill) --</option>
-                                    <?php if (!empty($collections_data)): ?>
-                                        <?php foreach ($collections_data as $col): ?>
-                                            <option value="<?= $col['id'] ?>"
-                                                    data-date="<?= htmlspecialchars($col['collection_date']) ?>"
-                                                    data-cage="<?= $col['cage_id'] ?>"
-                                                    data-batch="<?= $col['batch_id'] ?>"
-                                                    data-table-no="<?= $col['table_eggs'] ?>"
-                                                    data-table-kg="<?= $col['table_eggs_kg'] ?>"
-                                                    data-cracked-no="<?= $col['cracked_eggs'] ?>"
-                                                    data-cracked-kg="<?= $col['cracked_eggs_kg'] ?>">
-                                                [<?= date('d-M-Y', strtotime($col['collection_date'])) ?>] Batch: <?= htmlspecialchars($col['batch_name']) ?> | Cage: <?= htmlspecialchars($col['cage_name']) ?> &mdash; Table Eggs: <?= number_format($col['table_eggs']) ?> NO (<?= number_format($col['table_eggs_kg'], 2) ?> Kg), Cracked: <?= number_format($col['cracked_eggs']) ?> NO (<?= number_format($col['cracked_eggs_kg'], 2) ?> Kg)
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                                <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Selecting an entry populates the date, cage, batch, table eggs count & weight, and cracked eggs count & weight from Parent Stock Operations.</small>
+                            <div id="add_autofetch_status" class="alert alert-info py-2 px-3 small d-flex align-items-center justify-content-between mb-1 rounded-3 shadow-sm border-0" style="background-color: #e8f0fa; color: #185dbd;">
+                                <div>
+                                    <i class="bi bi-magic me-1 fw-bold"></i>
+                                    <span id="add_autofetch_msg" class="fw-bold">Select Date, Cage, and Batch to automatically fetch egg collection data.</span>
+                                </div>
+                                <span id="add_autofetch_spinner" class="spinner-border spinner-border-sm text-primary" style="display: none;" role="status"></span>
                             </div>
                         </div>
 
                         <!-- General Info -->
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Date <span class="text-danger">*</span></label>
-                            <input type="date" name="sale_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                            <input type="date" name="sale_date" id="add_sale_date" class="form-control fw-bold" value="<?= date('Y-m-d') ?>" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Cage Name <span class="text-danger">*</span></label>
-                            <select name="cage_id" class="form-select" required>
+                            <select name="cage_id" id="add_cage_id" class="form-select fw-bold" required>
                                 <option value="" disabled selected>-- Select Active Cage --</option>
-                                <?php foreach ($cages as $cg): ?>
+                                <?php foreach ($cages ?? [] as $cg): ?>
                                     <option value="<?= $cg['id'] ?>"><?= htmlspecialchars($cg['cage_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Batch <span class="text-danger">*</span></label>
-                            <select name="batch_id" class="form-select" required>
+                            <select name="batch_id" id="add_batch_id" class="form-select fw-bold" required>
                                 <option value="" disabled selected>-- Select Active Batch --</option>
-                                <?php foreach ($batches as $bt): ?>
+                                <?php foreach ($batches ?? [] as $bt): ?>
                                     <option value="<?= $bt['id'] ?>"><?= htmlspecialchars($bt['batch_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -155,7 +170,7 @@
                             <label class="form-label fw-bold">Cage Name <span class="text-danger">*</span></label>
                             <select name="cage_id" id="edit_egg_sale_cage_id" class="form-select" required>
                                 <option value="" disabled>-- Select Active Cage --</option>
-                                <?php foreach ($cages as $cg): ?>
+                                <?php foreach ($cages ?? [] as $cg): ?>
                                     <option value="<?= $cg['id'] ?>"><?= htmlspecialchars($cg['cage_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -164,7 +179,7 @@
                             <label class="form-label fw-bold">Batch <span class="text-danger">*</span></label>
                             <select name="batch_id" id="edit_egg_sale_batch_id" class="form-select" required>
                                 <option value="" disabled>-- Select Active Batch --</option>
-                                <?php foreach ($batches as $bt): ?>
+                                <?php foreach ($batches ?? [] as $bt): ?>
                                     <option value="<?= $bt['id'] ?>"><?= htmlspecialchars($bt['batch_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>

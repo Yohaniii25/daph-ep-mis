@@ -98,8 +98,13 @@ $(document).ready(function () {
     initFarmDataTable('#monthOldTable', { order: [[0, 'desc']] });
     initFarmDataTable('#issuingTable', { order: [[0, 'desc']] });
 
-    // 2. Filter Month Apply Handler
-    $('#btn_apply_filter').on('click', function () {
+    // 2. Filter Month / Form Apply Handler
+    $('#btn_apply_filter').on('click', function (e) {
+        const form = $(this).closest('form');
+        if (form.length) {
+            form.submit();
+            return;
+        }
         const mVal = $('#filter_month').val();
         let activeTabPane = 'daily';
         if ($('.nav-link.active').length) {
@@ -110,6 +115,33 @@ $(document).ready(function () {
         }
         const currentUrl = window.location.pathname;
         window.location.href = currentUrl + '?month=' + encodeURIComponent(mVal) + '&tab=' + encodeURIComponent(activeTabPane);
+    });
+
+    // 2b. Live Search Handler for Egg Sales Table
+    $('#egg_sales_search').on('keyup search input', function() {
+        if ($.fn.DataTable.isDataTable('#eggSalesTable')) {
+            $('#eggSalesTable').DataTable().search($(this).val()).draw();
+        }
+    });
+
+    // 2c. Export Dropdown Event Triggers for Egg Sales Table
+    $(document).on('click', '.export-csv', function(e) {
+        e.preventDefault();
+        if ($.fn.DataTable.isDataTable('#eggSalesTable')) {
+            $('#eggSalesTable').DataTable().button('.buttons-csv').trigger();
+        }
+    });
+    $(document).on('click', '.export-pdf', function(e) {
+        e.preventDefault();
+        if ($.fn.DataTable.isDataTable('#eggSalesTable')) {
+            $('#eggSalesTable').DataTable().button('.buttons-pdf').trigger();
+        }
+    });
+    $(document).on('click', '.export-print', function(e) {
+        e.preventDefault();
+        if ($.fn.DataTable.isDataTable('#eggSalesTable')) {
+            $('#eggSalesTable').DataTable().button('.buttons-print').trigger();
+        }
     });
 
     // 3. Edit Daily Feed Modal Event Listener
@@ -408,30 +440,71 @@ document.addEventListener('DOMContentLoaded', function () {
         el.addEventListener('input', function() { calcCrackedEggsSales('edit_'); });
     });
 
-    // Auto-fill Egg Sales from Parent Stock Operations Daily Collection
-    $(document).on('change', '#add_select_collection', function () {
-        const opt = $(this).find(':selected');
-        if (!opt.val()) return;
+    // Automatic Collection Data Fetching on Date, Cage, or Batch Change
+    function autoFetchCollectionData() {
+        const saleDate = $('#add_sale_date').val();
+        const cageId = $('#add_cage_id').val();
+        const batchId = $('#add_batch_id').val();
 
-        const date = opt.data('date');
-        const cage = opt.data('cage');
-        const batch = opt.data('batch');
-        const tableNo = opt.data('table-no') || 0;
-        const tableKg = opt.data('table-kg') || 0;
-        const crackedNo = opt.data('cracked-no') || 0;
-        const crackedKg = opt.data('cracked-kg') || 0;
+        const msgEl = $('#add_autofetch_msg');
+        const spinner = $('#add_autofetch_spinner');
 
-        if (date) $('#addEggSalesModal input[name="sale_date"]').val(date);
-        if (cage) $('#addEggSalesModal select[name="cage_id"]').val(cage);
-        if (batch) $('#addEggSalesModal select[name="batch_id"]').val(batch);
+        if (!saleDate || !cageId || !batchId) {
+            msgEl.html('<i class="bi bi-info-circle me-1"></i>Select Date, Cage, and Batch to automatically fetch collection numbers.');
+            return;
+        }
 
-        $('#add_table_eggs_no').val(tableNo);
-        $('#add_table_eggs_kg').val(parseFloat(tableKg).toFixed(2));
-        $('#add_cracked_eggs_no').val(crackedNo);
-        $('#add_cracked_eggs_kg').val(parseFloat(crackedKg).toFixed(2));
+        spinner.show();
+        msgEl.html('<i class="bi bi-arrow-repeat me-1"></i>Fetching collection data from Parent Stock Register...');
 
-        // Trigger live auto-calculate revenue
-        calcTableEggsSales('add_');
-        calcCrackedEggsSales('add_');
+        $.ajax({
+            url: 'processors/egg_sales_crud.php',
+            method: 'POST',
+            data: {
+                action: 'get_collection',
+                sale_date: saleDate,
+                cage_id: cageId,
+                batch_id: batchId
+            },
+            dataType: 'json',
+            success: function (res) {
+                spinner.hide();
+                if (res.status === 'success') {
+                    $('#add_table_eggs_no').val(res.table_eggs);
+                    $('#add_table_eggs_kg').val(parseFloat(res.table_eggs_kg).toFixed(2));
+                    $('#add_cracked_eggs_no').val(res.cracked_eggs);
+                    $('#add_cracked_eggs_kg').val(parseFloat(res.cracked_eggs_kg).toFixed(2));
+
+                    if (res.source === 'sales') {
+                        if (res.table_eggs_unit_price > 0) {
+                            $('#add_table_eggs_unit_price').val(parseFloat(res.table_eggs_unit_price).toFixed(2));
+                        }
+                        if (res.cracked_eggs_unit_price > 0) {
+                            $('#add_cracked_eggs_unit_price').val(parseFloat(res.cracked_eggs_unit_price).toFixed(2));
+                        }
+                    }
+
+                    calcTableEggsSales('add_');
+                    calcCrackedEggsSales('add_');
+
+                    const srcText = (res.source === 'sales') ? 'existing sales entry' : 'collection register';
+                    msgEl.html('<i class="bi bi-check-circle-fill text-success me-1"></i><b>Auto-Fetched!</b> Data populated from ' + srcText + ' for ' + saleDate + '.');
+                } else {
+                    msgEl.html('<i class="bi bi-info-circle text-muted me-1"></i>No collection or sales record found for this Date, Cage & Batch. Enter numbers manually.');
+                }
+            },
+            error: function () {
+                spinner.hide();
+                msgEl.html('<i class="bi bi-exclamation-triangle text-danger me-1"></i>Failed to query collection data.');
+            }
+        });
+    }
+
+    $(document).on('change input', '#add_sale_date, #add_cage_id, #add_batch_id', function () {
+        autoFetchCollectionData();
+    });
+
+    $(document).on('shown.bs.modal', '#addEggSalesModal', function () {
+        autoFetchCollectionData();
     });
 });
