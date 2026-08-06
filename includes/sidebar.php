@@ -221,6 +221,10 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                     <?php if ($is_farms_dd): ?>
                         <!-- Farms Operations Menu -->
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'office_details.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/farm/office_details.php">
+                            Office Details
+                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'parent_stock_operations.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/parent_stock_operations.php">
                             Parent Stock Operations

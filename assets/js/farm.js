@@ -102,6 +102,24 @@ $(document).ready(function () {
     initFarmDataTable('#monthOldTable', { order: [[0, 'desc']] });
     initFarmDataTable('#issuingTable', { order: [[0, 'desc']] });
 
+    // Office Assets DataTables Initialization (PDF, CSV, Print export enabled)
+    const landsTable = initFarmDataTable('#landsTable', { order: [[0, 'asc']] });
+    initFarmDataTable('#inventoryTable', { order: [[0, 'asc']] });
+    initFarmDataTable('#vehiclesTable', { order: [[0, 'asc']] });
+    initFarmDataTable('#repairsTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#furnitureTable', { order: [[0, 'asc']] });
+    initFarmDataTable('#machineryTable', { order: [[0, 'asc']] });
+    initFarmDataTable('#instrumentsTable', { order: [[0, 'asc']] });
+    initFarmDataTable('#counterfoilTable', { order: [[0, 'asc']] });
+
+    // Filter Land Status on #landsTable (Column index 3)
+    $('#filterLandStatus').on('change', function () {
+        const val = $.trim($(this).val());
+        if (landsTable) {
+            landsTable.column(3).search(val ? val : '').draw();
+        }
+    });
+
     // 2. Filter Month / Form Apply Handler
     $('#btn_apply_filter').on('click', function (e) {
         const form = $(this).closest('form');
