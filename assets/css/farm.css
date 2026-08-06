@@ -22,6 +22,26 @@
     --color-c11: #8d170e;
 }
 
+/* Farm Secondary Color Utilities */
+.text-farm-secondary {
+    color: var(--farm-secondary, #5a1216) !important;
+}
+
+.bg-farm-secondary {
+    background-color: var(--farm-secondary, #5a1216) !important;
+    color: #ffffff !important;
+}
+
+.border-farm-secondary {
+    border-color: var(--farm-secondary, #5a1216) !important;
+}
+
+.badge-farm-secondary {
+    background-color: rgba(90, 18, 22, 0.1) !important;
+    color: var(--farm-secondary, #5a1216) !important;
+    border: 1px solid var(--farm-secondary, #5a1216) !important;
+}
+
 /* Custom Farm Cards */
 .farm-card {
     border-radius: 12px;

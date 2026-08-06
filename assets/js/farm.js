@@ -71,9 +71,11 @@ $(document).ready(function () {
     initFarmDataTable('#drugLedgerTable', {
         order: [[0, 'asc']],
         language: {
-            emptyTable: "No stock movement entries found for this drug item. Click 'Log Stock Movement' to add one."
+            emptyTable: "No stock movement entries found for this drug item. Click 'Receive Order' or 'Issue Order' to add one."
         }
     });
+
+    initFarmDataTable('#manageDrugItemsTable', { order: [[0, 'asc']] });
 
     initFarmDataTable('#produceRegisterTable', {
         order: [[0, 'desc']],
@@ -196,13 +198,27 @@ $(document).ready(function () {
     $(document).on('click', '.btn-edit-drug-ledger', function () {
         const btn = $(this);
         $('#edit_drug_ledger_id').val(btn.data('id'));
+        $('#edit_order_no').val(btn.data('order_no'));
         $('#edit_record_date').val(btn.data('record_date'));
+        $('#edit_received_from').val(btn.data('received_from'));
+        $('#edit_issued_to').val(btn.data('issued_to'));
         $('#edit_party_name').val(btn.data('party_name'));
         $('#edit_ref_doc_no').val(btn.data('ref_doc_no'));
+        $('#edit_exp_date').val(btn.data('exp_date'));
         $('#edit_received_qty').val(btn.data('received_qty'));
         $('#edit_issued_qty').val(btn.data('issued_qty'));
         $('#edit_balance_qty').val(btn.data('balance_qty'));
         $('#edit_remarks').val(btn.data('remarks'));
+    });
+
+    // 6b. Edit Master Drug Item Event Listener
+    $(document).on('click', '.btn-edit-master-item', function () {
+        const btn = $(this);
+        $('#edit_item_id').val(btn.data('id'));
+        $('#edit_item_name').val(btn.data('item_name'));
+        $('#edit_item_unit').val(btn.data('unit_of_measure'));
+        $('#edit_item_exp_date').val(btn.data('exp_date'));
+        $('#edit_item_desc').val(btn.data('description'));
     });
 
     // 7. Edit Produce Register Entry Event Listener
@@ -317,10 +333,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function calcReceiveOrderBalance() {
+        const qtyEl = document.getElementById('receive_order_qty');
+        const calcEl = document.getElementById('receive_order_calc_balance');
+        if (qtyEl && calcEl) {
+            const baseBal = (typeof currentItemBalance !== 'undefined') ? parseFloat(currentItemBalance) : 0;
+            const recVal = parseFloat(qtyEl.value) || 0;
+            calcEl.value = (baseBal + recVal).toFixed(2);
+        }
+    }
+
+    function calcIssueOrderBalance() {
+        const qtyEl = document.getElementById('issue_order_qty');
+        const calcEl = document.getElementById('issue_order_calc_balance');
+        if (qtyEl && calcEl) {
+            const baseBal = (typeof currentItemBalance !== 'undefined') ? parseFloat(currentItemBalance) : 0;
+            const issVal = parseFloat(qtyEl.value) || 0;
+            calcEl.value = Math.max(0, baseBal - issVal).toFixed(2);
+        }
+    }
+
     const addRecInput = document.getElementById('add_received_qty');
     const addIssInput = document.getElementById('add_issued_qty');
     if (addRecInput) addRecInput.addEventListener('input', calcDrugLiveBalance);
     if (addIssInput) addIssInput.addEventListener('input', calcDrugLiveBalance);
+
+    const recOrderInput = document.getElementById('receive_order_qty');
+    const issOrderInput = document.getElementById('issue_order_qty');
+    if (recOrderInput) recOrderInput.addEventListener('input', calcReceiveOrderBalance);
+    if (issOrderInput) issOrderInput.addEventListener('input', calcIssueOrderBalance);
 
     // Fuel Register Balance Live Calculation
     function calcFuelLiveBalance() {
