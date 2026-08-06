@@ -12,11 +12,13 @@ $user_id = $_SESSION['user_id'] ?? 1;
 // Active tab determination
 $active_tab = $_GET['tab'] ?? 'daily'; // 'daily' or 'annex4'
 
-// Selected filter month (default to current month YYYY-MM)
-$selected_month = $_GET['month'] ?? date('Y-m');
+// Selected filter month & date (default to today's date YYYY-MM-DD)
+$selected_date = $_GET['date'] ?? date('Y-m-d');
+$selected_month = $_GET['month'] ?? date('Y-m', strtotime($selected_date));
 $first_day_of_month = date('Y-m-01', strtotime($selected_month . '-01'));
 $last_day_of_month = date('Y-m-t', strtotime($selected_month . '-01'));
 $month_label = date('F Y', strtotime($first_day_of_month));
+$date_label = date('d F Y', strtotime($selected_date));
 
 // Fetch available Cages for dropdowns
 $cages_res = $mysqli->query("SELECT id, cage_name FROM cages ORDER BY cage_name");
@@ -57,30 +59,50 @@ if ($res_daily) {
 $stmt_daily->close();
 
 // -------------------------------------------------------------
-// 2. Fetch & Auto-Sync Annex 4: Mash Details Records
+// 2. Fetch & Auto-Sync Daily Mash Details Records
 // -------------------------------------------------------------
-$feed_types = ['Layer', 'Starter', 'Grower', 'Cattle Feed'];
+$feed_types = ['Layer', 'Starter', 'Grower'];
 
-// Ensure all 4 feed types exist in monthly_mash_details for this month
+// Ensure feed types exist for $selected_date & auto-populate opening stock from immediate previous date
 foreach ($feed_types as $ft) {
-    $stmt_chk = $mysqli->prepare("SELECT id FROM monthly_mash_details WHERE record_month = ? AND feed_type = ?");
-    $stmt_chk->bind_param("ss", $first_day_of_month, $ft);
+    // 1. Fetch closing balance from immediate previous date strictly before selected_date
+    $stmt_prev = $mysqli->prepare("SELECT balance_stock_kg FROM monthly_mash_details WHERE record_month < ? AND feed_type = ? ORDER BY record_month DESC LIMIT 1");
+    $stmt_prev->bind_param("ss", $selected_date, $ft);
+    $stmt_prev->execute();
+    $prev_res = $stmt_prev->get_result();
+    $prev_closing = 0.00;
+    if ($prev_res && $prev_res->num_rows > 0) {
+        $prev_closing = floatval($prev_res->fetch_assoc()['balance_stock_kg']);
+    }
+    $stmt_prev->close();
+
+    // 2. Check if record exists for selected_date
+    $stmt_chk = $mysqli->prepare("SELECT id, opening_stock_kg FROM monthly_mash_details WHERE record_month = ? AND feed_type = ? LIMIT 1");
+    $stmt_chk->bind_param("ss", $selected_date, $ft);
     $stmt_chk->execute();
     $chk_res = $stmt_chk->get_result();
+
     if ($chk_res->num_rows === 0) {
-        $stmt_ins = $mysqli->prepare("INSERT INTO monthly_mash_details (record_month, feed_type, opening_stock_kg, received_kg, consumption_kg, issued_other_farm_kg, balance_stock_kg) VALUES (?, ?, 0.00, 0.00, 0.00, 0.00, 0.00)");
-        $stmt_ins->bind_param("ss", $first_day_of_month, $ft);
+        $stmt_ins = $mysqli->prepare("INSERT INTO monthly_mash_details (record_month, feed_type, opening_stock_kg, received_kg, consumption_kg, issued_other_farm_kg, balance_stock_kg) VALUES (?, ?, ?, 0.00, 0.00, 0.00, ?)");
+        $stmt_ins->bind_param("ssdd", $selected_date, $ft, $prev_closing, $prev_closing);
         $stmt_ins->execute();
         $stmt_ins->close();
+    } else {
+        $row_curr = $chk_res->fetch_assoc();
+        // Update opening_stock_kg to match previous day's closing balance
+        $stmt_upd_open = $mysqli->prepare("UPDATE monthly_mash_details SET opening_stock_kg = ? WHERE id = ?");
+        $stmt_upd_open->bind_param("di", $prev_closing, $row_curr['id']);
+        $stmt_upd_open->execute();
+        $stmt_upd_open->close();
     }
     $stmt_chk->close();
 }
 
-// Fetch Annex 4 records & auto-calculate consumption from daily feed log
+// Fetch records for selected_date & auto-calculate daily consumption
 $mash_records = [];
-$sql_mash = "SELECT * FROM monthly_mash_details WHERE record_month = ? ORDER BY FIELD(feed_type, 'Layer', 'Starter', 'Grower', 'Cattle Feed')";
+$sql_mash = "SELECT * FROM monthly_mash_details WHERE record_month = ? ORDER BY FIELD(feed_type, 'Layer', 'Starter', 'Grower')";
 $stmt_mash = $mysqli->prepare($sql_mash);
-$stmt_mash->bind_param("s", $first_day_of_month);
+$stmt_mash->bind_param("s", $selected_date);
 $stmt_mash->execute();
 $res_mash = $stmt_mash->get_result();
 
@@ -94,9 +116,9 @@ if ($res_mash) {
     while ($m = $res_mash->fetch_assoc()) {
         $ft = $m['feed_type'];
 
-        // Auto-sum consumption from daily feed distribution log for this feed type and month
-        $stmt_sum = $mysqli->prepare("SELECT COALESCE(SUM(amount_distributed_kg), 0) AS total_consumed FROM daily_feed_distribution WHERE feed_type = ? AND distribution_date BETWEEN ? AND ?");
-        $stmt_sum->bind_param("sss", $ft, $first_day_of_month, $last_day_of_month);
+        // Auto-sum daily consumption from daily feed distribution log for this date
+        $stmt_sum = $mysqli->prepare("SELECT COALESCE(SUM(amount_distributed_kg), 0) AS total_consumed FROM daily_feed_distribution WHERE feed_type = ? AND distribution_date = ?");
+        $stmt_sum->bind_param("ss", $ft, $selected_date);
         $stmt_sum->execute();
         $sum_row = $stmt_sum->get_result()->fetch_assoc();
         $auto_consumption = floatval($sum_row['total_consumed'] ?? 0);
@@ -108,7 +130,6 @@ if ($res_mash) {
         $issued_other = floatval($m['issued_other_farm_kg']);
         $auto_balance = ($opening + $received) - ($auto_consumption + $issued_other);
 
-        // Update record in database if consumption or balance changed
         if (abs(floatval($m['consumption_kg']) - $auto_consumption) > 0.001 || abs(floatval($m['balance_stock_kg']) - $auto_balance) > 0.001) {
             $stmt_upd = $mysqli->prepare("UPDATE monthly_mash_details SET consumption_kg = ?, balance_stock_kg = ? WHERE id = ?");
             $stmt_upd->bind_param("ddi", $auto_consumption, $auto_balance, $m['id']);
@@ -135,7 +156,7 @@ $stmt_mash->close();
 <div class="row align-items-center mb-4">
     <div class="col-md-7">
         <h3 class="fw-bold text-dark m-0">
-            <i class="bi bi-basket-fill me-2" style="color: #820100;"></i>Daily Feed Distribution & Annex 4: Mash Details
+            <i class="bi bi-basket-fill me-2" style="color: #820100;"></i>Feed Management
         </h3>
         <p class="text-muted mb-0 small">Manage daily feed distribution to cages and review monthly Mash inventory summaries.</p>
     </div>
@@ -172,14 +193,14 @@ $stmt_mash->close();
         <button class="nav-link fw-bold <?= ($active_tab === 'daily') ? 'active text-light' : 'text-dark bg-white' ?> border-0 py-3 px-4" 
                 id="daily-tab" data-bs-toggle="tab" data-bs-target="#daily-pane" type="button" role="tab" 
                 style="<?= ($active_tab === 'daily') ? 'background-color: #820100; color: #ffffff; border-radius: 8px 8px 0 0;' : 'border-radius: 8px 8px 0 0;' ?>">
-            <i class="bi bi-calendar-check me-2"></i>1. Daily Feed Distribution Log
+            <i class="bi bi-calendar-check me-2"></i>Daily Feed Distribution Log
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link fw-bold <?= ($active_tab === 'annex4') ? 'active text-light' : 'text-dark bg-white' ?> border-0 py-3 px-4" 
                 id="annex4-tab" data-bs-toggle="tab" data-bs-target="#annex4-pane" type="button" role="tab"
                 style="<?= ($active_tab === 'annex4') ? 'background-color: #185dbd; color: #ffffff; border-radius: 8px 8px 0 0;' : 'border-radius: 8px 8px 0 0;' ?>">
-            <i class="bi bi-file-earmark-spreadsheet me-2"></i>2. Annex 4: Mash Details (Monthly Summary)
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Mash Details (Monthly Summary)
         </button>
     </li>
 </ul>
@@ -265,13 +286,11 @@ $stmt_mash->close();
                                         <span class="badge px-3 py-2 fs-6 
                                             <?= ($r['feed_type'] === 'Layer') ? 'badge-feed-layer' : '' ?>
                                             <?= ($r['feed_type'] === 'Starter') ? 'badge-feed-starter' : '' ?>
-                                            <?= ($r['feed_type'] === 'Grower') ? 'badge-feed-grower' : '' ?>
-                                            <?= ($r['feed_type'] === 'Cattle Feed') ? 'badge-feed-cattle' : '' ?>"
+                                            <?= ($r['feed_type'] === 'Grower') ? 'badge-feed-grower' : '' ?>"
                                             style="
                                             <?= ($r['feed_type'] === 'Layer') ? 'background-color: #820100; color: #ffffff;' : '' ?>
                                             <?= ($r['feed_type'] === 'Starter') ? 'background-color: #efbe2c; color: #370709;' : '' ?>
                                             <?= ($r['feed_type'] === 'Grower') ? 'background-color: #003ddc; color: #ffffff;' : '' ?>
-                                            <?= ($r['feed_type'] === 'Cattle Feed') ? 'background-color: #b08723; color: #ffffff;' : '' ?>
                                             ">
                                             <?= htmlspecialchars($r['feed_type']) ?>
                                         </span>
@@ -364,8 +383,17 @@ $stmt_mash->close();
         </div>
 
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-            <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold text-dark m-0"><i class="bi bi-file-earmark-spreadsheet me-2 text-color-c10" style="color: #185dbd;"></i>Annex 4: Mash Details Monthly Inventory Register (<?= $month_label ?>)</h5>
+            <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h5 class="fw-bold text-dark m-0">
+                    <i class="bi bi-file-earmark-spreadsheet me-2 text-color-c10" style="color: #185dbd;"></i>Mash Details Inventory Register (<span id="mash_date_display"><?= $date_label ?></span>)
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="mash_date_filter" class="fw-bold mb-0 text-nowrap small text-muted"><i class="bi bi-calendar-date me-1"></i>Mash Date:</label>
+                    <input type="date" id="mash_date_filter" class="form-control form-control-sm w-auto shadow-sm fw-bold" value="<?= $selected_date ?>">
+                    <button type="button" id="btn_auto_fetch_opening" class="btn btn-sm text-white px-3 fw-bold shadow-sm" style="background-color: #185dbd; border-color: #185dbd;" title="Auto-fetch closing stock from immediate previous date as opening stock">
+                        <i class="bi bi-arrow-repeat me-1"></i>Auto-Fetch Opening Stock
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -384,16 +412,16 @@ $stmt_mash->close();
                         </thead>
                         <tbody>
                             <?php foreach ($mash_records as $m): ?>
-                                <tr>
+                                <tr id="mash_row_<?= strtolower(str_replace(' ', '_', $m['feed_type'])) ?>" data-feed_type="<?= htmlspecialchars($m['feed_type']) ?>">
                                     <td class="fw-bold text-start fs-6">
                                         <i class="bi bi-arrow-right-short text-color-c10 me-1" style="color: #185dbd;"></i><?= htmlspecialchars($m['feed_type']) ?>
                                     </td>
-                                    <td class="fw-bold"><?= number_format($m['opening_stock_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c10" style="color: #185dbd;"><?= number_format($m['received_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c6 bg-color-c6-light" style="color: #ef4016; background-color: #fdece8;"><?= number_format($m['consumption_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c8" style="color: #b08723;"><?= number_format($m['issued_other_farm_kg'], 2) ?></td>
-                                    <td class="fw-bold text-color-c10 bg-color-c10-light" style="color: #185dbd; background-color: #e8f0fa;"><?= number_format($m['balance_stock_kg'], 2) ?></td>
-                                    <td class="small"><?= htmlspecialchars($m['remarks'] ?? '-') ?></td>
+                                    <td class="fw-bold cell-opening-stock"><?= number_format($m['opening_stock_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c10 cell-received" style="color: #185dbd;"><?= number_format($m['received_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c6 bg-color-c6-light cell-consumption" style="color: #ef4016; background-color: #fdece8;"><?= number_format($m['consumption_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c8 cell-issued-other" style="color: #b08723;"><?= number_format($m['issued_other_farm_kg'], 2) ?></td>
+                                    <td class="fw-bold text-color-c10 bg-color-c10-light cell-balance" style="color: #185dbd; background-color: #e8f0fa;"><?= number_format($m['balance_stock_kg'], 2) ?></td>
+                                    <td class="small cell-remarks"><?= htmlspecialchars($m['remarks'] ?? '-') ?></td>
                                     <td>
                                         <button class="btn btn-sm btn-edit-action btn-edit-mash fw-bold px-3" style="border-color: #185dbd; color: #185dbd;"
                                                 data-id="<?= $m['id'] ?>"
@@ -414,11 +442,11 @@ $stmt_mash->close();
                         <tfoot class="tfoot-summary fw-bold" style="background-color: #d4c7b7; color: #370709;">
                             <tr>
                                 <td class="text-start">TOTAL SUMMARY</td>
-                                <td><?= number_format($total_opening_stock, 2) ?> kg</td>
-                                <td><?= number_format($total_received_stock, 2) ?> kg</td>
-                                <td class="text-color-c6" style="color: #ef4016;"><?= number_format($total_consumption, 2) ?> kg</td>
-                                <td><?= number_format($total_issued_other, 2) ?> kg</td>
-                                <td class="text-color-c10" style="color: #185dbd;"><?= number_format($total_balance_stock, 2) ?> kg</td>
+                                <td id="foot_total_opening"><?= number_format($total_opening_stock, 2) ?> kg</td>
+                                <td id="foot_total_received"><?= number_format($total_received_stock, 2) ?> kg</td>
+                                <td id="foot_total_consumption" class="text-color-c6" style="color: #ef4016;"><?= number_format($total_consumption, 2) ?> kg</td>
+                                <td id="foot_total_issued"><?= number_format($total_issued_other, 2) ?> kg</td>
+                                <td id="foot_total_balance" class="text-color-c10" style="color: #185dbd;"><?= number_format($total_balance_stock, 2) ?> kg</td>
                                 <td colspan="2"></td>
                             </tr>
                         </tfoot>
@@ -436,5 +464,138 @@ $stmt_mash->close();
 include './models/daily_feed_modals.php';
 include './models/monthly_mash_modals.php';
 ?>
+
+<!-- Auto-Fetch Opening Stock AJAX Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mashDateFilter = document.getElementById('mash_date_filter');
+    const btnAutoFetchOpening = document.getElementById('btn_auto_fetch_opening');
+
+    function autoFetchOpeningStock(selectedDate) {
+        if (!selectedDate) return;
+
+        const btn = btnAutoFetchOpening;
+        const origHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Fetching...';
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'fetch_opening_stock');
+        formData.append('date', selectedDate);
+
+        fetch('processors/monthly_mash_details_crud.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
+
+            if (data.status === 'success') {
+                const mashDateDisplay = document.getElementById('mash_date_display');
+                if (mashDateDisplay && data.date_label) {
+                    mashDateDisplay.innerText = data.date_label;
+                }
+
+                // Sync URL query if date changed
+                const currentUrlParams = new URLSearchParams(window.location.search);
+                if (currentUrlParams.get('date') !== selectedDate) {
+                    window.location.href = 'feed_management.php?tab=annex4&date=' + encodeURIComponent(selectedDate);
+                    return;
+                }
+
+                // Update table rows in real-time
+                if (data.records && Array.isArray(data.records)) {
+                    data.records.forEach(r => {
+                        const feedKey = r.feed_type.toLowerCase().replace(/\s+/g, '_');
+                        const row = document.getElementById('mash_row_' + feedKey);
+                        if (row) {
+                            const openCell = row.querySelector('.cell-opening-stock');
+                            const recCell = row.querySelector('.cell-received');
+                            const consCell = row.querySelector('.cell-consumption');
+                            const issCell = row.querySelector('.cell-issued-other');
+                            const balCell = row.querySelector('.cell-balance');
+                            const editBtn = row.querySelector('.btn-edit-mash');
+
+                            if (openCell) openCell.innerText = parseFloat(r.opening_stock_kg).toFixed(2);
+                            if (recCell) recCell.innerText = parseFloat(r.received_kg).toFixed(2);
+                            if (consCell) consCell.innerText = parseFloat(r.consumption_kg).toFixed(2);
+                            if (issCell) issCell.innerText = parseFloat(r.issued_other_farm_kg).toFixed(2);
+                            if (balCell) balCell.innerText = parseFloat(r.balance_stock_kg).toFixed(2);
+
+                            if (editBtn) {
+                                editBtn.dataset.id = r.id;
+                                editBtn.dataset.opening_stock_kg = r.opening_stock_kg;
+                                editBtn.dataset.received_kg = r.received_kg;
+                                editBtn.dataset.consumption_kg = r.consumption_kg;
+                                editBtn.dataset.issued_other_farm_kg = r.issued_other_farm_kg;
+                                editBtn.dataset.balance_stock_kg = r.balance_stock_kg;
+                            }
+                        }
+                    });
+                }
+
+                // Update footer summary
+                const footOpening = document.getElementById('foot_total_opening');
+                const footReceived = document.getElementById('foot_total_received');
+                const footConsumption = document.getElementById('foot_total_consumption');
+                const footIssued = document.getElementById('foot_total_issued');
+                const footBalance = document.getElementById('foot_total_balance');
+
+                if (footOpening) footOpening.innerText = parseFloat(data.total_opening_stock).toFixed(2) + ' kg';
+                if (footReceived) footReceived.innerText = parseFloat(data.total_received_stock).toFixed(2) + ' kg';
+                if (footConsumption) footConsumption.innerText = parseFloat(data.total_consumption).toFixed(2) + ' kg';
+                if (footIssued) footIssued.innerText = parseFloat(data.total_issued_other).toFixed(2) + ' kg';
+                if (footBalance) footBalance.innerText = parseFloat(data.total_balance_stock).toFixed(2) + ' kg';
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Daily Opening Stock Auto-Fetched!',
+                        text: `Opening stock populated from ${data.prev_date_label} closing balance for ${data.date_label}.`,
+                        confirmButtonColor: '#185dbd',
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to fetch opening stock.',
+                        confirmButtonColor: '#820100'
+                    });
+                }
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
+            console.error('AJAX Error:', err);
+        });
+    }
+
+    if (mashDateFilter) {
+        mashDateFilter.addEventListener('change', function() {
+            autoFetchOpeningStock(this.value);
+        });
+    }
+
+    if (btnAutoFetchOpening) {
+        btnAutoFetchOpening.addEventListener('click', function() {
+            const val = mashDateFilter ? mashDateFilter.value : '<?= $selected_date ?>';
+            autoFetchOpeningStock(val);
+        });
+    }
+});
+</script>
 
 <?php require_once '../../../includes/footer.php'; ?>

@@ -36,7 +36,7 @@ if (!isset($cages) || !is_array($cages)) {
                                 <option value="Layer">Layer</option>
                                 <option value="Starter">Starter</option>
                                 <option value="Grower">Grower</option>
-                                <option value="Cattle Feed">Cattle Feed</option>
+                            
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -102,7 +102,7 @@ if (!isset($cages) || !is_array($cages)) {
                                 <option value="Layer">Layer</option>
                                 <option value="Starter">Starter</option>
                                 <option value="Grower">Grower</option>
-                                <option value="Cattle Feed">Cattle Feed</option>
+                             
                             </select>
                         </div>
                         <div class="col-md-6">

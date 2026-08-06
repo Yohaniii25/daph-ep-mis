@@ -8,7 +8,7 @@
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" name="id" id="edit_mash_id">
                 <div class="modal-header text-light" style="background-color: var(--color-c10, #185dbd);">
-                    <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-pencil-square me-2"></i>Edit Annex 4: Mash Stock Details</h5>
+                    <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-pencil-square me-2"></i>Edit Mash Stock Details</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
