@@ -1,13 +1,16 @@
 <?php
 // pages/modules/farm/processors/save_batch.php
-session_start();
-require_once '../../../../config/db_connect.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../../config/db_connect.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'farms_dd') {
     die("Access denied");
 }
 
-$user_id = $_SESSION['user_id'] ?? 1;
+$user_id = $_SESSION['user_id'] ?? 0;
+$farm_id = $_SESSION['farm_id'] ?? 0;
 $action = $_POST['action'] ?? $_GET['action'] ?? 'create';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -54,6 +57,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
     $mysqli->close();
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'get') {
+    header('Content-Type: application/json');
+    $id = intval($_GET['id'] ?? 0);
+    $stmt = $mysqli->prepare("SELECT b.id, b.batch_number AS batch_name, b.batch_number FROM vaccine_batches b LEFT JOIN users u ON b.user_id = u.id WHERE b.id = ? AND (b.user_id = ? OR b.user_id IS NULL OR u.farm_id = ? OR ? = 0) LIMIT 1");
+    $stmt->bind_param("iiii", $id, $user_id, $farm_id, $farm_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($row = $res->fetch_assoc()) {
+        echo json_encode(['success' => true, 'data' => $row]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Batch not found']);
+    }
+    $stmt->close();
+    $mysqli->close();
+    exit();
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'delete') {
     $id = intval($_GET['id']);
 

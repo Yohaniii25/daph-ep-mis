@@ -1,13 +1,16 @@
 <?php
 // pages/modules/farm/processors/save_daily_egg_collection.php
-session_start();
-require_once '../../../../config/db_connect.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../../config/db_connect.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'farms_dd') {
     die("Access denied");
 }
 
-$user_id = $_SESSION['user_id'] ?? 1;
+$user_id = $_SESSION['user_id'] ?? 0;
+$farm_id = $_SESSION['farm_id'] ?? 0;
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -16,17 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $collection_date = $mysqli->real_escape_string($_POST['collection_date']);
     $pullets = intval($_POST['pullets']);
     $cockerels = intval($_POST['cockerels']);
-    
+
     // Egg Counts & Weights
     $hatchable = intval($_POST['hatchable_eggs']);
     $hatchable_kg = floatval($_POST['hatchable_eggs_kg'] ?? 0);
-    
+
     $table_eggs = intval($_POST['table_eggs']);
     $table_eggs_kg = floatval($_POST['table_eggs_kg'] ?? 0);
-    
+
     $cracked = intval($_POST['cracked_eggs']);
     $cracked_kg = floatval($_POST['cracked_eggs_kg'] ?? 0);
-    
+
     $total_eggs = $hatchable + $table_eggs + $cracked;
     $total_eggs_kg = round($hatchable_kg + $table_eggs_kg + $cracked_kg, 2);
 
@@ -137,6 +140,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
     }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'get') {
+    header('Content-Type: application/json');
+    $id = intval($_GET['id'] ?? 0);
+    $stmt = $mysqli->prepare("SELECT dep.*, b.batch_number AS batch_name, c.cage_name 
+                               FROM daily_egg_production dep
+                               JOIN vaccine_batches b ON dep.batch_id = b.id
+                               JOIN cages c ON dep.cage_id = c.id
+                               LEFT JOIN users u ON b.user_id = u.id
+                               WHERE dep.id = ? AND (b.user_id = ? OR b.user_id IS NULL OR u.farm_id = ? OR ? = 0) LIMIT 1");
+    $stmt->bind_param("iiii", $id, $user_id, $farm_id, $farm_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($row = $res->fetch_assoc()) {
+        echo json_encode(['success' => true, 'data' => $row]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Record not found']);
+    }
+    $stmt->close();
+    $mysqli->close();
+    exit();
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'delete') {
     $id = intval($_GET['id']);
 

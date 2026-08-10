@@ -1,7 +1,9 @@
 <?php
 // pages/modules/farm/processors/save_cage.php
-session_start();
-require_once '../../../../config/db_connect.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../../config/db_connect.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'farms_dd') {
     die("Access denied");
@@ -40,6 +42,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
     $mysqli->close();
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'get') {
+    header('Content-Type: application/json');
+    $id = intval($_GET['id'] ?? 0);
+    $stmt = $mysqli->prepare("SELECT * FROM cages WHERE id = ? LIMIT 1");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($row = $res->fetch_assoc()) {
+        echo json_encode(['success' => true, 'data' => $row]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Cage not found']);
+    }
+    $stmt->close();
+    $mysqli->close();
+    exit();
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'delete') {
     $id = intval($_GET['id']);
 

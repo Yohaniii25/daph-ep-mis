@@ -269,7 +269,7 @@ $month_label = date('F Y', strtotime($first_day_of_month));
         <div class="modal-content">
             <form action="processors/hatchery_register_crud.php" method="POST">
                 <input type="hidden" name="action" value="create">
-                <div class="modal-header text-white" style="background-color: #370709;">
+                <div class="modal-header text-light" style="background-color: #370709;">
                     <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-egg-fill me-2"></i>Log Hatchery Register Entry</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -290,7 +290,7 @@ $month_label = date('F Y', strtotime($first_day_of_month));
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Incubator Cage <span class="text-danger">*</span></label>
-                            <select name="cage_id" class="form-select" required>
+                            <select name="cage_id" id="add_cage_id" class="form-select" required>
                                 <option value="">-- Select Cage --</option>
                                 <?php foreach ($cages as $c): ?>
                                     <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['cage_name']) ?></option>
@@ -332,7 +332,7 @@ $month_label = date('F Y', strtotime($first_day_of_month));
                             <label class="form-label fw-bold">Hatching Percentage (%)</label>
                             <div class="input-group">
                                 <input type="text" id="add_hatching_percentage" class="form-control bg-light fw-bold" readonly value="0.00%">
-                                <span class="input-group-text bg-secondary text-white">%</span>
+                                <span class="input-group-text bg-secondary text-light">%</span>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -366,7 +366,7 @@ $month_label = date('F Y', strtotime($first_day_of_month));
             <form action="processors/hatchery_register_crud.php" method="POST">
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" name="id" id="edit_id">
-                <div class="modal-header text-white" style="background-color: #370709;">
+                <div class="modal-header text-light" style="background-color: #370709;">
                     <h5 class="modal-header-title fw-bold m-0"><i class="bi bi-pencil-square me-2"></i>Edit Hatchery Record</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -429,7 +429,7 @@ $month_label = date('F Y', strtotime($first_day_of_month));
                             <label class="form-label fw-bold">Hatching Percentage (%)</label>
                             <div class="input-group">
                                 <input type="text" id="edit_hatching_percentage" class="form-control bg-light fw-bold" readonly value="0.00%">
-                                <span class="input-group-text bg-secondary text-white">%</span>
+                                <span class="input-group-text bg-secondary text-light">%</span>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -463,6 +463,9 @@ $month_label = date('F Y', strtotime($first_day_of_month));
     </div>
 </div>
 
+<?php
+ob_start();
+?>
 <script>
 $(document).ready(function() {
 
@@ -474,18 +477,24 @@ $(document).ready(function() {
         }
     });
 
-    // Auto-fetch Eggs Loaded & Hatched Eggs from parent_stock_operations.php
-    function fetchParentStockData(batchId, recordDate, isEdit = false) {
-        if (!batchId) return;
+    // Auto-fetch Hatchable Eggs Loaded from parent_stock_operations based on date + batch + cage
+    function fetchParentStockData(batchId, cageId, recordDate, isEdit = false) {
+        if (!batchId) {
+            const loadedInput = isEdit ? '#edit_no_of_eggs_loaded' : '#add_no_of_eggs_loaded';
+            $(loadedInput).val(0);
+            if (isEdit) updateEditPercentage(); else updateAddPercentage();
+            return;
+        }
         $.getJSON('processors/get_parent_stock_hatchery_data.php', {
-            batch_id: batchId,
-            record_date: recordDate
+            batch_id:    batchId,
+            cage_id:     cageId  || 0,
+            record_date: recordDate || ''
         }, function(res) {
             if (res && res.success) {
-                const loadedInput = isEdit ? '#edit_no_of_eggs_loaded' : '#add_no_of_eggs_loaded';
+                const loadedInput  = isEdit ? '#edit_no_of_eggs_loaded'  : '#add_no_of_eggs_loaded';
                 const hatchedInput = isEdit ? '#edit_no_of_hatched_eggs' : '#add_no_of_hatched_eggs';
-                $(loadedInput).val(res.eggs_loaded);
-                $(hatchedInput).val(res.hatched_eggs);
+                $(loadedInput).val(res.eggs_loaded || 0);
+                $(hatchedInput).val(res.hatched_eggs || 0);
                 if (isEdit) {
                     updateEditPercentage();
                 } else {
@@ -495,16 +504,30 @@ $(document).ready(function() {
         });
     }
 
-    $('#add_batch_id, #add_record_date').on('change', function() {
-        const bId = $('#add_batch_id').val();
+    // Trigger on change or input for date / batch / cage in ADD modal
+    $('#add_batch_id, #add_record_date, #add_cage_id').on('change input', function() {
+        const bId   = $('#add_batch_id').val();
+        const cId   = $('#add_cage_id').val();
         const rDate = $('#add_record_date').val();
-        fetchParentStockData(bId, rDate, false);
+        fetchParentStockData(bId, cId, rDate, false);
     });
 
-    $('#edit_batch_id, #edit_record_date').on('change', function() {
-        const bId = $('#edit_batch_id').val();
+    // Trigger on change or input for date / batch / cage in EDIT modal
+    $('#edit_batch_id, #edit_record_date, #edit_cage_id').on('change input', function() {
+        const bId   = $('#edit_batch_id').val();
+        const cId   = $('#edit_cage_id').val();
         const rDate = $('#edit_record_date').val();
-        fetchParentStockData(bId, rDate, true);
+        fetchParentStockData(bId, cId, rDate, true);
+    });
+
+    // Auto-fetch when Add Modal is shown if batch is selected
+    $('#addHatcheryModal').on('shown.bs.modal', function() {
+        const bId   = $('#add_batch_id').val();
+        const cId   = $('#add_cage_id').val();
+        const rDate = $('#add_record_date').val();
+        if (bId) {
+            fetchParentStockData(bId, cId, rDate, false);
+        }
     });
 
     // Calculate Hatching Percentage with Candling Deduction: (Healthy Chicks / (Loaded Eggs - Candling Discards)) * 100
@@ -582,5 +605,7 @@ $(document).ready(function() {
     });
 });
 </script>
-
-<?php require_once '../../../includes/footer.php'; ?>
+<?php
+$pageScripts = ob_get_clean();
+require_once '../../../includes/footer.php';
+?>

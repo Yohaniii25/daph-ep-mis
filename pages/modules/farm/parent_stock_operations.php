@@ -8,16 +8,18 @@ if ($_SESSION['role'] !== 'farms_dd') {
 }
 
 $user_id = $_SESSION['user_id'] ?? 1;
+$farm_id = $_SESSION['farm_id'] ?? 0;
 
-// 1. Fetch Daily Egg Collection Records (scoped to user-created batches)
+// 1. Fetch Daily Egg Collection Records (scoped to user or farm)
 $collection_sql = "SELECT dep.*, b.batch_number AS batch_name, c.cage_name 
                    FROM daily_egg_production dep
                    JOIN vaccine_batches b ON dep.batch_id = b.id
                    JOIN cages c ON dep.cage_id = c.id
-                   WHERE b.user_id = ?
+                   LEFT JOIN users u ON b.user_id = u.id
+                   WHERE b.user_id = ? OR b.user_id IS NULL OR u.farm_id = ?
                    ORDER BY dep.collection_date DESC, dep.id DESC";
 $stmt = $mysqli->prepare($collection_sql);
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param("ii", $user_id, $farm_id);
 $stmt->execute();
 $collection_res = $stmt->get_result();
 $collections = [];
@@ -37,9 +39,9 @@ if ($cages_res) {
     }
 }
 
-// 3. Fetch User-Scoped Batches
-$batch_stmt = $mysqli->prepare("SELECT id, batch_number AS batch_name, created_at FROM vaccine_batches WHERE user_id = ? ORDER BY id DESC");
-$batch_stmt->bind_param("i", $user_id);
+// 3. Fetch User/Farm Scoped Batches
+$batch_stmt = $mysqli->prepare("SELECT b.id, b.batch_number AS batch_name, b.created_at FROM vaccine_batches b LEFT JOIN users u ON b.user_id = u.id WHERE b.user_id = ? OR b.user_id IS NULL OR u.farm_id = ? ORDER BY b.id DESC");
+$batch_stmt->bind_param("ii", $user_id, $farm_id);
 $batch_stmt->execute();
 $batch_res = $batch_stmt->get_result();
 $batches = [];
@@ -205,52 +207,27 @@ $batch_stmt->close();
                                     <td><span class="badge bg-info-subtle text-info border px-2 fw-bold"><?= number_format($c['hatchability_percentage'] ?? 0, 2) ?>%</span></td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-info view-collection-btn"
+                                            <button class="btn btn-outline-primary edit-egg-btn"
                                                 data-id="<?= $c['id'] ?>"
-                                                data-date="<?= htmlspecialchars($c['collection_date']) ?>"
-                                                data-batch-name="<?= htmlspecialchars($c['batch_name']) ?>"
-                                                data-cage-name="<?= htmlspecialchars($c['cage_name']) ?>"
+                                                data-batch_id="<?= $c['batch_id'] ?>"
+                                                data-cage_id="<?= $c['cage_id'] ?>"
+                                                data-collection_date="<?= $c['collection_date'] ?>"
                                                 data-pullets="<?= $c['pullets'] ?>"
                                                 data-cockerels="<?= $c['cockerels'] ?>"
-                                                data-total="<?= $c['total_eggs'] ?>"
-                                                data-total-kg="<?= $c['total_eggs_kg'] ?? 0 ?>"
-                                                data-hatchable="<?= $c['hatchable_eggs'] ?>"
-                                                data-hatchable-kg="<?= $c['hatchable_eggs_kg'] ?? 0 ?>"
-                                                data-table-eggs="<?= $c['table_eggs'] ?>"
-                                                data-table-kg="<?= $c['table_eggs_kg'] ?? 0 ?>"
-                                                data-cracked="<?= $c['cracked_eggs'] ?>"
-                                                data-cracked-kg="<?= $c['cracked_eggs_kg'] ?? 0 ?>"
-                                                data-loading-date="<?= htmlspecialchars($c['loading_date'] ?? '') ?>"
-                                                data-hatchery-name="<?= htmlspecialchars($c['hatchery_name'] ?? '') ?>"
-                                                data-eggs-loaded="<?= $c['eggs_loaded'] ?? 0 ?>"
-                                                data-hatching-date="<?= htmlspecialchars($c['hatching_date'] ?? '') ?>"
-                                                data-hatched-eggs="<?= $c['hatched_eggs'] ?? 0 ?>"
-                                                data-hatchability="<?= number_format($c['hatchability_percentage'] ?? 0, 2) ?>"
-                                                data-bs-toggle="modal" data-bs-target="#viewEggModal"
-                                                title="View Details">
-                                                <i class="bi bi-eye-fill"></i>
-                                            </button>
-                                            <button class="btn btn-outline-secondary edit-collection-btn"
-                                                data-id="<?= $c['id'] ?>"
-                                                data-date="<?= $c['collection_date'] ?>"
-                                                data-batch="<?= $c['batch_id'] ?>"
-                                                data-cage="<?= $c['cage_id'] ?>"
-                                                data-pullets="<?= $c['pullets'] ?>"
-                                                data-cockerels="<?= $c['cockerels'] ?>"
-                                                data-total="<?= $c['total_eggs'] ?>"
-                                                data-total-kg="<?= $c['total_eggs_kg'] ?? 0 ?>"
-                                                data-hatchable="<?= $c['hatchable_eggs'] ?>"
-                                                data-hatchable-kg="<?= $c['hatchable_eggs_kg'] ?? 0 ?>"
-                                                data-table-eggs="<?= $c['table_eggs'] ?>"
-                                                data-table-kg="<?= $c['table_eggs_kg'] ?? 0 ?>"
-                                                data-cracked="<?= $c['cracked_eggs'] ?>"
-                                                data-cracked-kg="<?= $c['cracked_eggs_kg'] ?? 0 ?>"
-                                                data-loading-date="<?= htmlspecialchars($c['loading_date'] ?? '') ?>"
-                                                data-hatchery-name="<?= htmlspecialchars($c['hatchery_name'] ?? '') ?>"
-                                                data-eggs-loaded="<?= $c['eggs_loaded'] ?? 0 ?>"
-                                                data-hatching-date="<?= htmlspecialchars($c['hatching_date'] ?? '') ?>"
-                                                data-hatched-eggs="<?= $c['hatched_eggs'] ?? 0 ?>"
-                                                data-hatchability="<?= number_format($c['hatchability_percentage'] ?? 0, 2) ?>"
+                                                data-hatchable_eggs="<?= $c['hatchable_eggs'] ?>"
+                                                data-hatchable_eggs_kg="<?= $c['hatchable_eggs_kg'] ?>"
+                                                data-table_eggs="<?= $c['table_eggs'] ?>"
+                                                data-table_eggs_kg="<?= $c['table_eggs_kg'] ?>"
+                                                data-cracked_eggs="<?= $c['cracked_eggs'] ?>"
+                                                data-cracked_eggs_kg="<?= $c['cracked_eggs_kg'] ?>"
+                                                data-total_eggs="<?= $c['total_eggs'] ?>"
+                                                data-total_eggs_kg="<?= $c['total_eggs_kg'] ?>"
+                                                data-loading_date="<?= htmlspecialchars($c['loading_date'] ?? '') ?>"
+                                                data-hatchery_name="<?= htmlspecialchars($c['hatchery_name'] ?? '') ?>"
+                                                data-eggs_loaded="<?= $c['eggs_loaded'] ?>"
+                                                data-hatching_date="<?= htmlspecialchars($c['hatching_date'] ?? '') ?>"
+                                                data-hatched_eggs="<?= $c['hatched_eggs'] ?>"
+                                                data-hatchability_percentage="<?= $c['hatchability_percentage'] ?>"
                                                 data-bs-toggle="modal" data-bs-target="#editEggModal"
                                                 title="Edit Record">
                                                 <i class="bi bi-pencil-fill"></i>
@@ -408,25 +385,26 @@ include './models/add_batch_modal.php';
 include './models/edit_daily_egg_collection_modal.php';
 include './models/edit_cage_modal.php';
 include './models/edit_batch_modal.php';
-include './models/view_daily_egg_collection_modal.php';
 include './models/export_columns_modal.php';
 include './models/add_sales_returns_modal.php';
-?>
 
+ob_start();
+?>
 <script>
     $(document).ready(function() {
         if (!$.fn.DataTable.isDataTable('#eggCollectionTable')) {
             $('#eggCollectionTable').DataTable({
                 responsive: true,
                 dom: "<'row mb-3 align-items-center'<'col-md-8'B><'col-md-4 text-end'f>>" +
-                     "<'row'<'col-sm-12'tr>>" +
-                     "<'row mt-3 align-items-center'<'col-md-4'l><'col-md-8 text-end'p>>",
-                buttons: [
-                    {
+                    "<'row'<'col-sm-12'tr>>" +
+                    "<'row mt-3 align-items-center'<'col-md-4'l><'col-md-8 text-end'p>>",
+                buttons: [{
                         extend: 'csvHtml5',
                         text: '<i class="bi bi-file-earmark-csv me-1"></i>CSV',
                         className: 'btn btn-sm btn-success me-1 shadow-sm fw-bold',
-                        exportOptions: { columns: ':not(:last-child)' }
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        }
                     },
                     {
                         extend: 'pdfHtml5',
@@ -434,26 +412,22 @@ include './models/add_sales_returns_modal.php';
                         className: 'btn btn-sm btn-danger me-1 shadow-sm fw-bold',
                         orientation: 'landscape',
                         pageSize: 'A4',
-                        exportOptions: { columns: ':not(:last-child)' }
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        }
                     },
                     {
                         extend: 'print',
                         text: '<i class="bi bi-printer me-1"></i>Print',
                         className: 'btn btn-sm btn-secondary me-1 shadow-sm fw-bold',
-                        exportOptions: { columns: ':not(:last-child)' }
-                    },
-                    {
-                        text: '<i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Manage Columns Export',
-                        className: 'btn btn-sm btn-dark px-3 me-1 rounded fw-bold shadow-sm',
-                        action: function(e, dt, node, config) {
-                            $('#exportColumnsModal').modal('show');
+                        exportOptions: {
+                            columns: ':not(:last-child)'
                         }
                     }
                 ],
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search collections..."
-                }
+                order: [
+                    [0, 'desc']
+                ]
             });
         }
 
@@ -481,12 +455,91 @@ include './models/add_sales_returns_modal.php';
             $('#add_hatchability_percentage').val(pct);
         });
 
+        // AJAX Edit Daily Egg Collection Handler
+        $(document).on('click', '.edit-egg-btn', function(e) {
+            e.preventDefault();
+            var btn = $(this).closest('.edit-egg-btn');
+            var id = btn.attr('data-id') || btn.data('id');
+            if (!id) return;
+
+            $.get('processors/save_daily_egg_collection.php', { action: 'get', id: id }, function(res) {
+                if (res && res.success && res.data) {
+                    var data = res.data;
+                    $('#edit_egg_id').val(data.id);
+                    $('#edit_batch_id').val(data.batch_id);
+                    $('#edit_cage_id').val(data.cage_id);
+                    $('#edit_collection_date').val(data.collection_date);
+                    $('#edit_pullets').val(data.pullets);
+                    $('#edit_cockerels').val(data.cockerels);
+                    $('#edit_hatchable_eggs').val(data.hatchable_eggs);
+                    $('#edit_hatchable_eggs_kg').val(parseFloat(data.hatchable_eggs_kg || 0).toFixed(2));
+                    $('#edit_table_eggs').val(data.table_eggs);
+                    $('#edit_table_eggs_kg').val(parseFloat(data.table_eggs_kg || 0).toFixed(2));
+                    $('#edit_cracked_eggs').val(data.cracked_eggs);
+                    $('#edit_cracked_eggs_kg').val(parseFloat(data.cracked_eggs_kg || 0).toFixed(2));
+                    $('#edit_total_eggs').val(data.total_eggs);
+                    $('#edit_total_eggs_kg').val(parseFloat(data.total_eggs_kg || 0).toFixed(2));
+                    $('#edit_loading_date').val(data.loading_date || '');
+                    $('#edit_hatchery_name').val(data.hatchery_name || '');
+                    $('#edit_eggs_loaded').val(data.eggs_loaded || 0);
+                    $('#edit_hatching_date').val(data.hatching_date || '');
+                    $('#edit_hatched_eggs').val(data.hatched_eggs || 0);
+                    $('#edit_hatchability_percentage').val(parseFloat(data.hatchability_percentage || 0).toFixed(2));
+                    $('#editEggModal').modal('show');
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: (res && res.message) ? res.message : 'Failed to fetch record details.' });
+                }
+            }).fail(function() {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'AJAX request failed while fetching record details.' });
+            });
+        });
+
+        // AJAX Edit Cage Handler
+        $(document).on('click', '.edit-cage-btn', function(e) {
+            e.preventDefault();
+            var btn = $(this).closest('.edit-cage-btn');
+            var id = btn.attr('data-id') || btn.data('id');
+            if (!id) return;
+
+            $.get('processors/save_cage.php', { action: 'get', id: id }, function(res) {
+                if (res && res.success && res.data) {
+                    $('#edit_cage_id').val(res.data.id);
+                    $('#edit_cage_name').val(res.data.cage_name);
+                    $('#editCageModal').modal('show');
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: (res && res.message) ? res.message : 'Failed to fetch cage details.' });
+                }
+            }).fail(function() {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'AJAX request failed while fetching cage details.' });
+            });
+        });
+
+        // AJAX Edit Batch Handler
+        $(document).on('click', '.edit-batch-btn', function(e) {
+            e.preventDefault();
+            var btn = $(this).closest('.edit-batch-btn');
+            var id = btn.attr('data-id') || btn.data('id');
+            if (!id) return;
+
+            $.get('processors/save_batch.php', { action: 'get', id: id }, function(res) {
+                if (res && res.success && res.data) {
+                    $('#edit_batch_num_id').val(res.data.id);
+                    $('#edit_batch_number').val(res.data.batch_number || res.data.batch_name);
+                    $('#editBatchModal').modal('show');
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: (res && res.message) ? res.message : 'Failed to fetch batch details.' });
+                }
+            }).fail(function() {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'AJAX request failed while fetching batch details.' });
+            });
+        });
+
         // Auto-Calculate Total Eggs (NO) in Edit Modal
         $(document).on('input', '.edit-egg-calc', function() {
             var hatch = parseInt($('#edit_hatchable_eggs').val()) || 0;
             var table = parseInt($('#edit_table_eggs').val()) || 0;
             var cracked = parseInt($('#edit_cracked_eggs').val()) || 0;
-            $('#edit_egg_count').val(hatch + table + cracked);
+            $('#edit_total_eggs').val(hatch + table + cracked);
         });
 
         // Auto-Calculate Total Weight (Kg) in Edit Modal
@@ -505,103 +558,11 @@ include './models/add_sales_returns_modal.php';
             $('#edit_hatchability_percentage').val(pct);
         });
 
-        // Populate View Modal
-        $('.view-collection-btn').on('click', function() {
-            $('#view_collection_date').text($(this).data('date') || '-');
-            $('#view_batch_name').text($(this).data('batch-name') || '-');
-            $('#view_cage_name').text($(this).data('cage-name') || '-');
-            $('#view_pullets').text(Number($(this).data('pullets') || 0).toLocaleString());
-            $('#view_cockerels').text(Number($(this).data('cockerels') || 0).toLocaleString());
-
-            $('#view_hatchable_eggs').text(Number($(this).data('hatchable') || 0).toLocaleString() + ' NO');
-            $('#view_hatchable_eggs_kg').text(Number($(this).data('hatchable-kg') || 0).toFixed(2) + ' Kg');
-
-            $('#view_table_eggs').text(Number($(this).data('table-eggs') || 0).toLocaleString() + ' NO');
-            $('#view_table_eggs_kg').text(Number($(this).data('table-kg') || 0).toFixed(2) + ' Kg');
-
-            $('#view_cracked_eggs').text(Number($(this).data('cracked') || 0).toLocaleString() + ' NO');
-            $('#view_cracked_eggs_kg').text(Number($(this).data('cracked-kg') || 0).toFixed(2) + ' Kg');
-
-            $('#view_total_eggs').text(Number($(this).data('total') || 0).toLocaleString() + ' NO');
-            $('#view_total_eggs_kg').text(Number($(this).data('total-kg') || 0).toFixed(2) + ' Kg');
-
-            $('#view_loading_date').text($(this).data('loading-date') || '-');
-            $('#view_hatchery_name').text($(this).data('hatchery-name') || '-');
-            $('#view_eggs_loaded').text(Number($(this).data('eggs-loaded') || 0).toLocaleString());
-            $('#view_hatching_date').text($(this).data('hatching-date') || '-');
-            $('#view_hatched_eggs').text(Number($(this).data('hatched-eggs') || 0).toLocaleString());
-            $('#view_hatchability_percentage').text(($(this).data('hatchability') || '0.00') + '%');
-        });
-
-        // Populate Edit Modal
-        $('.edit-collection-btn').on('click', function() {
-            var id = $(this).data('id');
-            var date = $(this).data('date');
-            var batch = $(this).data('batch');
-            var cage = $(this).data('cage');
-            var pullets = $(this).data('pullets');
-            var cockerels = $(this).data('cockerels');
-
-            var total = $(this).data('total');
-            var totalKg = $(this).data('total-kg');
-            var hatchable = $(this).data('hatchable');
-            var hatchableKg = $(this).data('hatchable-kg');
-            var tableEggs = $(this).data('table-eggs');
-            var tableKg = $(this).data('table-kg');
-            var cracked = $(this).data('cracked');
-            var crackedKg = $(this).data('cracked-kg');
-
-            var loadingDate = $(this).data('loading-date');
-            var hatcheryName = $(this).data('hatchery-name');
-            var eggsLoaded = $(this).data('eggs-loaded');
-            var hatchingDate = $(this).data('hatching-date');
-            var hatchedEggs = $(this).data('hatched-eggs');
-            var hatchability = $(this).data('hatchability');
-
-            $('#edit_collection_id').val(id);
-            $('#edit_collection_date').val(date);
-            $('#edit_batch_id').val(batch);
-            $('#edit_cage_id').val(cage);
-            $('#edit_pullets').val(pullets);
-            $('#edit_cockerels').val(cockerels);
-
-            $('#edit_egg_count').val(total);
-            $('#edit_total_eggs_kg').val(totalKg);
-            $('#edit_hatchable_eggs').val(hatchable);
-            $('#edit_hatchable_eggs_kg').val(hatchableKg);
-            $('#edit_table_eggs').val(tableEggs);
-            $('#edit_table_eggs_kg').val(tableKg);
-            $('#edit_cracked_eggs').val(cracked);
-            $('#edit_cracked_eggs_kg').val(crackedKg);
-
-            $('#edit_loading_date').val(loadingDate);
-            $('#edit_hatchery_name').val(hatcheryName);
-            $('#edit_eggs_loaded').val(eggsLoaded);
-            $('#edit_hatching_date').val(hatchingDate);
-            $('#edit_hatched_eggs').val(hatchedEggs);
-            $('#edit_hatchability_percentage').val(hatchability);
-        });
-
-        // Handle editing cage
-        $('.edit-cage-btn').on('click', function() {
-            var id = $(this).data('id');
-            var name = $(this).data('name');
-            $('#edit_cage_id').val(id);
-            $('#edit_cage_name').val(name);
-        });
-
-        // Handle editing batch
-        $('.edit-batch-btn').on('click', function() {
-            var id = $(this).data('id');
-            var name = $(this).data('name');
-            $('#edit_batch_num_id').val(id);
-            $('#edit_batch_number').val(name);
-        });
-
         // SweetAlert Delete Collection Record
         $(document).on('click', '.delete-record-btn', function(e) {
             e.preventDefault();
-            var href = $(this).data('href');
+            var href = $(this).closest('button').attr('data-href') || $(this).attr('data-href');
+            if (!href) return;
             Swal.fire({
                 title: 'Delete Collection Record?',
                 text: 'Are you sure you want to permanently delete this egg collection record? This action cannot be undone.',
@@ -621,7 +582,8 @@ include './models/add_sales_returns_modal.php';
         // SweetAlert Delete Cage
         $(document).on('click', '.delete-cage-btn', function(e) {
             e.preventDefault();
-            var href = $(this).data('href');
+            var href = $(this).closest('button').attr('data-href') || $(this).attr('data-href');
+            if (!href) return;
             Swal.fire({
                 title: 'Delete Cage?',
                 text: 'Are you sure you want to permanently delete this cage?',
@@ -641,7 +603,8 @@ include './models/add_sales_returns_modal.php';
         // SweetAlert Delete Batch
         $(document).on('click', '.delete-batch-btn', function(e) {
             e.preventDefault();
-            var href = $(this).data('href');
+            var href = $(this).closest('button').attr('data-href') || $(this).attr('data-href');
+            if (!href) return;
             Swal.fire({
                 title: 'Delete Batch?',
                 text: 'Are you sure you want to delete this batch? All associated daily egg collections will be permanently removed.',
@@ -667,34 +630,43 @@ include './models/add_sales_returns_modal.php';
         });
 
         // ================= ANNEX 01 ASYNC AJAX REPORT LOADER =================
-        function loadAnnex01Report(monthVal) {
+        var currentLoadedAnnexMonth = '';
+
+        function loadAnnex01Report(monthVal, forceReload) {
             if (!monthVal) {
                 var now = new Date();
                 monthVal = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            }
+            if (!forceReload && currentLoadedAnnexMonth === monthVal && $('#annexMatrixTable').length > 0) {
+                return;
             }
             $('#annexReportContainer').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted fw-bold">Loading Annex 01 Monthly Register for ' + monthVal + '...</p></div>');
 
             $.get('processors/get_annex_01_data.php', {
                 month: monthVal
             }, function(data) {
+                currentLoadedAnnexMonth = monthVal;
                 $('#annexReportContainer').html(data);
-            }).fail(function() {
+            }).fail(function(xhr, status, error) {
+                console.error("Annex 01 Load Error:", status, error, xhr.responseText);
                 $('#annexReportContainer').html('<div class="alert alert-danger fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Failed to load Annex 01 report. Please try again.</div>');
             });
         }
 
-        // Trigger load when switching to Annex 01 Tab
-        $('#annex-01-tab').on('shown.bs.tab', function() {
+        // Trigger load when switching to Annex 01 Tab (bind click & shown.bs.tab)
+        $(document).on('click shown.bs.tab', '#annex-01-tab', function() {
             var monthVal = $('#annex_month_filter').val();
-            loadAnnex01Report(monthVal);
+            loadAnnex01Report(monthVal, false);
         });
 
         // Trigger load on filter button click
         $('#btnLoadAnnexReport').on('click', function() {
             var monthVal = $('#annex_month_filter').val();
-            loadAnnex01Report(monthVal);
+            loadAnnex01Report(monthVal, true);
         });
     });
 </script>
-
-<?php require_once '../../../includes/footer.php'; ?>
+<?php
+$pageScripts = ob_get_clean();
+require_once '../../../includes/footer.php';
+?>

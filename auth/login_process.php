@@ -109,9 +109,9 @@ if (password_verify($password, $user['password'])) {
 
     if ($training_center_id) $_SESSION['training_center_id'] = $training_center_id;
 
-    // Force farm_id from database if role is farms_dd; otherwise fallback to post input
-    if ($user['role'] === 'farms_dd') {
-        $_SESSION['farm_id'] = !is_null($user['farm_id']) ? intval($user['farm_id']) : null;
+    // Use farm_id from database if available; fallback to posted farm_id dropdown selection
+    if (!is_null($user['farm_id'])) {
+        $_SESSION['farm_id'] = intval($user['farm_id']);
     } elseif ($farm_id) {
         $_SESSION['farm_id'] = $farm_id;
     }
