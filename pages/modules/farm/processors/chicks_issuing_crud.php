@@ -3,6 +3,8 @@
 session_start();
 require_once '../../../../config/db_connect.php';
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'farms_dd') {
     die("Access denied");
 }
@@ -78,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $stmt = $mysqli->prepare($sql);
         $stmt->bind_param(
-            "ssssiiiiiiiiiiiiiiiiiiiiiddds",
+            'ssss' . str_repeat('i', 22) . 'dds',
             $record_month, $issue_date, $name_of_range, $batch_no, $no_of_eggs_hatched, $starting_balance_of_month,
             $deaths_before_sexing, $received, $live_chicks_pullets, $live_chicks_cockerels,
             $deaths_sexing_pullets, $deaths_sexing_cockerels, $deaths_sexing_unsexed,
@@ -112,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $mysqli->prepare($sql);
         $stmt->bind_param(
-            "ssssiiiiiiiiiiiiiiiiiiiiidddsi",
+            'ssss' . str_repeat('i', 22) . 'ddsi',
             $record_month, $issue_date, $name_of_range, $batch_no, $no_of_eggs_hatched, $starting_balance_of_month,
             $deaths_before_sexing, $received, $live_chicks_pullets, $live_chicks_cockerels,
             $deaths_sexing_pullets, $deaths_sexing_cockerels, $deaths_sexing_unsexed,
