@@ -264,7 +264,7 @@ if ($res_mc) {
             'raw_id' => $r['id'],
             'source_key' => 'chick_dist',
             'source_label' => 'Chick Distribution',
-            'source_badge' => 'bg-dark text-white',
+            'source_badge' => 'bg-dark text-light',
             'source_icon' => 'bi-box-seam',
             'date' => $r['sale_date'],
             'voucher_no' => $r['receipt_no'] ?: 'CHK-' . $r['id'],
@@ -448,7 +448,7 @@ if ($filter_period === 'daily') {
         </div>
 
         <div class="col-md-3 d-flex align-items-end gap-2">
-            <button type="submit" class="btn text-white fw-bold px-4 shadow-sm w-100" style="background-color: #820100;">
+            <button type="submit" class="btn text-light fw-bold px-4 shadow-sm w-100" style="background-color: #820100;">
                 <i class="bi bi-funnel-fill me-1"></i>Apply Filter
             </button>
             <?php if ($filter_period !== 'all'): ?>
@@ -687,7 +687,7 @@ if ($filter_period === 'daily') {
 <div class="modal fade" id="addAccountModal" tabindex="-1" aria-labelledby="addAccountModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header text-white" style="background-color: #820100;">
+            <div class="modal-header text-light" style="background-color: #820100;">
                 <h5 class="modal-title fw-bold" id="addAccountModalLabel">
                     <i class="bi bi-plus-circle me-2"></i>Log New Financial Voucher Entry
                 </h5>
@@ -734,7 +734,7 @@ if ($filter_period === 'daily') {
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-white fw-bold px-4" style="background-color: #820100;">Save Voucher Entry</button>
+                    <button type="submit" class="btn text-light fw-bold px-4" style="background-color: #820100;">Save Voucher Entry</button>
                 </div>
             </form>
         </div>
@@ -745,7 +745,7 @@ if ($filter_period === 'daily') {
 <div class="modal fade" id="editAccountModal" tabindex="-1" aria-labelledby="editAccountModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header text-white" style="background-color: #820100;">
+            <div class="modal-header text-light" style="background-color: #820100;">
                 <h5 class="modal-title fw-bold" id="editAccountModalLabel">
                     <i class="bi bi-pencil-square me-2"></i>Edit Financial Voucher Entry
                 </h5>
@@ -793,7 +793,7 @@ if ($filter_period === 'daily') {
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-white fw-bold px-4" style="background-color: #820100;">Update Voucher Entry</button>
+                    <button type="submit" class="btn text-light fw-bold px-4" style="background-color: #820100;">Update Voucher Entry</button>
                 </div>
             </form>
         </div>
