@@ -235,68 +235,59 @@ if ($stmt) { $stmt->close(); }
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($records)): ?>
+                    <?php foreach ($records as $r): ?>
                         <tr>
-                            <td colspan="13" class="text-center py-4 text-muted">
-                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                No Goat disposal records found for the selected filter period.
+                            <td class="fw-bold text-nowrap"><?= date('Y-m-d', strtotime($r['disposal_date'])) ?></td>
+                            <td><span class="badge bg-light text-dark border px-2"><?= htmlspecialchars($r['voucher_no']) ?></span></td>
+                            <td>
+                                <?php 
+                                $disp = htmlspecialchars($r['how_disposed_of']);
+                                if (strtolower($disp) === 'sold') {
+                                    echo '<span class="badge bg-success-subtle text-success border px-2"><i class="bi bi-cart-check me-1"></i>Sold</span>';
+                                } elseif (strtolower($disp) === 'died') {
+                                    echo '<span class="badge bg-danger-subtle text-danger border px-2"><i class="bi bi-x-circle me-1"></i>Died</span>';
+                                } elseif (strtolower($disp) === 'transferred') {
+                                    echo '<span class="badge bg-info-subtle text-info border px-2"><i class="bi bi-arrow-left-right me-1"></i>Transferred</span>';
+                                } else {
+                                    echo '<span class="badge bg-secondary-subtle text-dark border px-2">' . $disp . '</span>';
+                                }
+                                ?>
+                            </td>
+                            <td class="fw-bold text-primary">
+                                <?= ($r['amount_realized'] > 0) ? 'LKR ' . number_format($r['amount_realized'], 2) : '-' ?>
+                            </td>
+                            <td class="small text-muted"><?= htmlspecialchars($r['cash_receipt_info'] ?: '-') ?></td>
+                            <td class="fw-bold"><?= intval($r['stud_bulls']) ?></td>
+                            <td class="fw-bold"><?= intval($r['draught_bulls']) ?></td>
+                            <td class="fw-bold"><?= intval($r['cows']) ?></td>
+                            <td class="fw-bold"><?= intval($r['heifer_calves']) ?></td>
+                            <td class="fw-bold"><?= intval($r['bull_calves']) ?></td>
+                            <td class="fw-bold fs-6 text-danger bg-light"><?= intval($r['total_animals']) ?> Head</td>
+                            <td class="small text-start"><?= htmlspecialchars($r['remarks'] ?: '-') ?></td>
+                            <td class="text-end text-nowrap">
+                                <button type="button" class="btn btn-sm btn-edit-action btn-edit-disposal me-1"
+                                    data-id="<?= $r['id'] ?>"
+                                    data-date="<?= htmlspecialchars($r['disposal_date']) ?>"
+                                    data-voucher="<?= htmlspecialchars($r['voucher_no']) ?>"
+                                    data-how="<?= htmlspecialchars($r['how_disposed_of']) ?>"
+                                    data-amount="<?= $r['amount_realized'] ?>"
+                                    data-receipt="<?= htmlspecialchars($r['cash_receipt_info'] ?? '') ?>"
+                                    data-stud="<?= $r['stud_bulls'] ?>"
+                                    data-draught="<?= $r['draught_bulls'] ?>"
+                                    data-cows="<?= $r['cows'] ?>"
+                                    data-heifer="<?= $r['heifer_calves'] ?>"
+                                    data-bull="<?= $r['bull_calves'] ?>"
+                                    data-remarks="<?= htmlspecialchars($r['remarks'] ?? '') ?>"
+                                    data-bs-toggle="modal" data-bs-target="#editAnimalDisposalModal"
+                                    title="Edit Entry">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <a href="processors/animal_disposal_crud.php?action=delete&id=<?= $r['id'] ?>&redirect_page=goat_register.php" class="btn btn-sm btn-delete-action btn-delete-record" title="Delete Record">
+                                    <i class="bi bi-trash"></i>
+                                </a>
                             </td>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($records as $r): ?>
-                            <tr>
-                                <td class="fw-bold text-nowrap"><?= date('Y-m-d', strtotime($r['disposal_date'])) ?></td>
-                                <td><span class="badge bg-light text-dark border px-2"><?= htmlspecialchars($r['voucher_no']) ?></span></td>
-                                <td>
-                                    <?php 
-                                    $disp = htmlspecialchars($r['how_disposed_of']);
-                                    if (strtolower($disp) === 'sold') {
-                                        echo '<span class="badge bg-success-subtle text-success border px-2"><i class="bi bi-cart-check me-1"></i>Sold</span>';
-                                    } elseif (strtolower($disp) === 'died') {
-                                        echo '<span class="badge bg-danger-subtle text-danger border px-2"><i class="bi bi-x-circle me-1"></i>Died</span>';
-                                    } elseif (strtolower($disp) === 'transferred') {
-                                        echo '<span class="badge bg-info-subtle text-info border px-2"><i class="bi bi-arrow-left-right me-1"></i>Transferred</span>';
-                                    } else {
-                                        echo '<span class="badge bg-secondary-subtle text-dark border px-2">' . $disp . '</span>';
-                                    }
-                                    ?>
-                                </td>
-                                <td class="fw-bold text-primary">
-                                    <?= ($r['amount_realized'] > 0) ? 'LKR ' . number_format($r['amount_realized'], 2) : '-' ?>
-                                </td>
-                                <td class="small text-muted"><?= htmlspecialchars($r['cash_receipt_info'] ?: '-') ?></td>
-                                <td class="fw-bold"><?= intval($r['stud_bulls']) ?></td>
-                                <td class="fw-bold"><?= intval($r['draught_bulls']) ?></td>
-                                <td class="fw-bold"><?= intval($r['cows']) ?></td>
-                                <td class="fw-bold"><?= intval($r['heifer_calves']) ?></td>
-                                <td class="fw-bold"><?= intval($r['bull_calves']) ?></td>
-                                <td class="fw-bold fs-6 text-danger bg-light"><?= intval($r['total_animals']) ?> Head</td>
-                                <td class="small text-start"><?= htmlspecialchars($r['remarks'] ?: '-') ?></td>
-                                <td class="text-end text-nowrap">
-                                    <button type="button" class="btn btn-sm btn-edit-action btn-edit-disposal me-1"
-                                        data-id="<?= $r['id'] ?>"
-                                        data-date="<?= htmlspecialchars($r['disposal_date']) ?>"
-                                        data-voucher="<?= htmlspecialchars($r['voucher_no']) ?>"
-                                        data-how="<?= htmlspecialchars($r['how_disposed_of']) ?>"
-                                        data-amount="<?= $r['amount_realized'] ?>"
-                                        data-receipt="<?= htmlspecialchars($r['cash_receipt_info'] ?? '') ?>"
-                                        data-stud="<?= $r['stud_bulls'] ?>"
-                                        data-draught="<?= $r['draught_bulls'] ?>"
-                                        data-cows="<?= $r['cows'] ?>"
-                                        data-heifer="<?= $r['heifer_calves'] ?>"
-                                        data-bull="<?= $r['bull_calves'] ?>"
-                                        data-remarks="<?= htmlspecialchars($r['remarks'] ?? '') ?>"
-                                        data-bs-toggle="modal" data-bs-target="#editAnimalDisposalModal"
-                                        title="Edit Entry">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
-                                    <a href="processors/animal_disposal_crud.php?action=delete&id=<?= $r['id'] ?>&redirect_page=goat_register.php" class="btn btn-sm btn-delete-action btn-delete-record" title="Delete Record">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <?php endforeach; ?>
                 </tbody>
                 <tfoot class="tfoot-summary fw-bold">
                     <tr>

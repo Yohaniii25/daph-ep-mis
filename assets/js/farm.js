@@ -58,10 +58,22 @@ function initFarmDataTable(selector, customOptions = {}) {
 
 $(document).ready(function () {
     // 1. Initialize DataTables for all Farm Module Tables
-    initFarmDataTable('#cattleDisposalTable', { order: [[0, 'desc']] });
-    initFarmDataTable('#whiteCattleDisposalTable', { order: [[0, 'desc']] });
-    initFarmDataTable('#buffaloDisposalTable', { order: [[0, 'desc']] });
-    initFarmDataTable('#goatDisposalTable', { order: [[0, 'desc']] });
+    initFarmDataTable('#cattleDisposalTable', {
+        order: [[0, 'desc']],
+        language: { emptyTable: "No Cattle disposal records found for the selected filter period." }
+    });
+    initFarmDataTable('#whiteCattleDisposalTable', {
+        order: [[0, 'desc']],
+        language: { emptyTable: "No White Cattle disposal records found for the selected filter period." }
+    });
+    initFarmDataTable('#buffaloDisposalTable', {
+        order: [[0, 'desc']],
+        language: { emptyTable: "No Buffalo disposal records found for the selected filter period." }
+    });
+    initFarmDataTable('#goatDisposalTable', {
+        order: [[0, 'desc']],
+        language: { emptyTable: "No Goat disposal records found for the selected filter period." }
+    });
 
     initFarmDataTable('#dailyFeedTable', { order: [[0, 'desc']] });
     initFarmDataTable('#mashTable', { paging: false, searching: true, info: false });
