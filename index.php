@@ -36,9 +36,15 @@ unset($_SESSION['login_error']); // Clear errors on reload
         }
 
         .login-wrapper {
+            width: 100%;
             max-width: 440px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
+            margin: auto;
+            padding: 2.5rem 1rem 1.5rem 1rem;
+            flex: 1 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-sizing: border-box;
         }
 
         .login-box {
@@ -47,6 +53,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
             padding: 2.5rem 2.25rem;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(0, 0, 0, 0.04);
+            margin-bottom: 1.5rem;
         }
 
         .login-box .form-label {
@@ -110,12 +117,16 @@ unset($_SESSION['login_error']); // Clear errors on reload
 
         .login-footer {
             text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.78rem;
-            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.82rem;
+            color: #ffffff;
+            background: #6B0F1A;
+            width: 100%;
+            padding: 1rem 15px;
             letter-spacing: 0.02em;
+            position: relative;
+            margin-top: auto;
+            flex-shrink: 0;
         }
-    </style>
     </style>
 </head>
 
@@ -218,9 +229,10 @@ unset($_SESSION['login_error']); // Clear errors on reload
             </form>
         </div>
 
-        <div class="login-footer">
-            © 2026 Copyright SLTDIGITAL | All Rights Reserved
-        </div>
+    </div>
+
+    <div class="login-footer">
+        © 2026 Copyright SLTDIGITAL | All Rights Reserved
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
