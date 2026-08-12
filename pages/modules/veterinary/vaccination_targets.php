@@ -180,22 +180,13 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
-
-<div class="d-flex w-100 align-items-stretch min-vh-100">
-
-    <div class="flex-shrink-0" style="background-color: #370709;">
-        <?php  ?>
-    </div>
-
-    
-
-            <div class="mb-4 d-flex justify-content-between align-items-center">
+<div class="mb-4 d-flex justify-content-between align-items-center">
                 <div>
                     <h4 class="fw-bold mb-1" style="color: #370709;">Annual Targets & Field Metrics</h4>
                     <span class="badge" style="background-color: #d4c7b7; color: #370709;"><i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($range_name) ?> Range</span>
                     <span class="badge text-light" style="background-color: #a07174;"><i class="bi bi-building me-1"></i><?= htmlspecialchars($district_name) ?> District</span>
                 </div>
-                <div>
+                <div class="d-flex gap-2 align-items-center">
                     <div class="input-group">
                         <label class="input-group-text fw-bold text-light" style="background-color: #820100; border-color: #820100;">Evaluation Year</label>
                         <select id="dashboardYearFilter" class="form-select border-secondary" onchange="location = '?year='+this.value;">
@@ -204,6 +195,9 @@ require_once '../../../includes/header.php';
                             <option value="2024" <?= $selected_year == 2024 ? 'selected' : '' ?>>2024</option>
                         </select>
                     </div>
+                    <a href="annual_targets.php" class="btn btn-secondary shadow-sm text-nowrap">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
                 </div>
             </div>
 

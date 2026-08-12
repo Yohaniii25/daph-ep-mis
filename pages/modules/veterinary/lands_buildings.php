@@ -115,9 +115,17 @@ require_once '../../../includes/header.php';
                                                 <small class="text-muted"><?= htmlspecialchars($row['deed_description']) ?></small>
                                             </td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-outline-danger" onclick="handleAssetDelete(<?= $row['id'] ?>)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                <div class="btn-group">
+                                                    <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewLand(<?= json_encode($row) ?>)'>
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-primary me-1" title="Edit Property" onclick='editLand(<?= json_encode($row) ?>)'>
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleAssetDelete(<?= $row['id'] ?>)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endwhile;
@@ -174,9 +182,17 @@ require_once '../../../includes/header.php';
                                             <td class="text-center fw-bold text-primary"><?= sprintf("%02d", $row['available_quantity']) ?></td>
                                             <td><small class="text-muted"><?= htmlspecialchars($row['remarks']) ?></small></td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-outline-danger" onclick="handleInventoryDelete(<?= $row['id'] ?>)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                <div class="btn-group">
+                                                    <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewInventory(<?= json_encode($row) ?>)'>
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-primary me-1" title="Edit Item" onclick='editInventory(<?= json_encode($row) ?>)'>
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleInventoryDelete(<?= $row['id'] ?>)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endwhile;
@@ -193,8 +209,12 @@ require_once '../../../includes/header.php';
 </div>
 
 <?php include 'models/add_land_property.php'; ?>
+<?php include 'models/edit_land_property.php'; ?>
+<?php include 'models/view_land_property.php'; ?>
 
 <?php include 'models/add_building_inventory.php'; ?>
+<?php include 'models/edit_building_inventory.php'; ?>
+<?php include 'models/view_building_inventory.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -295,7 +315,92 @@ require_once '../../../includes/header.php';
                 }
             });
         });
+        // Submit Edit Land Form
+        $('#editAssetForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/update_land_asset.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Updated!', response.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                }
+            });
+        });
+
+        // Submit Edit Inventory Form
+        $('#editInventoryForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/update_building_inventory.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Updated!', response.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                }
+            });
+        });
     });
+
+    function viewLand(data) {
+        document.getElementById('view_property_name').textContent = data.property_name || '-';
+        document.getElementById('view_land_extent').textContent = data.land_extent || '-';
+        document.getElementById('view_building_area').textContent = data.building_area || '-';
+        document.getElementById('view_land_status').textContent = data.land_status || '-';
+        document.getElementById('view_deed_reference').textContent = data.deed_reference || '-';
+        document.getElementById('view_deed_description').textContent = data.deed_description || '-';
+        var modal = new bootstrap.Modal(document.getElementById('viewAssetModal'));
+        modal.show();
+    }
+
+    function editLand(data) {
+        document.getElementById('edit_land_id').value = data.id || '';
+        document.getElementById('edit_property_name').value = data.property_name || '';
+        document.getElementById('edit_land_extent').value = data.land_extent || '';
+        document.getElementById('edit_building_area').value = data.building_area || '';
+        document.getElementById('edit_land_status').value = data.land_status || 'State Owned';
+        document.getElementById('edit_deed_reference').value = data.deed_reference || '';
+        document.getElementById('edit_deed_description').value = data.deed_description || '';
+        var modal = new bootstrap.Modal(document.getElementById('editAssetModal'));
+        modal.show();
+    }
+
+    function viewInventory(data) {
+        document.getElementById('view_inventory_item').textContent = data.inventory_item || '-';
+        document.getElementById('view_available_quantity').textContent = data.available_quantity || '-';
+        document.getElementById('view_inventory_property').textContent = data.property_name || '-';
+        document.getElementById('view_inventory_condition').textContent = data.current_condition || '-';
+        document.getElementById('view_inventory_specification').textContent = data.specification || '-';
+        document.getElementById('view_inventory_remarks').textContent = data.remarks || '-';
+        var modal = new bootstrap.Modal(document.getElementById('viewInventoryModal'));
+        modal.show();
+    }
+
+    function editInventory(data) {
+        document.getElementById('edit_inventory_id').value = data.id || '';
+        document.getElementById('edit_land_asset_id').value = data.land_asset_id || '';
+        document.getElementById('edit_inventory_item').value = data.inventory_item || '';
+        document.getElementById('edit_available_quantity').value = data.available_quantity || 1;
+        document.getElementById('edit_current_condition').value = data.current_condition || 'Good';
+        document.getElementById('edit_specification').value = data.specification || '';
+        document.getElementById('edit_remarks').value = data.remarks || '';
+        var modal = new bootstrap.Modal(document.getElementById('editInventoryModal'));
+        modal.show();
+    }
 
     function handleAssetDelete(id) {
         Swal.fire({

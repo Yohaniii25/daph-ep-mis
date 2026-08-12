@@ -119,6 +119,9 @@ require_once '../../../includes/header.php';
                         ?>
                     </select>
                 </form>
+                <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
             </div>
         </div>
 

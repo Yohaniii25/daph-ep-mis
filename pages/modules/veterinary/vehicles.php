@@ -110,9 +110,17 @@ require_once '../../../includes/header.php';
                                         </td>
                                         <td><small class="text-muted"><?= htmlspecialchars($row['other_details']) ?></small></td>
                                         <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-danger" onclick="handleVehicleDelete(<?= $row['id'] ?>)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewVehicle(<?= json_encode($row) ?>)'>
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-primary me-1" title="Edit Vehicle" onclick='editVehicle(<?= json_encode($row) ?>)'>
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleVehicleDelete(<?= $row['id'] ?>)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endwhile; $fleet_stmt->close(); ?>
@@ -162,9 +170,17 @@ require_once '../../../includes/header.php';
                                         <td><span class="small"><?= htmlspecialchars($row['place_of_repair']) ?></span></td>
                                         <td class="text-end fw-bold text-dark"><?= number_format($row['amount'], 2) ?></td>
                                         <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-danger" onclick="handleRepairDelete(<?= $row['id'] ?>)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-info me-1" title="View Log" onclick='viewRepair(<?= json_encode($row) ?>)'>
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-primary me-1" title="Edit Log" onclick='editRepair(<?= json_encode($row) ?>)'>
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleRepairDelete(<?= $row['id'] ?>)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endwhile; $rep_stmt->close(); ?>
@@ -181,7 +197,11 @@ require_once '../../../includes/header.php';
 
 <!-- include models -->
 <?php include 'models/add_vehicle.php'; ?>
+<?php include 'models/edit_vehicle.php'; ?>
+<?php include 'models/view_vehicle.php'; ?>
 <?php include 'models/add_repair_vehicle.php'; ?>
+<?php include 'models/edit_vehicle_repair.php'; ?>
+<?php include 'models/view_vehicle_repair.php'; ?>
 
 
 
@@ -226,8 +246,82 @@ require_once '../../../includes/header.php';
                     } else { Swal.fire('Error', res.message, 'error'); }
                 }
             });
+        // Submit Edit Vehicle Form
+        $('#editVehicleForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/update_vehicle.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if(res.success) {
+                        Swal.fire('Updated!', res.message, 'success').then(() => { location.reload(); });
+                    } else { Swal.fire('Error', res.message, 'error'); }
+                }
+            });
+        });
+
+        // Submit Edit Repair Form
+        $('#editRepairForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/update_vehicle_repair.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if(res.success) {
+                        Swal.fire('Updated!', res.message, 'success').then(() => { location.reload(); });
+                    } else { Swal.fire('Error', res.message, 'error'); }
+                }
+            });
         });
     });
+
+    function viewVehicle(data) {
+        document.getElementById('view_vehicle_type').textContent = data.vehicle_type || '-';
+        document.getElementById('view_vehicle_number').textContent = data.vehicle_number || '-';
+        document.getElementById('view_chassis_number').textContent = data.chassis_number || '-';
+        document.getElementById('view_current_condition').textContent = data.current_condition || '-';
+        document.getElementById('view_other_details').textContent = data.other_details || '-';
+        var modal = new bootstrap.Modal(document.getElementById('viewVehicleModal'));
+        modal.show();
+    }
+
+    function editVehicle(data) {
+        document.getElementById('edit_vehicle_id').value = data.id || '';
+        document.getElementById('edit_vehicle_type').value = data.vehicle_type || '';
+        document.getElementById('edit_vehicle_number').value = data.vehicle_number || '';
+        document.getElementById('edit_chassis_number').value = data.chassis_number || '';
+        document.getElementById('edit_current_condition').value = data.current_condition || 'Running';
+        document.getElementById('edit_other_details').value = data.other_details || '';
+        var modal = new bootstrap.Modal(document.getElementById('editVehicleModal'));
+        modal.show();
+    }
+
+    function viewRepair(data) {
+        document.getElementById('view_repair_vehicle_number').textContent = data.vehicle_number || '-';
+        document.getElementById('view_repair_date').textContent = data.repair_date || '-';
+        document.getElementById('view_repair_done').textContent = data.repair_done || '-';
+        document.getElementById('view_place_of_repair').textContent = data.place_of_repair || '-';
+        document.getElementById('view_repair_amount').textContent = data.amount ? parseFloat(data.amount).toLocaleString('en-US', {minimumFractionDigits: 2}) : '0.00';
+        document.getElementById('view_repair_description').textContent = data.repair_description || '-';
+        var modal = new bootstrap.Modal(document.getElementById('viewRepairModal'));
+        modal.show();
+    }
+
+    function editRepair(data) {
+        document.getElementById('edit_repair_id').value = data.id || '';
+        document.getElementById('edit_repair_vehicle_id').value = data.vehicle_id || '';
+        document.getElementById('edit_repair_date').value = data.repair_date || '';
+        document.getElementById('edit_repair_done').value = data.repair_done || '';
+        document.getElementById('edit_place_of_repair').value = data.place_of_repair || '';
+        document.getElementById('edit_repair_amount').value = data.amount || '';
+        document.getElementById('edit_repair_description').value = data.repair_description || '';
+        var modal = new bootstrap.Modal(document.getElementById('editRepairModal'));
+        modal.show();
+    }
 
     function handleVehicleDelete(id) {
         Swal.fire({

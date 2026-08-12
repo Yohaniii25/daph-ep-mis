@@ -103,17 +103,26 @@ require_once '../../../includes/header.php';
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold">Employee Management</h3>
-                <p class="text-muted small">Manage staff details, designations, and office assignments</p>
+                <h3 class="fw-bold mb-1">Employee Management</h3>
+                <p class="text-muted small mb-0">Manage staff details, designations, and office assignments</p>
             </div>
-            <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-                <i class="bi bi-person-plus-fill me-2"></i>Add New Officer
-            </button>
-            <!-- add back button next to add new officer-->
-            <a href="office_details.php" class="btn btn-secondary shadow-sm">
-                <i class="bi bi-arrow-left me-2"></i>Back
-            </a>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                    <i class="bi bi-person-plus-fill me-2"></i>Add New Officer
+                </button>
+                <a href="office_details.php" class="btn btn-secondary shadow-sm">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+            </div>
         </div>
+
+        <?php if (isset($_SESSION['msg'])): ?>
+            <div class="alert alert-<?= $_SESSION['msg_type'] ?? 'info' ?> alert-dismissible fade show shadow-sm py-2 px-3 mb-4 small" role="alert">
+                <?= htmlspecialchars($_SESSION['msg']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+        <?php endif; ?>
 
         <div class="card shadow-sm border-0">
             <div class="card-body">
@@ -146,7 +155,7 @@ require_once '../../../includes/header.php';
                                     <td><?= $row['range_name'] ?? '<span class="text-muted small">N/A</span>' ?></td>
                                     <td class="small"><?= htmlspecialchars($row['contact_number'] ?? 'N/A') ?></td>
                                     <td>
-                                        <a href="leave_details.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-primary" title="View Leave Details">
+                                        <a href="#" class="btn btn-sm btn-outline-primary" title="View Leave Details">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </td>
@@ -174,6 +183,7 @@ require_once '../../../includes/header.php';
 </div>
 
 <?php include 'models/add_employee.php'; ?>
+<?php include 'models/edit_employee.php'; ?>
 
 <!-- View Employee Details Modal -->
 <div class="modal fade" id="viewEmployeeModal" tabindex="-1" aria-hidden="true">
@@ -249,6 +259,7 @@ require_once '../../../includes/header.php';
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     $(document).ready(function() {
@@ -311,30 +322,71 @@ require_once '../../../includes/header.php';
         modal.show();
     }
 
+    function editEmployee(data) {
+        document.getElementById('edit_id').value = data.id || '';
+        document.getElementById('edit_service_number').value = data.service_number || data.emp_id || '';
+        document.getElementById('edit_officer_name').value = data.full_name || '';
+        document.getElementById('edit_designation').value = data.designation || '';
+        document.getElementById('edit_user_role').value = data.role || 'employee';
+        document.getElementById('edit_service_category').value = data.service_category || '';
+        document.getElementById('edit_email').value = data.email || '';
+        document.getElementById('edit_contact_number').value = data.contact_number || data.phone || '';
+        document.getElementById('edit_appointment_date').value = data.appointment_date || '';
+        document.getElementById('edit_appointment_date_current_position').value = data.appointment_date_current_position || '';
+
+        var editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+        editModal.show();
+    }
+
     function confirmDelete(id) {
-        if (confirm("Are you sure you want to deactivate this officer? This action cannot be undone.")) {
-            $.ajax({
-                url: 'processors/delete_employee.php',
-                type: 'POST',
-                data: {
-                    id: id
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        $('#row-' + id).fadeOut(400, function() {
-                            $(this).remove();
+        Swal.fire({
+            title: 'Deactivate Officer?',
+            text: 'Are you sure you want to deactivate this officer? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Deactivate',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'processors/delete_employee.php',
+                    type: 'POST',
+                    data: {
+                        id: id
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deactivated!',
+                                text: response.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            $('#row-' + id).fadeOut(400, function() {
+                                $(this).remove();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Server Error',
+                            text: 'Failed to connect to the server.'
                         });
-                        alert(response.message);
-                    } else {
-                        alert('Error: ' + response.message);
                     }
-                },
-                error: function() {
-                    alert('Failed to connect to the server.');
-                }
-            });
-        }
+                });
+            }
+        });
     }
 </script>
 

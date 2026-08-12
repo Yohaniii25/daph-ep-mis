@@ -88,9 +88,17 @@ require_once '../../../includes/header.php';
                                 <td class="text-secondary small fw-medium"><?= htmlspecialchars($row['purchase_date']) ?></td>
                                 <td><small class="text-muted"><?= !empty($row['remarks']) ? htmlspecialchars($row['remarks']) : '-' ?></small></td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-danger" onclick="handleCounterfoilDelete(<?= $row['id'] ?>)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewCounterfoil(<?= json_encode($row) ?>)'>
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit Counterfoil" onclick='editCounterfoil(<?= json_encode($row) ?>)'>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleCounterfoilDelete(<?= $row['id'] ?>)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endwhile; $cf_stmt->close(); ?>
@@ -103,6 +111,8 @@ require_once '../../../includes/header.php';
 </div>
 
 <?php include 'models/add_counterfoil.php'; ?>
+<?php include 'models/edit_counterfoil.php'; ?>
+<?php include 'models/view_counterfoil.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -131,7 +141,46 @@ require_once '../../../includes/header.php';
                 }
             });
         });
+
+        // Submit Edit Counterfoil Form
+        $('#editCounterfoilForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/update_counterfoil.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Updated!', res.message, 'success').then(() => { location.reload(); });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                }
+            });
+        });
     });
+
+    function viewCounterfoil(data) {
+        document.getElementById('view_counterfoil_type').textContent = data.counterfoil_type || '-';
+        document.getElementById('view_counterfoil_condition').textContent = data.current_condition || '-';
+        document.getElementById('view_counterfoil_quantity').textContent = data.available_quantity || '-';
+        document.getElementById('view_counterfoil_purchase_date').textContent = data.purchase_date || '-';
+        document.getElementById('view_counterfoil_remarks').textContent = data.remarks || '-';
+        var modal = new bootstrap.Modal(document.getElementById('viewCounterfoilModal'));
+        modal.show();
+    }
+
+    function editCounterfoil(data) {
+        document.getElementById('edit_counterfoil_id').value = data.id || '';
+        document.getElementById('edit_counterfoil_type').value = data.counterfoil_type || '';
+        document.getElementById('edit_counterfoil_condition').value = data.current_condition || 'Good';
+        document.getElementById('edit_counterfoil_quantity').value = data.available_quantity || 1;
+        document.getElementById('edit_counterfoil_purchase_date').value = data.purchase_date || '';
+        document.getElementById('edit_counterfoil_remarks').value = data.remarks || '';
+        var modal = new bootstrap.Modal(document.getElementById('editCounterfoilModal'));
+        modal.show();
+    }
 
     function handleCounterfoilDelete(id) {
         Swal.fire({

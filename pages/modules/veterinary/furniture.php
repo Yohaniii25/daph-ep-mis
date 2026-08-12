@@ -89,9 +89,17 @@ require_once '../../../includes/header.php';
                                 <td class="text-center fw-bold text-primary"><?= sprintf("%02d", $row['available_quantity']) ?></td>
                                 <td><small class="text-muted"><?= htmlspecialchars($row['remarks']) ?></small></td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-danger" onclick="handleFurnitureDelete(<?= $row['id'] ?>)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewFurniture(<?= json_encode($row) ?>)'>
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit Furniture" onclick='editFurniture(<?= json_encode($row) ?>)'>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleFurnitureDelete(<?= $row['id'] ?>)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endwhile; $furn_stmt->close(); ?>
@@ -104,6 +112,8 @@ require_once '../../../includes/header.php';
 </div>
 
 <?php include 'models/add_furniture.php'; ?>
+<?php include 'models/edit_furniture.php'; ?>
+<?php include 'models/view_furniture.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -132,7 +142,46 @@ require_once '../../../includes/header.php';
                 }
             });
         });
+
+        // Submit Edit Furniture Form
+        $('#editFurnitureForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/update_furniture.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Updated!', res.message, 'success').then(() => { location.reload(); });
+                    } else {
+                        Swal.fire('Update Failed', res.message, 'error');
+                    }
+                }
+            });
+        });
     });
+
+    function viewFurniture(data) {
+        document.getElementById('view_furniture_type').textContent = data.furniture_type || '-';
+        document.getElementById('view_furniture_quantity').textContent = data.available_quantity || '-';
+        document.getElementById('view_date_received').textContent = data.date_received || '-';
+        document.getElementById('view_furniture_condition').textContent = data.current_condition || '-';
+        document.getElementById('view_furniture_remarks').textContent = data.remarks || '-';
+        var modal = new bootstrap.Modal(document.getElementById('viewFurnitureModal'));
+        modal.show();
+    }
+
+    function editFurniture(data) {
+        document.getElementById('edit_furniture_id').value = data.id || '';
+        document.getElementById('edit_furniture_type').value = data.furniture_type || '';
+        document.getElementById('edit_furniture_quantity').value = data.available_quantity || 1;
+        document.getElementById('edit_date_received').value = data.date_received || '';
+        document.getElementById('edit_furniture_condition').value = data.current_condition || 'Good';
+        document.getElementById('edit_furniture_remarks').value = data.remarks || '';
+        var modal = new bootstrap.Modal(document.getElementById('editFurnitureModal'));
+        modal.show();
+    }
 
     function handleFurnitureDelete(id) {
         Swal.fire({

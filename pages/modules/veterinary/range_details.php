@@ -167,44 +167,44 @@ require_once '../../../includes/header.php';
                         </a>
                     </div>
                     <div class="col">
-                        <a href="furniture.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #a07174; min-height: 105px;">
+                        <a href="#" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #a07174; min-height: 105px;">
                             <i class="bi bi-file-earmark-plus fs-3 mb-1"></i>
                             <span class="text-center">Regulatory Functions</span>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="machineries.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #689ccf; min-height: 105px;">
+                        <a href="#" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #689ccf; min-height: 105px;">
                             <i class="bi bi-gear-fill fs-3 mb-1"></i>
                             <span class="text-center">Animal Health</span>
                         </a>
                     </div>
 
                     <div class="col">
-                        <a href="instruments.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #2e7d32; min-height: 105px;">
+                        <a href="#" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #2e7d32; min-height: 105px;">
                             <i class="bi bi-tools fs-3 mb-1"></i>
                             <span class="text-center">Clinical Services</span>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="counter_foilage.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #e65100; min-height: 105px;">
+                        <a href="#" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #e65100; min-height: 105px;">
                             <i class="bi bi-file-earmark-text-fill fs-3 mb-1"></i>
                             <span class="text-center">Animal Breeding</span>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="human_population.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #455a64; min-height: 105px;">
+                        <a href="#" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #455a64; min-height: 105px;">
                             <i class="bi bi-person-bounding-box fs-3 mb-1"></i>
                             <span class="text-center">Livestock Production</span>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="animal_population.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #1565c0; min-height: 105px;">
+                        <a href="#" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #1565c0; min-height: 105px;">
                             <i class="bi bi-patch-check-fill fs-3 mb-1"></i>
                             <span class="text-center">Dairy Hub</span>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="range_maps.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #00838f; min-height: 105px;">
+                        <a href="#" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #00838f; min-height: 105px;">
                             <i class="bi bi-geo-alt-fill fs-3 mb-1"></i>
                             <span class="text-center">Projects</span>
                         </a>

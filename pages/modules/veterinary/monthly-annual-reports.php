@@ -73,6 +73,10 @@ require_once '../../../includes/header.php';
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Monthly Reports</h2>
                 <p class="text-muted small mb-0">Official mapping profile metrics dynamically captured for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong></p>
             </div>
+
+            <a href="range_details.php" class="btn btn-secondary shadow-sm text-nowrap">
+                <i class="bi bi-arrow-left me-2"></i>Back
+            </a>
             <?php if (isset($_SESSION['msg'])): ?>
                 <div class="alert alert-<?= $_SESSION['msg_type'] ?> py-2 px-3 mb-0 small">
                     <?= $_SESSION['msg'] ?>

@@ -88,9 +88,17 @@ require_once '../../../includes/header.php';
                                 <td class="text-secondary small fw-medium"><?= htmlspecialchars($row['purchase_date']) ?></td>
                                 <td><small class="text-muted"><?= !empty($row['remarks']) ? htmlspecialchars($row['remarks']) : '-' ?></small></td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-danger" onclick="handleInstrumentDelete(<?= $row['id'] ?>)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewInstrument(<?= json_encode($row) ?>)'>
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit Instrument" onclick='editInstrument(<?= json_encode($row) ?>)'>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleInstrumentDelete(<?= $row['id'] ?>)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endwhile; $inst_stmt->close(); ?>
@@ -104,6 +112,8 @@ require_once '../../../includes/header.php';
 
 <!-- include modal -->
 <?php include 'models/add_instrument.php'; ?>
+<?php include 'models/edit_instrument.php'; ?>
+<?php include 'models/view_instrument.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -131,7 +141,46 @@ require_once '../../../includes/header.php';
                 }
             });
         });
+
+        // Submit Edit Instrument Form
+        $('#editInstrumentForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                url: 'processors/update_instrument.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Updated!', res.message, 'success').then(() => { location.reload(); });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                }
+            });
+        });
     });
+
+    function viewInstrument(data) {
+        document.getElementById('view_instrument_type').textContent = data.instrument_type || '-';
+        document.getElementById('view_instrument_condition').textContent = data.current_condition || '-';
+        document.getElementById('view_instrument_quantity').textContent = data.available_quantity || '-';
+        document.getElementById('view_instrument_purchase_date').textContent = data.purchase_date || '-';
+        document.getElementById('view_instrument_remarks').textContent = data.remarks || '-';
+        var modal = new bootstrap.Modal(document.getElementById('viewInstrumentModal'));
+        modal.show();
+    }
+
+    function editInstrument(data) {
+        document.getElementById('edit_instrument_id').value = data.id || '';
+        document.getElementById('edit_instrument_type').value = data.instrument_type || '';
+        document.getElementById('edit_instrument_condition').value = data.current_condition || 'Good';
+        document.getElementById('edit_instrument_quantity').value = data.available_quantity || 1;
+        document.getElementById('edit_instrument_purchase_date').value = data.purchase_date || '';
+        document.getElementById('edit_instrument_remarks').value = data.remarks || '';
+        var modal = new bootstrap.Modal(document.getElementById('editInstrumentModal'));
+        modal.show();
+    }
 
     function handleInstrumentDelete(id) {
         Swal.fire({

@@ -72,9 +72,12 @@ require_once '../../../includes/header.php';
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold">Daily Diary</h3>
-                <p class="text-muted small">Daily activities of the Veterinary Surgeon.</p>
+                <h3 class="fw-bold mb-1">Daily Diary</h3>
+                <p class="text-muted small mb-0">Daily activities of the Veterinary Surgeon.</p>
             </div>
+            <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
+                <i class="bi bi-arrow-left me-2"></i>Back
+            </a>
         </div>
 
         <div class="card shadow-sm mb-4 border-0">

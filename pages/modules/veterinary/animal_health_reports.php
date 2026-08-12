@@ -89,9 +89,14 @@ require_once '../../../includes/header.php';
                 <h2 class="h4 mb-0 fw-bold">Animal Health Reports</h2>
                 <small class="text-muted"><?= htmlspecialchars($range_name) ?> | DAPH Eastern Province</small>
             </div>
-            <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#recordTreatmentModal">
-                <i class="bi bi-plus-lg me-1"></i> New Health Record
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#recordTreatmentModal">
+                    <i class="bi bi-plus-lg me-1"></i> New Health Record
+                </button>
+                <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+            </div>
         </div>
 
         <div class="row g-4 mb-4">

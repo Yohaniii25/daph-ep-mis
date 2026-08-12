@@ -73,12 +73,17 @@ require_once '../../../includes/header.php';
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Production Balance</h2>
                 <p class="text-muted small mb-0">Production Balance metrics dynamically captured for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong></p>
             </div>
-            <?php if (isset($_SESSION['msg'])): ?>
-                <div class="alert alert-<?= $_SESSION['msg_type'] ?> py-2 px-3 mb-0 small">
-                    <?= $_SESSION['msg'] ?>
-                </div>
-                <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
-            <?php endif; ?>
+            <div class="d-flex gap-2 align-items-center">
+                <?php if (isset($_SESSION['msg'])): ?>
+                    <div class="alert alert-<?= $_SESSION['msg_type'] ?> py-2 px-3 mb-0 small">
+                        <?= $_SESSION['msg'] ?>
+                    </div>
+                    <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+                <?php endif; ?>
+                <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+            </div>
         </div>
 
         <div class="row g-4">

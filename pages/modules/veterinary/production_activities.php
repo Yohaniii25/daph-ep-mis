@@ -51,14 +51,7 @@ require_once '../../../includes/header.php';
     }
 </style>
 
-<div class="d-flex w-100 align-items-stretch min-vh-100">
-    <div class="flex-shrink-0" style="background-color: #370709;">
-        <?php  ?>
-    </div>
-
-    
-            
-            <div class="mb-4 d-flex justify-content-between align-items-center">
+<div class="mb-4 d-flex justify-content-between align-items-center">
                 <div>
                     <h4 class="fw-bold mb-1" style="color: #370709;">Production Activity Logs</h4>
                     <span class="badge" style="background-color: #d4c7b7; color: #370709;"><i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($range_name) ?> Range</span>
@@ -73,6 +66,9 @@ require_once '../../../includes/header.php';
                     <button class="btn text-light fw-bold text-nowrap" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addActivityModal">
                         <i class="bi bi-plus-circle me-1"></i> Log Activity Target
                     </button>
+                    <a href="annual_targets.php" class="btn btn-secondary shadow-sm text-nowrap">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
                 </div>
             </div>
 

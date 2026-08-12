@@ -75,11 +75,16 @@ require_once '../../../includes/header.php';
                     </ol>
                 </nav>
             </div>
-            <div class="btn-group shadow-sm">
-                <button type="button" class="btn btn-sm btn-outline-primary toggle-vis" data-column="3,4">AI View</button>
-                <button type="button" class="btn btn-sm btn-outline-info toggle-vis" data-column="5,6">PD View</button>
-                <button type="button" class="btn btn-sm btn-outline-success toggle-vis" data-column="7,8">Calving View</button>
-                <button type="button" class="btn btn-sm btn-secondary toggle-vis" data-column="all">Reset</button>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="btn-group shadow-sm">
+                    <button type="button" class="btn btn-sm btn-outline-primary toggle-vis" data-column="3,4">AI View</button>
+                    <button type="button" class="btn btn-sm btn-outline-info toggle-vis" data-column="5,6">PD View</button>
+                    <button type="button" class="btn btn-sm btn-outline-success toggle-vis" data-column="7,8">Calving View</button>
+                    <button type="button" class="btn btn-sm btn-secondary toggle-vis" data-column="all">Reset</button>
+                </div>
+                <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
             </div>
         </div>
 

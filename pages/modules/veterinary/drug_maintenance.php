@@ -103,6 +103,9 @@ require_once '../../../includes/header.php';
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Drug Maintenance</h2>
                 <p class="text-muted small mb-0">Manage and track drug ledger balances for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
+            <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
+                <i class="bi bi-arrow-left me-2"></i>Back
+            </a>
         </div>
 
         <div class="row g-4 mb-4">
@@ -265,7 +268,7 @@ $pageScripts = '
             "order": [
                 [0, "desc"]
             ],
-            "dom": \'Ref<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>\',
+            "dom": \'<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>\',
             "language": {
                 "search": "_INPUT_",
                 "searchPlaceholder": "Search ledger rows..."
