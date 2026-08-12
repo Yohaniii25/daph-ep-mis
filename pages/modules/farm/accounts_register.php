@@ -114,21 +114,20 @@ $egg_sales_income = 0.00;
 $egg_sales_count = 0;
 
 $where_es = getSqlDateFilter('es.sale_date', $filter_period, $filter_date, $filter_month);
-$res_es = $mysqli->query("SELECT es.*, c.cage_name FROM daily_egg_sales es LEFT JOIN cages c ON es.cage_id = c.id WHERE es.total_amount > 0 $where_es ORDER BY es.sale_date DESC, es.id DESC");
+$res_es = $mysqli->query("SELECT es.*, c.cage_name FROM daily_egg_sales es LEFT JOIN cages c ON es.cage_id = c.id WHERE es.grand_total_sales > 0 $where_es ORDER BY es.sale_date DESC, es.id DESC");
 if ($res_es) {
     while ($r = $res_es->fetch_assoc()) {
-        $amt = floatval($r['total_amount']);
+        $amt = floatval($r['grand_total_sales']);
         $egg_sales_income += $amt;
         $egg_sales_count++;
 
-        $purchaser = !empty($r['purchaser_name']) ? htmlspecialchars($r['purchaser_name']) : 'General Purchaser';
-        $desc = "Purchaser: " . $purchaser;
+        $desc = "Cage: " . htmlspecialchars($r['cage_name'] ?? 'N/A');
         $details = [];
-        if (floatval($r['table_eggs_qty']) > 0) {
-            $details[] = "Table Eggs: " . number_format($r['table_eggs_qty']) . " @ LKR " . number_format($r['table_eggs_rate'], 2);
+        if (floatval($r['table_eggs_no'] ?? 0) > 0) {
+            $details[] = "Table Eggs: " . number_format($r['table_eggs_no']) . " @ LKR " . number_format($r['table_eggs_unit_price'] ?? 0, 2);
         }
-        if (floatval($r['hatching_eggs_qty']) > 0) {
-            $details[] = "Hatching Eggs: " . number_format($r['hatching_eggs_qty']) . " @ LKR " . number_format($r['hatching_eggs_rate'], 2);
+        if (floatval($r['cracked_eggs_no'] ?? 0) > 0) {
+            $details[] = "Cracked Eggs: " . number_format($r['cracked_eggs_no']) . " @ LKR " . number_format($r['cracked_eggs_unit_price'] ?? 0, 2);
         }
         if (!empty($details)) {
             $desc .= " (" . implode(", ", $details) . ")";
@@ -145,11 +144,11 @@ if ($res_es) {
             'source_badge' => 'bg-info text-dark',
             'source_icon' => 'bi-egg-fill',
             'date' => $r['sale_date'],
-            'voucher_no' => $r['receipt_no'] ?: 'EGG-' . $r['id'],
+            'voucher_no' => 'EGG-' . $r['id'],
             'category' => 'Egg Sales Revenue',
             'type' => 'Income',
             'description' => $desc,
-            'cash_book_ref' => $r['receipt_no'] ?: '-',
+            'cash_book_ref' => '-',
             'amount' => $amt,
             'is_direct' => false,
             'link' => 'sales_of_eggs.php'
@@ -163,20 +162,16 @@ if ($res_es) {
 $hatchery_income = 0.00;
 $hatchery_count = 0;
 
-$where_hs = getSqlDateFilter('sale_date', $filter_period, $filter_date, $filter_month);
-$res_hs = $mysqli->query("SELECT * FROM hatchery_sales WHERE total_amount > 0 $where_hs ORDER BY sale_date DESC, id DESC");
+$where_hs = getSqlDateFilter('sales_date', $filter_period, $filter_date, $filter_month);
+$res_hs = $mysqli->query("SELECT * FROM hatchery_sales WHERE total_revenue > 0 $where_hs ORDER BY sales_date DESC, id DESC");
 if ($res_hs) {
     while ($r = $res_hs->fetch_assoc()) {
-        $amt = floatval($r['total_amount']);
+        $amt = floatval($r['total_revenue']);
         $hatchery_income += $amt;
         $hatchery_count++;
 
-        $buyer = !empty($r['buyer_name']) ? htmlspecialchars($r['buyer_name']) : 'N/A';
-        $chick_type = !empty($r['chick_type']) ? htmlspecialchars($r['chick_type']) : 'Day-Old Chicks';
-        $desc = "Buyer: " . $buyer . " (" . $chick_type . " - Qty: " . number_format($r['qty_sold']) . " @ LKR " . number_format($r['unit_price'], 2) . ")";
-        if (!empty($r['remarks'])) {
-            $desc .= ". " . htmlspecialchars($r['remarks']);
-        }
+        $chick_type = !empty($r['egg_category']) ? htmlspecialchars($r['egg_category']) : 'Day-Old Chicks';
+        $desc = "Hatchery Sales (" . $chick_type . " - Qty: " . number_format($r['quantity_sold']) . " @ LKR " . number_format($r['actual_rate'] ?? 0, 2) . ")";
 
         $all_transactions[] = [
             'id' => 'hs_' . $r['id'],
@@ -185,12 +180,12 @@ if ($res_hs) {
             'source_label' => 'Hatchery Sales',
             'source_badge' => 'bg-warning text-dark',
             'source_icon' => 'bi-sun-fill',
-            'date' => $r['sale_date'],
-            'voucher_no' => $r['voucher_no'] ?: 'HAT-' . $r['id'],
+            'date' => $r['sales_date'],
+            'voucher_no' => 'HAT-' . $r['id'],
             'category' => 'Hatchery Chick Sales',
             'type' => 'Income',
             'description' => $desc,
-            'cash_book_ref' => $r['voucher_no'] ?: '-',
+            'cash_book_ref' => '-',
             'amount' => $amt,
             'is_direct' => false,
             'link' => 'hatchery_register.php'
@@ -244,20 +239,16 @@ if ($res_doc) {
 $chick_dist_income = 0.00;
 $chick_dist_count = 0;
 
-$where_mc = getSqlDateFilter('sale_date', $filter_period, $filter_date, $filter_month);
-$res_mc = $mysqli->query("SELECT * FROM month_old_chicks_distribution WHERE amount_realized > 0 $where_mc ORDER BY sale_date DESC, id DESC");
+$where_mc = getSqlDateFilter('record_date', $filter_period, $filter_date, $filter_month);
+$res_mc = $mysqli->query("SELECT * FROM month_old_chicks_distribution WHERE total_amount > 0 $where_mc ORDER BY record_date DESC, id DESC");
 if ($res_mc) {
     while ($r = $res_mc->fetch_assoc()) {
-        $amt = floatval($r['amount_realized']);
+        $amt = floatval($r['total_amount']);
         $chick_dist_income += $amt;
         $chick_dist_count++;
 
-        $farmer = !empty($r['farmer_name']) ? htmlspecialchars($r['farmer_name']) : 'N/A';
-        $chick_type = !empty($r['chick_type']) ? htmlspecialchars($r['chick_type']) : 'Month-Old Chicks';
-        $desc = "Farmer: " . $farmer . " (" . $chick_type . " - Qty: " . number_format($r['no_of_chicks']) . " @ LKR " . number_format($r['unit_price'], 2) . ")";
-        if (!empty($r['remarks'])) {
-            $desc .= ". " . htmlspecialchars($r['remarks']);
-        }
+        $place = !empty($r['sent_to_place']) ? htmlspecialchars($r['sent_to_place']) : 'N/A';
+        $desc = "Sent to: " . $place . " (Month-Old Chicks - Qty: " . number_format($r['no_of_chicks_sent'] ?? 0) . " @ LKR " . number_format($r['price_per_chick'] ?? 0, 2) . ")";
 
         $all_transactions[] = [
             'id' => 'mc_' . $r['id'],
@@ -266,12 +257,12 @@ if ($res_mc) {
             'source_label' => 'Chick Distribution',
             'source_badge' => 'bg-dark text-light',
             'source_icon' => 'bi-box-seam',
-            'date' => $r['sale_date'],
-            'voucher_no' => $r['receipt_no'] ?: 'CHK-' . $r['id'],
+            'date' => $r['record_date'],
+            'voucher_no' => 'CHK-' . $r['id'],
             'category' => 'Month-Old Chick Sales',
             'type' => 'Income',
             'description' => $desc,
-            'cash_book_ref' => $r['receipt_no'] ?: '-',
+            'cash_book_ref' => '-',
             'amount' => $amt,
             'is_direct' => false,
             'link' => 'chick_details.php'
@@ -329,23 +320,20 @@ $vehicle_expense = 0.00;
 $vehicle_count = 0;
 
 $where_vr = getSqlDateFilter('vr.repair_date', $filter_period, $filter_date, $filter_month);
-$res_vr = $mysqli->query("SELECT vr.*, v.vehicle_number, v.vehicle_type FROM vehicle_repairs vr LEFT JOIN registered_vehicles v ON vr.vehicle_id = v.id WHERE (vr.cost > 0 OR vr.cost_lkr > 0 OR vr.amount > 0) $where_vr ORDER BY vr.repair_date DESC, vr.id DESC");
+$res_vr = $mysqli->query("SELECT vr.*, v.vehicle_number, v.vehicle_type FROM vehicle_repairs vr LEFT JOIN registered_vehicles v ON vr.vehicle_id = v.id WHERE vr.amount > 0 $where_vr ORDER BY vr.repair_date DESC, vr.id DESC");
 if ($res_vr) {
     while ($r = $res_vr->fetch_assoc()) {
-        $amt = floatval($r['cost'] > 0 ? $r['cost'] : ($r['cost_lkr'] > 0 ? $r['cost_lkr'] : ($r['amount'] ?? 0)));
+        $amt = floatval($r['amount'] ?? 0);
         if ($amt > 0) {
             $vehicle_expense += $amt;
             $vehicle_count++;
 
             $v_num = !empty($r['vehicle_number']) ? htmlspecialchars($r['vehicle_number']) : 'Vehicle';
             $v_type = !empty($r['vehicle_type']) ? htmlspecialchars($r['vehicle_type']) : 'Asset';
-            $repair_nature = !empty($r['nature_of_repair']) ? htmlspecialchars($r['nature_of_repair']) : 'Maintenance';
-            $garage = !empty($r['garage_name']) ? htmlspecialchars($r['garage_name']) : 'Garage';
+            $repair_nature = !empty($r['repair_description']) ? htmlspecialchars($r['repair_description']) : (!empty($r['repair_done']) ? htmlspecialchars($r['repair_done']) : 'Maintenance');
+            $garage = !empty($r['place_of_repair']) ? htmlspecialchars($r['place_of_repair']) : 'Garage';
 
             $desc = "Vehicle: " . $v_num . " (" . $v_type . ") - Repair: " . $repair_nature . " @ " . $garage;
-            if (!empty($r['remarks'])) {
-                $desc .= ". " . htmlspecialchars($r['remarks']);
-            }
 
             $all_transactions[] = [
                 'id' => 'vr_' . $r['id'],
@@ -355,11 +343,11 @@ if ($res_vr) {
                 'source_badge' => 'bg-danger',
                 'source_icon' => 'bi-truck',
                 'date' => $r['repair_date'],
-                'voucher_no' => $r['voucher_no'] ?: 'VR-' . $r['id'],
+                'voucher_no' => !empty($r['invoice_ref']) ? $r['invoice_ref'] : 'VR-' . $r['id'],
                 'category' => 'Vehicle Repairs & Maintenance',
                 'type' => 'Expense',
                 'description' => $desc,
-                'cash_book_ref' => $r['voucher_no'] ?: '-',
+                'cash_book_ref' => !empty($r['invoice_ref']) ? $r['invoice_ref'] : '-',
                 'amount' => $amt,
                 'is_direct' => false,
                 'link' => 'vehicles.php'
@@ -676,6 +664,111 @@ if ($filter_period === 'daily') {
                         <td></td>
                     </tr>
                 </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- DETAILED CONSOLIDATED LEDGER CARD -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h5 class="fw-bold text-dark m-0">
+                <i class="bi bi-receipt-cutoff me-2" style="color: #820100;"></i>Consolidated Cash Book Ledger
+            </h5>
+            <small class="text-muted">Detailed view of all manual and automated transactions across all farm sub-modules.</small>
+        </div>
+        <!-- Table Filter Controls -->
+        <div class="d-flex align-items-center gap-2">
+            <select id="filter_source" class="form-select form-select-sm shadow-sm" style="width: 180px;" onchange="filterAccountsTable()">
+                <option value="all">All Sources</option>
+                <option value="direct">Direct Ledger</option>
+                <option value="livestock">Livestock Sales</option>
+                <option value="egg_sales">Egg Sales</option>
+                <option value="hatchery">Hatchery &amp; Chick Sales</option>
+                <option value="chick_dist">Chick Distribution</option>
+                <option value="produce">Produce Sales</option>
+                <option value="vehicles">Vehicle Repair</option>
+            </select>
+            <select id="filter_type" class="form-select form-select-sm shadow-sm" style="width: 140px;" onchange="filterAccountsTable()">
+                <option value="all">All Types</option>
+                <option value="Income">Income Only</option>
+                <option value="Expense">Expense Only</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table id="accountsRegisterTable" class="table table-hover align-middle text-center mb-0" style="width:100%">
+                <thead class="table-dark" style="background-color: #820100;">
+                    <tr>
+                        <th style="width: 10%;">Date</th>
+                        <th style="width: 12%;">Source</th>
+                        <th style="width: 12%;">Voucher / Ref</th>
+                        <th style="width: 15%;">Category</th>
+                        <th style="width: 25%;" class="text-start">Description / Particulars</th>
+                        <th style="width: 8%;">Folio Ref</th>
+                        <th style="width: 10%;">Amount (LKR)</th>
+                        <th style="width: 8%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($all_transactions)): ?>
+                        <tr>
+                            <td colspan="8" class="text-muted py-4">No transactions found for the selected period.</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($all_transactions as $t): ?>
+                            <tr class="account-row" data-source="<?= htmlspecialchars($t['source_key']) ?>" data-type="<?= htmlspecialchars($t['type']) ?>">
+                                <td class="fw-bold text-nowrap"><?= date('Y-m-d', strtotime($t['date'])) ?></td>
+                                <td>
+                                    <span class="badge <?= htmlspecialchars($t['source_badge']) ?> d-inline-flex align-items-center gap-1">
+                                        <i class="bi <?= htmlspecialchars($t['source_icon']) ?>"></i>
+                                        <?= htmlspecialchars($t['source_label']) ?>
+                                    </span>
+                                </td>
+                                <td><span class="badge bg-light text-dark border px-2"><?= htmlspecialchars($t['voucher_no']) ?></span></td>
+                                <td class="fw-medium text-dark"><?= htmlspecialchars($t['category']) ?></td>
+                                <td class="text-start small">
+                                    <?= htmlspecialchars($t['description']) ?>
+                                    <?php if (!empty($t['link'])): ?>
+                                        <a href="<?= htmlspecialchars($t['link']) ?>" class="ms-1 text-decoration-none" title="Go to sub-module">
+                                            <i class="bi bi-box-arrow-up-right small"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </td>
+                                <td><span class="badge bg-light text-muted border px-2"><?= htmlspecialchars($t['cash_book_ref']) ?></span></td>
+                                <td class="fw-bold <?= ($t['type'] === 'Income') ? 'text-success' : 'text-danger' ?>">
+                                    <?= ($t['type'] === 'Income' ? '+' : '-') ?> LKR <?= number_format($t['amount'], 2) ?>
+                                </td>
+                                <td>
+                                    <?php if ($t['is_direct']): ?>
+                                        <button class="btn btn-sm btn-outline-primary btn-edit-account me-1"
+                                                data-id="<?= htmlspecialchars($t['raw_id']) ?>"
+                                                data-date="<?= htmlspecialchars($t['date']) ?>"
+                                                data-voucher="<?= htmlspecialchars($t['voucher_no']) ?>"
+                                                data-category="<?= htmlspecialchars($t['category']) ?>"
+                                                data-type="<?= htmlspecialchars($t['type']) ?>"
+                                                data-description="<?= htmlspecialchars($t['description']) ?>"
+                                                data-amount="<?= htmlspecialchars($t['amount']) ?>"
+                                                data-ref="<?= htmlspecialchars($t['cash_book_ref']) ?>"
+                                                title="Edit Voucher">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-delete-account"
+                                                data-id="<?= htmlspecialchars($t['raw_id']) ?>"
+                                                data-voucher="<?= htmlspecialchars($t['voucher_no']) ?>"
+                                                title="Delete Voucher">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="text-muted small italic">Automated</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
             </table>
         </div>
     </div>

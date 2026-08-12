@@ -19,7 +19,7 @@ $farm_name = 'Regional Farm';
 $off_phone = 'N/A';
 $off_email = 'N/A';
 
-$user_query = $mysqli->prepare("SELECT u.full_name, u.phone, u.email, f.name AS farm_name FROM users u LEFT JOIN farms f ON u.farm_id = f.id WHERE u.id = ?");
+$user_query = $mysqli->prepare("SELECT u.full_name, u.phone, u.email, f.farm_name FROM users u LEFT JOIN regional_farms f ON u.farm_id = f.id WHERE u.id = ?");
 if ($user_query) {
     $user_query->bind_param("i", $user_id);
     $user_query->execute();
@@ -38,6 +38,17 @@ function getAssetCount($mysqli, $table, $farm_id, $user_id) {
     $where = "is_active = 1";
     if (in_array($table, ['registered_vehicles', 'vehicle_repairs', 'registered_vehicle_repairs', 'furniture_assets', 'machinery_assets', 'instrument_assets', 'counterfoil_assets'])) {
         $where = "1=1";
+    }
+    if ($table === 'users') {
+        $stmt = $mysqli->prepare("SELECT COUNT(*) AS cnt FROM `users` WHERE is_active = 1 AND farm_id = ?");
+        if ($stmt) {
+            $stmt->bind_param("i", $farm_id);
+            $stmt->execute();
+            $res = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            return intval($res['cnt'] ?? 0);
+        }
+        return 0;
     }
     $stmt = $mysqli->prepare("SELECT COUNT(*) AS cnt FROM `$table` WHERE $where AND (farm_id = ? OR user_id = ?)");
     if ($stmt) {

@@ -273,10 +273,6 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             href="<?= $base_path ?>pages/modules/farm/goat_register.php">
                             Goat
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'inventory_register.php') ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/farm/inventory_register.php">
-                            Inventory
-                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'accounts_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/accounts_register.php">
                             Accounts
@@ -353,7 +349,7 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     href="<?= $base_path ?>pages/profile.php">
                     <i class="bi bi-person-circle me-2"></i> Profile
                 </a>
-                <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>logout.php">
+                <a class="nav-link d-flex align-items-center d-block py-3 px-3" href="<?= $base_path ?>logout.php" id="logout-link">
                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                 </a>
 

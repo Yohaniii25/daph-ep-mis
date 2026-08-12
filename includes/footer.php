@@ -65,6 +65,36 @@
                 }
             });
         }
+
+        // Logout Confirmation Script (SweetAlert2)
+        const logoutLink = document.getElementById('logout-link');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetUrl = this.getAttribute('href');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Are you sure you want to log out?',
+                        text: 'Your current active session will be ended.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#500707', // Matching sidebar highlight color
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, Log out',
+                        cancelButtonText: 'Cancel',
+                        focusCancel: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = targetUrl;
+                        }
+                    });
+                } else {
+                    if (confirm('Are you sure you want to log out?')) {
+                        window.location.href = targetUrl;
+                    }
+                }
+            });
+        }
     </script>
     <?php if (!empty($pageScripts)) echo $pageScripts; ?>
 </body>
