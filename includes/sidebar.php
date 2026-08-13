@@ -280,17 +280,10 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     <?php endif; ?>
                     <?php if ($is_training_officer): ?>
                         <!-- Training Officer Menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
-                            href="<?= $base_path ?>pages/modules/training/training_details.php">
-                            Training Details
-                        </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
-                            href="<?= $base_path ?>pages/modules/training/other_facilitation.php">
-                            Other Facilitation Details
-                        </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
-                            href="<?= $base_path ?>pages/modules/training/production.php">
-                            Production
+
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'monthly_income_summary.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/training/monthly_income_summary.php">
+                            Monthly Income Summary
                         </a>
                     <?php endif; ?>
                     <?php if ($is_district_dd): ?>

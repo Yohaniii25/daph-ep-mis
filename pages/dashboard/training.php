@@ -101,25 +101,12 @@ if (!empty($current_center_id)) {
             </div>
             <div class="card-body pt-0">
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <a href="<?= BASE_PATH ?>pages/modules/training/training_details.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-white d-block">
-                            <i style="color: white;" class="bi bi-people fs-4"></i><br>
-                            <span style="color:white">Training Details</span>
+                    <div class="col-md-3">
+                        <a href="<?= BASE_PATH ?>pages/modules/training/monthly_income_summary.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
+                            <i style="color: white;" class="bi bi-receipt-cutoff fs-4"></i><br>
+                            <span style="color:white">Income Summary</span>
                         </a>
                     </div>
-                    <div class="col-md-4">
-                        <a href="<?= BASE_PATH ?>pages/modules/training/other_facilities.php" style="background-color: #b08723;" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-white d-block">
-                            <i style="color: white;" class="bi bi-shield-check fs-4"></i><br>
-                            <span style="color:white">Other Facilities</span>
-                        </a>
-                    </div>
-                    <div class="col-md-4">
-                        <a href="<?= BASE_PATH ?>pages/modules/training/production.php" style="background-color: #689ccf;" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
-                            <i style="color: white;" class="bi bi-box fs-4"></i><br>
-                            <span style="color:white">Production</span>
-                        </a>
-                    </div>
-
                 </div>
             </div>
         </div>
