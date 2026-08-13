@@ -3,12 +3,51 @@
 if ($_SESSION['role'] !== 'training_officer') die("Access denied");
 require_once './includes/header.php';
 require_once './includes/sidebar.php';
+require_once './config/db_connect.php';
+
+$current_training_center = null;
+$current_center_id = $_SESSION['training_center_id'] ?? null;
+$current_center_location = $_SESSION['training_center_location'] ?? null;
+
+if (!empty($current_center_id)) {
+    $training_center_stmt = $mysqli->prepare("SELECT id, center_name, location FROM training_centers WHERE id = ? AND is_active = 1 LIMIT 1");
+    if ($training_center_stmt) {
+        $training_center_stmt->bind_param("i", $current_center_id);
+        $training_center_stmt->execute();
+        $training_center_result = $training_center_stmt->get_result();
+        if ($training_center_result && $training_center_result->num_rows > 0) {
+            $current_training_center = $training_center_result->fetch_assoc();
+        }
+        $training_center_stmt->close();
+    }
+} elseif (!empty($current_center_location)) {
+    $training_center_stmt = $mysqli->prepare("SELECT id, center_name, location FROM training_centers WHERE location = ? AND is_active = 1 ORDER BY center_name ASC LIMIT 1");
+    if ($training_center_stmt) {
+        $training_center_stmt->bind_param("s", $current_center_location);
+        $training_center_stmt->execute();
+        $training_center_result = $training_center_stmt->get_result();
+        if ($training_center_result && $training_center_result->num_rows > 0) {
+            $current_training_center = $training_center_result->fetch_assoc();
+        }
+        $training_center_stmt->close();
+    }
+}
 ?>
 
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4">
-        <h2 class="mt-4 mb-5 text-black fw-normal">Trainee Center Dashboard</h2>
+        <h2 class="mt-4 mb-3 text-black fw-normal">
+            <?= !empty($current_training_center) ? htmlspecialchars($current_training_center['center_name']) . ' Dashboard' : 'Training Center Dashboard' ?>
+        </h2>
+
+        <?php if (!empty($current_training_center)): ?>
+            <div class="alert alert-info mb-4">
+                <strong>Logged training center:</strong>
+                <?= htmlspecialchars($current_training_center['center_name']) ?>
+                - <?= htmlspecialchars($current_training_center['location']) ?>
+            </div>
+        <?php endif; ?>
 
         <!-- 4 Cards -->
         <div class="row g-4 mb-5">

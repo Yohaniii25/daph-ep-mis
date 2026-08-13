@@ -2,12 +2,36 @@
 // add_user.php  →  Keep this file forever (protect it later with .htaccess)
 require_once 'config/db_connect.php';
 
+function ensure_training_center_user_columns($mysqli) {
+    $checks = [
+        'training_center_id' => 'INT NULL',
+        'training_center_location' => 'VARCHAR(255) NULL'
+    ];
+
+    foreach ($checks as $column => $definition) {
+        $result = $mysqli->query("SHOW COLUMNS FROM users LIKE '" . $mysqli->real_escape_string($column) . "'");
+        if ($result && $result->num_rows === 0) {
+            $mysqli->query("ALTER TABLE users ADD COLUMN `" . $mysqli->real_escape_string($column) . "` " . $definition);
+        }
+    }
+}
+
+ensure_training_center_user_columns($mysqli);
+
 // Fetch active farms for select dropdown
 $farms = [];
 $farms_res = $mysqli->query("SELECT id, farm_name, location FROM regional_farms WHERE is_active = 1 ORDER BY farm_name");
 if ($farms_res) {
     while ($row = $farms_res->fetch_assoc()) {
         $farms[] = $row;
+    }
+}
+
+$training_centers = [];
+$training_center_res = $mysqli->query("SELECT id, center_name, location FROM training_centers WHERE is_active = 1 ORDER BY location ASC, center_name ASC");
+if ($training_center_res) {
+    while ($row = $training_center_res->fetch_assoc()) {
+        $training_centers[] = $row;
     }
 }
 
@@ -18,9 +42,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name  = trim($_POST['full_name']);
     $role       = $_POST['role'];
     $district   = $_POST['district'];
+    $training_center_id = isset($_POST['training_center_id']) && $_POST['training_center_id'] !== '' ? intval($_POST['training_center_id']) : null;
+    $training_center_location = isset($_POST['training_center_location']) ? trim($_POST['training_center_location']) : '';
 
     $farm_id = null;
     $validation_failed = false;
+
+    if ($role === 'training_officer') {
+        if (is_null($training_center_id) || $training_center_location === '') {
+            echo '<div class="alert alert-danger">Error: Training center and training center location are required for this role.</div>';
+            $validation_failed = true;
+        } else {
+            $center_check = $mysqli->prepare("SELECT id, location FROM training_centers WHERE id = ? AND is_active = 1 LIMIT 1");
+            if ($center_check) {
+                $center_check->bind_param("i", $training_center_id);
+                $center_check->execute();
+                $center_result = $center_check->get_result();
+                if ($center_result->num_rows === 0) {
+                    echo '<div class="alert alert-danger">Error: Invalid Training Center selection.</div>';
+                    $validation_failed = true;
+                } else {
+                    $center_data = $center_result->fetch_assoc();
+                    if (strcasecmp(trim($center_data['location'] ?? ''), $training_center_location) !== 0) {
+                        echo '<div class="alert alert-danger">Error: The selected training center does not match the chosen location.</div>';
+                        $validation_failed = true;
+                    }
+                }
+                $center_check->close();
+            }
+
+            if (!$validation_failed) {
+                $existing_training_user = $mysqli->prepare("SELECT id FROM users WHERE role = 'training_officer' AND training_center_id = ? AND is_active = 1 LIMIT 1");
+                if ($existing_training_user) {
+                    $existing_training_user->bind_param("i", $training_center_id);
+                    $existing_training_user->execute();
+                    $existing_training_user_result = $existing_training_user->get_result();
+                    if ($existing_training_user_result->num_rows > 0) {
+                        echo '<div class="alert alert-danger">Error: A training officer is already assigned to this training center location.</div>';
+                        $validation_failed = true;
+                    }
+                    $existing_training_user->close();
+                }
+            }
+        }
+    }
 
     // Validation for Farms Officer (farms_dd)
     if ($role === 'farms_dd') {
@@ -48,15 +113,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Auto hash the password
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        // FIXED - declare variable first
         $is_active = 1;
 
-        // === FIXED INSERT (matches your actual users table including farm_id) ===
-        $stmt = $mysqli->prepare("INSERT INTO users 
-            (username, email, password, full_name, role, district, farm_id, is_active) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($role === 'training_officer') {
+            $stmt = $mysqli->prepare("INSERT INTO users 
+                (username, email, password, full_name, role, district, farm_id, training_center_id, training_center_location, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        $stmt->bind_param("ssssssii", $username, $email, $hash, $full_name, $role, $district, $farm_id, $is_active);
+            $stmt->bind_param("ssssssiiis", $username, $email, $hash, $full_name, $role, $district, $farm_id, $training_center_id, $training_center_location, $is_active);
+        } else {
+            $stmt = $mysqli->prepare("INSERT INTO users 
+                (username, email, password, full_name, role, district, farm_id, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+
+            $stmt->bind_param("ssssssii", $username, $email, $hash, $full_name, $role, $district, $farm_id, $is_active);
+        }
 
         if ($stmt->execute()) {
             echo '<div class="alert alert-success">✅ User <b>' . htmlspecialchars($username) . 
@@ -121,6 +192,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="Provincial">Provincial</option>
                         </select>
                     </div>
+
+                    <div class="col-md-6" id="training_center_location_container" style="display: none;">
+                        <label>Training Center Location</label>
+                        <select name="training_center_location" id="training_center_location" class="form-select">
+                            <option value="">-- Select Location --</option>
+                            <?php foreach ($training_centers as $center): ?>
+                                <option value="<?= htmlspecialchars($center['location']) ?>"><?= htmlspecialchars($center['location']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6" id="training_center_container" style="display: none;">
+                        <label>Training Center</label>
+                        <select name="training_center_id" id="training_center_id" class="form-select">
+                            <option value="">-- Select Training Center --</option>
+                            <?php foreach ($training_centers as $center): ?>
+                                <option value="<?= $center['id'] ?>" data-location="<?= htmlspecialchars($center['location']) ?>"><?= htmlspecialchars($center['center_name']) ?> (<?= htmlspecialchars($center['location']) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <!-- Farm selection container dynamically toggled -->
                     <div class="col-md-6" id="farm_container" style="display: none;">
                         <label>Farm Assignment</label>
@@ -145,9 +236,16 @@ document.addEventListener("DOMContentLoaded", function() {
     var roleSelect = document.querySelector('select[name="role"]');
     var farmContainer = document.getElementById('farm_container');
     var farmSelect = document.getElementById('farm_id');
+    var trainingCenterLocationContainer = document.getElementById('training_center_location_container');
+    var trainingCenterLocationSelect = document.getElementById('training_center_location');
+    var trainingCenterContainer = document.getElementById('training_center_container');
+    var trainingCenterSelect = document.getElementById('training_center_id');
 
-    function toggleFarmField() {
-        if (roleSelect.value === 'farms_dd') {
+    function toggleContextualFields() {
+        var isFarmRole = roleSelect.value === 'farms_dd';
+        var isTrainingOfficer = roleSelect.value === 'training_officer';
+
+        if (isFarmRole) {
             farmContainer.style.display = 'block';
             farmSelect.setAttribute('required', 'required');
         } else {
@@ -155,10 +253,31 @@ document.addEventListener("DOMContentLoaded", function() {
             farmSelect.removeAttribute('required');
             farmSelect.value = '';
         }
+
+        if (isTrainingOfficer) {
+            trainingCenterLocationContainer.style.display = 'block';
+            trainingCenterLocationSelect.setAttribute('required', 'required');
+            trainingCenterContainer.style.display = 'block';
+            trainingCenterSelect.setAttribute('required', 'required');
+        } else {
+            trainingCenterLocationContainer.style.display = 'none';
+            trainingCenterLocationSelect.removeAttribute('required');
+            trainingCenterLocationSelect.value = '';
+            trainingCenterContainer.style.display = 'none';
+            trainingCenterSelect.removeAttribute('required');
+            trainingCenterSelect.value = '';
+        }
     }
 
-    roleSelect.addEventListener('change', toggleFarmField);
-    toggleFarmField(); // run once on load
+    trainingCenterSelect.addEventListener('change', function() {
+        var selected = this.options[this.selectedIndex];
+        if (selected && selected.dataset.location) {
+            trainingCenterLocationSelect.value = selected.dataset.location;
+        }
+    });
+
+    roleSelect.addEventListener('change', toggleContextualFields);
+    toggleContextualFields();
 });
 </script>
 </body>

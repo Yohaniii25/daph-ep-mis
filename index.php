@@ -187,15 +187,30 @@ unset($_SESSION['login_error']); // Clear errors on reload
                     </select>
                 </div>
 
+                <div id="trainingCenterLocationGroup" class="mb-4 dynamic-field-group">
+                    <label class="form-label fw-bold text-secondary small">Training Center Location</label>
+                    <select name="training_center_location" id="trainingCenterLocation" class="form-select">
+                        <option value="">-- Select Training Center Location --</option>
+                        <?php
+                        $tc_loc_res = $mysqli->query("SELECT DISTINCT location FROM training_centers WHERE is_active = 1 AND location IS NOT NULL AND location <> '' ORDER BY location ASC");
+                        if ($tc_loc_res) {
+                            while ($row = $tc_loc_res->fetch_assoc()) {
+                                echo "<option value='" . htmlspecialchars($row['location'], ENT_QUOTES, 'UTF-8') . "'>" . htmlspecialchars($row['location']) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+
                 <div id="trainingCenterGroup" class="mb-4 dynamic-field-group">
                     <label class="form-label fw-bold text-secondary small">Center Name</label>
-                    <select name="training_center_id" class="form-select">
+                    <select name="training_center_id" id="trainingCenterSelect" class="form-select">
                         <option value="">-- Select Training Center --</option>
                         <?php
-                        $tc_res = $mysqli->query("SELECT id, center_name FROM training_centers WHERE is_active = 1 ORDER BY id ASC");
+                        $tc_res = $mysqli->query("SELECT id, center_name, location FROM training_centers WHERE is_active = 1 ORDER BY id ASC");
                         if ($tc_res) {
                             while ($row = $tc_res->fetch_assoc()) {
-                                echo "<option value='" . $row['id'] . "'>" . htmlspecialchars($row['center_name']) . "</option>";
+                                echo "<option value='" . $row['id'] . "' data-location='" . htmlspecialchars($row['location'], ENT_QUOTES, 'UTF-8') . "'>" . htmlspecialchars($row['center_name']) . "</option>";
                             }
                         }
                         ?>
@@ -256,11 +271,22 @@ unset($_SESSION['login_error']); // Clear errors on reload
                     $('#districtGroup').fadeIn().find('select').prop('required', true);
                     $('#rangeGroup').fadeIn().find('select').prop('required', true);
                 } else if (selectedVal === 'training_centers') {
-                    //Show Training Center selector lists
+                    //Show Training Center selectors and location selector
+                    $('#trainingCenterLocationGroup').fadeIn().find('select').prop('required', true);
                     $('#trainingCenterGroup').fadeIn().find('select').prop('required', true);
                 } else if (selectedVal === 'regional_farms') {
                     //Show Regional Farm selector lists
                     $('#farmGroup').fadeIn().find('select').prop('required', true);
+                }
+            });
+
+            $('#trainingCenterSelect').change(function () {
+                var selectedOption = $(this).find('option:selected');
+                var location = selectedOption.data('location');
+                if (location) {
+                    $('#trainingCenterLocation').val(location);
+                } else {
+                    $('#trainingCenterLocation').val('');
                 }
             });
 

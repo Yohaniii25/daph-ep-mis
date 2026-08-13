@@ -18,10 +18,11 @@ $login_id      = trim($_POST['login_id'] ?? '');
 $password      = $_POST['password'] ?? '';
 $user_category = trim($_POST['user_category'] ?? '');
 
-$district_id        = isset($_POST['district_id']) ? intval($_POST['district_id']) : null;
-$range_id           = isset($_POST['range_id']) ? intval($_POST['range_id']) : null;
-$training_center_id = isset($_POST['training_center_id']) ? intval($_POST['training_center_id']) : null;
-$farm_id            = isset($_POST['farm_id']) ? intval($_POST['farm_id']) : null;
+$district_id               = isset($_POST['district_id']) ? intval($_POST['district_id']) : null;
+$range_id                  = isset($_POST['range_id']) ? intval($_POST['range_id']) : null;
+$training_center_id        = isset($_POST['training_center_id']) ? intval($_POST['training_center_id']) : null;
+$training_center_location  = trim($_POST['training_center_location'] ?? '');
+$farm_id                   = isset($_POST['farm_id']) ? intval($_POST['farm_id']) : null;
 
 // Validate essential inputs
 if (empty($login_id) || empty($password) || empty($user_category)) {
@@ -96,16 +97,49 @@ if ($user_category === 'range_veterinary_officer') {
     }
 }
 
+if ($user_category === 'training_centers') {
+    if (empty($training_center_id) || empty($training_center_location)) {
+        $_SESSION['login_error'] = "Please select both the training center and its location.";
+        header("Location: ../index.php");
+        exit();
+    }
+
+    $training_center_stmt = $mysqli->prepare("SELECT id, location FROM training_centers WHERE id = ? AND is_active = 1 LIMIT 1");
+    if (!$training_center_stmt) {
+        $_SESSION['login_error'] = "Unable to validate training center assignment.";
+        header("Location: ../index.php");
+        exit();
+    }
+
+    $training_center_stmt->bind_param("i", $training_center_id);
+    $training_center_stmt->execute();
+    $training_center_result = $training_center_stmt->get_result();
+
+    if ($training_center_result->num_rows === 0) {
+        $_SESSION['login_error'] = "Access denied: Invalid training center selection.";
+        header("Location: ../index.php");
+        exit();
+    }
+
+    $training_center = $training_center_result->fetch_assoc();
+    if (strcasecmp(trim($training_center['location'] ?? ''), trim($training_center_location)) !== 0) {
+        $_SESSION['login_error'] = "Access denied: Training center location does not match the selected center.";
+        header("Location: ../index.php");
+        exit();
+    }
+}
+
 
 if (password_verify($password, $user['password'])) {
 
-    $_SESSION['user_id']       = $user['id'];
-    $_SESSION['username']      = $user['username'];
-    $_SESSION['full_name']     = $user['full_name'];
-    $_SESSION['role']          = $user['role'];
-    $_SESSION['range_id']      = $user['range_id'];
-    $_SESSION['district_id']   = $user['district_id'];
-    $_SESSION['user_category'] = $user_category;
+    $_SESSION['user_id']                 = $user['id'];
+    $_SESSION['username']                = $user['username'];
+    $_SESSION['full_name']               = $user['full_name'];
+    $_SESSION['role']                    = $user['role'];
+    $_SESSION['range_id']                = $user['range_id'];
+    $_SESSION['district_id']             = $user['district_id'];
+    $_SESSION['user_category']           = $user_category;
+    $_SESSION['training_center_location'] = $training_center_location;
 
     if ($training_center_id) $_SESSION['training_center_id'] = $training_center_id;
 
