@@ -99,6 +99,18 @@ if ($project_root && $current_dir) {
             margin-left: 70px;
         }
 
+        #layoutSidenav_content #layoutSidenav_content {
+            margin-left: 0 !important;
+            padding-top: 0 !important;
+            min-height: auto;
+            background: transparent;
+        }
+
+        #layoutSidenav_content #layoutSidenav_content > main,
+        #layoutSidenav_content > main {
+            padding-top: 0.5rem;
+        }
+
         .search-bar {
             width: 450px;
             border-radius: 30px;

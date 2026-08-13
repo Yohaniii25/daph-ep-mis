@@ -4,6 +4,8 @@ if ($_SESSION['role'] !== 'training_officer') die("Access denied");
 require_once './includes/header.php';
 require_once './includes/sidebar.php';
 require_once './config/db_connect.php';
+?><link rel="stylesheet" href="<?= BASE_PATH ?? '/daph-ep-mis/' ?>assets/css/training.css">
+<?php
 
 $current_training_center = null;
 $current_center_id = $_SESSION['training_center_id'] ?? null;
@@ -35,19 +37,22 @@ if (!empty($current_center_id)) {
 ?>
 
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4">
-        <h2 class="mt-4 mb-3 text-black fw-normal">
+<div class="container-fluid px-4 py-4 training-dashboard-shell">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <h2 class="training-page-title mb-0">
             <?= !empty($current_training_center) ? htmlspecialchars($current_training_center['center_name']) . ' Dashboard' : 'Training Center Dashboard' ?>
         </h2>
 
         <?php if (!empty($current_training_center)): ?>
-            <div class="alert alert-info mb-4">
-                <strong>Logged training center:</strong>
-                <?= htmlspecialchars($current_training_center['center_name']) ?>
-                - <?= htmlspecialchars($current_training_center['location']) ?>
+            <div class="training-hero-badge d-inline-flex align-items-center gap-2">
+                <i class="bi bi-geo-alt-fill"></i>
+                <span>
+                    <strong><?= htmlspecialchars($current_training_center['center_name']) ?></strong>
+                    - <?= htmlspecialchars($current_training_center['location']) ?>
+                </span>
             </div>
         <?php endif; ?>
+    </div>
 
         <!-- 4 Cards -->
         <div class="row g-4 mb-5">
@@ -90,11 +95,11 @@ if (!empty($current_center_id)) {
         </div>
 
         <!-- Quick Actions -->
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3">
+        <div class="card quick-action-card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-0">
                 <h6 class="mb-0 fw-bold text-muted small text-uppercase"><i class="bi bi-lightning-charge me-2 text-warning"></i>Quick Actions</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body pt-0">
                 <div class="row g-3">
                     <div class="col-md-4">
                         <a href="<?= BASE_PATH ?>pages/modules/training/training_details.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-white d-block">
@@ -123,7 +128,7 @@ if (!empty($current_center_id)) {
 
             <!-- SECTION 1: TRAINING PROGRAMS METRICS -->
             <div class="col-12 col-xl-7">
-                <div class="card border-0 shadow-sm h-100">
+                <div class="card section-panel border-0 h-100 training-main-panel">
                     <div class="card-body p-4 d-flex flex-column justify-content-between">
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
@@ -264,7 +269,7 @@ if (!empty($current_center_id)) {
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm">
+                <div class="card section-panel border-0">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <span class="badge bg-teal-custom text-teal-custom p-2 rounded-3" style="background-color: rgba(20, 184, 166, 0.1); color: #14b8a6;">
@@ -310,10 +315,6 @@ if (!empty($current_center_id)) {
 
             </div>
         </div>
-    </main>
-</div>
-
-
 
 <?php require_once './includes/footer.php'; ?>
 

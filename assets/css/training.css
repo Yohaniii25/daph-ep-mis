@@ -1,0 +1,83 @@
+.training-dashboard-shell {
+    min-height: calc(100vh - 70px);
+}
+
+.training-page-title {
+    font-size: clamp(1.8rem, 2vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #1f2937;
+    margin-bottom: 1.2rem;
+}
+
+.training-hero-badge {
+    background: linear-gradient(135deg, #500707, #7f1d1d);
+    color: #ffffff;
+    border: none;
+    border-radius: 14px;
+    padding: 0.9rem 1.2rem;
+    box-shadow: 0 10px 25px rgba(80, 7, 7, 0.12);
+}
+
+.metric-card {
+    border: 0;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+    overflow: hidden;
+    height: 100%;
+}
+
+.metric-card .card-body {
+    padding: 1.35rem 1.25rem 1.1rem;
+}
+
+.metric-card .metric-label {
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-bottom: 0.7rem;
+}
+
+.metric-card .metric-value {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 800;
+    margin: 0;
+}
+
+.metric-card .metric-trend {
+    font-size: 0.8rem;
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.metric-card.primary .metric-value { color: #2563eb; }
+.metric-card.danger .metric-value { color: #dc2626; }
+.metric-card.warning .metric-value { color: #d97706; }
+.metric-card.success .metric-value { color: #059669; }
+
+.quick-action-card {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+}
+
+.section-panel {
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 20px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.training-main-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
