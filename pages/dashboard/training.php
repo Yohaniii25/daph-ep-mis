@@ -101,10 +101,17 @@ if (!empty($current_center_id)) {
             </div>
             <div class="card-body pt-0">
                 <div class="row g-3">
-                    <div class="col-md-3">
+
+                    <div class="col-md-3 col-sm-6">
                         <a href="<?= BASE_PATH ?>pages/modules/training/monthly_income_summary.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white;" class="bi bi-receipt-cutoff fs-4"></i><br>
                             <span style="color:white">Income Summary</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <a href="<?= BASE_PATH ?>pages/modules/training/advanced_programme.php" style="background-color: #ef4016;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
+                            <i style="color: white;" class="bi bi-calendar-week fs-4"></i><br>
+                            <span style="color:white">Advance Programme</span>
                         </a>
                     </div>
                 </div>
