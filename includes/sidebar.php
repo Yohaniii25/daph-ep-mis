@@ -279,6 +279,10 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                     <?php endif; ?>
                     <?php if ($is_training_officer): ?>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['office_details.php', 'lands_buildings.php', 'vehicles.php', 'furniture.php', 'machineries.php', 'instruments.php', 'counter_foilage.php', 'employee_managment.php']) && strpos($_SERVER['REQUEST_URI'], '/training/') !== false ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/training/office_details.php">
+                            Office Details
+                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'monthly_income_summary.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/training/monthly_income_summary.php">
                             Monthly Income Summary

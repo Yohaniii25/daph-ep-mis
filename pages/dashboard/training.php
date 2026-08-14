@@ -350,19 +350,25 @@ if ($prod_recent_stmt) {
         </div>
         <div class="card-body pt-0">
             <div class="row g-3">
-                <div class="col-md-4 col-sm-6">
-                    <a href="<?= BASE_PATH ?>pages/modules/training/monthly_income_summary.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-light d-block rounded-3">
+                <div class="col-lg-3 col-sm-6">
+                    <a href="<?= BASE_PATH ?>pages/modules/training/office_details.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-light d-block rounded-3">
+                        <i class="bi bi-building fs-4 mb-1 d-block text-light"></i>
+                        <span class="text-light fw-semibold">Office Details &amp; Assets</span>
+                    </a>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                    <a href="<?= BASE_PATH ?>pages/modules/training/monthly_income_summary.php" style="background-color: #198754;" class="btn w-100 py-3 shadow-sm border-0 text-light d-block rounded-3">
                         <i class="bi bi-receipt-cutoff fs-4 mb-1 d-block text-light"></i>
                         <span class="text-light fw-semibold">Monthly Income Summary</span>
                     </a>
                 </div>
-                <div class="col-md-4 col-sm-6">
+                <div class="col-lg-3 col-sm-6">
                     <a href="<?= BASE_PATH ?>pages/modules/training/advanced_programme.php" style="background-color: #ef4016;" class="btn w-100 py-3 shadow-sm border-0 text-light d-block rounded-3">
                         <i class="bi bi-calendar-week fs-4 mb-1 d-block text-light"></i>
                         <span class="text-light fw-semibold">Advance Programme</span>
                     </a>
                 </div>
-                <div class="col-md-4 col-sm-6">
+                <div class="col-lg-3 col-sm-6">
                     <a href="<?= BASE_PATH ?>pages/modules/training/produce_register.php" style="background-color: #1e3c72;" class="btn w-100 py-3 shadow-sm border-0 text-light d-block rounded-3">
                         <i class="bi bi-journal-text fs-4 mb-1 d-block text-light"></i>
                         <span class="text-light fw-semibold">Produce Register (Form A.D.30)</span>
