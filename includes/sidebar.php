@@ -287,6 +287,10 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                             href="<?= $base_path ?>pages/modules/training/advanced_programme.php">
                             Advance Programme
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'produce_register.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/training/produce_register.php">
+                            Produce Register (Perishables)
+                        </a>
                     <?php endif; ?>
                     <?php if ($is_district_dd): ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
