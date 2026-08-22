@@ -1,13 +1,13 @@
 <?php
 $role = $_SESSION['role'] ?? '';
-$is_pd = ($role === 'provincial_director');
+$is_pd = in_array($role, ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2']);
 $is_hr_user = ($role === 'administrator');
 $is_finance_admin = ($role === 'finance_admin');
 $is_planning_officer = ($role === 'planning_officer');
 $is_sms = ($role === 'sms');
 $is_farms_dd = ($role === 'farms_dd');
 $is_training_officer = ($role === 'training_officer');
-$is_district_dd = ($role === 'district_dd');
+$is_district_dd = in_array($role, ['district_dd', 'deputy_director_district']);
 $is_veterinary_surgeon = ($role === 'veterinary_surgeon');
 $is_employee = ($role === 'employee');
 
@@ -297,18 +297,39 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                     <?php endif; ?>
                     <?php if ($is_district_dd): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_veterinary_officers.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/range_veterinary_officers.php">
+                            Range Veterinary Officer
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'regional_farms.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/regional_farms.php">
+                            Regional Farms
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'office_details.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/office_details.php">
+                            Office Details
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'training_centers.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/training_centers.php">
+                            Training Center
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'subject_matter_specialists.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/subject_matter_specialists.php">
+                            Subject Matter Specialist
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'users_summary.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/users_summary.php">
+                            Users Summary
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'diary_management.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/diary_management.php">
                             Diary Management
                         </a>
-                        <!-- <a class="nav-link d-flex align-items-center px-4 py-3" href="<?= $base_path ?>pages/modules/district/approval_diaries.php">
-                            Approval of Diaries & Programmes
-                        </a> -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'revenue_management.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/revenue_management.php">
                             Revenue Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'district_revenue_summary.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/district_revenue_summary.php">
                             District Revenue Summary
                         </a>

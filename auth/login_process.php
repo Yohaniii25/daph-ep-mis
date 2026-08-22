@@ -31,25 +31,24 @@ if (empty($login_id) || empty($password) || empty($user_category)) {
     exit();
 }
 
-
 $category_to_role_map = [
-    'provincial_director'            => 'provincial_director',
-    'additional_provincial_director' => 'provincial_director',
-    'subject_matter_specialist'      => 'sms',
-    'deputy_director_hq_1'           => 'provincial_director',
-    'deputy_director_hq_2'           => 'provincial_director',
-    'deputy_director_district'       => 'district_dd',
-    'range_veterinary_officer'       => 'veterinary_surgeon',
-    'training_centers'               => 'training_officer',
-    'regional_farms'                 => 'farms_dd'
+    'provincial_director'            => ['provincial_director'],
+    'additional_provincial_director' => ['provincial_director'],
+    'subject_matter_specialist'      => ['sms'],
+    'deputy_director_hq_1'           => ['deputy_director_hq_1', 'provincial_director'],
+    'deputy_director_hq_2'           => ['deputy_director_hq_2', 'provincial_director'],
+    'deputy_director_district'       => ['district_dd'],
+    'range_veterinary_officer'       => ['veterinary_surgeon'],
+    'training_centers'               => ['training_officer'],
+    'regional_farms'                 => ['farms_dd']
 ];
 
-$expected_db_role = $category_to_role_map[$user_category] ?? $user_category;
+$allowed_roles_for_cat = $category_to_role_map[$user_category] ?? [$user_category];
 
 $field = filter_var($login_id, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
 $stmt = $mysqli->prepare("
-    SELECT id, username, email, password, full_name, role, range_id, district_id, farm_id 
+    SELECT id, username, email, password, full_name, role, range_id, district_id, district, farm_id 
     FROM users 
     WHERE $field = ? AND is_active = 1 
     LIMIT 1
@@ -72,11 +71,22 @@ if ($result->num_rows === 0) {
 
 $user = $result->fetch_assoc();
 
-if ($user['role'] !== $expected_db_role) {
+if (!in_array($user['role'], $allowed_roles_for_cat)) {
     $_SESSION['login_attempts']++;
     $_SESSION['login_error'] = "Authorization Role mismatch for this account footprint.";
     header("Location: ../index.php");
     exit();
+}
+
+// Infer district_id from district text if missing
+if (empty($user['district_id']) && !empty($user['district'])) {
+    if ($user['district'] === 'Amparai' || $user['district'] === 'Ampara') {
+        $user['district_id'] = 1;
+    } elseif ($user['district'] === 'Batticaloa') {
+        $user['district_id'] = 2;
+    } elseif ($user['district'] === 'Trincomalee') {
+        $user['district_id'] = 3;
+    }
 }
 
 // Validate matching districts for specialized district fields
@@ -132,14 +142,21 @@ if ($user_category === 'training_centers') {
 
 if (password_verify($password, $user['password'])) {
 
-    $_SESSION['user_id']                 = $user['id'];
-    $_SESSION['username']                = $user['username'];
-    $_SESSION['full_name']               = $user['full_name'];
-    $_SESSION['role']                    = $user['role'];
-    $_SESSION['range_id']                = $user['range_id'];
-    $_SESSION['district_id']             = $user['district_id'];
-    $_SESSION['user_category']           = $user_category;
+    $_SESSION['user_id']                  = $user['id'];
+    $_SESSION['username']                 = $user['username'];
+    $_SESSION['full_name']                = $user['full_name'];
+    $_SESSION['role']                     = $user['role'];
+    $_SESSION['range_id']                 = $user['range_id'];
+    $_SESSION['district_id']              = $user['district_id'];
+    $_SESSION['district']                 = $user['district'] ?? 'Provincial';
+    $_SESSION['user_category']            = $user_category;
     $_SESSION['training_center_location'] = $training_center_location;
+
+    // For HQ roles, ensure global/province-wide scope
+    if (in_array($user['role'], ['deputy_director_hq_1', 'deputy_director_hq_2', 'provincial_director'])) {
+        $_SESSION['district_id'] = null;
+        $_SESSION['district']    = 'Provincial';
+    }
 
     if ($training_center_id) $_SESSION['training_center_id'] = $training_center_id;
 

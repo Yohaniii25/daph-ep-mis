@@ -280,7 +280,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                 }
             });
 
-            $('#trainingCenterSelect').change(function () {
+            $('#trainingCenterSelect').change(function() {
                 var selectedOption = $(this).find('option:selected');
                 var location = selectedOption.data('location');
                 if (location) {

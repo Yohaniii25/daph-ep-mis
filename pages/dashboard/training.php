@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$allowed_roles = ['training_officer', 'administrator', 'provincial_director', 'district_dd'];
+$allowed_roles = ['training_officer', 'administrator', 'provincial_director', 'district_dd', 'deputy_director_hq_1', 'deputy_director_hq_2'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
     die("Access denied");
 }
@@ -250,7 +250,7 @@ if ($prod_recent_stmt) {
 
         <div class="d-flex flex-wrap align-items-center gap-2">
             <!-- Training Centre Selector for Admins / Multi-Center Roles -->
-            <?php if (in_array($_SESSION['role'], ['administrator', 'provincial_director', 'district_dd']) && count($all_centers) > 1): ?>
+            <?php if (in_array($_SESSION['role'], ['administrator', 'provincial_director', 'district_dd', 'deputy_director_hq_1', 'deputy_director_hq_2']) && count($all_centers) > 1): ?>
                 <form method="GET" action="" class="d-inline-block">
                     <select name="center_id" class="form-select form-select-sm shadow-sm border-secondary fw-semibold" onchange="this.form.submit()">
                         <?php foreach ($all_centers as $tc): ?>

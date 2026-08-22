@@ -3,25 +3,36 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if ($_SESSION['role'] !== 'provincial_director') {
+$allowed_hq_roles = ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'administrator'];
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_hq_roles)) {
     die("Access denied. Unauthorized role footprint.");
 }
 
 require_once './config/db_connect.php';
 require_once './includes/header.php';
 
+$role = $_SESSION['role'] ?? 'provincial_director';
 
-//Total Employees ---
+$role_titles = [
+    'deputy_director_hq_1' => ['title' => 'Deputy Director - H/Q-1 Dashboard', 'badge' => 'Deputy Director H/Q-1', 'desc' => 'Consolidated province-wide operational summaries and global data access across all functional divisions.'],
+    'deputy_director_hq_2' => ['title' => 'Deputy Director - H/Q-2 Dashboard', 'badge' => 'Deputy Director H/Q-2', 'desc' => 'Consolidated province-wide operational summaries and global data access across all functional divisions.'],
+    'provincial_director'  => ['title' => 'Provincial Director Dashboard', 'badge' => 'Provincial Director', 'desc' => 'Unified management summaries across all functional veterinary divisions.'],
+    'administrator'        => ['title' => 'Executive Director Dashboard', 'badge' => 'Administrator', 'desc' => 'Global management summaries across all provincial divisions.']
+];
+
+$dashboard_info = $role_titles[$role] ?? $role_titles['provincial_director'];
+
+// Total Employees (Global Province-wide)
 $emp_query = "SELECT COUNT(id) AS total_emp FROM `users` WHERE `is_active` = 1";
 $emp_res = $mysqli->query($emp_query);
 $total_employees = ($emp_res) ? $emp_res->fetch_assoc()['total_emp'] : 0;
 
-// Active Ranges ---
+// Active Ranges (Global Province-wide)
 $range_query = "SELECT COUNT(id) AS total_ranges FROM `veterinary_ranges` WHERE `is_active` = 1";
 $range_res = $mysqli->query($range_query);
 $total_ranges = ($range_res) ? $range_res->fetch_assoc()['total_ranges'] : 0;
 
-//Hatchability Rates Summary 
+// Hatchability Rates Summary
 $hatch_query = "SELECT 
                     SUM(hatchable_count) AS total_hatchable, 
                     SUM(chicks_hatched) AS total_hatched 
@@ -35,17 +46,17 @@ if ($hatch_res) {
     }
 }
 
-//Total Hatchery Revenue ---
+// Total Hatchery Revenue
 $sales_query = "SELECT SUM(quantity_sold * actual_rate) AS total_rev FROM `hatchery_sales`";
 $sales_res = $mysqli->query($sales_query);
 $total_revenue = ($sales_res) ? $sales_res->fetch_assoc()['total_rev'] : 0.00;
 
-//Total Remaining Regional Vaccine Doses ---
+// Total Remaining Regional Vaccine Doses
 $drug_query = "SELECT SUM(starter_count_month + during_month_received - used_doses_count - doses_damaged) AS live_stock FROM `drug_records`";
 $drug_res = $mysqli->query($drug_query);
 $total_vaccines = ($drug_res) ? $drug_res->fetch_assoc()['live_stock'] : 0;
 
-//Today's Present Staff Estimation (Users active without active leaves today) ---
+// Today's Present Staff Estimation (Users active without active leaves today)
 $attendance_query = "SELECT COUNT(u.id) AS present_today FROM `users` u 
                      WHERE u.is_active = 1 AND u.id NOT IN (
                         SELECT user_id FROM `leave_requests` 
@@ -64,10 +75,13 @@ $present_today = ($attendance_res) ? $attendance_res->fetch_assoc()['present_tod
         
         <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
             <div>
-                <h2 class="text-dark fw-bold mb-0">Provincial Director Dashboard</h2>
-                <p class="text-muted small mb-0">Unified management summaries across all functional veterinary divisions.</p>
+                <h2 class="text-dark fw-bold mb-0"><?= htmlspecialchars($dashboard_info['title']) ?></h2>
+                <p class="text-muted small mb-0"><?= htmlspecialchars($dashboard_info['desc']) ?></p>
             </div>
-            <span class="badge bg-danger p-2 font-monospace shadow-sm">Provincial Director</span>
+            <div class="d-flex gap-2">
+                <span class="badge bg-danger p-2 font-monospace shadow-sm"><?= htmlspecialchars($dashboard_info['badge']) ?></span>
+                <span class="badge bg-dark p-2 font-monospace shadow-sm">All Districts Scope</span>
+            </div>
         </div>
 
         <div class="row g-3 mb-4">
@@ -85,7 +99,7 @@ $present_today = ($attendance_res) ? $attendance_res->fetch_assoc()['present_tod
                     <div class="card-body p-3">
                         <small class="text-muted text-uppercase fw-bold d-block mb-1">Total Employees</small>
                         <h3 class="text-dark fw-bold mb-0"><?= number_format($total_employees) ?></h3>
-                        <small class="text-muted text-nowrap">Active profiles registered</small>
+                        <small class="text-muted text-nowrap">Active profiles across all districts</small>
                     </div>
                 </div>
             </div>
@@ -138,43 +152,43 @@ $present_today = ($attendance_res) ? $attendance_res->fetch_assoc()['present_tod
             <div class="card-body bg-white">
                 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3">
                     <div class="col">
-                        <a href="#" class="btn btn-primary w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                        <a href="pages/modules/pd/animal_health_reports.php" class="btn btn-primary w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-heart-pulse-fill fs-3 me-3"></i>
                             <div>
                                 <span class="d-block fw-bold text-light">Animal Health Log</span>
-                                <small style="color: white;" class="">Diseases and treatments tracking</small>
+                                <small style="color: white;">Diseases and treatments tracking</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
-                        <a style="background-color: #370709;" href="#" class="btn w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                        <a style="background-color: #370709;" href="pages/dashboard/veterinary_office.php" class="btn w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-activity fs-3 me-3 text-light"></i>
                             <div>
-                                <span class="d-block fw-bold text-light">Breeding Metrics</span>
-                                <small style="color: white;" class="">AI and calving performance tracking</small>
+                                <span class="d-block fw-bold text-light">Breeding & Range Hub</span>
+                                <small style="color: white;">AI and calving performance</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
-                        <a style="background-color: #c6aa4b;" href="#" class="btn btn-warning w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                        <a style="background-color: #c6aa4b;" href="pages/dashboard/farms.php" class="btn btn-warning w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-egg-fried fs-3 me-3 text-dark"></i>
                             <div>
-                                <span class="d-block fw-bold text-dark">Hatchery Ledger</span>
-                                <small class="text-muted">Batches, rates, and item sales data</small>
+                                <span class="d-block fw-bold text-dark">Regional Farms Hub</span>
+                                <small class="text-dark">Batches, rates, and item sales data</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="#" class="btn btn-success w-100 py-3 text-start shadow-sm d-flex align-items-center">
-                            <i class="bi bi-capsule fs-3 me-3 text-light"></i>
+                        <a href="pages/dashboard/training.php" class="btn btn-success w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                            <i class="bi bi-easel fs-3 me-3 text-light"></i>
                             <div>
-                                <span class="d-block fw-bold text-light">Vaccine Balances</span>
-                                <small class="text-light">Consolidated stock operations</small>
+                                <span class="d-block fw-bold text-light">Training Centers Hub</span>
+                                <small class="text-light">Farmer training & programmes</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="#" class="btn btn-secondary w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                        <a href="pages/modules/pd/approval_diaries.php" class="btn btn-secondary w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-calendar4-event fs-3 me-3 text-light"></i>
                             <div>
                                 <span class="d-block fw-bold text-light">Advanced Programs</span>
@@ -183,29 +197,29 @@ $present_today = ($attendance_res) ? $attendance_res->fetch_assoc()['present_tod
                         </a>
                     </div>
                     <div class="col">
-                        <a style="background-color: #8d170e;" href="#" class="btn btn-danger w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                        <a style="background-color: #8d170e;" href="pages/modules/hr/leave_management.php" class="btn btn-danger w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-person-badge fs-3 me-3 text-light"></i>
                             <div>
                                 <span class="d-block fw-bold text-light">Leave Management</span>
-                                <small class="text-light">Approve fields and officer assignments</small>
+                                <small class="text-light">Approve fields and officer leaves</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="#" class="btn btn-dark w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                        <a href="pages/modules/finance/assets_management.php" class="btn btn-dark w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-tools fs-3 me-3 text-light"></i>
                             <div>
                                 <span class="d-block fw-bold text-light">Asset Inventory</span>
-                                <small class="text-light">Track movable/immovable regional property</small>
+                                <small class="text-light">Track regional property</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
-                        <a href="#" class="btn btn-light text-dark border-secondary w-100 py-3 text-start shadow-sm d-flex align-items-center">
-                            <i class="bi bi-bucket-fill fs-3 me-3 text-muted"></i>
+                        <a href="pages/modules/pd/provincial_reports.php" class="btn btn-light text-dark border-secondary w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                            <i class="bi bi-file-earmark-bar-graph fs-3 me-3 text-muted"></i>
                             <div>
-                                <span class="d-block fw-bold text-dark">Dairy Hub Data</span>
-                                <small class="text-muted">Milk collections and yields logs</small>
+                                <span class="d-block fw-bold text-dark">Provincial Reports</span>
+                                <small class="text-muted">High-level consolidated reports</small>
                             </div>
                         </a>
                     </div>
@@ -233,15 +247,20 @@ $present_today = ($attendance_res) ? $attendance_res->fetch_assoc()['present_tod
                             </thead>
                             <tbody>
                                 <?php
-                                $range_perf_query = "SELECT b.*, r.name AS range_name FROM `breeding_progress` b
-                                                     LEFT JOIN `veterinary_ranges` r ON b.range_id = r.id
-                                                     ORDER BY b.year DESC, b.month_number DESC LIMIT 10";
+                                $range_perf_query = "SELECT r.name AS range_name, a.report_year AS year, a.report_month AS month_number,
+                                                            COUNT(DISTINCT a.id) AS ai_count,
+                                                            (SELECT COUNT(DISTINCT pd.id) FROM breeding_pd_performance pd WHERE pd.range_id = a.range_id AND pd.report_year = a.report_year AND pd.report_month = a.report_month) AS pd_count,
+                                                            (SELECT COUNT(DISTINCT c.id) FROM breeding_calving_performance c WHERE c.range_id = a.range_id AND c.report_year = a.report_year AND c.report_month = a.report_month) AS calving_count
+                                                     FROM breeding_ai_performance a
+                                                     LEFT JOIN veterinary_ranges r ON a.range_id = r.id
+                                                     GROUP BY a.range_id, a.report_year, a.report_month
+                                                     ORDER BY a.report_year DESC, a.report_month DESC LIMIT 10";
                                 $range_perf_res = $mysqli->query($range_perf_query);
                                 if ($range_perf_res && $range_perf_res->num_rows > 0):
                                     while ($row = $range_perf_res->fetch_assoc()):
                                 ?>
                                         <tr>
-                                            <td class="fw-bold text-dark"><?= htmlspecialchars($row['range_name']) ?></td>
+                                            <td class="fw-bold text-dark"><?= htmlspecialchars($row['range_name'] ?? 'General Range') ?></td>
                                             <td class="text-center"><?= $row['year'] ?> / M-<?= sprintf("%02d", $row['month_number']) ?></td>
                                             <td class="text-center font-monospace text-primary fw-bold"><?= number_format($row['ai_count']) ?></td>
                                             <td class="text-center font-monospace text-warning fw-bold"><?= number_format($row['pd_count']) ?></td>
