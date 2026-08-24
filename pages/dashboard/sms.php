@@ -50,37 +50,43 @@ require_once './includes/sidebar.php';
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <a href="<?= BASE_PATH ?>pages/modules/sms/office_details.php" style="background-color: #1e3c72;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
+                            <i style="color: white;" class="bi bi-building-fill fs-4"></i><br>
+                            <span style="color:white">Office Details</span>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
                         <a href="<?= BASE_PATH ?>pages/modules/sms/my_diary.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white;" class="bi bi-calendar-check fs-4"></i><br>
                             <span style="color:white">Diary Management</span>
                         </a>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-lg-3 col-md-4 col-sm-6">
                         <a href="<?= BASE_PATH ?>pages/modules/sms/immunization.php" style="background-color: #b08723;" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white;" class="bi bi-shield-check fs-4"></i><br>
                             <span style="color:white">Immunization</span>
                         </a>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-lg-3 col-md-4 col-sm-6">
                         <a href="<?= BASE_PATH ?>pages/modules/sms/mobile_clinics.php" style="background-color: #689ccf;" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white;" class="bi bi-capsule-pill fs-4"></i><br>
                             <span style="color:white">Mobile Clinic</span>
                         </a>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-lg-3 col-md-4 col-sm-6">
                         <a href="<?= BASE_PATH ?>pages/modules/sms/drug_maintenance.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white; " class="bi bi-capsule fs-4"></i><br>
                             <span style="color:white">Drug Maintenance</span>
                         </a>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-lg-3 col-md-4 col-sm-6">
                         <a href="<?= BASE_PATH ?>pages/modules/sms/outbreak_report.php" style="background-color: #a07174;" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white;" class="bi bi-envelope-plus fs-4"></i><br>
                             <span style="color:white">Outbreak Report</span>
                         </a>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-lg-3 col-md-4 col-sm-6">
                         <a href="<?= BASE_PATH ?>pages/modules/sms/disease_control.php" style="background-color: #8d170e;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white; " class="bi bi-bandaid fs-4"></i><br>
                             <span style="color:white">Disease Control</span>

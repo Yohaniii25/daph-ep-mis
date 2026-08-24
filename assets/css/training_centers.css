@@ -1,0 +1,154 @@
+/* assets/css/training_centers.css - Modern UI Design System for Training Centers Operations Hub */
+:root {
+    --tc-green: #2e7d32;
+    --tc-dark-green: #1b5e20;
+    --tc-gold: #b08723;
+    --tc-teal: #00796b;
+    --tc-orange: #e65100;
+}
+
+.kpi-stat-card {
+    border: none;
+    border-radius: 14px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow: hidden;
+}
+.kpi-stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+.kpi-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+}
+.kpi-stat-card.kpi-green::after { background: linear-gradient(90deg, #2e7d32, #43a047); }
+.kpi-stat-card.kpi-teal::after { background: linear-gradient(90deg, #00796b, #00acc1); }
+.kpi-stat-card.kpi-orange::after { background: linear-gradient(90deg, #e65100, #ff9800); }
+.kpi-stat-card.kpi-gold::after { background: linear-gradient(90deg, #b08723, #d4af37); }
+
+.kpi-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+/* Primary Training Action Buttons */
+.btn-tc-action {
+    min-height: 95px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff !important;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    padding: 12px 8px;
+}
+.btn-tc-action:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+    filter: brightness(1.1);
+    color: #ffffff !important;
+}
+.btn-tc-action.active {
+    box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px #2e7d32, 0 12px 24px rgba(46, 125, 50, 0.35);
+    filter: brightness(1.05);
+    font-weight: 700;
+}
+.btn-tc-action.active::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    width: 14px;
+    height: 6px;
+    border-radius: 4px;
+    background: #ffffff;
+}
+.btn-tc-action i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+/* Sub-category pill buttons */
+.sub-stat-pill {
+    border-radius: 50px;
+    font-size: 0.82rem;
+    padding: 7px 16px;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    border-width: 1.5px;
+    text-decoration: none;
+}
+.sub-stat-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.sub-stat-pill.active-pill {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    font-weight: 700;
+    transform: translateY(-1px);
+}
+
+/* Export Buttons Styling */
+.dt-buttons .btn {
+    margin-right: 6px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 5px 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    transition: all 0.15s ease;
+}
+.dt-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* Table Styling */
+#tcDataTable thead th,
+.table-modern thead th {
+    background-color: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 12px 14px;
+}
+#tcDataTable tbody td,
+.table-modern tbody td {
+    padding: 11px 14px;
+    font-size: 0.875rem;
+}
+#tcDataTable tbody tr:hover,
+.table-modern tbody tr:hover {
+    background-color: rgba(46, 125, 50, 0.04) !important;
+}
+
+.card-modern {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.04);
+    background: #ffffff;
+}

@@ -193,27 +193,31 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                     <?php endif; ?>
                     <?php if ($is_sms): ?>
                         <!-- Subject Matter Specialist Menu-->
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['office_details.php', 'lands_buildings.php', 'vehicles.php', 'furniture.php', 'machineries.php', 'instruments.php', 'counter_foilage.php', 'employee_managment.php']) && strpos($_SERVER['REQUEST_URI'], '/sms/') !== false ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/sms/office_details.php">
+                            Office Details
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'my_diary.php' || basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'advanced_programme.php' || basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'daily_diary.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/my_diary.php">
                             Diary and Advanced Programme
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['immunization.php', 'vaccine_types.php']) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/immunization.php">
                             Immunization
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'mobile_clinics.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/mobile_clinics.php">
                             Mobile Clinics
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_maintenance.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/drug_maintenance.php">
                             Drug Maintenance
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'outbreak_report.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/outbreak_report.php">
                             Outbreak Report
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'disease_control.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/disease_control.php">
                             Disease Control
                         </a>
@@ -297,6 +301,10 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         </a>
                     <?php endif; ?>
                     <?php if ($is_district_dd): ?>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'office_details.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/office_details.php">
+                            Office Details
+                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_veterinary_officers.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/range_veterinary_officers.php">
                             Range Veterinary Officer
@@ -304,10 +312,6 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'regional_farms.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/regional_farms.php">
                             Regional Farms
-                        </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'office_details.php') ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/district/office_details.php">
-                            Office Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'training_centers.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/training_centers.php">
