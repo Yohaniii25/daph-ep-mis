@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // pages/modules/district/training_centers.php -> Master Training Centers Summary Dashboard for District Deputy Directors & Leadership
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -317,8 +317,8 @@ $active_record_count = count($report_records);
 ?>
 
 <!-- DataTables + Buttons CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 
 <!-- Training Centers Hub CSS -->
 <link rel="stylesheet" href="../../../assets/css/training_centers.css">

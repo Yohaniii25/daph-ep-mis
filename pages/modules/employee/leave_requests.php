@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -61,12 +61,12 @@ require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
 ?>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<link href="../../../assets/css/inter.css" rel="stylesheet">
+<link href="../../../assets/css/fullcalendar.min.css" rel="stylesheet">
 <!-- DataTables CSS -->
-<link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-<link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
-<link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet">
+<link href="../../../assets/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link href="../../../assets/css/responsive.bootstrap5.min.css" rel="stylesheet">
+<link href="../../../assets/css/buttons.bootstrap5.min.css" rel="stylesheet">
 
 <style>
     .modal-backdrop {

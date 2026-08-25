@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // pages/modules/training/produce_register.php -> Produce Register (Perishables) - Form A.D.30
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -131,9 +131,9 @@ if ($stmt) {
 <?php require_once '../../../includes/sidebar.php'; ?>
 
 <!-- DataTables & SweetAlert2 Assets -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
 <style>
     .produce-header-receipt {

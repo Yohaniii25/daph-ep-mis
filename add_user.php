@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // add_user.php  →  Keep this file forever (protect it later with .htaccess)
 require_once 'config/db_connect.php';
 
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head>
     <title>Add New User</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-5">

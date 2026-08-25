@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -63,7 +63,7 @@ $rec_stmt->close();
 $districts = $mysqli->query("SELECT id, name FROM districts ORDER BY name ASC")->fetch_all(MYSQLI_ASSOC);
 ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 
 <div id="layoutSidenav_content" class="bg-light">
     <main class="container-fluid px-4 pt-4">

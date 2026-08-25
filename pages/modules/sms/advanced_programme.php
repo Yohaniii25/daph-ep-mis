@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -20,8 +20,8 @@ require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
 ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 
 <div id="layoutSidenav_content">
     <main class="container-fluid px-4 pt-4">
@@ -201,8 +201,8 @@ require_once '../../../includes/sidebar.php';
 <?php require_once '../../../includes/footer.php'; ?>
 
 <!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

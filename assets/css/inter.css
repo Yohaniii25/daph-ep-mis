@@ -1,0 +1,7 @@
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: local('Inter'), local('Inter-Regular'), local('Segoe UI'), local('Roboto');
+}

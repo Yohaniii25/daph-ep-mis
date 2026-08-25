@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
@@ -58,8 +58,8 @@ $projects = $list_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 require_once '../../../includes/header.php';
 ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 
 
 

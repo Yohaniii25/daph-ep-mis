@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../../includes/header.php';
 if (!in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) die("Access denied");
 require_once '../../../config/db_connect.php';
@@ -28,9 +28,9 @@ if ($total_batches_res) {
     }
 </style>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
 
         <h2 class="mb-4">Immunization - Vaccine Batches Register</h2>

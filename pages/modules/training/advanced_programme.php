@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -83,9 +83,9 @@ if ($stmt) {
 
 <?php require_once '../../../includes/sidebar.php'; ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
 <div id="layoutSidenav_content" class="bg-light">
     <main class="container-fluid px-4 pt-4 pb-5">

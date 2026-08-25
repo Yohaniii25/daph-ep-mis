@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
@@ -50,7 +50,7 @@ if ($range_id) {
 require_once '../../../includes/header.php';
 ?>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../../../assets/css/veterinary.css">
 
         <!-- Header -->

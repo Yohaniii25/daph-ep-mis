@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../../../includes/header.php';
 if ($_SESSION['role'] !== 'sms') die("Access denied");
 require_once '../../../config/db_connect.php';
@@ -29,8 +29,8 @@ $total_batches = $batch_count_res ? $batch_count_res->fetch_assoc()['total'] : 0
 
 <?php require_once '../../../includes/sidebar.php'; ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 
 <div id="layoutSidenav_content" class="bg-light">
     <main class="container-fluid px-4 pt-4">

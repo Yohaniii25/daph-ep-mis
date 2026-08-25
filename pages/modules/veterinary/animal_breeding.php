@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -79,7 +79,7 @@ if (!empty($range_id)) {
 require_once '../../../includes/header.php';
 ?>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../../../assets/css/veterinary.css">
 
 

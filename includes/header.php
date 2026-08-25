@@ -32,18 +32,19 @@ if ($project_root && $current_dir) {
     <title><?= defined('SITE_SHORT_NAME') ? SITE_SHORT_NAME : 'DAPH - EP MIS' ?></title>
 
     <!-- Bootstrap 5 CSS & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="<?= $rel_path ?>assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= $rel_path ?>assets/css/bootstrap-icons.min.css" rel="stylesheet">
 
     <!-- DataTables & SweetAlert2 CSS -->
-    <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="<?= $rel_path ?>assets/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="<?= $rel_path ?>assets/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <link href="<?= $rel_path ?>assets/css/sweetalert2.min.css" rel="stylesheet">
 
     <!-- Dedicated Module CSS Files -->
     <link href="<?= $rel_path ?>assets/css/style.css" rel="stylesheet">
     <link href="<?= $rel_path ?>assets/css/farm.css" rel="stylesheet">
     <link href="<?= $rel_path ?>assets/css/veterinary.css" rel="stylesheet">
+    <link href="<?= $rel_path ?>assets/css/sms.css" rel="stylesheet">
 
     <link rel="icon" type="image/png" href="<?= $rel_path ?>assets/img/favicon.png">
 

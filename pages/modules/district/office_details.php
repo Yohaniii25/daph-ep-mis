@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // pages/modules/district/office_details.php -> District Office Details & Range Infrastructure
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -79,7 +79,7 @@ $total_staff = array_sum(array_column($range_offices, 'staff_count'));
 $total_vehicles = array_sum(array_column($range_offices, 'vehicle_count'));
 ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 
 <div id="layoutSidenav_content" class="bg-light">
     <main class="container-fluid px-4 pt-4">

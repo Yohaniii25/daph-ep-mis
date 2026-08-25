@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -98,7 +98,7 @@ $result = $stmt->get_result();
 require_once '../../../includes/header.php';
 ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 
 
         <div class="d-flex justify-content-between align-items-center mb-4">

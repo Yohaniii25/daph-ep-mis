@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -33,9 +33,9 @@ if (!empty($range_id)) {
 require_once '../../../includes/header.php';
 ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
 
 

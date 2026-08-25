@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // pages/modules/district/users_summary.php -> All Users Summary for District Deputy Director
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -77,7 +77,7 @@ $emp_count = count(array_filter($users_list, fn($u) => $u['role'] === 'employee'
 $active_users = count(array_filter($users_list, fn($u) => !empty($u['is_active'])));
 ?>
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 
 <div id="layoutSidenav_content" class="bg-light">
     <main class="container-fluid px-4 pt-4">

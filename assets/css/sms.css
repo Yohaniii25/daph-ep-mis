@@ -1,0 +1,71 @@
+/**
+ * Subject Matter Specialist (SMS) Module Stylesheet
+ * DAPH - EP MIS
+ */
+
+/* Metric Cards */
+.metric-card-custom {
+    border-radius: 16px !important;
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.25s ease-in-out;
+}
+
+.metric-card-custom:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-2px);
+}
+
+.metric-label-text {
+    font-size: 0.92rem !important;
+    font-weight: 500 !important;
+    color: #8a92a6 !important;
+    margin-bottom: 12px !important;
+}
+
+.metric-number-display {
+    font-size: 2.45rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: -1px !important;
+}
+
+/* SMS Module Badges & Buttons */
+.animal-toggle-btn.active {
+    background-color: #cfe2ff !important;
+    border-color: #0d6efd !important;
+    color: #084298 !important;
+    font-weight: 500;
+}
+
+.animal-toggle-btn.active .check-icon {
+    display: inline !important;
+}
+
+.animal-toggle-btn.active .bi-tag {
+    display: none;
+}
+
+/* SMS Theme Colors */
+.sms-bg-maroon {
+    background-color: #370709 !important;
+    color: #ffffff !important;
+}
+
+.sms-bg-gold {
+    background-color: #b08723 !important;
+    color: #ffffff !important;
+}
+
+.sms-bg-navy {
+    background-color: #1e3c72 !important;
+    color: #ffffff !important;
+}
+
+/* DataTables SMS Enhancements */
+.sms-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.82rem;
+    letter-spacing: 0.5px;
+}
