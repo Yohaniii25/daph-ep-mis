@@ -1,12 +1,13 @@
 <?php
-
-require_once 'includes/header.php';  
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $role = $_SESSION['role'] ?? '';
 
 $dashboard_map = [
     'provincial_director'    => 'pages/dashboard/provincial_director.php',
-    'deputy_director_hq_1'   => 'pages/dashboard/provincial_director.php',
+    'deputy_director_hq_1'   => 'pages/dashboard/planning_dd.php',
     'deputy_director_hq_2'   => 'pages/dashboard/provincial_director.php',
     'district_dd'            => 'pages/dashboard/district.php',
     'veterinary_surgeon'     => 'pages/dashboard/veterinary_office.php',
@@ -26,5 +27,3 @@ if (!file_exists($target)) {
 }
 
 require_once $target;
-
-require_once 'includes/footer.php';

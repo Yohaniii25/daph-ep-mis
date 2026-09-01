@@ -1,6 +1,7 @@
 <?php
 $role = $_SESSION['role'] ?? '';
-$is_pd = in_array($role, ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2']);
+$is_pd = in_array($role, ['provincial_director']);
+$is_planning_dd = ($role === 'deputy_director_hq_1');
 $is_hr_user = ($role === 'administrator');
 $is_finance_admin = ($role === 'finance_admin');
 $is_planning_officer = ($role === 'planning_officer');
@@ -11,8 +12,11 @@ $is_district_dd = in_array($role, ['district_dd', 'deputy_director_district']);
 $is_veterinary_surgeon = ($role === 'veterinary_surgeon');
 $is_employee = ($role === 'employee');
 
+
 $base_path = '/daph-ep-mis/';
-$is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
+$current_path = $_SERVER['REQUEST_URI'] ?? '';
+$current_file = basename(parse_url($current_path, PHP_URL_PATH) ?? '');
+$is_dashboard = (strpos($current_path, 'dashboard') !== false);
 ?>
 
 <style>
@@ -99,10 +103,23 @@ $is_dashboard = (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false);
 
                 <!-- Main Menu Items -->
                 <div class="sidebar-menu">
-                    <a class="nav-link d-flex align-items-center px-4 py-3 <?= $is_dashboard ? 'bg-danger' : '' ?>"
+                    <a class="nav-link d-flex align-items-center px-4 py-3 <?= $is_dashboard ? 'bg-danger text-white' : '' ?>"
                         href="<?= $base_path ?>dashboard.php">
                         Dashboard
                     </a>
+
+                    <!-- Planning Deputy Director (H/Q-1) Menu -->
+                    <?php if ($is_planning_dd): ?>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'planning_dd/range_details') !== false || in_array($current_file, ['range_statistics.php', 'annual_targets.php', 'monthly-annual-reports.php', 'regulatory_functions.php', 'animal_health.php', 'clinical_services.php', 'animal_breeding.php', 'livestock_production.php', 'dairy_hub.php', 'projects.php', 'monitoring.php', 'accounts.php', 'clean_sri_lanka.php', 'trainings.php'])) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/planning_dd/range_details.php">
+                            Range Details
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'planning_dd/office_details') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/planning_dd/office_details.php">
+                            Office Details
+                        </a>
+                    <?php endif; ?>
+
                     <!-- Provincial Director Menu -->
                     <?php if ($is_pd): ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3"

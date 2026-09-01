@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // pages/modules/district/range_veterinary_officers.php -> Comprehensive Range Veterinary Overview & Annual Returns Statistics
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
