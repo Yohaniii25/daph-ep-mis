@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 
 session_start();
 require_once '../../../../config/db_connect.php';
+require_once '../../../../includes/notification_helper.php';
 
 $vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $vs_roles)) {
@@ -126,6 +127,9 @@ if (isset($_POST['save_employee'])) {
         if ($insert_stmt->execute()) {
             $_SESSION['msg'] = "Officer record successfully created under your Range profile.";
             $_SESSION['msg_type'] = "success";
+
+            // Automated notification trigger
+            create_officer_notification($mysqli, 'New Officer Added', $officer_name, $service_number, $range_id, 'pages/modules/veterinary/employee_managment.php');
         } else {
             $_SESSION['msg'] = "Database error: " . $insert_stmt->error;
             $_SESSION['msg_type'] = "danger";

@@ -95,6 +95,49 @@
                 }
             });
         }
+
+        // Notification Interactions (Dropdown, Mark Read)
+        const notifApiUrl = '<?= $rel_path ?>includes/notifications_api.php';
+
+        $(document).on('click', '.mark-all-read-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const btn = $(this);
+            $.ajax({
+                url: notifApiUrl,
+                type: 'POST',
+                data: { action: 'mark_read' },
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp && resp.success) {
+                        $('#notificationBadge').addClass('d-none').text('0');
+                        $('#notificationHeaderBadge').addClass('d-none').text('0 New');
+                        $('.notif-unread-dot').remove();
+                        $('.notification-item').removeClass('bg-light fw-medium');
+                        btn.fadeOut(200);
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '.notification-item', function(e) {
+            const item = $(this);
+            const notifId = item.data('id');
+            const href = item.attr('href');
+            if (notifId && item.find('.notif-unread-dot').length > 0) {
+                // Mark single notification as read
+                $.ajax({
+                    url: notifApiUrl,
+                    type: 'POST',
+                    data: { action: 'mark_read', id: notifId },
+                    dataType: 'json',
+                    success: function() {
+                        item.removeClass('bg-light fw-medium');
+                        item.find('.notif-unread-dot').remove();
+                    }
+                });
+            }
+        });
     </script>
     <?php if (!empty($pageScripts)) echo $pageScripts; ?>
 </body>

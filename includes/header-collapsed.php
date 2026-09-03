@@ -9,6 +9,13 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/../config/constants.php';
+require_once __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/notification_helper.php';
+
+// Notification data for header bell
+$header_user_id = intval($_SESSION['user_id'] ?? 0);
+$header_unread_count = get_unread_notification_count($mysqli, $header_user_id);
+$header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
 ?>
 
 <!DOCTYPE html>
@@ -141,10 +148,77 @@ require_once __DIR__ . '/../config/constants.php';
                 </ul>
             </div>
 
-            <a class="text-dark me-4 position-relative" href="#">
-                <i class="bi bi-bell fs-4"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">9+</span>
-            </a>
+            <!-- Notifications Dropdown -->
+            <div class="dropdown me-4" id="notificationDropdownContainer">
+                <a class="text-dark position-relative d-inline-block text-decoration-none" href="#" id="notificationBellDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                    <i class="bi bi-bell fs-4"></i>
+                    <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger <?= $header_unread_count > 0 ? '' : 'd-none' ?>" style="font-size: 0.65rem;">
+                        <?= $header_unread_count > 99 ? '99+' : $header_unread_count ?>
+                    </span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0 mt-2" aria-labelledby="notificationBellDropdown" style="width: 360px; border-radius: 12px; overflow: hidden; z-index: 1055;">
+                    <div class="p-3 text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #500707 0%, #750d0d 100%);">
+                        <div>
+                            <span class="fw-bold fs-6"><i class="bi bi-bell-fill me-2"></i>Notifications</span>
+                            <span id="notificationHeaderBadge" class="badge bg-light text-dark rounded-pill ms-2 <?= $header_unread_count > 0 ? '' : 'd-none' ?>"><?= $header_unread_count ?> New</span>
+                        </div>
+                        <?php if ($header_unread_count > 0): ?>
+                            <button type="button" class="btn btn-sm btn-link text-white text-decoration-none p-0 mark-all-read-btn" style="font-size: 11px; opacity: 0.9;">
+                                <i class="bi bi-check2-all me-1"></i>Mark all read
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                    <div class="notification-list-container" style="max-height: 340px; overflow-y: auto;">
+                        <?php if (empty($header_notifications)): ?>
+                            <div class="text-center py-4 text-muted" id="notificationEmptyState">
+                                <i class="bi bi-bell-slash fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                <span class="small">No notifications yet</span>
+                            </div>
+                        <?php else: ?>
+                            <div class="list-group list-group-flush" id="notificationListGroup">
+                                <?php foreach ($header_notifications as $notif): ?>
+                                    <a href="<?= !empty($notif['link']) ? '../' . ltrim($notif['link'], '/') : '#' ?>" 
+                                       class="list-group-item list-group-item-action p-3 border-bottom notification-item <?= empty($notif['is_read']) ? 'bg-light fw-medium' : '' ?>"
+                                       data-id="<?= $notif['id'] ?>" style="transition: background 0.2s;">
+                                        <div class="d-flex align-items-start">
+                                            <div class="me-3 mt-1">
+                                                <?php if (strpos(strtolower($notif['title']), 'add') !== false): ?>
+                                                    <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                                        <i class="bi bi-person-plus-fill"></i>
+                                                    </div>
+                                                <?php elseif (strpos(strtolower($notif['title']), 'remov') !== false): ?>
+                                                    <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                                        <i class="bi bi-person-x-fill"></i>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                                        <i class="bi bi-info-circle-fill"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="fw-bold small text-dark"><?= htmlspecialchars($notif['title']) ?></span>
+                                                    <small class="text-muted" style="font-size: 10px;"><?= htmlspecialchars($notif['time_ago']) ?></small>
+                                                </div>
+                                                <p class="mb-0 text-muted small lh-sm" style="font-size: 12px;"><?= htmlspecialchars($notif['message']) ?></p>
+                                            </div>
+                                            <?php if (empty($notif['is_read'])): ?>
+                                                <span class="ms-2 p-1 bg-danger rounded-circle align-self-center notif-unread-dot" style="width: 6px; height: 6px;" title="Unread"></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="p-2 bg-light text-center border-top">
+                        <a href="../pages/modules/hr/employee_managment.php" class="text-decoration-none small text-secondary fw-semibold">
+                            <i class="bi bi-people me-1"></i>View Employee Management
+                        </a>
+                    </div>
+                </div>
+            </div>
 
             <div class="dropdown">
                 <a class="d-flex align-items-center text-dark text-decoration-none" data-bs-toggle="dropdown">

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -59,7 +59,7 @@ require_once '../../../includes/sidebar.php';
 </thead>
                         <tbody>
     <?php while ($row = $result->fetch_assoc()): ?>
-        <tr>
+        <tr id="row-<?= $row['id'] ?>">
             <td><span class="fw-bold text-primary">#<?= $row['emp_id'] ?></span></td>
             <td>
                 <div class="fw-bold"><?= htmlspecialchars($row['officer_name']) ?></div>
@@ -156,9 +156,59 @@ include 'models/add_employee.php';
     });
 
     function confirmDelete(id) {
-        if (confirm("Are you sure you want to delete this officer? This action cannot be undone.")) {
-            // Add your AJAX or Redirect logic here
-            console.log("Deleting officer ID: " + id);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Deactivate Officer?',
+                text: 'Are you sure you want to remove/deactivate this officer? Jurisdiction directors will be automatically notified.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Deactivate',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: 'processors/delete_employee.php',
+                        type: 'POST',
+                        data: { id: id },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Officer Removed',
+                                    text: response.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                $('#row-' + id).fadeOut(400, function() {
+                                    $(this).remove();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Operation Failed',
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Server communication failure.', 'error');
+                        }
+                    });
+                }
+            });
+        } else {
+            if (confirm("Are you sure you want to deactivate this officer?")) {
+                $.post('processors/delete_employee.php', { id: id }, function(res) {
+                    if (res.success) {
+                        $('#row-' + id).remove();
+                    } else {
+                        alert(res.message);
+                    }
+                }, 'json');
+            }
         }
     }
 </script>

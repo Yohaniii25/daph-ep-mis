@@ -2810,6 +2810,49 @@ INSERT INTO `training_centers` (`id`, `center_name`, `location`, `is_active`, `c
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL COMMENT 'Recipient user id from users table',
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `type` varchar(50) NOT NULL DEFAULT 'officer_change' COMMENT 'e.g., officer_change, system, etc.',
+  `link` varchar(255) DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_read` (`user_id`, `is_read`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `office_details`
+--
+
+CREATE TABLE `office_details` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `range_id` int(11) DEFAULT NULL,
+  `unit_id` int(11) DEFAULT NULL,
+  `officer_name` varchar(255) NOT NULL,
+  `designation` varchar(100) NOT NULL,
+  `emp_id` varchar(50) DEFAULT NULL,
+  `contact_number` varchar(20) DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `registered_date` date DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `status` enum('Active','Inactive') DEFAULT 'Active',
+  PRIMARY KEY (`id`),
+  KEY `range_id` (`range_id`),
+  KEY `unit_id` (`unit_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 

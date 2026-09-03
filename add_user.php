@@ -1,6 +1,7 @@
 <?php
 // add_user.php  →  Keep this file forever (protect it later with .htaccess)
 require_once 'config/db_connect.php';
+require_once 'includes/notification_helper.php';
 
 function ensure_schema_updates($mysqli) {
     // 1. Ensure columns exist
@@ -189,6 +190,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             echo '<div class="alert alert-success">✅ User <b>' . htmlspecialchars($username) . 
                  '</b> created successfully!<br>Password: <b>' . htmlspecialchars($password) . '</b></div>';
+
+            if (!empty($range_id)) {
+                create_officer_notification($mysqli, 'New Officer Added', $full_name, $username, $range_id, 'pages/modules/district/range_veterinary_officers.php');
+            }
         } else {
             echo '<div class="alert alert-danger">Error: ' . $stmt->error . '</div>';
         }
