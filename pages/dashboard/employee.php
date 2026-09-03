@@ -1,7 +1,8 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'employee') {
+$emp_roles = ['employee', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher'];
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $emp_roles)) {
     die("Access denied. Please login as an employee.");
 }
 

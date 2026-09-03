@@ -44,7 +44,7 @@ $sql = "
         COALESCE(cnt_sub.cnt_count, 0) AS cnt_count
     FROM veterinary_ranges vr
     JOIN districts d ON vr.district_id = d.id
-    LEFT JOIN users u ON vr.id = u.range_id AND u.role = 'veterinary_surgeon' AND u.is_active = 1
+    LEFT JOIN users u ON vr.id = u.range_id AND u.role IN ('veterinary_surgeon', 'government_veterinary_surgeon') AND u.is_active = 1
     LEFT JOIN (
         SELECT range_id, COUNT(*) AS staff_count 
         FROM users 

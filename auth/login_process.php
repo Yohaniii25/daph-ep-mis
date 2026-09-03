@@ -37,8 +37,18 @@ $category_to_role_map = [
     'subject_matter_specialist'      => ['sms'],
     'deputy_director_hq_1'           => ['deputy_director_hq_1', 'provincial_director'],
     'deputy_director_hq_2'           => ['deputy_director_hq_2', 'provincial_director'],
-    'deputy_director_district'       => ['district_dd'],
-    'range_veterinary_officer'       => ['veterinary_surgeon'],
+    'range_veterinary_officer'       => [
+        'veterinary_surgeon',
+        'government_veterinary_surgeon',
+        'additional_veterinary_surgeon',
+        'livestock_development_officer',
+        'development_officer',
+        'driver',
+        'dispensary_assistant',
+        'department_laborer',
+        'night_watcher',
+        'employee'
+    ],
     'training_centers'               => ['training_officer'],
     'regional_farms'                 => ['farms_dd']
 ];

@@ -9,8 +9,10 @@ $is_sms = ($role === 'sms');
 $is_farms_dd = ($role === 'farms_dd');
 $is_training_officer = ($role === 'training_officer');
 $is_district_dd = in_array($role, ['district_dd', 'deputy_director_district']);
-$is_veterinary_surgeon = ($role === 'veterinary_surgeon');
-$is_employee = ($role === 'employee');
+$vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
+$emp_roles = ['employee', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher'];
+$is_veterinary_surgeon = in_array($role, $vs_roles);
+$is_employee = in_array($role, $emp_roles);
 
 
 $base_path = '/daph-ep-mis/';

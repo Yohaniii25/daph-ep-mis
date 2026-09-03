@@ -86,7 +86,7 @@ $vs_query = "SELECT u.id AS user_id, u.username, u.full_name, u.email, u.phone, 
                     (SELECT COUNT(*) FROM breeding_ai_performance bai WHERE bai.range_id = vr.id) AS total_ai
              FROM users u
              LEFT JOIN veterinary_ranges vr ON u.range_id = vr.id
-             WHERE u.role = 'veterinary_surgeon' AND (u.district_id = ? OR vr.district_id = ?) ";
+             WHERE u.role IN ('veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon') AND (u.district_id = ? OR vr.district_id = ?) ";
 if ($selected_range_id > 0) {
     $vs_query .= " AND vr.id = " . intval($selected_range_id);
 }

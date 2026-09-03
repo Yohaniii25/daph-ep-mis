@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // add_user.php  →  Keep this file forever (protect it later with .htaccess)
 require_once 'config/db_connect.php';
 
@@ -17,12 +17,12 @@ function ensure_schema_updates($mysqli) {
         }
     }
 
-    // 2. Ensure role enum includes new Deputy Director roles
+    // 2. Ensure role enum includes new Deputy Director roles and Range Office user roles
     $role_col_res = $mysqli->query("SHOW COLUMNS FROM users LIKE 'role'");
     if ($role_col_res && $row = $role_col_res->fetch_assoc()) {
         $type = $row['Type'];
-        if (strpos($type, 'deputy_director_hq_1') === false || strpos($type, 'deputy_director_hq_2') === false) {
-            $mysqli->query("ALTER TABLE users MODIFY COLUMN role ENUM('provincial_director','district_dd','veterinary_surgeon','training_officer','sms','farms_dd','finance_admin','planning_officer','administrator','data_entry','employee','deputy_director_hq_1','deputy_director_hq_2') NOT NULL");
+        if (strpos($type, 'government_veterinary_surgeon') === false || strpos($type, 'additional_veterinary_surgeon') === false || strpos($type, 'livestock_development_officer') === false) {
+            $mysqli->query("ALTER TABLE users MODIFY COLUMN role ENUM('provincial_director','district_dd','veterinary_surgeon','training_officer','sms','farms_dd','finance_admin','planning_officer','administrator','data_entry','employee','deputy_director_hq_1','deputy_director_hq_2','government_veterinary_surgeon','additional_veterinary_surgeon','livestock_development_officer','development_officer','driver','dispensary_assistant','department_laborer','night_watcher') NOT NULL");
         }
     }
 }
@@ -46,6 +46,14 @@ if ($training_center_res) {
     }
 }
 
+$ranges = [];
+$ranges_res = $mysqli->query("SELECT id, name, district_id FROM veterinary_ranges WHERE is_active = 1 ORDER BY name ASC");
+if ($ranges_res) {
+    while ($row = $ranges_res->fetch_assoc()) {
+        $ranges[] = $row;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username   = trim($_POST['username']);
     $email      = trim($_POST['email']);
@@ -55,6 +63,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $district   = $_POST['district'] ?? 'Provincial';
     $training_center_id = isset($_POST['training_center_id']) && $_POST['training_center_id'] !== '' ? intval($_POST['training_center_id']) : null;
     $training_center_location = isset($_POST['training_center_location']) ? trim($_POST['training_center_location']) : '';
+    $range_id   = isset($_POST['range_id']) && $_POST['range_id'] !== '' ? intval($_POST['range_id']) : null;
+
+    $range_roles_designations = [
+        'government_veterinary_surgeon' => 'Government Veterinary Surgeon (GVS)',
+        'additional_veterinary_surgeon' => 'Additional Veterinary Surgeon (AVS)',
+        'livestock_development_officer' => 'Livestock Development Officer (or Instructor)',
+        'development_officer'           => 'Development Officer (DO)',
+        'driver'                        => 'Driver',
+        'dispensary_assistant'          => 'Dispensary Assistant',
+        'department_laborer'            => 'Department Laborer',
+        'night_watcher'                 => 'Night Watcher',
+        'veterinary_surgeon'            => 'Government Veterinary Surgeon (GVS)'
+    ];
+
+    $designation = trim($_POST['designation'] ?? ($range_roles_designations[$role] ?? ''));
 
     $farm_id = null;
     $district_id = null;
@@ -149,16 +172,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($role === 'training_officer') {
             $stmt = $mysqli->prepare("INSERT INTO users 
-                (username, email, password, full_name, role, district, district_id, farm_id, training_center_id, training_center_location, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                (username, email, password, full_name, role, designation, district, district_id, farm_id, training_center_id, training_center_location, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-            $stmt->bind_param("ssssssiiisi", $username, $email, $hash, $full_name, $role, $district, $district_id, $farm_id, $training_center_id, $training_center_location, $is_active);
+            $stmt->bind_param("sssssssiisis", $username, $email, $hash, $full_name, $role, $designation, $district, $district_id, $farm_id, $training_center_id, $training_center_location, $is_active);
         } else {
             $stmt = $mysqli->prepare("INSERT INTO users 
-                (username, email, password, full_name, role, district, district_id, farm_id, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                (username, email, password, full_name, role, designation, district, district_id, farm_id, range_id, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-            $stmt->bind_param("ssssssiii", $username, $email, $hash, $full_name, $role, $district, $district_id, $farm_id, $is_active);
+            $stmt->bind_param("sssssssiisi", $username, $email, $hash, $full_name, $role, $designation, $district, $district_id, $farm_id, $range_id, $is_active);
         }
 
         if ($stmt->execute()) {
@@ -203,18 +226,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-6">
                         <label>Role</label>
                         <select name="role" id="roleSelect" class="form-select" required>
-                            <option value="veterinary_surgeon">Veterinary Surgeon</option>
-                            <option value="district_dd">District Deputy Director</option>
-                            <option value="deputy_director_hq_1">Deputy Director H/Q1</option>
-                            <option value="deputy_director_hq_2">Deputy Director H/Q2</option>
-                            <option value="provincial_director">Provincial Director</option>
-                            <option value="training_officer">Training Officer</option>
-                            <option value="sms">Subject Matter Specialist</option>
-                            <option value="administrator">Administrator</option>
-                            <option value="finance_admin">Finance Admin</option>
-                            <option value="planning_officer">Planning Officer</option>
-                            <option value="farms_dd">Deputy Director (Farms Operation)</option>
-                            <option value="employee">Employee</option>
+                            <optgroup label="Range Office Roles">
+                                <option value="government_veterinary_surgeon">Government Veterinary Surgeon</option>
+                                <option value="additional_veterinary_surgeon">Additional Veterinary Surgeon</option>
+                                <option value="livestock_development_officer">Livestock Development Officer (or Instructor)</option>
+                                <option value="development_officer">Development Officer</option>
+                                <option value="driver">Driver</option>
+                                <option value="dispensary_assistant">Dispensary Assistant</option>
+                                <option value="department_laborer">Department Laborer</option>
+                                <option value="night_watcher">Night Watcher</option>
+                            </optgroup>
+                            <optgroup label="Headquarters & District Roles">
+                                <option value="district_dd">District Deputy Director</option>
+                                <option value="deputy_director_hq_1">Deputy Director H/Q1</option>
+                                <option value="deputy_director_hq_2">Deputy Director H/Q2</option>
+                                <option value="provincial_director">Provincial Director</option>
+                                <option value="training_officer">Training Officer</option>
+                                <option value="sms">Subject Matter Specialist</option>
+                                <option value="administrator">Administrator</option>
+                                <option value="finance_admin">Finance Admin</option>
+                                <option value="planning_officer">Planning Officer</option>
+                                <option value="farms_dd">Deputy Director (Farms Operation)</option>
+                                <option value="veterinary_surgeon">Veterinary Surgeon (Legacy)</option>
+                                <option value="employee">Employee (General)</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="col-md-6" id="districtContainer">
@@ -224,6 +259,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="Batticaloa">Batticaloa</option>
                             <option value="Trincomalee">Trincomalee</option>
                             <option value="Provincial" id="districtOptionProvincial">Provincial</option>
+                        </select>
+                    </div>
+
+                    <!-- Range Office Selection dynamically toggled -->
+                    <div class="col-md-6" id="range_container" style="display: none;">
+                        <label>Veterinary Range Office</label>
+                        <select name="range_id" id="range_id" class="form-select">
+                            <option value="">-- Select Range Office --</option>
+                            <?php foreach ($ranges as $range): ?>
+                                <option value="<?= $range['id'] ?>" data-district-id="<?= $range['district_id'] ?>"><?= htmlspecialchars($range['name']) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -273,10 +319,45 @@ document.addEventListener("DOMContentLoaded", function() {
     var provincialOption = document.getElementById('districtOptionProvincial');
     var farmContainer = document.getElementById('farm_container');
     var farmSelect = document.getElementById('farm_id');
+    var rangeContainer = document.getElementById('range_container');
+    var rangeSelect = document.getElementById('range_id');
     var trainingCenterLocationContainer = document.getElementById('training_center_location_container');
     var trainingCenterLocationSelect = document.getElementById('training_center_location');
     var trainingCenterContainer = document.getElementById('training_center_container');
     var trainingCenterSelect = document.getElementById('training_center_id');
+
+    var rangeRoles = [
+        'government_veterinary_surgeon',
+        'additional_veterinary_surgeon',
+        'livestock_development_officer',
+        'development_officer',
+        'driver',
+        'dispensary_assistant',
+        'department_laborer',
+        'night_watcher',
+        'veterinary_surgeon'
+    ];
+
+    function filterRangesByDistrict() {
+        var district = districtSelect.value;
+        var distIdMap = {'Amparai': '1', 'Ampara': '1', 'Batticaloa': '2', 'Trincomalee': '3'};
+        var activeDistId = distIdMap[district] || '';
+
+        var options = rangeSelect.querySelectorAll('option');
+        options.forEach(function(opt) {
+            if (!opt.value) {
+                opt.style.display = '';
+                return;
+            }
+            if (activeDistId && opt.getAttribute('data-district-id') === activeDistId) {
+                opt.style.display = '';
+            } else if (!activeDistId) {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
 
     function toggleContextualFields() {
         var role = roleSelect.value;
@@ -284,9 +365,10 @@ document.addEventListener("DOMContentLoaded", function() {
         var isTrainingOfficer = (role === 'training_officer');
         var isDistrictDD = (role === 'district_dd');
         var isHQRole = (role === 'deputy_director_hq_1' || role === 'deputy_director_hq_2' || role === 'provincial_director');
+        var isRangeRole = rangeRoles.includes(role);
 
         // Dynamic Form Logic for District selection
-        if (isDistrictDD) {
+        if (isDistrictDD || isRangeRole) {
             districtContainer.style.display = 'block';
             districtSelect.setAttribute('required', 'required');
             if (provincialOption) provincialOption.style.display = 'none';
@@ -302,6 +384,14 @@ document.addEventListener("DOMContentLoaded", function() {
             districtContainer.style.display = 'block';
             districtSelect.setAttribute('required', 'required');
             if (provincialOption) provincialOption.style.display = '';
+        }
+
+        if (isRangeRole) {
+            rangeContainer.style.display = 'block';
+            filterRangesByDistrict();
+        } else {
+            rangeContainer.style.display = 'none';
+            rangeSelect.value = '';
         }
 
         if (isFarmRole) {
@@ -332,6 +422,12 @@ document.addEventListener("DOMContentLoaded", function() {
         var selected = this.options[this.selectedIndex];
         if (selected && selected.dataset.location) {
             trainingCenterLocationSelect.value = selected.dataset.location;
+        }
+    });
+
+    districtSelect.addEventListener('change', function() {
+        if (rangeRoles.includes(roleSelect.value)) {
+            filterRangesByDistrict();
         }
     });
 

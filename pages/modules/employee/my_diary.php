@@ -1,8 +1,9 @@
-﻿<?php
+<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'employee') {
+$emp_roles = ['employee', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher'];
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $emp_roles)) {
     header("Location: ../../../index.php");
     exit();
 }

@@ -1,8 +1,9 @@
-﻿<?php
+<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+$vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $vs_roles)) {
     header("Location: ../../../../index.php");
     exit();
 }
@@ -322,12 +323,58 @@ require_once '../../../includes/header.php';
         modal.show();
     }
 
+    const roleDesignationMapping = {
+        'government_veterinary_surgeon': 'Government Veterinary Surgeon (GVS)',
+        'additional_veterinary_surgeon': 'Additional Veterinary Surgeon (AVS)',
+        'livestock_development_officer': 'Livestock Development Officer (or Instructor)',
+        'development_officer': 'Development Officer (DO)',
+        'driver': 'Driver',
+        'dispensary_assistant': 'Dispensary Assistant',
+        'department_laborer': 'Department Laborer',
+        'night_watcher': 'Night Watcher'
+    };
+
+    function syncRoleToDesignation(roleSelectElem, targetDesignationId) {
+        const desigElem = document.getElementById(targetDesignationId);
+        if (!desigElem) return;
+        const mapped = roleDesignationMapping[roleSelectElem.value];
+        if (mapped) {
+            for (let i = 0; i < desigElem.options.length; i++) {
+                if (desigElem.options[i].value === mapped) {
+                    desigElem.selectedIndex = i;
+                    return;
+                }
+            }
+        }
+    }
+
     function editEmployee(data) {
         document.getElementById('edit_id').value = data.id || '';
         document.getElementById('edit_service_number').value = data.service_number || data.emp_id || '';
         document.getElementById('edit_officer_name').value = data.full_name || '';
-        document.getElementById('edit_designation').value = data.designation || '';
-        document.getElementById('edit_user_role').value = data.role || 'employee';
+
+        var desigElem = document.getElementById('edit_designation');
+        if (desigElem) {
+            desigElem.value = data.designation || '';
+            if (!desigElem.value && data.designation) {
+                for (let i = 0; i < desigElem.options.length; i++) {
+                    if (desigElem.options[i].value.toLowerCase().includes(data.designation.toLowerCase()) || 
+                        desigElem.options[i].text.toLowerCase().includes(data.designation.toLowerCase())) {
+                        desigElem.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        var roleElem = document.getElementById('edit_user_role');
+        if (roleElem) {
+            roleElem.value = data.role || 'employee';
+            if (!roleElem.value && data.role) {
+                roleElem.value = 'employee';
+            }
+        }
+
         document.getElementById('edit_service_category').value = data.service_category || '';
         document.getElementById('edit_email').value = data.email || '';
         document.getElementById('edit_contact_number').value = data.contact_number || data.phone || '';

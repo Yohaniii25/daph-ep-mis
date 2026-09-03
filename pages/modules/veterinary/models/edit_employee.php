@@ -20,19 +20,39 @@
                             <input type="text" name="officer_name" id="edit_officer_name" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Designation</label>
-                            <input type="text" name="designation" id="edit_designation" class="form-control" required>
+                            <label class="form-label small fw-bold">User Role <span class="text-danger">*</span></label>
+                            <select name="user_role" id="edit_user_role" class="form-select" required onchange="syncRoleToDesignation(this, 'edit_designation')">
+                                <option value="">Select Role</option>
+                                <option value="government_veterinary_surgeon">Government Veterinary Surgeon</option>
+                                <option value="additional_veterinary_surgeon">Additional Veterinary Surgeon</option>
+                                <option value="livestock_development_officer">Livestock Development Officer (or Instructor)</option>
+                                <option value="development_officer">Development Officer</option>
+                                <option value="driver">Driver</option>
+                                <option value="dispensary_assistant">Dispensary Assistant</option>
+                                <option value="department_laborer">Department Laborer</option>
+                                <option value="night_watcher">Night Watcher</option>
+                                <option value="veterinary_surgeon">Veterinary Surgeon (Legacy)</option>
+                                <option value="employee">Employee (Legacy)</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">User Role</label>
-                            <select name="user_role" id="edit_user_role" class="form-select" required>
-                                <option value="">Select Role</option>
-                                <option value="employee">Employee</option>
-                                <option value="training_officer">Training Officer</option>
-                                <option value="sms">Subject Matter Specialist</option>
-                                <option value="farms_dd">Farms DD</option>
-                                <option value="finance_admin">Finance Admin</option>
-                                <option value="planning_officer">Planning Officer</option>
+                            <label class="form-label small fw-bold">Designation <span class="text-danger">*</span></label>
+                            <select name="designation" id="edit_designation" class="form-select" required>
+                                <option value="">Select Designation</option>
+                                <option value="Government Veterinary Surgeon (GVS)">Government Veterinary Surgeon (GVS)</option>
+                                <option value="Additional Veterinary Surgeon (AVS)">Additional Veterinary Surgeon (AVS)</option>
+                                <option value="Livestock Development Officer (or Instructor)">Livestock Development Officer (or Instructor)</option>
+                                <option value="Development Officer (DO)">Development Officer (DO)</option>
+                                <option value="Driver">Driver</option>
+                                <option value="Dispensary Assistant">Dispensary Assistant</option>
+                                <option value="Department Laborer">Department Laborer</option>
+                                <option value="Night Watcher">Night Watcher</option>
+                                <option value="GVS">GVS</option>
+                                <option value="LDO">LDO</option>
+                                <option value="LDI">LDI</option>
+                                <option value="PDO">PDO</option>
+                                <option value="CDO">CDO</option>
+                                <option value="Watcher">Watcher</option>
                             </select>
                         </div>
                         <div class="col-md-6">

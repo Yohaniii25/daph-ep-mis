@@ -1,8 +1,9 @@
-﻿<?php
+<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'employee') {
+$emp_roles = ['employee', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher'];
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $emp_roles)) {
     header("Location: ../../../index.php");
     exit();
 }
@@ -41,7 +42,24 @@ $acting_result = $mysqli->query($acting_query);
 
 // Determine Working Hours Group
 $work_group = 'B'; // Default
-$group_a = ['Veterinary surgeon', 'Veterinary surgeoon', 'LDO', 'DO', 'GVS'];
+$group_a = [
+    'Veterinary surgeon',
+    'Veterinary surgeoon',
+    'Government Veterinary Surgeon',
+    'Government Veterinary Surgeon (GVS)',
+    'Additional Veterinary Surgeon',
+    'Additional Veterinary Surgeon (AVS)',
+    'Livestock Development Officer',
+    'Livestock Development Instructor',
+    'Livestock Development Officer (or Instructor)',
+    'Development Officer',
+    'Development Officer (DO)',
+    'LDO',
+    'LDI',
+    'DO',
+    'GVS',
+    'AVS'
+];
 if (in_array($user_designation, $group_a)) {
     $work_group = 'A';
 }

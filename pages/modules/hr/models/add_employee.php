@@ -36,11 +36,16 @@
                             <select name="designation" class="form-select">
                                 <option value="">Select Designation</option>
                                 <option value="GVS">GVS (Government Veterinary Surgeon)</option>
+                                <option value="AVS">AVS (Additional Veterinary Surgeon)</option>
                                 <option value="LDO">LDO (Livestock Development Officer)</option>
                                 <option value="LDI">LDI (Livestock Development Instructor)</option>
+                                <option value="DO">DO (Development Officer)</option>
+                                <option value="Driver">Driver</option>
+                                <option value="Dispensary Assistant">Dispensary Assistant</option>
+                                <option value="Department Laborer">Department Laborer</option>
+                                <option value="Night Watcher">Night Watcher</option>
                                 <option value="PDO">PDO (Project Development Officer)</option>
                                 <option value="Clerk">Clerk</option>
-                                <option value="Driver">Driver</option>
                             </select>
                         </div>
                         <div class="col-md-6">

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // pages/modules/district/office_details.php -> District Office Details & Range Infrastructure
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -62,7 +62,7 @@ $range_query = "SELECT vr.id, vr.name AS range_name, vr.code, vr.is_active,
                        (SELECT COUNT(*) FROM building_inventories bi JOIN land_assets la ON bi.land_asset_id = la.id WHERE la.range_id = vr.id) AS building_count,
                        (SELECT COUNT(*) FROM registered_vehicles rv WHERE rv.range_id = vr.id) AS vehicle_count
                 FROM veterinary_ranges vr
-                LEFT JOIN users u ON u.range_id = vr.id AND u.role = 'veterinary_surgeon' AND u.is_active = 1
+                LEFT JOIN users u ON u.range_id = vr.id AND u.role IN ('veterinary_surgeon', 'government_veterinary_surgeon') AND u.is_active = 1
                 WHERE vr.district_id = ?
                 ORDER BY vr.name ASC";
 

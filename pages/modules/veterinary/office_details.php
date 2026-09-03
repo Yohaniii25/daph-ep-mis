@@ -2,7 +2,8 @@
 session_start();
 require_once '../../../config/db_connect.php';
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+$vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $vs_roles)) {
     header("Location: ../../../../index.php");
     exit();
 }
@@ -72,7 +73,7 @@ $off_phone  = !empty($user_data['phone']) ? $user_data['phone'] : 'Unknown';
 $off_email  = !empty($user_data['email']) ? $user_data['email'] : 'Unknown';
 
 // 1. Fetch Human Resources (Staff)
-$staff_stmt = $mysqli->prepare("SELECT * FROM users WHERE district_id = ? AND range_id = ? AND role IN ('employee', 'veterinary_surgeon') AND is_active = 1");
+$staff_stmt = $mysqli->prepare("SELECT * FROM users WHERE district_id = ? AND range_id = ? AND is_active = 1");
 $staff_stmt->bind_param("ii", $_SESSION['district_id'], $range_id);
 $staff_stmt->execute();
 $staff_list = $staff_stmt->get_result()->fetch_all(MYSQLI_ASSOC);

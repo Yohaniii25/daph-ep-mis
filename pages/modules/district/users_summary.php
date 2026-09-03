@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // pages/modules/district/users_summary.php -> All Users Summary for District Deputy Director
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -72,8 +72,10 @@ $u_stmt->close();
 
 // Role counts in district
 $total_users = count($users_list);
-$vs_count = count(array_filter($users_list, fn($u) => $u['role'] === 'veterinary_surgeon'));
-$emp_count = count(array_filter($users_list, fn($u) => $u['role'] === 'employee'));
+$vs_roles_list = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
+$emp_roles_list = ['employee', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher'];
+$vs_count = count(array_filter($users_list, fn($u) => in_array($u['role'], $vs_roles_list)));
+$emp_count = count(array_filter($users_list, fn($u) => in_array($u['role'], $emp_roles_list)));
 $active_users = count(array_filter($users_list, fn($u) => !empty($u['is_active'])));
 ?>
 
@@ -108,14 +110,14 @@ $active_users = count(array_filter($users_list, fn($u) => !empty($u['is_active']
                 <div class="card border-0 shadow-sm border-start border-danger border-4 p-3 h-100">
                     <small class="text-muted text-uppercase fw-bold">Veterinary Surgeons</small>
                     <h3 class="text-danger fw-bold mb-0"><?= number_format($vs_count) ?></h3>
-                    <small class="text-muted">In-Charge Range Officers</small>
+                    <small class="text-muted">In-Charge Range Officers (GVS/AVS)</small>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card border-0 shadow-sm border-start border-info border-4 p-3 h-100">
                     <small class="text-muted text-uppercase fw-bold">Field Staff &amp; Officers</small>
                     <h3 class="text-info fw-bold mb-0"><?= number_format($emp_count) ?></h3>
-                    <small class="text-muted">LDOs, CDOs, Watchers, Drivers</small>
+                    <small class="text-muted">LDOs, DOs, Drivers, DAs, Laborers, Watchers</small>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
@@ -167,11 +169,11 @@ $active_users = count(array_filter($users_list, fn($u) => !empty($u['is_active']
                                         <td>
                                             <?php
                                             $role_badge_class = 'secondary';
-                                            if ($u['role'] === 'veterinary_surgeon') $role_badge_class = 'primary';
+                                            if (in_array($u['role'], ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'])) $role_badge_class = 'primary';
                                             elseif ($u['role'] === 'district_dd') $role_badge_class = 'danger';
                                             elseif ($u['role'] === 'training_officer') $role_badge_class = 'success';
                                             elseif ($u['role'] === 'farms_dd') $role_badge_class = 'warning text-dark';
-                                            elseif ($u['role'] === 'employee') $role_badge_class = 'info text-dark';
+                                            elseif (in_array($u['role'], ['employee', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher'])) $role_badge_class = 'info text-dark';
                                             ?>
                                             <span class="badge bg-<?= $role_badge_class ?>">
                                                 <?= ucwords(str_replace('_', ' ', $u['role'])) ?>
