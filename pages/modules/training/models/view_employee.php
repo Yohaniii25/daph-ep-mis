@@ -37,6 +37,10 @@
                         <span class="text-dark" id="view_phone">-</span>
                     </div>
                     <div class="col-md-6">
+                        <small class="text-muted d-block fw-bold text-uppercase">Date of Birth</small>
+                        <span class="text-dark" id="view_date_of_birth">-</span>
+                    </div>
+                    <div class="col-md-6">
                         <small class="text-muted d-block fw-bold text-uppercase">Appointment Date</small>
                         <span class="text-dark" id="view_appointment_date">-</span>
                     </div>

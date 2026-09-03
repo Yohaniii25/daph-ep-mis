@@ -41,6 +41,10 @@
                         <span class="fw-semibold text-dark" id="view_contact">-</span>
                     </div>
                     <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Date of Birth</small>
+                        <span class="fw-semibold text-dark" id="view_date_of_birth">-</span>
+                    </div>
+                    <div class="col-md-6">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Appointment Date</small>
                         <span class="fw-semibold text-dark" id="view_appointment_date">-</span>
                     </div>

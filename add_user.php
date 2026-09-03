@@ -7,7 +7,8 @@ function ensure_schema_updates($mysqli) {
     $checks = [
         'training_center_id' => 'INT NULL',
         'training_center_location' => 'VARCHAR(255) NULL',
-        'district_id' => 'INT NULL'
+        'district_id' => 'INT NULL',
+        'date_of_birth' => 'DATE NULL DEFAULT NULL'
     ];
 
     foreach ($checks as $column => $definition) {
@@ -64,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $training_center_id = isset($_POST['training_center_id']) && $_POST['training_center_id'] !== '' ? intval($_POST['training_center_id']) : null;
     $training_center_location = isset($_POST['training_center_location']) ? trim($_POST['training_center_location']) : '';
     $range_id   = isset($_POST['range_id']) && $_POST['range_id'] !== '' ? intval($_POST['range_id']) : null;
+    $date_of_birth = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
 
     $range_roles_designations = [
         'government_veterinary_surgeon' => 'Government Veterinary Surgeon (GVS)',
@@ -172,16 +174,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($role === 'training_officer') {
             $stmt = $mysqli->prepare("INSERT INTO users 
-                (username, email, password, full_name, role, designation, district, district_id, farm_id, training_center_id, training_center_location, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                (username, email, password, full_name, role, designation, date_of_birth, district, district_id, farm_id, training_center_id, training_center_location, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-            $stmt->bind_param("sssssssiisis", $username, $email, $hash, $full_name, $role, $designation, $district, $district_id, $farm_id, $training_center_id, $training_center_location, $is_active);
+            $stmt->bind_param("ssssssssiisis", $username, $email, $hash, $full_name, $role, $designation, $date_of_birth, $district, $district_id, $farm_id, $training_center_id, $training_center_location, $is_active);
         } else {
             $stmt = $mysqli->prepare("INSERT INTO users 
-                (username, email, password, full_name, role, designation, district, district_id, farm_id, range_id, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                (username, email, password, full_name, role, designation, date_of_birth, district, district_id, farm_id, range_id, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-            $stmt->bind_param("sssssssiisi", $username, $email, $hash, $full_name, $role, $designation, $district, $district_id, $farm_id, $range_id, $is_active);
+            $stmt->bind_param("ssssssssiisi", $username, $email, $hash, $full_name, $role, $designation, $date_of_birth, $district, $district_id, $farm_id, $range_id, $is_active);
         }
 
         if ($stmt->execute()) {
@@ -222,6 +224,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-6">
                         <label>Full Name</label>
                         <input type="text" name="full_name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Date of Birth</label>
+                        <input type="date" name="date_of_birth" class="form-control">
                     </div>
                     <div class="col-md-6">
                         <label>Role</label>

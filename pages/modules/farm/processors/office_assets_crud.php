@@ -518,6 +518,7 @@ if ($action === 'save_employee') {
     $service_cat    = trim($_POST['service_category'] ?? '');
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
+    $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : date('Y-m-d');
     $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : date('Y-m-d');
 
@@ -532,14 +533,14 @@ if ($action === 'save_employee') {
         INSERT INTO users (
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
-            district_id, range_id, farm_id, registered_date, appointment_date, 
+            district_id, range_id, farm_id, date_of_birth, registered_date, appointment_date, 
             appointment_date_current_position, is_active
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, CURDATE(), ?, ?, 1)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURDATE(), ?, ?, 1)
     ");
 
     if ($stmt) {
         $stmt->bind_param(
-            "ssssssssssisss",
+            "ssssssssssissss",
             $username,
             $default_password,
             $email,
@@ -552,6 +553,7 @@ if ($action === 'save_employee') {
             $service_cat,
             $district_id,
             $farm_id,
+            $dob,
             $app_date,
             $app_current
         );
@@ -574,6 +576,7 @@ if ($action === 'update_employee') {
     $service_cat    = trim($_POST['service_category'] ?? '');
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
+    $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : date('Y-m-d');
     $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : date('Y-m-d');
 
@@ -584,11 +587,11 @@ if ($action === 'update_employee') {
     $stmt = $mysqli->prepare("
         UPDATE users SET 
             service_number = ?, full_name = ?, designation = ?, role = ?, 
-            service_category = ?, email = ?, phone = ?, appointment_date = ?, 
+            service_category = ?, email = ?, phone = ?, date_of_birth = ?, appointment_date = ?, 
             appointment_date_current_position = ? 
         WHERE id = ? AND (farm_id = ? OR id = ?)
     ");
-    $stmt->bind_param("sssssssssiii", $service_number, $officer_name, $designation, $user_role, $service_cat, $email, $contact_number, $app_date, $app_current, $id, $farm_id, $user_id);
+    $stmt->bind_param("ssssssssssiii", $service_number, $officer_name, $designation, $user_role, $service_cat, $email, $contact_number, $dob, $app_date, $app_current, $id, $farm_id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Officer details updated successfully.', '../employee_managment.php');

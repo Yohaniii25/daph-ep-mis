@@ -18,6 +18,7 @@ if (isset($_POST['update_employee'])) {
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
     
+    $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
     $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : null;
 
@@ -59,6 +60,7 @@ if (isset($_POST['update_employee'])) {
             service_category = ?,
             email = ?,
             phone = ?,
+            date_of_birth = ?,
             appointment_date = ?,
             appointment_date_current_position = ?
         WHERE id = ? AND district_id = ? AND range_id = ?
@@ -66,7 +68,7 @@ if (isset($_POST['update_employee'])) {
 
     if ($update_stmt) {
         $update_stmt->bind_param(
-            "ssssssssssiii",
+            "sssssssssssiii",
             $service_number,
             $service_number,
             $officer_name,
@@ -75,6 +77,7 @@ if (isset($_POST['update_employee'])) {
             $service_cat,
             $email,
             $contact_number,
+            $dob,
             $app_date,
             $app_current,
             $id,

@@ -521,6 +521,7 @@ if ($action === 'save_employee') {
     $service_category   = trim($_POST['service_category'] ?? 'Technical Support');
     $email              = trim($_POST['email'] ?? '');
     $contact_number     = trim($_POST['contact_number'] ?? '');
+    $date_of_birth      = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $appointment_date   = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
     $appointment_date_current_position = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : null;
     $username           = !empty($email) ? strtolower(explode('@', $email)[0]) : 'sms_user_' . rand(1000, 9999);
@@ -530,8 +531,8 @@ if ($action === 'save_employee') {
         respondJsonOrRedirect($is_ajax, false, 'Officer Name and Service Number are required.', '../employee_managment.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO users (username, password, full_name, email, phone, designation, role, service_category, service_number, emp_id, district_id, appointment_date, appointment_date_current_position, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
-    $stmt->bind_param("ssssssssssiss", $username, $default_password, $officer_name, $email, $contact_number, $designation, $user_role, $service_category, $service_number, $service_number, $district_id, $appointment_date, $appointment_date_current_position);
+    $stmt = $mysqli->prepare("INSERT INTO users (username, password, full_name, email, phone, designation, role, service_category, service_number, emp_id, district_id, date_of_birth, appointment_date, appointment_date_current_position, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+    $stmt->bind_param("ssssssssssisss", $username, $default_password, $officer_name, $email, $contact_number, $designation, $user_role, $service_category, $service_number, $service_number, $district_id, $date_of_birth, $appointment_date, $appointment_date_current_position);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'New technical staff officer registered successfully.', '../employee_managment.php');
@@ -549,6 +550,7 @@ if ($action === 'update_employee') {
     $service_category   = trim($_POST['service_category'] ?? '');
     $email              = trim($_POST['email'] ?? '');
     $contact_number     = trim($_POST['contact_number'] ?? '');
+    $date_of_birth      = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $appointment_date   = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
     $appointment_date_current_position = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : null;
 
@@ -556,8 +558,8 @@ if ($action === 'update_employee') {
         respondJsonOrRedirect($is_ajax, false, 'Invalid officer ID or missing details.', '../employee_managment.php');
     }
 
-    $stmt = $mysqli->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, designation = ?, role = ?, service_category = ?, service_number = ?, appointment_date = ?, appointment_date_current_position = ? WHERE id = ?");
-    $stmt->bind_param("sssssssssi", $officer_name, $email, $contact_number, $designation, $user_role, $service_category, $service_number, $appointment_date, $appointment_date_current_position, $id);
+    $stmt = $mysqli->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, designation = ?, role = ?, service_category = ?, service_number = ?, date_of_birth = ?, appointment_date = ?, appointment_date_current_position = ? WHERE id = ?");
+    $stmt->bind_param("ssssssssssi", $officer_name, $email, $contact_number, $designation, $user_role, $service_category, $service_number, $date_of_birth, $appointment_date, $appointment_date_current_position, $id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Officer details updated successfully.', '../employee_managment.php');

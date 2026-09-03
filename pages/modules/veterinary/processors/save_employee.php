@@ -24,6 +24,7 @@ if (isset($_POST['save_employee'])) {
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
     
+    $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
     $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : null;
 
@@ -96,14 +97,14 @@ if (isset($_POST['save_employee'])) {
         INSERT INTO users (
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
-            district_id, range_id, registered_date, appointment_date, 
+            district_id, range_id, date_of_birth, registered_date, appointment_date, 
             appointment_date_current_position, is_active, district
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?)
     ");
 
     if ($insert_stmt) {
         $insert_stmt->bind_param(
-            "ssssssssssiisss",
+            "ssssssssssiissss",
             $username,
             $default_password,
             $email,
@@ -116,6 +117,7 @@ if (isset($_POST['save_employee'])) {
             $service_cat,
             $district_id,
             $range_id,
+            $dob,
             $app_date,
             $app_current,
             $district_enum

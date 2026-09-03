@@ -36,6 +36,10 @@
                         <span class="text-dark" id="view_phone">-</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span class="text-muted small">Date of Birth:</span>
+                        <span class="text-dark" id="view_date_of_birth">-</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                         <span class="text-muted small">Appointment Date:</span>
                         <span class="text-dark" id="view_appointment_date">-</span>
                     </li>

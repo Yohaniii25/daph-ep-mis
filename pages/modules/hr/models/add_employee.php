@@ -77,6 +77,10 @@
                             <input type="text" name="contact_number" class="form-control" placeholder="07XXXXXXXX">
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date of Birth</label>
+                            <input type="date" name="date_of_birth" class="form-control">
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Registration Date</label>
                             <input type="date" name="registered_date" class="form-control" value="<?= date('Y-m-d') ?>">
                         </div>

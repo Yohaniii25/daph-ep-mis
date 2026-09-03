@@ -111,6 +111,7 @@ $stmt->close();
                                     data-service_category="<?= htmlspecialchars($emp['service_category'] ?? '') ?>"
                                     data-email="<?= htmlspecialchars($emp['email'] ?? '') ?>"
                                     data-phone="<?= htmlspecialchars($emp['phone'] ?? '') ?>"
+                                    data-date_of_birth="<?= htmlspecialchars($emp['date_of_birth'] ?? '') ?>"
                                     data-appointment_date="<?= htmlspecialchars($emp['appointment_date'] ?? '') ?>"
                                     data-appointment_date_current="<?= htmlspecialchars($emp['appointment_date_current_position'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#viewEmployeeModal"
@@ -126,6 +127,7 @@ $stmt->close();
                                     data-service_category="<?= htmlspecialchars($emp['service_category'] ?? '') ?>"
                                     data-email="<?= htmlspecialchars($emp['email'] ?? '') ?>"
                                     data-contact_number="<?= htmlspecialchars($emp['phone'] ?? '') ?>"
+                                    data-date_of_birth="<?= htmlspecialchars($emp['date_of_birth'] ?? '') ?>"
                                     data-appointment_date="<?= htmlspecialchars($emp['appointment_date'] ?? '') ?>"
                                     data-appointment_date_current="<?= htmlspecialchars($emp['appointment_date_current_position'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#editEmployeeModal"
@@ -162,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#view_service_category').text(btn.data('service_category') || 'N/A');
         $('#view_email').text(btn.data('email') || 'N/A');
         $('#view_phone').text(btn.data('phone') || 'N/A');
+        $('#view_date_of_birth').text(btn.data('date_of_birth') || 'N/A');
         $('#view_appointment_date').text(btn.data('appointment_date') || 'N/A');
         $('#view_appointment_date_current').text(btn.data('appointment_date_current') || 'N/A');
     });
@@ -176,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#edit_service_category').val(btn.data('service_category'));
         $('#edit_email').val(btn.data('email'));
         $('#edit_contact_number').val(btn.data('contact_number'));
+        $('#edit_date_of_birth').val(btn.data('date_of_birth'));
         $('#edit_appointment_date').val(btn.data('appointment_date'));
         $('#edit_appointment_date_current').val(btn.data('appointment_date_current'));
     });

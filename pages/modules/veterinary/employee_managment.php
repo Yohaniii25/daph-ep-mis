@@ -79,6 +79,7 @@ $query = "
         od.designation,
         od.role,
         od.service_category,
+        od.date_of_birth,
         od.appointment_date,
         od.appointment_date_current_position,
         od.registered_date,
@@ -237,6 +238,10 @@ require_once '../../../includes/header.php';
                         <span class="fw-semibold text-dark" id="view_range">-</span>
                     </div>
                     <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Date of Birth</small>
+                        <span class="fw-semibold text-dark" id="view_date_of_birth">-</span>
+                    </div>
+                    <div class="col-md-6">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Appointment Date</small>
                         <span class="fw-semibold text-dark" id="view_appointment_date">-</span>
                     </div>
@@ -316,6 +321,7 @@ require_once '../../../includes/header.php';
         document.getElementById('view_contact').textContent = data.contact_number || '-';
         document.getElementById('view_district').textContent = data.district_name || '-';
         document.getElementById('view_range').textContent = data.range_name || '-';
+        document.getElementById('view_date_of_birth').textContent = data.date_of_birth || '-';
         document.getElementById('view_appointment_date').textContent = data.appointment_date || '-';
         document.getElementById('view_appointment_current').textContent = data.appointment_date_current_position || '-';
         document.getElementById('view_registered_date').textContent = data.registered_date || '-';
@@ -378,6 +384,7 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_service_category').value = data.service_category || '';
         document.getElementById('edit_email').value = data.email || '';
         document.getElementById('edit_contact_number').value = data.contact_number || data.phone || '';
+        document.getElementById('edit_date_of_birth').value = data.date_of_birth || '';
         document.getElementById('edit_appointment_date').value = data.appointment_date || '';
         document.getElementById('edit_appointment_date_current_position').value = data.appointment_date_current_position || '';
 

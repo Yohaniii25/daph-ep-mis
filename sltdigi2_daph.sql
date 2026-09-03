@@ -2831,6 +2831,7 @@ CREATE TABLE `users` (
   `registered_date` date DEFAULT NULL,
   `appointment_date` date DEFAULT NULL,
   `appointment_date_current_position` date DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
   `office_id` int(11) DEFAULT NULL COMMENT 'Links to veterinary_ranges.id (for Veterinary Surgeon only)',
   `farm_id` int(11) DEFAULT NULL,
   `district` enum('Amparai','Batticaloa','Trincomalee','Provincial') NOT NULL,

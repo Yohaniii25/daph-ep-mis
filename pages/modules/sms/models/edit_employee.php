@@ -45,6 +45,10 @@
                             <input type="text" name="contact_number" id="edit_contact_number" class="form-control">
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date of Birth</label>
+                            <input type="date" name="date_of_birth" id="edit_date_of_birth" class="form-control">
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Appointment Date</label>
                             <input type="date" name="appointment_date" id="edit_appointment_date" class="form-control">
                         </div>
