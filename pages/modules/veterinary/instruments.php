@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -152,7 +152,16 @@ require_once '../../../includes/header.php';
                 dataType: 'json',
                 success: function(res) {
                     if (res.success) {
-                        Swal.fire('Updated!', res.message, 'success').then(() => { location.reload(); });
+                        if (res.staged) {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Pending Authorization',
+                                text: res.message,
+                                confirmButtonColor: '#500707'
+                            }).then(() => { location.reload(); });
+                        } else {
+                            Swal.fire('Updated!', res.message, 'success').then(() => { location.reload(); });
+                        }
                     } else {
                         Swal.fire('Error', res.message, 'error');
                     }

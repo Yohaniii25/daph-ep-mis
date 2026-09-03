@@ -211,6 +211,18 @@ include 'models/add_employee.php';
             }
         }
     }
+
+    <?php if (isset($_SESSION['staged_msg'])): ?>
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Authorization Pending',
+            text: <?= json_encode($_SESSION['staged_msg']) ?>,
+            confirmButtonColor: '#500707'
+        });
+    }
+    <?php unset($_SESSION['staged_msg']); ?>
+    <?php endif; ?>
 </script>
 
 <style>

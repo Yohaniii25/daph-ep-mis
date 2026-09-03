@@ -2933,6 +2933,36 @@ INSERT INTO `training_produce_register` (`id`, `training_center_id`, `commodity`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `pending_approvals`
+--
+
+CREATE TABLE `pending_approvals` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `module` enum('hr','inventory') NOT NULL,
+  `record_type` varchar(50) NOT NULL COMMENT 'e.g., users, office_details, building_inventories, furniture_assets, machinery_assets, instrument_assets, registered_vehicles, land_assets, counterfoil_assets',
+  `record_id` int(11) NOT NULL COMMENT 'Live record primary key ID',
+  `target_name` varchar(255) NOT NULL COMMENT 'Display label: officer name, item name, etc.',
+  `requested_by` int(11) NOT NULL COMMENT 'users.id of the person making the edit',
+  `requester_name` varchar(100) NOT NULL,
+  `requester_role` varchar(50) NOT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `old_data` longtext NOT NULL COMMENT 'JSON snapshot of existing record',
+  `new_data` longtext NOT NULL COMMENT 'JSON snapshot of proposed changes',
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `rejection_reason` varchar(255) DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_module` (`module`),
+  KEY `idx_requested_by` (`requested_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `notifications`
 --
 

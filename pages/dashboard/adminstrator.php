@@ -1,12 +1,10 @@
 <?php
 
 if ($_SESSION['role'] !== 'administrator') die("Access denied");
-require_once './includes/sidebar.php';
+require_once './includes/header.php';
 
 ?>
 
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
         <h2 class="mb-5 text-dark">Administration Dashboard</h2>
 
         <!-- 4 Cards -->

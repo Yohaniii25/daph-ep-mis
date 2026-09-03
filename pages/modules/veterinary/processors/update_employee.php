@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../../../config/db_connect.php';
+require_once '../../../../includes/approval_helper.php';
 
 $vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $vs_roles)) {
@@ -48,6 +49,48 @@ if (isset($_POST['update_employee'])) {
 
     $range_id    = $_SESSION['range_id'] ?? null;
     $district_id = $_SESSION['district_id'] ?? null;
+
+    // Fetch existing live record snapshot
+    $stmt_curr = $mysqli->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt_curr->bind_param("i", $id);
+    $stmt_curr->execute();
+    $old_user = $stmt_curr->get_result()->fetch_assoc();
+    $stmt_curr->close();
+
+    $new_user_data = [
+        'service_number' => $service_number,
+        'emp_id' => $service_number,
+        'full_name' => $officer_name,
+        'designation' => $designation,
+        'role' => $user_role,
+        'service_category' => $service_cat,
+        'email' => $email,
+        'phone' => $contact_number,
+        'date_of_birth' => $dob,
+        'appointment_date' => $app_date,
+        'appointment_date_current_position' => $app_current
+    ];
+
+    // Staging evaluation
+    $staging_res = stage_or_apply_edit(
+        $mysqli, 
+        'hr', 
+        'users', 
+        $id, 
+        $officer_name, 
+        $old_user ?: [], 
+        $new_user_data, 
+        $district_id, 
+        $range_id
+    );
+
+    if (!empty($staging_res['is_staged'])) {
+        $_SESSION['staged_msg'] = "Edit submitted successfully. Changes are pending authorization by the Provincial Director.";
+        $_SESSION['msg'] = "Edit submitted successfully. Changes are pending authorization by the Provincial Director.";
+        $_SESSION['msg_type'] = "info";
+        header("Location: ../employee_managment.php");
+        exit();
+    }
 
     // Cross-check: ensure VS can only edit employees in their own district/range
     $update_stmt = $mysqli->prepare("

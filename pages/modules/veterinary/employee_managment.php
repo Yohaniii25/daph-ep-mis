@@ -442,6 +442,16 @@ require_once '../../../includes/header.php';
             }
         });
     }
+
+    <?php if (isset($_SESSION['staged_msg'])): ?>
+    Swal.fire({
+        icon: 'info',
+        title: 'Authorization Pending',
+        text: <?= json_encode($_SESSION['staged_msg']) ?>,
+        confirmButtonColor: '#500707'
+    });
+    <?php unset($_SESSION['staged_msg']); ?>
+    <?php endif; ?>
 </script>
 
 <style>

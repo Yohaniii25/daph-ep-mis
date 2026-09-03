@@ -34,15 +34,11 @@ $_SESSION['full_name']   = $full_name;
 
 $stmt->close();
 
-require_once './includes/sidebar.php'; 
-
+require_once './includes/header.php'; 
 
 $task_count = 5; 
 $leave_balance = 14;
 ?>
-
-<div id="layoutSidenav_content">
-    <main class="container-fluid px-4 pt-4">
         
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -188,11 +184,9 @@ $leave_balance = 14;
                 </div>
             </div>
         </div>
-    </main>
-</div>
-
 <style>
     .bg-primary-soft { background-color: #e7f1ff; }
     .bg-info-soft { background-color: #e1f5fe; }
     .x-small { font-size: 0.75rem; }
 </style>
+<?php require_once './includes/footer.php'; ?>

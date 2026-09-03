@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -325,9 +325,18 @@ require_once '../../../includes/header.php';
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        Swal.fire('Updated!', response.message, 'success').then(() => {
-                            location.reload();
-                        });
+                        if (response.staged) {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Pending Authorization',
+                                text: response.message,
+                                confirmButtonColor: '#500707'
+                            }).then(() => { location.reload(); });
+                        } else {
+                            Swal.fire('Updated!', response.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        }
                     } else {
                         Swal.fire('Error', response.message, 'error');
                     }
@@ -345,9 +354,18 @@ require_once '../../../includes/header.php';
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        Swal.fire('Updated!', response.message, 'success').then(() => {
-                            location.reload();
-                        });
+                        if (response.staged) {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Pending Authorization',
+                                text: response.message,
+                                confirmButtonColor: '#500707'
+                            }).then(() => { location.reload(); });
+                        } else {
+                            Swal.fire('Updated!', response.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        }
                     } else {
                         Swal.fire('Error', response.message, 'error');
                     }

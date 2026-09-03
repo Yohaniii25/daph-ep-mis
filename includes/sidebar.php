@@ -19,6 +19,7 @@ $base_path = '/daph-ep-mis/';
 $current_path = $_SERVER['REQUEST_URI'] ?? '';
 $current_file = basename(parse_url($current_path, PHP_URL_PATH) ?? '');
 $is_dashboard = (strpos($current_path, 'dashboard') !== false);
+require_once __DIR__ . '/approval_helper.php';
 ?>
 
 <style>
@@ -123,7 +124,17 @@ $is_dashboard = (strpos($current_path, 'dashboard') !== false);
                     <?php endif; ?>
 
                     <!-- Provincial Director Menu -->
-                    <?php if ($is_pd): ?>
+                    <?php if ($is_pd): 
+                        $pd_pending_count = isset($mysqli) ? get_pending_approvals_count($mysqli) : 0;
+                    ?>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'pd/pending_approvals.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/pd/pending_approvals.php">
+                            <i class="bi bi-shield-check me-2"></i> Pending Approvals
+                            <?php if ($pd_pending_count > 0): ?>
+                                <span class="badge rounded-pill bg-danger ms-auto"><?= $pd_pending_count ?></span>
+                            <?php endif; ?>
+                        </a>
+
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/pd/animal_health_reports.php">
                             Animal Health Log

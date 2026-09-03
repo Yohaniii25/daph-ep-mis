@@ -2,6 +2,7 @@
 // pages/modules/farm/processors/office_assets_crud.php
 session_start();
 require_once '../../../../config/db_connect.php';
+require_once '../../../../includes/approval_helper.php';
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'farms_dd') {
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)) {
@@ -19,14 +20,18 @@ $district_id = intval($_SESSION['district_id'] ?? 0);
 $user_category = !empty($_SESSION['user_category']) ? $_SESSION['user_category'] : 'regional_farms';
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-function respondJsonOrRedirect($is_ajax, $success, $msg, $redirect_url) {
+function respondJsonOrRedirect($is_ajax, $success, $msg, $redirect_url, $extra = []) {
     if ($is_ajax) {
         header('Content-Type: application/json');
-        echo json_encode(['success' => $success, 'message' => $msg]);
+        echo json_encode(array_merge(['success' => $success, 'message' => $msg], $extra));
         exit();
     } else {
-        $status = $success ? 'success' : 'error';
-        header("Location: " . $redirect_url . (strpos($redirect_url, '?') !== false ? '&' : '?') . "status=" . $status . "&msg=" . urlencode($msg));
+        if (!empty($extra['staged'])) {
+            $_SESSION['staged_msg'] = $msg;
+        }
+        $_SESSION['msg'] = $msg;
+        $_SESSION['msg_type'] = $success ? 'success' : 'danger';
+        header("Location: " . $redirect_url);
         exit();
     }
 }
@@ -582,6 +587,31 @@ if ($action === 'update_employee') {
 
     if ($id <= 0 || empty($officer_name) || empty($email)) {
         respondJsonOrRedirect($is_ajax, false, 'Invalid officer ID or missing mandatory attributes.', '../employee_managment.php');
+    }
+
+    // Fetch existing live record snapshot
+    $stmt_curr = $mysqli->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt_curr->bind_param("i", $id);
+    $stmt_curr->execute();
+    $old_user = $stmt_curr->get_result()->fetch_assoc();
+    $stmt_curr->close();
+
+    $new_user_data = [
+        'service_number'   => $service_number,
+        'full_name'        => $officer_name,
+        'designation'      => $designation,
+        'role'             => $user_role,
+        'service_category' => $service_cat,
+        'email'            => $email,
+        'phone'            => $contact_number,
+        'date_of_birth'    => $dob,
+        'appointment_date' => $app_date,
+        'appointment_date_current_position' => $app_current
+    ];
+
+    $staging_res = stage_or_apply_edit($mysqli, 'hr', 'users', $id, $officer_name, $old_user ?: [], $new_user_data, $district_id);
+    if (!empty($staging_res['is_staged'])) {
+        respondJsonOrRedirect($is_ajax, true, 'Edit submitted successfully. Changes are pending authorization by the Provincial Director.', '../employee_managment.php', ['staged' => true]);
     }
 
     $stmt = $mysqli->prepare("

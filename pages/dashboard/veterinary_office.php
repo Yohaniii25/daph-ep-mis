@@ -112,6 +112,7 @@ if (!empty($_SESSION['range_id'])) {
 }
 
 require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <style>
@@ -310,5 +311,5 @@ require_once __DIR__ . '/../../config/constants.php';
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>
