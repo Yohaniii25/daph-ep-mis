@@ -37,6 +37,7 @@ $category_to_role_map = [
     'subject_matter_specialist'      => ['sms'],
     'deputy_director_hq_1'           => ['deputy_director_hq_1', 'provincial_director'],
     'deputy_director_hq_2'           => ['deputy_director_hq_2', 'provincial_director'],
+    'deputy_director_district'       => ['district_dd', 'deputy_director_district'],
     'range_veterinary_officer'       => [
         'veterinary_surgeon',
         'government_veterinary_surgeon',
@@ -90,13 +91,32 @@ if (!in_array($user['role'], $allowed_roles_for_cat)) {
 
 // Infer district_id from district text if missing
 if (empty($user['district_id']) && !empty($user['district'])) {
-    if ($user['district'] === 'Amparai' || $user['district'] === 'Ampara') {
+    if (strcasecmp($user['district'], 'Amparai') === 0 || strcasecmp($user['district'], 'Ampara') === 0) {
         $user['district_id'] = 1;
-    } elseif ($user['district'] === 'Batticaloa') {
+    } elseif (strcasecmp($user['district'], 'Batticaloa') === 0) {
         $user['district_id'] = 2;
-    } elseif ($user['district'] === 'Trincomalee') {
+    } elseif (strcasecmp($user['district'], 'Trincomalee') === 0) {
         $user['district_id'] = 3;
     }
+}
+
+// Infer district text from district_id if missing
+if (!empty($user['district_id']) && empty($user['district'])) {
+    $d_stmt = $mysqli->prepare("SELECT name FROM districts WHERE id = ? LIMIT 1");
+    if ($d_stmt) {
+        $d_stmt->bind_param("i", $user['district_id']);
+        $d_stmt->execute();
+        $d_res = $d_stmt->get_result();
+        if ($d_row = $d_res->fetch_assoc()) {
+            $user['district'] = $d_row['name'];
+        }
+        $d_stmt->close();
+    }
+}
+
+// Fallback: If user has no district_id in DB, but selected one during login
+if (empty($user['district_id']) && $district_id) {
+    $user['district_id'] = $district_id;
 }
 
 // Validate matching districts for specialized district fields

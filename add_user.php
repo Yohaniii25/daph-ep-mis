@@ -56,6 +56,8 @@ if ($ranges_res) {
     }
 }
 
+$form_message = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username   = trim($_POST['username']);
     $email      = trim($_POST['email']);
@@ -92,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $district_id = null;
     } elseif ($role === 'district_dd') {
         if (empty($district) || $district === 'Provincial') {
-            echo '<div class="alert alert-danger">Error: Please select a specific District for District Deputy Director.</div>';
+            $form_message .= '<div class="alert alert-danger d-flex align-items-center gap-2" role="alert"><span class="alert-icon">!</span><div>Please select a specific District for District Deputy Director.</div></div>';
             $validation_failed = true;
         }
     }
@@ -108,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($role === 'training_officer') {
         if (is_null($training_center_id) || $training_center_location === '') {
-            echo '<div class="alert alert-danger">Error: Training center and training center location are required for this role.</div>';
+            $form_message .= '<div class="alert alert-danger d-flex align-items-center gap-2" role="alert"><span class="alert-icon">!</span><div>Training center and training center location are required for this role.</div></div>';
             $validation_failed = true;
         } else {
             $center_check = $mysqli->prepare("SELECT id, location FROM training_centers WHERE id = ? AND is_active = 1 LIMIT 1");
@@ -117,12 +119,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $center_check->execute();
                 $center_result = $center_check->get_result();
                 if ($center_result->num_rows === 0) {
-                    echo '<div class="alert alert-danger">Error: Invalid Training Center selection.</div>';
+                    $form_message .= '<div class="alert alert-danger d-flex align-items-center gap-2" role="alert"><span class="alert-icon">!</span><div>Invalid Training Center selection.</div></div>';
                     $validation_failed = true;
                 } else {
                     $center_data = $center_result->fetch_assoc();
                     if (strcasecmp(trim($center_data['location'] ?? ''), $training_center_location) !== 0) {
-                        echo '<div class="alert alert-danger">Error: The selected training center does not match the chosen location.</div>';
+                        $form_message .= '<div class="alert alert-danger d-flex align-items-center gap-2" role="alert"><span class="alert-icon">!</span><div>The selected training center does not match the chosen location.</div></div>';
                         $validation_failed = true;
                     }
                 }
@@ -136,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $existing_training_user->execute();
                     $existing_training_user_result = $existing_training_user->get_result();
                     if ($existing_training_user_result->num_rows > 0) {
-                        echo '<div class="alert alert-danger">Error: A training officer is already assigned to this training center location.</div>';
+                        $form_message .= '<div class="alert alert-danger d-flex align-items-center gap-2" role="alert"><span class="alert-icon">!</span><div>A training officer is already assigned to this training center location.</div></div>';
                         $validation_failed = true;
                     }
                     $existing_training_user->close();
@@ -149,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($role === 'farms_dd') {
         $farm_id = isset($_POST['farm_id']) && $_POST['farm_id'] !== '' ? intval($_POST['farm_id']) : null;
         if (is_null($farm_id)) {
-            echo '<div class="alert alert-danger">Error: Farm assignment is required for Deputy Director (Farms Operation) role.</div>';
+            $form_message .= '<div class="alert alert-danger d-flex align-items-center gap-2" role="alert"><span class="alert-icon">!</span><div>Farm assignment is required for Deputy Director (Farms Operation) role.</div></div>';
             $validation_failed = true;
         } else {
             // Verify if farm_id exists in regional_farms
@@ -159,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $farm_check->execute();
                 $farm_res = $farm_check->get_result();
                 if ($farm_res->num_rows === 0) {
-                    echo '<div class="alert alert-danger">Error: Invalid Farm selection.</div>';
+                    $form_message .= '<div class="alert alert-danger d-flex align-items-center gap-2" role="alert"><span class="alert-icon">!</span><div>Invalid Farm selection.</div></div>';
                     $validation_failed = true;
                 }
                 $farm_check->close();
@@ -188,14 +190,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($stmt->execute()) {
-            echo '<div class="alert alert-success">✅ User <b>' . htmlspecialchars($username) . 
-                 '</b> created successfully!<br>Password: <b>' . htmlspecialchars($password) . '</b></div>';
+            $form_message .= '<div class="alert alert-success d-flex align-items-center gap-2" role="alert"><span class="alert-icon">✓</span><div>User <b>' . htmlspecialchars($username) .
+                 '</b> created successfully!<br>Password: <b>' . htmlspecialchars($password) . '</b></div></div>';
 
             if (!empty($range_id)) {
                 create_officer_notification($mysqli, 'New Officer Added', $full_name, $username, $range_id, 'pages/modules/district/range_veterinary_officers.php');
             }
         } else {
-            echo '<div class="alert alert-danger">Error: ' . $stmt->error . '</div>';
+            $form_message .= '<div class="alert alert-danger d-flex align-items-center gap-2" role="alert"><span class="alert-icon">!</span><div>Error: ' . htmlspecialchars($stmt->error) . '</div></div>';
         }
     }
 }
@@ -204,15 +206,233 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Add New User</title>
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --pv-navy: #0f3d5c;
+            --pv-navy-dark: #0a2c43;
+            --pv-teal: #1f8a70;
+            --pv-teal-light: #e6f4f1;
+            --pv-bg: #eef2f5;
+            --pv-border: #dde3e8;
+            --pv-text: #2c3e4a;
+            --pv-muted: #7c8b94;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(180deg, var(--pv-bg) 0%, #e4eaee 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--pv-text);
+            min-height: 100vh;
+        }
+
+        .page-wrap {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+
+        .brand-strip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            color: var(--pv-navy);
+        }
+
+        .brand-strip .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--pv-teal);
+            box-shadow: 0 0 0 4px var(--pv-teal-light);
+        }
+
+        .brand-strip span {
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--pv-muted);
+        }
+
+        .form-card {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid var(--pv-border);
+            box-shadow: 0 20px 45px -20px rgba(15, 61, 92, 0.25), 0 2px 8px rgba(15, 61, 92, 0.06);
+            overflow: hidden;
+        }
+
+        .form-card-header {
+            background: linear-gradient(135deg, var(--pv-navy) 0%, var(--pv-navy-dark) 100%);
+            color: #fff;
+            padding: 30px 36px;
+            position: relative;
+        }
+
+        .form-card-header::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 85% 20%, rgba(31, 138, 112, 0.35), transparent 55%);
+            pointer-events: none;
+        }
+
+        .form-card-header h4 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.5rem;
+            position: relative;
+        }
+
+        .form-card-header p {
+            margin: 6px 0 0;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.75);
+            position: relative;
+        }
+
+        .form-card-body {
+            padding: 36px;
+        }
+
+        .section-label {
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--pv-teal);
+            margin: 28px 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--pv-border);
+        }
+
+        .section-label:first-of-type { margin-top: 4px; }
+
+        label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--pv-text);
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+
+        .form-control, .form-select {
+            border: 1.5px solid var(--pv-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.92rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            background-color: #fbfcfd;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--pv-teal);
+            box-shadow: 0 0 0 3px var(--pv-teal-light);
+            background-color: #fff;
+        }
+
+        .form-hint {
+            font-size: 0.76rem;
+            color: var(--pv-muted);
+            margin-top: 4px;
+        }
+
+        hr {
+            border-top: 1px solid var(--pv-border);
+            margin: 32px 0 24px;
+        }
+
+        .btn-success {
+            background: var(--pv-teal);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 28px;
+            font-weight: 600;
+            box-shadow: 0 8px 20px -8px rgba(31, 138, 112, 0.55);
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .btn-success:hover {
+            background: #197a63;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px -8px rgba(31, 138, 112, 0.6);
+        }
+
+        .btn-secondary {
+            background: #fff;
+            border: 1.5px solid var(--pv-border);
+            color: var(--pv-text);
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f7f9;
+            border-color: #c9d2d9;
+            color: var(--pv-text);
+        }
+
+        .alert {
+            border: none;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .alert-success {
+            background: var(--pv-teal-light);
+            color: #146353;
+        }
+
+        .alert-danger {
+            background: #fdeceb;
+            color: #b3261e;
+        }
+
+        .alert-icon {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.08);
+        }
+
+        #range_container, #training_center_location_container,
+        #training_center_container, #farm_container {
+            transition: opacity 0.15s ease;
+        }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container mt-5">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white"><h4>Add New User</h4></div>
-        <div class="card-body">
+<body>
+<div class="page-wrap">
+    <div class="brand-strip">
+        <span class="dot"></span>
+        <span>Provincial Livestock Department &mdash; User Management</span>
+    </div>
+
+    <div class="form-card">
+        <div class="form-card-header">
+            <h4>Add New User</h4>
+            <p>Create an account and assign the correct role, district, and workplace details.</p>
+        </div>
+        <div class="form-card-body">
+            <?= $form_message ?>
             <form method="POST">
+                <div class="section-label">Account Details</div>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label>Username</label>
@@ -225,6 +445,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-6">
                         <label>Password (plain)</label>
                         <input type="text" name="password" class="form-control" value="123yoh" required>
+                        <div class="form-hint">Auto-hashed before it's stored.</div>
                     </div>
                     <div class="col-md-6">
                         <label>Full Name</label>
@@ -234,6 +455,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label>Date of Birth</label>
                         <input type="date" name="date_of_birth" class="form-control">
                     </div>
+                </div>
+
+                <div class="section-label">Role &amp; Assignment</div>
+                <div class="row g-3">
                     <div class="col-md-6">
                         <label>Role</label>
                         <select name="role" id="roleSelect" class="form-select" required>
@@ -247,7 +472,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="department_laborer">Department Laborer</option>
                                 <option value="night_watcher">Night Watcher</option>
                             </optgroup>
-                            <optgroup label="Headquarters & District Roles">
+                            <optgroup label="Headquarters &amp; District Roles">
                                 <option value="district_dd">District Deputy Director</option>
                                 <option value="deputy_director_hq_1">Deputy Director H/Q1</option>
                                 <option value="deputy_director_hq_2">Deputy Director H/Q2</option>
