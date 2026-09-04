@@ -1,6 +1,8 @@
 <?php
-session_start();
-require_once '../../../config/db_connect.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../config/db_connect.php';
 
 // Access validation check
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {

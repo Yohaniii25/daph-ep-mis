@@ -29,7 +29,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     };
-    Chart.register(centerTotalTextPlugin);
+    if (typeof Chart !== 'undefined') {
+        Chart.register(centerTotalTextPlugin);
+    }
 
     // Returns the currently checked ethnicity values (excludes the "All" master checkbox)
     function getSelectedEthnicities() {
@@ -65,7 +67,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const urlParams = new URLSearchParams({
             year: targetYear,
             pop_type: targetPopType,
-            ethnicities: JSON.stringify(targetEthnicities)
+            ethnicities: JSON.stringify(targetEthnicities),
+            _t: Date.now()
         });
 
         fetch(`get_population_data.php?${urlParams.toString()}`)
@@ -129,16 +132,29 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Isolate vectors to map directly onto the Chart labels object tracking matrices
                 const chartLabels = data.map(item => item.ethnicity);
                 const chartValues = data.map(item => item.count);
+                const ethColorMap = {
+                    'Sinhala': '#370709', // Deep Maroon
+                    'Tamil': '#d97706',   // Amber / Orange
+                    'Muslim': '#059669'   // Emerald Green
+                };
+                const chartColors = chartLabels.map(label => ethColorMap[label] || '#64748b');
 
-                if (humanPieChartInstance) {
-                    humanPieChartInstance.data.labels = chartLabels;
-                    humanPieChartInstance.data.datasets[0].data = chartValues;
-                    humanPieChartInstance.options.plugins.centerTotalText.text = targetPopType;
-                    humanPieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
-                    humanPieChartInstance.update();
-                } else {
-                    const canvasEl = document.getElementById('humanPopulationPieChart');
-                    if (canvasEl) {
+                const canvasEl = document.getElementById('humanPopulationPieChart');
+                if (canvasEl && typeof Chart !== 'undefined') {
+                    if (!humanPieChartInstance) {
+                        humanPieChartInstance = Chart.getChart(canvasEl) || null;
+                    }
+
+                    if (humanPieChartInstance) {
+                        humanPieChartInstance.data.labels = chartLabels;
+                        humanPieChartInstance.data.datasets[0].data = chartValues;
+                        humanPieChartInstance.data.datasets[0].backgroundColor = chartColors;
+                        if (humanPieChartInstance.options.plugins && humanPieChartInstance.options.plugins.centerTotalText) {
+                            humanPieChartInstance.options.plugins.centerTotalText.text = targetPopType;
+                            humanPieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
+                        }
+                        humanPieChartInstance.update();
+                    } else {
                         const ctxCanvas = canvasEl.getContext('2d');
                         humanPieChartInstance = new Chart(ctxCanvas, {
                             type: 'doughnut',
@@ -146,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 labels: chartLabels,
                                 datasets: [{
                                     data: chartValues,
-                                    backgroundColor: ['#370709', '#a07174', '#e2e8f0'],
+                                    backgroundColor: chartColors,
                                     borderWidth: 2,
                                     borderColor: '#ffffff'
                                 }]
@@ -174,6 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(error => console.error('Error fetching dynamic dashboard profiles:', error));
     }
+    window.fetchFilteredPopulationData = fetchFilteredPopulationData;
 
     // Attach simple listener hooks for the filter controls
     const filterYearEl = document.getElementById("filterYear");
@@ -320,16 +337,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 const chartLabels = data.map(item => item.animal_type);
                 const chartValues = data.map(item => item.count);
 
-                if (animalPieChartInstance) {
-                    animalPieChartInstance.data.labels = chartLabels;
-                    animalPieChartInstance.data.datasets[0].data = chartValues;
-                    animalPieChartInstance.options.plugins.centerTotalText.text = 'Total Population';
-                    animalPieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
-                    animalPieChartInstance.update();
-                } else {
-                    const canvasEl = document.getElementById('animalPopulationPieChart');
-                    if (canvasEl) {
-                        const ctxCanvas = canvasEl.getContext('2d');
+                const animalCanvasEl = document.getElementById('animalPopulationPieChart');
+                if (animalCanvasEl && typeof Chart !== 'undefined') {
+                    if (!animalPieChartInstance) {
+                        animalPieChartInstance = Chart.getChart(animalCanvasEl) || null;
+                    }
+
+                    if (animalPieChartInstance) {
+                        animalPieChartInstance.data.labels = chartLabels;
+                        animalPieChartInstance.data.datasets[0].data = chartValues;
+                        if (animalPieChartInstance.options.plugins && animalPieChartInstance.options.plugins.centerTotalText) {
+                            animalPieChartInstance.options.plugins.centerTotalText.text = 'Total Population';
+                            animalPieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
+                        }
+                        animalPieChartInstance.update();
+                    } else {
+                        const ctxCanvas = animalCanvasEl.getContext('2d');
                         animalPieChartInstance = new Chart(ctxCanvas, {
                             type: 'doughnut',
                             data: {

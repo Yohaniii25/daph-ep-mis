@@ -46,6 +46,22 @@ if ($range_id) {
     $stmt->close();
 }
 
+// Fetch distinct recorded years for human population
+$pop_years = [2026, 2025, 2024, 2023];
+if ($range_id) {
+    $stmt_yr = $mysqli->prepare("SELECT DISTINCT year FROM human_populations WHERE range_id = ? ORDER BY year DESC");
+    if ($stmt_yr) {
+        $stmt_yr->bind_param("i", $range_id);
+        $stmt_yr->execute();
+        $yr_res = $stmt_yr->get_result();
+        while ($yrow = $yr_res->fetch_assoc()) {
+            $pop_years[] = intval($yrow['year']);
+        }
+        $stmt_yr->close();
+    }
+}
+$pop_years = array_unique($pop_years);
+rsort($pop_years);
 
 require_once '../../../includes/header.php';
 ?>
@@ -61,14 +77,28 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
+        <?php if (isset($_SESSION['msg'])): ?>
+            <div class="alert alert-<?= htmlspecialchars($_SESSION['msg_type'] ?? 'info') ?> alert-dismissible fade show mb-4 shadow-sm" role="alert">
+                <?= $_SESSION['msg'] ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+        <?php endif; ?>
 
         <!-- Human Population Dynamics section -->
         <div class="row g-4 mb-5 mt-2">
             <div class="col-12">
                 <div class="card gov-card">
-                    <div class="card-header bg-white pt-4 px-4 border-0">
-                        <h5 class="fw-bold mb-1" style="color: #370709;"><i class="bi bi-people-fill me-2"></i>Human Population</h5>
-                        <p class="text-muted small mb-0">Demographic composition tracking and sector breakdown analytics from database.</p>
+                    <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold mb-1" style="color: #370709;"><i class="bi bi-people-fill me-2"></i>Human Population</h5>
+                            <p class="text-muted small mb-0">Demographic composition tracking and sector breakdown analytics from database.</p>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#manageHumanPopulationModal">
+                                <i class="bi bi-gear-fill me-1"></i> Manage Population
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body px-4 pb-4">
 
@@ -76,10 +106,9 @@ require_once '../../../includes/header.php';
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-bold text-secondary">Year Selection</label>
                                 <select id="filterYear" class="form-select form-select-sm filter-control">
-                                    <option value="2026">2026</option>
-                                    <option value="2025" selected>2025</option>
-                                    <option value="2024">2024</option>
-                                    <option value="2023">2023</option>
+                                    <?php foreach ($pop_years as $py): ?>
+                                        <option value="<?= $py ?>" <?= $py === 2025 ? 'selected' : '' ?>><?= $py ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
@@ -316,6 +345,256 @@ require_once '../../../includes/header.php';
 
 <?php
 include 'models/add_health_record.php';
-$pageScripts = '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
+include 'models/manage_human_population_modal.php';
+
+ob_start();
+?>
+<script>
+$(document).ready(function() {
+    // Dynamic total calculation in manage population modal
+    function updateManagePopTotal() {
+        const male = parseInt($("#managePopMale").val()) || 0;
+        const female = parseInt($("#managePopFemale").val()) || 0;
+        $("#managePopTotalPreview").text((male + female).toLocaleString());
+    }
+    $(document).on("input", "#managePopMale, #managePopFemale", updateManagePopTotal);
+
+    // Reset button in manage population modal
+    $("#btnResetPopForm").on("click", function() {
+        $("#manageHumanPopForm")[0].reset();
+        const currentYear = $("#filterYear").val() || new Date().getFullYear();
+        $("#managePopYear").val(currentYear);
+        $("#managePopTotalPreview").text("0");
+        $("#formTabLabel").text("Add / Update Record");
+        $("#btnSavePopForm").html('<i class="bi bi-check-circle-fill me-1 text-success"></i> Save Demographics');
+        $("#managePopAlertBox").empty();
+    });
+
+    // Fetch and populate recorded demographics list in modal
+    function loadRecordedDemographics() {
+        $.ajax({
+            url: "processors/save_human_population.php?action=get_list",
+            type: "GET",
+            dataType: "json",
+            success: function(res) {
+                if (res.success) {
+                    const tbody = $("#recordedDemographicsTable tbody");
+                    tbody.empty();
+                    $("#recordsCountBadge").text(res.data.length);
+                    if (res.data.length === 0) {
+                        tbody.append('<tr><td colspan="7" class="text-center py-3 text-muted">No population records found for this range.</td></tr>');
+                        return;
+                    }
+                    res.data.forEach(function(item) {
+                        const safeEth = $("<div>").text(item.ethnicity).html();
+                        const row = `
+                            <tr data-year="${item.year}" data-ethnicity="${safeEth}" data-male="${item.male}" data-female="${item.female}" data-households="${item.households}">
+                                <td class="fw-bold">${item.year}</td>
+                                <td><span class="badge bg-secondary">${safeEth}</span></td>
+                                <td class="text-end text-primary font-monospace">${Number(item.male).toLocaleString()}</td>
+                                <td class="text-end text-danger font-monospace">${Number(item.female).toLocaleString()}</td>
+                                <td class="text-end fw-bold font-monospace" style="color: #370709;">${Number(item.total).toLocaleString()}</td>
+                                <td class="text-end text-success font-monospace">${Number(item.households).toLocaleString()}</td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary btn-xs py-0 px-2 btn-edit-human-pop" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-xs py-0 px-2 btn-delete-human-pop" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                }
+            },
+            error: function() {
+                $("#recordedDemographicsTable tbody").html('<tr><td colspan="7" class="text-center py-3 text-danger">Failed to load records.</td></tr>');
+            }
+        });
+    }
+
+    // Modal open event: pre-fill current active year & refresh demographics list
+    $("#manageHumanPopulationModal").on("show.bs.modal", function() {
+        const currentYear = $("#filterYear").val() || new Date().getFullYear();
+        if ($("#formTabLabel").text() === "Add / Update Record") {
+            $("#managePopYear").val(currentYear);
+        }
+        loadRecordedDemographics();
+    });
+
+    $("#btnRefreshPopList").on("click", function() {
+        loadRecordedDemographics();
+    });
+
+    // Form submission via AJAX
+    $("#manageHumanPopForm").on("submit", function(e) {
+        e.preventDefault();
+        const btn = $("#btnSavePopForm");
+        const originalBtnHtml = btn.html();
+        btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...');
+
+        $.ajax({
+            url: "processors/save_human_population.php",
+            type: "POST",
+            data: $(this).serialize(),
+            dataType: "json",
+            success: function(res) {
+                btn.prop("disabled", false).html(originalBtnHtml);
+                if (res.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Saved Successfully",
+                        text: res.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    // Ensure saved year exists in filter dropdown and is selected
+                    const savedYear = res.year;
+                    if (savedYear) {
+                        if ($(`#filterYear option[value="${savedYear}"]`).length === 0) {
+                            $("#filterYear").prepend(new Option(savedYear, savedYear, true, true));
+                        }
+                        $("#filterYear").val(savedYear);
+                    }
+
+                    // Trigger direct reload of pie chart and datatable
+                    if (typeof window.fetchFilteredPopulationData === 'function') {
+                        window.fetchFilteredPopulationData();
+                    }
+
+                    // Refresh modal records list
+                    loadRecordedDemographics();
+
+                    // Close the modal so the updated pie chart and table are immediately visible
+                    const modalEl = document.getElementById("manageHumanPopulationModal");
+                    if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+                    }
+                    $("#manageHumanPopulationModal").modal("hide");
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Save Failed",
+                        text: res.message || "An error occurred while saving demographics."
+                    });
+                }
+            },
+            error: function() {
+                btn.prop("disabled", false).html(originalBtnHtml);
+                Swal.fire({
+                    icon: "error",
+                    title: "Request Error",
+                    text: "Server communication failed. Check connection and try again."
+                });
+            }
+        });
+    });
+
+    // Edit button click in modal records table
+    $(document).on("click", ".btn-edit-human-pop", function() {
+        const row = $(this).closest("tr");
+        const year = row.data("year");
+        const ethnicity = row.data("ethnicity");
+        const male = row.data("male");
+        const female = row.data("female");
+        const households = row.data("households");
+
+        $("#managePopYear").val(year);
+        $("#managePopEthnicity").val(ethnicity);
+        $("#managePopMale").val(male);
+        $("#managePopFemale").val(female);
+        $("#managePopHouseholds").val(households);
+        updateManagePopTotal();
+
+        $("#formTabLabel").text(`Edit Record: ${ethnicity} (${year})`);
+        $("#btnSavePopForm").html('<i class="bi bi-pencil-square me-1"></i> Update Demographics');
+
+        const addTabTrigger = new bootstrap.Tab(document.getElementById("add-pop-tab"));
+        addTabTrigger.show();
+    });
+
+    // Delete button click in modal records table
+    $(document).on("click", ".btn-delete-human-pop", function() {
+        const row = $(this).closest("tr");
+        const year = row.data("year");
+        const ethnicity = row.data("ethnicity");
+
+        Swal.fire({
+            icon: "warning",
+            title: "Delete Demographic Record?",
+            html: `Are you sure you want to delete population data for <strong>${ethnicity}</strong> in year <strong>${year}</strong>?<br><small class="text-danger">This will remove Male, Female, and Household counts for this group.</small>`,
+            showCancelButton: true,
+            confirmButtonColor: "#370709",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: '<i class="bi bi-trash-fill me-1"></i> Yes, Delete',
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "processors/save_human_population.php",
+                    type: "POST",
+                    data: {
+                        action: "delete",
+                        year: year,
+                        ethnicity: ethnicity
+                    },
+                    dataType: "json",
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Deleted",
+                                text: res.message,
+                                timer: 1800,
+                                showConfirmButton: false
+                            });
+                            row.fadeOut(300, function() {
+                                $(this).remove();
+                                const currentCount = parseInt($("#recordsCountBadge").text()) || 1;
+                                $("#recordsCountBadge").text(Math.max(0, currentCount - 1));
+                                if ($("#recordedDemographicsTable tbody tr").length === 0) {
+                                    $("#recordedDemographicsTable tbody").append('<tr><td colspan="7" class="text-center py-3 text-muted">No population records found for this range.</td></tr>');
+                                }
+                            });
+
+                            // Refresh main page chart & table
+                            if (typeof window.fetchFilteredPopulationData === 'function') {
+                                window.fetchFilteredPopulationData();
+                            }
+                            const filterYearEl = document.getElementById("filterYear");
+                            if (filterYearEl) {
+                                filterYearEl.dispatchEvent(new Event("change"));
+                            }
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Deletion Failed",
+                                text: res.message
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Server communication error while attempting to delete."
+                        });
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
+<?php
+$pageScripts = ob_get_clean();
 require_once '../../../includes/footer.php';
 ?>

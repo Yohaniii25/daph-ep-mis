@@ -31,6 +31,9 @@
         }
     }
     ?>
+    <!-- Chart.js Library -->
+    <script src="<?= $rel_path ?>assets/js/chart.min.js"></script>
+
     <!-- Dedicated Module JS Files -->
     <script src="<?= $rel_path ?>assets/js/farm.js"></script>
     <script src="<?= $rel_path ?>assets/js/veterinary.js"></script>
