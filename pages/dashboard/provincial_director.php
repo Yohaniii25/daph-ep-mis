@@ -152,6 +152,15 @@ $present_today = ($attendance_res) ? $attendance_res->fetch_assoc()['present_tod
             <div class="card-body bg-white">
                 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3">
                     <div class="col">
+                        <a style="background-color: #820100;" href="pages/modules/pd/employee_managment.php" class="btn w-100 py-3 text-start shadow-sm d-flex align-items-center">
+                            <i class="bi bi-people-fill fs-3 me-3 text-light"></i>
+                            <div>
+                                <span class="d-block fw-bold text-light">Global HR Directory</span>
+                                <small style="color: white;">Personnel, roles & appointments</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col">
                         <a href="pages/modules/pd/animal_health_reports.php" class="btn btn-primary w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-heart-pulse-fill fs-3 me-3"></i>
                             <div>

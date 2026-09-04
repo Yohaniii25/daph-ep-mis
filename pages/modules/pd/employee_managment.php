@@ -1,8 +1,8 @@
 <?php
-
 /**
- * pages/modules/hr/employee_managment.php
- * Global HR Directory & Role Management Module for Provincial Director & HQ Executives
+ * pages/modules/pd/employee_managment.php
+ * Global HR Directory & Role Management Module for Provincial Director
+ * Strictly organized inside pages/modules/pd/
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -25,7 +25,7 @@ $user_role = $_SESSION['role'];
 $query = "
     SELECT 
         u.*, 
-        d.name AS district_name,
+        d.name AS district_name, 
         vr.name AS range_name, 
         rf.farm_name,
         tc.center_name AS training_center_name
@@ -54,19 +54,23 @@ if ($result) {
     }
 }
 
-// Extract Key Role groups for Executive Identification Cards
+// 1. Subject Matter Specialist (SMS)
 $sms_officers = array_filter($all_officers, function ($o) {
-    return ($o['role'] === 'sms');
+    return ($o['role'] === 'sms') 
+        || (stripos($o['designation'] ?? '', 'Subject Matter Specialist') !== false)
+        || (stripos($o['designation'] ?? '', 'SMS') !== false);
 });
 
+// 2. Deputy Director H/Q (1 & 2)
 $dd_hq1_officers = array_filter($all_officers, function ($o) {
-    return ($o['role'] === 'deputy_director_hq_1');
+    return ($o['role'] === 'deputy_director_hq_1') || (stripos($o['designation'] ?? '', 'H/Q-1') !== false) || (stripos($o['designation'] ?? '', 'HQ 1') !== false);
 });
 
 $dd_hq2_officers = array_filter($all_officers, function ($o) {
-    return ($o['role'] === 'deputy_director_hq_2');
+    return ($o['role'] === 'deputy_director_hq_2') || (stripos($o['designation'] ?? '', 'H/Q-2') !== false) || (stripos($o['designation'] ?? '', 'HQ 2') !== false);
 });
 
+// 3. Veterinary Surgeons (Field & Clinical)
 $vs_officers = array_filter($all_officers, function ($o) {
     return in_array($o['role'], ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'])
         || (stripos($o['designation'] ?? '', 'Veterinary Surgeon') !== false)
@@ -74,11 +78,12 @@ $vs_officers = array_filter($all_officers, function ($o) {
         || (stripos($o['designation'] ?? '', 'AVS') !== false);
 });
 
+// District DDs
 $district_dd_officers = array_filter($all_officers, function ($o) {
     return ($o['role'] === 'district_dd');
 });
 
-// Fetch master options for Assignment Modal
+// Fetch master options for Modals
 $districts = $mysqli->query("SELECT id, name FROM districts ORDER BY id ASC")->fetch_all(MYSQLI_ASSOC);
 $ranges = $mysqli->query("SELECT id, name, district_id FROM veterinary_ranges WHERE is_active = 1 ORDER BY name ASC")->fetch_all(MYSQLI_ASSOC);
 $farms = $mysqli->query("SELECT id, farm_name FROM regional_farms WHERE is_active = 1 ORDER BY farm_name ASC")->fetch_all(MYSQLI_ASSOC);
@@ -91,7 +96,7 @@ require_once '../../../includes/sidebar.php';
 <link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 <style>
     :root {
-        --daph-maroon: #500707;
+        --daph-maroon: #820100;
         --daph-maroon-dark: #370709;
         --daph-gold: #c28e2b;
         --daph-gold-soft: #fcf6e8;
@@ -156,7 +161,7 @@ require_once '../../../includes/sidebar.php';
         background: var(--daph-maroon) !important;
         color: #fff !important;
         border-color: var(--daph-maroon) !important;
-        box-shadow: 0 4px 10px rgba(80, 7, 7, 0.25);
+        box-shadow: 0 4px 10px rgba(130, 1, 0, 0.25);
     }
 
     .table thead th {
@@ -178,21 +183,22 @@ require_once '../../../includes/sidebar.php';
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-1 small">
                         <li class="breadcrumb-item"><a href="../../../dashboard.php" class="text-decoration-none text-muted">Dashboard</a></li>
-                        <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">HR Management</li>
+                        <li class="breadcrumb-item"><a href="pending_approvals.php" class="text-decoration-none text-muted">Provincial Oversight</a></li>
+                        <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">Global HR Directory</li>
                     </ol>
                 </nav>
                 <h3 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-people-fill text-danger"></i>
+                    <i class="bi bi-people-fill" style="color: #820100;"></i>
                     Global Human Resources Directory
                 </h3>
                 <p class="text-muted small mb-0">Province-wide personnel registry, executive appointments, and instant role oversight</p>
             </div>
             <div class="d-flex gap-2 mt-2 mt-md-0">
-                <a href="../../../add_user.php" class="btn btn-outline-danger shadow-sm btn-sm px-3 d-flex align-items-center gap-2">
+                <button type="button" class="btn text-light shadow-sm btn-sm px-3 d-flex align-items-center gap-2" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                     <i class="bi bi-person-plus-fill"></i>
                     <span>Register New Officer</span>
-                </a>
-                <button class="btn btn-danger shadow-sm btn-sm px-3 d-flex align-items-center gap-2" onclick="refreshDirectory()">
+                </button>
+                <button class="btn btn-outline-secondary shadow-sm btn-sm px-3 d-flex align-items-center gap-2" onclick="refreshDirectory()">
                     <i class="bi bi-arrow-clockwise"></i>
                     <span>Refresh</span>
                 </button>
@@ -217,7 +223,7 @@ require_once '../../../includes/sidebar.php';
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle bg-purple p-2 text-white d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background: #6f42c1;">
+                                <div class="rounded-circle p-2 text-white d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background: #6f42c1;">
                                     <i class="bi bi-star-fill"></i>
                                 </div>
                                 <div>
@@ -342,7 +348,7 @@ require_once '../../../includes/sidebar.php';
                         <button type="button" class="filter-pill-btn" data-filter="Training Officer">
                             <i class="bi bi-mortarboard me-1"></i>Training Officers
                         </button>
-                        <button type="button" class="filter-pill-btn" data-filter="Farms">
+                        <button type="button" class="filter-pill-btn" data-filter="Deputy Director (Farms)">
                             <i class="bi bi-flower1 me-1"></i>Farms DD
                         </button>
                     </div>
@@ -359,11 +365,11 @@ require_once '../../../includes/sidebar.php';
                             <tr>
                                 <th>Officer Name / Contact</th>
                                 <th>Assigned Role</th>
-                                <th>Designation</th>
+                                <th>Official Designation</th>
                                 <th>District / Scope</th>
                                 <th>Facility / Range</th>
                                 <th>Status</th>
-                                <th class="text-center" style="width: 130px;">Actions</th>
+                                <th class="text-center" style="width: 140px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -448,12 +454,10 @@ require_once '../../../includes/sidebar.php';
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
-                                        <div class="btn-group btn-group-sm">
-                                            <button type="button" class="btn btn-outline-primary" title="Assign New Role / Designation"
-                                                onclick="openAssignRoleModal(<?= htmlspecialchars(json_encode($officer), ENT_QUOTES, 'UTF-8') ?>)">
-                                                <i class="bi bi-pencil-square me-1"></i>Assign Role
-                                            </button>
-                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Assign New Role / Designation"
+                                            onclick="openAssignRoleModal(<?= htmlspecialchars(json_encode($officer), ENT_QUOTES, 'UTF-8') ?>)">
+                                            <i class="bi bi-pencil-square me-1"></i>Assign Role
+                                        </button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -466,151 +470,11 @@ require_once '../../../includes/sidebar.php';
     </main>
 </div>
 
-<!-- MODAL: EDIT / REASSIGN ROLE -->
-<div class="modal fade" id="assignRoleModal" tabindex="-1" aria-labelledby="assignRoleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--daph-maroon) 0%, #721c24 100%);">
-                <div>
-                    <h5 class="modal-title fw-bold mb-0" id="assignRoleModalLabel">
-                        <i class="bi bi-person-badge me-2"></i>Officer Role & Designation Assignment
-                    </h5>
-                    <small class="text-white-50">Updates live system credentials and dispatches automated assignment notification to the officer</small>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+<!-- DEDICATED ADD EMPLOYEE MODAL (PD SPECIFIC) -->
+<?php require_once __DIR__ . '/models/add_employee.php'; ?>
 
-            <form id="assignRoleForm">
-                <input type="hidden" name="user_id" id="modal_user_id">
-                <input type="hidden" name="ajax" value="1">
-
-                <div class="modal-body p-4 bg-light">
-                    <!-- Officer Quick Banner -->
-                    <div class="card border-0 shadow-sm p-3 mb-3 bg-white">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h6 class="fw-bold mb-1 text-dark" id="modal_officer_name_display">Officer Name</h6>
-                                <small class="text-muted" id="modal_officer_email_display">email@daph.gov.lk</small>
-                            </div>
-                            <span class="badge badge-soft-maroon px-3 py-2" id="modal_current_role_badge">Current Role</span>
-                        </div>
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Full Name</label>
-                            <input type="text" name="full_name" id="modal_full_name" class="form-control form-control-sm" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-danger">Assign Role *</label>
-                            <select name="role" id="modal_role" class="form-select form-select-sm" required>
-                                <option value="">-- Select System Role --</option>
-                                <optgroup label="Top Provincial Leadership">
-                                    <option value="provincial_director">Provincial Director</option>
-                                    <option value="sms">Subject Matter Specialist (SMS)</option>
-                                    <option value="deputy_director_hq_1">Deputy Director H/Q-1 (Operations)</option>
-                                    <option value="deputy_director_hq_2">Deputy Director H/Q-2 (Planning)</option>
-                                    <option value="administrator">System Administrator</option>
-                                </optgroup>
-                                <optgroup label="District & Clinical Leadership">
-                                    <option value="district_dd">District Deputy Director</option>
-                                    <option value="veterinary_surgeon">Veterinary Surgeon (Range VS)</option>
-                                    <option value="government_veterinary_surgeon">Government Veterinary Surgeon (GVS)</option>
-                                    <option value="additional_veterinary_surgeon">Additional Veterinary Surgeon (AVS)</option>
-                                </optgroup>
-                                <optgroup label="Institutional & Operational Officers">
-                                    <option value="farms_dd">Deputy Director (Farms Operation)</option>
-                                    <option value="training_officer">Training Officer</option>
-                                    <option value="planning_officer">Planning Officer</option>
-                                    <option value="finance_admin">Finance Administrator</option>
-                                </optgroup>
-                                <optgroup label="Range Staff & Technical Support">
-                                    <option value="livestock_development_officer">Livestock Development Officer (LDO)</option>
-                                    <option value="development_officer">Development Officer (DO)</option>
-                                    <option value="driver">Driver</option>
-                                    <option value="dispensary_assistant">Dispensary Assistant</option>
-                                    <option value="department_laborer">Department Laborer</option>
-                                    <option value="night_watcher">Night Watcher</option>
-                                    <option value="employee">Employee / Staff</option>
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Official Designation / Position Title</label>
-                            <input type="text" name="designation" id="modal_designation" class="form-control form-control-sm" placeholder="e.g. Subject Matter Specialist / GVS">
-                            <small class="text-muted" style="font-size: 11px;">Will be formatted into: <em>"You are assigned as the [Position Title]"</em></small>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">District Jurisdiction</label>
-                            <select name="district_id" id="modal_district_id" class="form-select form-select-sm">
-                                <option value="">Provincial / All Districts</option>
-                                <?php foreach ($districts as $d): ?>
-                                    <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6" id="group_range">
-                            <label class="form-label small fw-bold text-dark">Veterinary Range (Field Offices)</label>
-                            <select name="range_id" id="modal_range_id" class="form-select form-select-sm">
-                                <option value="">Not Applicable / HQ</option>
-                                <?php foreach ($ranges as $r): ?>
-                                    <option value="<?= $r['id'] ?>" data-district="<?= $r['district_id'] ?>"><?= htmlspecialchars($r['name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6" id="group_farm">
-                            <label class="form-label small fw-bold text-dark">Regional Farm</label>
-                            <select name="farm_id" id="modal_farm_id" class="form-select form-select-sm">
-                                <option value="">Not Applicable</option>
-                                <?php foreach ($farms as $f): ?>
-                                    <option value="<?= $f['id'] ?>"><?= htmlspecialchars($f['farm_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6" id="group_training">
-                            <label class="form-label small fw-bold text-dark">Training Center</label>
-                            <select name="training_center_id" id="modal_training_center_id" class="form-select form-select-sm">
-                                <option value="">Not Applicable</option>
-                                <?php foreach ($training_centers as $tc): ?>
-                                    <option value="<?= $tc['id'] ?>"><?= htmlspecialchars($tc['center_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Service Number / Employee ID</label>
-                            <input type="text" name="service_number" id="modal_service_number" class="form-control form-control-sm" placeholder="e.g. EP-DAPH-104">
-                        </div>
-                    </div>
-
-                    <!-- Notification Alert Preview Callout -->
-                    <div class="alert alert-info border-0 mt-3 mb-0 small d-flex align-items-start gap-2">
-                        <i class="bi bi-bell-fill fs-5 text-primary"></i>
-                        <div>
-                            <strong>Automated Direct Notification:</strong> Saving will immediately dispatch an in-app notification bell alert stating:
-                            <div class="p-2 mt-1 rounded bg-white border font-monospace text-dark" id="preview_notification_text">
-                                "You are assigned as the ..."
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="modal-footer bg-white border-top">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger btn-sm px-4" id="saveAssignmentBtn">
-                        <i class="bi bi-check2-circle me-1"></i>Confirm & Dispatch Notification
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- DEDICATED ASSIGN ROLE MODAL (PD SPECIFIC) -->
+<?php require_once __DIR__ . '/models/assign_role_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="../../../assets/js/bootstrap.bundle.min.js"></script>
@@ -640,7 +504,7 @@ require_once '../../../includes/sidebar.php';
             dataTable.column(1).search(filterValue).draw();
         });
 
-        // Live preview of the assignment notification message
+        // Live preview of the assignment notification message in Role Modal
         function updateNotificationPreview() {
             var roleSelect = $('#modal_role option:selected').text();
             var designation = $('#modal_designation').val().trim();
@@ -651,7 +515,7 @@ require_once '../../../includes/sidebar.php';
         $('#modal_role, #modal_designation').on('input change', updateNotificationPreview);
 
         // Submit role reassignment via AJAX
-        $('#assignRoleForm').on('submit', function(e) {
+        $('#pdAssignRoleForm').on('submit', function(e) {
             e.preventDefault();
             var $btn = $('#saveAssignmentBtn');
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Saving & Notifying...');
@@ -668,8 +532,8 @@ require_once '../../../includes/sidebar.php';
                         Swal.fire({
                             icon: 'success',
                             title: 'Role Assigned & Notified',
-                            html: '<p class="mb-2">' + response.message + '</p><div class="p-2 bg-light border rounded small font-monospace">Notification Message: <strong>' + response.notification_msg + '</strong></div>',
-                            confirmButtonColor: '#500707'
+                            html: '<p class="mb-2">' + response.message + '</p><div class="p-2 bg-light border rounded small font-monospace">Notification Dispatched: <strong>' + response.notification_msg + '</strong></div>',
+                            confirmButtonColor: '#820100'
                         }).then(() => {
                             location.reload();
                         });

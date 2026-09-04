@@ -135,6 +135,11 @@ require_once __DIR__ . '/approval_helper.php';
                             <?php endif; ?>
                         </a>
 
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'pd/employee_manag') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/pd/employee_managment.php">
+                            <i class="bi bi-people-fill me-2"></i> Global HR Directory
+                        </a>
+
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/pd/animal_health_reports.php">
                             Animal Health Log

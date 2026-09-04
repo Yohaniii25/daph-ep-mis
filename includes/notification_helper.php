@@ -264,3 +264,106 @@ if (!function_exists('format_time_ago')) {
         }
     }
 }
+
+if (!function_exists('notify_assigned_officer')) {
+    /**
+     * Dispatch an automated direct assignment notification to an officer
+     * Dynamic message format: "You are assigned as the [Insert Position/Role Name]"
+     * Triggers via in-app notification bell and email if SMTP/mail is configured.
+     *
+     * @param mysqli $mysqli Database connection
+     * @param int $user_id Recipient officer user ID
+     * @param string $position_or_role Position or role assigned
+     * @param string|null $link Optional portal link (defaults to dashboard.php)
+     * @return array Result status ['success' => bool, 'notification_id' => int, 'message' => string, 'email_sent' => bool]
+     */
+    function notify_assigned_officer($mysqli, $user_id, $position_or_role, $link = 'dashboard.php') {
+        if (!$mysqli || empty($user_id)) {
+            return ['success' => false, 'error' => 'Invalid database connection or user ID'];
+        }
+
+        $clean_title = trim($position_or_role);
+        // Map common raw enum role keys to human-friendly titles if raw role passed
+        $role_map = [
+            'sms' => 'Subject Matter Specialist',
+            'deputy_director_hq_1' => 'Deputy Director H/Q (1)',
+            'deputy_director_hq_2' => 'Deputy Director H/Q (2)',
+            'district_dd' => 'District Deputy Director',
+            'veterinary_surgeon' => 'Veterinary Surgeon',
+            'government_veterinary_surgeon' => 'Government Veterinary Surgeon',
+            'additional_veterinary_surgeon' => 'Additional Veterinary Surgeon',
+            'provincial_director' => 'Provincial Director',
+            'livestock_development_officer' => 'Livestock Development Officer',
+            'development_officer' => 'Development Officer',
+            'driver' => 'Driver',
+            'dispensary_assistant' => 'Dispensary Assistant',
+            'department_laborer' => 'Department Laborer',
+            'night_watcher' => 'Night Watcher',
+            'farms_dd' => 'Deputy Director (Farms)',
+            'training_officer' => 'Training Officer',
+            'planning_officer' => 'Planning Officer',
+            'finance_admin' => 'Finance Administrator',
+            'administrator' => 'Administrator'
+        ];
+
+        if (isset($role_map[$clean_title])) {
+            $clean_title = $role_map[$clean_title];
+        }
+
+        // Exact message format requested by user:
+        // "You are assigned as the [Insert Position/Role Name]"
+        $notification_message = "You are assigned as the " . $clean_title;
+        $title = "Role Assignment";
+        $type = "role_assignment";
+
+        // 1. In-app notification bell record
+        $stmt = $mysqli->prepare("
+            INSERT INTO notifications (user_id, title, message, type, link, is_read, created_at) 
+            VALUES (?, ?, ?, ?, ?, 0, NOW())
+        ");
+
+        $inserted_id = 0;
+        if ($stmt) {
+            $stmt->bind_param("issss", $user_id, $title, $notification_message, $type, $link);
+            $stmt->execute();
+            $inserted_id = $stmt->insert_id;
+            $stmt->close();
+        }
+
+        // 2. Email dispatch if email exists and mail/SMTP is configured
+        $email_sent = false;
+        $stmt_user = $mysqli->prepare("SELECT email, full_name, username FROM users WHERE id = ? LIMIT 1");
+        if ($stmt_user) {
+            $stmt_user->bind_param("i", $user_id);
+            $stmt_user->execute();
+            $user_data = $stmt_user->get_result()->fetch_assoc();
+            $stmt_user->close();
+
+            if (!empty($user_data['email'])) {
+                $recipient_email = $user_data['email'];
+                $recipient_name = !empty($user_data['full_name']) ? $user_data['full_name'] : $user_data['username'];
+                $email_subject = "Official Notification: " . $notification_message . " - DAPH Eastern Province";
+                
+                $email_body = "Dear " . $recipient_name . ",\r\n\r\n";
+                $email_body .= $notification_message . ".\r\n\r\n";
+                $email_body .= "Please log in to the Department of Animal Production and Health (Eastern Province) portal to view your updated dashboard and assigned tasks.\r\n\r\n";
+                $email_body .= "Department of Animal Production & Health\r\nEastern Province, Sri Lanka\r\n";
+
+                $headers = "From: no-reply@daph.ep.gov.lk\r\n" .
+                           "Reply-To: info@daph.ep.gov.lk\r\n" .
+                           "X-Mailer: PHP/" . phpversion();
+
+                // Safe mail dispatch (wrapped with @ so it won't throw warning if local mail server is not active)
+                $email_sent = @mail($recipient_email, $email_subject, $email_body, $headers);
+            }
+        }
+
+        return [
+            'success' => true,
+            'notification_id' => $inserted_id,
+            'message' => $notification_message,
+            'email_sent' => $email_sent
+        ];
+    }
+}
+
