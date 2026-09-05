@@ -143,49 +143,106 @@ if ($action === 'fetch_officers') {
     $officers = [];
 
     if ($category === 'range_veterinary_officer') {
-        $role_filter_sql = "";
         if ($sub_role === 'government_veterinary_surgeon') {
-            $role_filter_sql = "u.role IN ('government_veterinary_surgeon', 'veterinary_surgeon')";
-        } elseif (!empty($sub_role)) {
-            $safe_role = $mysqli->real_escape_string($sub_role);
-            if ($safe_role === 'department_laborer') {
-                $role_filter_sql = "u.role IN ('department_laborer', 'employee')";
-            } else {
-                $role_filter_sql = "u.role = '$safe_role'";
-            }
+            // District-wide bulk role assignment: No need to mention or select individual range officers
+            $count_q = $mysqli->query("
+                SELECT COUNT(DISTINCT action_id) AS cnt 
+                FROM user_quick_action_assignments 
+                WHERE (
+                    target_role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+                    OR user_id IN (
+                        SELECT id FROM users 
+                        WHERE role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+                          AND (district_id = $district_id OR district = '$district_name' OR district = '{$district_name}i')
+                    )
+                ) AND (district_id = $district_id OR district_id IS NULL)
+            ");
+            $cnt_row = $count_q ? $count_q->fetch_assoc() : null;
+            $assigned_cnt = $cnt_row ? (int)$cnt_row['cnt'] : 0;
+
+            $officers[] = [
+                'id' => 'all_veterinary_surgeons',
+                'username' => 'district_veterinary_surgeons',
+                'full_name' => 'All Government Veterinary Surgeons',
+                'role' => 'government_veterinary_surgeon',
+                'designation' => 'Government Veterinary Surgeon (District-Wide)',
+                'workstation' => 'All Ranges in ' . $district_name . ' District',
+                'assigned_count' => $assigned_cnt,
+                'is_role_target' => true
+            ];
         } else {
-            $role_filter_sql = "u.role IN ('government_veterinary_surgeon', 'veterinary_surgeon', 'additional_veterinary_surgeon', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher', 'employee')";
-        }
+            $role_filter_sql = "";
+            if (!empty($sub_role)) {
+                $safe_role = $mysqli->real_escape_string($sub_role);
+                if ($safe_role === 'department_laborer') {
+                    $role_filter_sql = "u.role IN ('department_laborer', 'employee')";
+                } else {
+                    $role_filter_sql = "u.role = '$safe_role'";
+                }
+            } else {
+                $role_filter_sql = "u.role IN ('government_veterinary_surgeon', 'veterinary_surgeon', 'additional_veterinary_surgeon', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher', 'employee')";
+            }
 
-        $sql = "
-            SELECT u.id, u.username, u.full_name, u.role, u.designation,
-                   vr.name AS workstation_name,
-                   (SELECT COUNT(*) FROM user_quick_action_assignments a WHERE a.user_id = u.id) AS assigned_count
-            FROM users u
-            LEFT JOIN veterinary_ranges vr ON u.range_id = vr.id
-            WHERE u.is_active = 1
-              AND ($role_filter_sql)
-              AND (
-                  vr.district_id = $district_id 
-                  OR u.district_id = $district_id 
-                  OR u.district = '$district_name' 
-                  OR u.district = '{$district_name}i'
-              )
-            ORDER BY vr.name ASC, u.full_name ASC
-        ";
+            // If "All Sub-roles" was selected, add the District-Wide VS option at top
+            if (empty($sub_role)) {
+                $count_q = $mysqli->query("
+                    SELECT COUNT(DISTINCT action_id) AS cnt 
+                    FROM user_quick_action_assignments 
+                    WHERE (
+                        target_role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+                        OR user_id IN (
+                            SELECT id FROM users 
+                            WHERE role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+                              AND (district_id = $district_id OR district = '$district_name' OR district = '{$district_name}i')
+                        )
+                    ) AND (district_id = $district_id OR district_id IS NULL)
+                ");
+                $cnt_row = $count_q ? $count_q->fetch_assoc() : null;
+                $assigned_cnt = $cnt_row ? (int)$cnt_row['cnt'] : 0;
 
-        $res = $mysqli->query($sql);
-        if ($res) {
-            while ($row = $res->fetch_assoc()) {
                 $officers[] = [
-                    'id' => (int)$row['id'],
-                    'username' => $row['username'],
-                    'full_name' => $row['full_name'],
-                    'role' => $row['role'],
-                    'designation' => $row['designation'] ?: ucwords(str_replace('_', ' ', $row['role'])),
-                    'workstation' => $row['workstation_name'] ? "Range: " . $row['workstation_name'] : "District Office",
-                    'assigned_count' => (int)$row['assigned_count']
+                    'id' => 'all_veterinary_surgeons',
+                    'username' => 'district_veterinary_surgeons',
+                    'full_name' => 'All Government Veterinary Surgeons',
+                    'role' => 'government_veterinary_surgeon',
+                    'designation' => 'Government Veterinary Surgeon (District-Wide)',
+                    'workstation' => 'All Ranges in ' . $district_name . ' District',
+                    'assigned_count' => $assigned_cnt,
+                    'is_role_target' => true
                 ];
+            }
+
+            $sql = "
+                SELECT u.id, u.username, u.full_name, u.role, u.designation,
+                       vr.name AS workstation_name,
+                       (SELECT COUNT(*) FROM user_quick_action_assignments a WHERE a.user_id = u.id) AS assigned_count
+                FROM users u
+                LEFT JOIN veterinary_ranges vr ON u.range_id = vr.id
+                WHERE u.is_active = 1
+                  AND ($role_filter_sql)
+                  AND u.role NOT IN ('government_veterinary_surgeon', 'veterinary_surgeon')
+                  AND (
+                      vr.district_id = $district_id 
+                      OR u.district_id = $district_id 
+                      OR u.district = '$district_name' 
+                      OR u.district = '{$district_name}i'
+                  )
+                ORDER BY vr.name ASC, u.full_name ASC
+            ";
+
+            $res = $mysqli->query($sql);
+            if ($res) {
+                while ($row = $res->fetch_assoc()) {
+                    $officers[] = [
+                        'id' => (int)$row['id'],
+                        'username' => $row['username'],
+                        'full_name' => $row['full_name'],
+                        'role' => $row['role'],
+                        'designation' => $row['designation'] ?: ucwords(str_replace('_', ' ', $row['role'])),
+                        'workstation' => $row['workstation_name'] ? "Office: " . $row['workstation_name'] : "District Office",
+                        'assigned_count' => (int)$row['assigned_count']
+                    ];
+                }
             }
         }
     } elseif ($category === 'subject_matter_specialist') {
@@ -288,7 +345,43 @@ if ($action === 'fetch_officers') {
 // ACTION: fetch_officer_assignments
 // -------------------------------------------------------------
 if ($action === 'fetch_officer_assignments') {
-    $target_user_id = intval($_GET['user_id'] ?? 0);
+    $target_raw = trim($_GET['user_id'] ?? '');
+
+    if ($target_raw === 'all_veterinary_surgeons') {
+        $assigned_actions = [];
+        $dist_alt = $district_name . 'i';
+        $stmt = $mysqli->prepare("
+            SELECT DISTINCT action_id 
+            FROM user_quick_action_assignments 
+            WHERE (
+                target_role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+                OR user_id IN (
+                    SELECT id FROM users 
+                    WHERE role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+                      AND (district_id = ? OR district = ? OR district = ?)
+                )
+            ) AND (district_id = ? OR district_id IS NULL)
+        ");
+        if ($stmt) {
+            $stmt->bind_param("issi", $district_id, $district_name, $dist_alt, $district_id);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $assigned_actions[] = $row['action_id'];
+            }
+            $stmt->close();
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'user_id' => 'all_veterinary_surgeons',
+            'district_id' => $district_id,
+            'assignments' => $assigned_actions
+        ]);
+        exit();
+    }
+
+    $target_user_id = intval($target_raw);
     if ($target_user_id <= 0) {
         echo json_encode(['status' => 'error', 'message' => 'Invalid officer selected.']);
         exit();
@@ -300,9 +393,9 @@ if ($action === 'fetch_officer_assignments') {
     }
 
     $assigned_actions = [];
-    $stmt = $mysqli->prepare("SELECT action_id FROM user_quick_action_assignments WHERE user_id = ?");
+    $stmt = $mysqli->prepare("SELECT DISTINCT action_id FROM user_quick_action_assignments WHERE user_id = ? AND (district_id = ? OR district_id IS NULL)");
     if ($stmt) {
-        $stmt->bind_param("i", $target_user_id);
+        $stmt->bind_param("ii", $target_user_id, $district_id);
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) {
@@ -314,6 +407,7 @@ if ($action === 'fetch_officer_assignments') {
     echo json_encode([
         'status' => 'success',
         'user_id' => $target_user_id,
+        'district_id' => $district_id,
         'assignments' => $assigned_actions
     ]);
     exit();
@@ -328,13 +422,8 @@ if ($action === 'save_assignments') {
         exit();
     }
 
-    $target_user_id = intval($_POST['user_id'] ?? 0);
+    $target_raw = trim($_POST['user_id'] ?? '');
     $selected_actions = $_POST['action_ids'] ?? [];
-
-    if ($target_user_id <= 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Please select a valid officer.']);
-        exit();
-    }
 
     if (!is_array($selected_actions)) {
         $selected_actions = [];
@@ -342,19 +431,106 @@ if ($action === 'save_assignments') {
 
     // Filter to only valid quick actions
     $filtered_actions = array_values(array_intersect($selected_actions, $valid_actions));
+    $assigned_by = (int)$_SESSION['user_id'];
+
+    if ($target_raw === 'all_veterinary_surgeons') {
+        $mysqli->begin_transaction();
+        try {
+            $dist_alt = $district_name . 'i';
+            // Find all VS in this district
+            $vs_ids = [];
+            $vs_q = $mysqli->query("
+                SELECT id FROM users 
+                WHERE role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+                  AND (district_id = $district_id OR district = '$district_name' OR district = '$dist_alt')
+            ");
+            if ($vs_q) {
+                while ($vrow = $vs_q->fetch_assoc()) {
+                    $vs_ids[] = (int)$vrow['id'];
+                }
+            }
+
+            // Delete existing assignments for VS in this district
+            $id_clause = !empty($vs_ids) ? "OR user_id IN (" . implode(',', $vs_ids) . ")" : "";
+            $mysqli->query("
+                DELETE FROM user_quick_action_assignments 
+                WHERE (district_id = $district_id OR district_id IS NULL)
+                  AND (target_role IN ('government_veterinary_surgeon', 'veterinary_surgeon') $id_clause)
+            ");
+
+            // Insert role-level district assignments
+            if (!empty($filtered_actions)) {
+                $ins_role = $mysqli->prepare("
+                    INSERT INTO user_quick_action_assignments (user_id, target_role, district_id, action_id, assigned_by) 
+                    VALUES (NULL, 'veterinary_surgeon', ?, ?, ?)
+                ");
+                foreach ($filtered_actions as $act_id) {
+                    $ins_role->bind_param("isi", $district_id, $act_id, $assigned_by);
+                    $ins_role->execute();
+                }
+                $ins_role->close();
+
+                // Also insert for existing VS user IDs for direct user lookups
+                if (!empty($vs_ids)) {
+                    $ins_u = $mysqli->prepare("
+                        INSERT INTO user_quick_action_assignments (user_id, target_role, district_id, action_id, assigned_by) 
+                        VALUES (?, 'veterinary_surgeon', ?, ?, ?)
+                    ");
+                    foreach ($vs_ids as $uid) {
+                        foreach ($filtered_actions as $act_id) {
+                            $ins_u->bind_param("iisi", $uid, $district_id, $act_id, $assigned_by);
+                            $ins_u->execute();
+                        }
+                    }
+                    $ins_u->close();
+                }
+            }
+
+            $mysqli->commit();
+
+            if (function_exists('logActivity')) {
+                logActivity(
+                    $mysqli,
+                    $assigned_by,
+                    'UPDATE_QUICK_ACTION_ASSIGNMENTS',
+                    'user_quick_action_assignments',
+                    0,
+                    null,
+                    $filtered_actions,
+                    "District DD updated task assignments for All Government Veterinary Surgeons across $district_name District (" . count($filtered_actions) . " actions assigned district-wide)"
+                );
+            }
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Task assignments updated successfully. Quick Actions are now active across all veterinary ranges in ' . htmlspecialchars($district_name) . ' District for all Government Veterinary Surgeons.',
+                'assigned_count' => count($filtered_actions),
+                'action_ids' => $filtered_actions
+            ]);
+            exit();
+        } catch (Exception $e) {
+            $mysqli->rollback();
+            echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    $target_user_id = intval($target_raw);
+    if ($target_user_id <= 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Please select a valid officer.']);
+        exit();
+    }
 
     if (!verify_user_district_jurisdiction($mysqli, $target_user_id, $district_id, $district_name, $tc_district_mapping, $farm_district_mapping)) {
         echo json_encode(['status' => 'error', 'message' => 'Officer does not belong to your district jurisdiction.']);
         exit();
     }
 
-    $assigned_by = (int)$_SESSION['user_id'];
-
     // Retrieve previous assignments for audit logging
     $old_assignments = [];
-    $old_stmt = $mysqli->prepare("SELECT action_id FROM user_quick_action_assignments WHERE user_id = ?");
+    $old_stmt = $mysqli->prepare("SELECT action_id FROM user_quick_action_assignments WHERE user_id = ? AND (district_id = ? OR district_id IS NULL)");
     if ($old_stmt) {
-        $old_stmt->bind_param("i", $target_user_id);
+        $old_stmt->bind_param("ii", $target_user_id, $district_id);
         $old_stmt->execute();
         $old_res = $old_stmt->get_result();
         while ($r = $old_res->fetch_assoc()) {
@@ -365,17 +541,17 @@ if ($action === 'save_assignments') {
 
     $mysqli->begin_transaction();
     try {
-        // Delete current assignments
-        $del_stmt = $mysqli->prepare("DELETE FROM user_quick_action_assignments WHERE user_id = ?");
-        $del_stmt->bind_param("i", $target_user_id);
+        // Delete current assignments for this officer in this district
+        $del_stmt = $mysqli->prepare("DELETE FROM user_quick_action_assignments WHERE user_id = ? AND (district_id = ? OR district_id IS NULL)");
+        $del_stmt->bind_param("ii", $target_user_id, $district_id);
         $del_stmt->execute();
         $del_stmt->close();
 
-        // Insert new assignments
+        // Insert new district-wide assignments
         if (!empty($filtered_actions)) {
-            $ins_stmt = $mysqli->prepare("INSERT INTO user_quick_action_assignments (user_id, action_id, assigned_by) VALUES (?, ?, ?)");
+            $ins_stmt = $mysqli->prepare("INSERT INTO user_quick_action_assignments (user_id, district_id, action_id, assigned_by) VALUES (?, ?, ?, ?)");
             foreach ($filtered_actions as $act_id) {
-                $ins_stmt->bind_param("isi", $target_user_id, $act_id, $assigned_by);
+                $ins_stmt->bind_param("iisi", $target_user_id, $district_id, $act_id, $assigned_by);
                 $ins_stmt->execute();
             }
             $ins_stmt->close();
@@ -393,13 +569,13 @@ if ($action === 'save_assignments') {
                 $target_user_id,
                 $old_assignments,
                 $filtered_actions,
-                "District DD updated task assignments for Officer ID $target_user_id (" . count($filtered_actions) . " actions assigned)"
+                "District DD updated task assignments for Officer ID $target_user_id (" . count($filtered_actions) . " actions assigned district-wide)"
             );
         }
 
         echo json_encode([
             'status' => 'success',
-            'message' => 'Task assignments updated successfully for the selected officer.',
+            'message' => 'Task assignments updated successfully. Delegated actions are now active district-wide across all veterinary ranges in ' . htmlspecialchars($district_name) . ' District.',
             'assigned_count' => count($filtered_actions),
             'action_ids' => $filtered_actions
         ]);
@@ -420,7 +596,50 @@ if ($action === 'revoke_assignments') {
         exit();
     }
 
-    $target_user_id = intval($_POST['user_id'] ?? 0);
+    $target_raw = trim($_POST['user_id'] ?? '');
+
+    if ($target_raw === 'all_veterinary_surgeons') {
+        $dist_alt = $district_name . 'i';
+        $vs_ids = [];
+        $vs_q = $mysqli->query("
+            SELECT id FROM users 
+            WHERE role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+              AND (district_id = $district_id OR district = '$district_name' OR district = '$dist_alt')
+        ");
+        if ($vs_q) {
+            while ($vrow = $vs_q->fetch_assoc()) {
+                $vs_ids[] = (int)$vrow['id'];
+            }
+        }
+
+        $id_clause = !empty($vs_ids) ? "OR user_id IN (" . implode(',', $vs_ids) . ")" : "";
+        $del_res = $mysqli->query("
+            DELETE FROM user_quick_action_assignments 
+            WHERE (district_id = $district_id OR district_id IS NULL)
+              AND (target_role IN ('government_veterinary_surgeon', 'veterinary_surgeon') $id_clause)
+        ");
+
+        if ($del_res) {
+            if (function_exists('logActivity')) {
+                logActivity(
+                    $mysqli,
+                    $_SESSION['user_id'],
+                    'REVOKE_QUICK_ACTION_ASSIGNMENTS',
+                    'user_quick_action_assignments',
+                    0,
+                    null,
+                    null,
+                    "District DD revoked all district-wide task assignments for Government Veterinary Surgeons in $district_name District"
+                );
+            }
+            echo json_encode(['status' => 'success', 'message' => 'All task assignments have been successfully revoked for Government Veterinary Surgeons across all ranges in ' . htmlspecialchars($district_name) . ' District.']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Failed to revoke assignments.']);
+        }
+        exit();
+    }
+
+    $target_user_id = intval($target_raw);
     if ($target_user_id <= 0) {
         echo json_encode(['status' => 'error', 'message' => 'Invalid officer specified.']);
         exit();
@@ -431,8 +650,8 @@ if ($action === 'revoke_assignments') {
         exit();
     }
 
-    $del_stmt = $mysqli->prepare("DELETE FROM user_quick_action_assignments WHERE user_id = ?");
-    $del_stmt->bind_param("i", $target_user_id);
+    $del_stmt = $mysqli->prepare("DELETE FROM user_quick_action_assignments WHERE user_id = ? AND (district_id = ? OR district_id IS NULL)");
+    $del_stmt->bind_param("ii", $target_user_id, $district_id);
     $success = $del_stmt->execute();
     $del_stmt->close();
 
@@ -446,10 +665,10 @@ if ($action === 'revoke_assignments') {
                 $target_user_id,
                 null,
                 null,
-                "District DD revoked all task assignments for Officer ID $target_user_id"
+                "District DD revoked all district-wide task assignments for Officer ID $target_user_id"
             );
         }
-        echo json_encode(['status' => 'success', 'message' => 'All task assignments have been successfully revoked.']);
+        echo json_encode(['status' => 'success', 'message' => 'All task assignments have been successfully revoked across the district.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Failed to revoke assignments.']);
     }

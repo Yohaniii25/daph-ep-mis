@@ -42,135 +42,215 @@ if ($dist_stmt) {
     $dist_stmt->close();
 }
 
-// 14 Standardized Quick Actions with official icons and branding
+// 14 Standardized Quick Actions with official icons, branding, and category metadata
 $quick_actions_list = [
     'range_statistics' => [
         'id' => 1,
         'title' => 'Range Statistics',
         'icon' => 'bi-graph-up',
         'color' => '#820100',
-        'desc' => 'Statistical returns & population summaries'
+        'desc' => 'Statistical returns & population summaries',
+        'category' => 'reports',
+        'category_label' => 'Reports & Data'
     ],
     'annual_targets' => [
         'id' => 2,
         'title' => 'Annual Targets',
         'icon' => 'bi-bar-chart',
         'color' => '#370709',
-        'desc' => 'Annual operational targets & performance'
+        'desc' => 'Annual operational targets & performance',
+        'category' => 'reports',
+        'category_label' => 'Reports & Data'
     ],
     'monthly_annual_reports' => [
         'id' => 3,
         'title' => 'Monthly/Annual Reports',
         'icon' => 'bi-car-front-fill',
         'color' => '#b08723',
-        'desc' => 'Periodic reporting submissions'
+        'desc' => 'Periodic reporting submissions',
+        'category' => 'reports',
+        'category_label' => 'Reports & Data'
     ],
     'regulatory_functions' => [
         'id' => 4,
         'title' => 'Regulatory Functions',
         'icon' => 'bi-file-earmark-plus',
         'color' => '#a07174',
-        'desc' => 'Animals Act compounding & legal functions'
+        'desc' => 'Animals Act compounding & legal functions',
+        'category' => 'clinical',
+        'category_label' => 'Clinical & Legal'
     ],
     'animal_health' => [
         'id' => 5,
         'title' => 'Animal Health',
         'icon' => 'bi-gear-fill',
         'color' => '#689ccf',
-        'desc' => 'Disease surveillance & clinical logs'
+        'desc' => 'Disease surveillance & clinical logs',
+        'category' => 'clinical',
+        'category_label' => 'Clinical Care'
     ],
     'clinical_services' => [
         'id' => 6,
         'title' => 'Clinical Services',
         'icon' => 'bi-tools',
         'color' => '#2e7d32',
-        'desc' => 'Outpatient veterinary clinical care'
+        'desc' => 'Outpatient veterinary clinical care',
+        'category' => 'clinical',
+        'category_label' => 'Clinical Care'
     ],
     'animal_breeding' => [
         'id' => 7,
         'title' => 'Animal Breeding',
         'icon' => 'bi-file-earmark-text-fill',
         'color' => '#e65100',
-        'desc' => 'Artificial insemination & pedigree records'
+        'desc' => 'Artificial insemination & pedigree records',
+        'category' => 'clinical',
+        'category_label' => 'Breeding & AI'
     ],
     'livestock_production' => [
         'id' => 8,
         'title' => 'Livestock Production',
         'icon' => 'bi-person-bounding-box',
         'color' => '#455a64',
-        'desc' => 'Production levels & activity tracking'
+        'desc' => 'Production levels & activity tracking',
+        'category' => 'operations',
+        'category_label' => 'Field Operations'
     ],
     'dairy_hub' => [
         'id' => 9,
         'title' => 'Dairy Hub',
         'icon' => 'bi-patch-check-fill',
         'color' => '#1565c0',
-        'desc' => 'Milk collection & dairy farmer hubs'
+        'desc' => 'Milk collection & dairy farmer hubs',
+        'category' => 'operations',
+        'category_label' => 'Dairy & Hubs'
     ],
     'projects' => [
         'id' => 10,
         'title' => 'Projects',
         'icon' => 'bi-geo-alt-fill',
         'color' => '#00838f',
-        'desc' => 'Field development project tracking'
+        'desc' => 'Field development project tracking',
+        'category' => 'operations',
+        'category_label' => 'Special Projects'
     ],
     'monitoring' => [
         'id' => 11,
         'title' => 'Monitoring',
         'icon' => 'bi-folder-fill',
         'color' => '#283593',
-        'desc' => 'Field inspections & audit monitoring'
+        'desc' => 'Field inspections & audit monitoring',
+        'category' => 'operations',
+        'category_label' => 'Field Monitoring'
     ],
     'accounts' => [
         'id' => 12,
         'title' => 'Accounts',
         'icon' => 'bi-bookmark-dash-fill',
         'color' => '#ad1457',
-        'desc' => 'Revenue, cash books & expenditures'
+        'desc' => 'Revenue, cash books & expenditures',
+        'category' => 'reports',
+        'category_label' => 'Finance & Cash'
     ],
     'clean_sri_lanka' => [
         'id' => 13,
         'title' => 'Clean Sri Lanka',
         'icon' => 'bi-graph-up-arrow',
         'color' => '#d84315',
-        'desc' => 'Clean Sri Lanka national initiative'
+        'desc' => 'Clean Sri Lanka national initiative',
+        'category' => 'operations',
+        'category_label' => 'National Program'
     ],
     'trainings' => [
         'id' => 14,
         'title' => 'Trainings',
         'icon' => 'bi-sliders',
         'color' => '#37474f',
-        'desc' => 'Farmer workshops & staff capacity sessions'
+        'desc' => 'Farmer workshops & staff capacity sessions',
+        'category' => 'operations',
+        'category_label' => 'Capacity Building'
     ],
 ];
 
 // Fetch active assignments overview within this District DD jurisdiction
+$district_assignments = [];
+
+// 1. First check if any assignments exist for Government Veterinary Surgeons in this district
+$dist_alt = $district_name . 'i';
+$vs_actions_q = $mysqli->query("
+    SELECT DISTINCT a.action_id, MAX(a.assigned_at) as last_assigned_at, assigner.full_name as assigned_by_name
+    FROM user_quick_action_assignments a
+    LEFT JOIN users assigner ON a.assigned_by = assigner.id
+    WHERE (
+        a.target_role IN ('government_veterinary_surgeon', 'veterinary_surgeon')
+        OR a.user_id IN (
+            SELECT id FROM users 
+            WHERE role IN ('government_veterinary_surgeon', 'veterinary_surgeon') 
+              AND (district_id = $district_id OR district = '$district_name' OR district = '$dist_alt')
+        )
+    ) AND (a.district_id = $district_id OR a.district_id IS NULL)
+    GROUP BY a.action_id
+");
+$vs_actions = [];
+$vs_last_time = null;
+$vs_assigner_name = 'District Deputy Director';
+if ($vs_actions_q) {
+    while ($arow = $vs_actions_q->fetch_assoc()) {
+        $vs_actions[] = $arow['action_id'];
+        if (!$vs_last_time || strtotime($arow['last_assigned_at']) > strtotime($vs_last_time)) {
+            $vs_last_time = $arow['last_assigned_at'];
+        }
+        if (!empty($arow['assigned_by_name'])) {
+            $vs_assigner_name = $arow['assigned_by_name'];
+        }
+    }
+}
+
+if (!empty($vs_actions)) {
+    $district_assignments[] = [
+        'user_id' => 'all_veterinary_surgeons',
+        'username' => 'all_vs_district',
+        'full_name' => 'All Government Veterinary Surgeons',
+        'role' => 'government_veterinary_surgeon',
+        'designation' => 'Government Veterinary Surgeon (District-Wide)',
+        'range_name' => null,
+        'assigned_action_keys' => implode(',', $vs_actions),
+        'actions_array' => $vs_actions,
+        'action_count' => count($vs_actions),
+        'last_assigned_at' => $vs_last_time,
+        'assigned_by_name' => $vs_assigner_name,
+        'is_role_target' => true
+    ];
+}
+
+// 2. Fetch non-VS officers who have individual assignments
 $overview_sql = "
     SELECT u.id AS user_id, u.username, u.full_name, u.role, u.designation,
            vr.name AS range_name,
-           GROUP_CONCAT(a.action_id ORDER BY a.id ASC) AS assigned_action_keys,
-           COUNT(a.id) AS action_count,
+           GROUP_CONCAT(DISTINCT a.action_id ORDER BY a.id ASC) AS assigned_action_keys,
+           COUNT(DISTINCT a.action_id) AS action_count,
            MAX(a.assigned_at) AS last_assigned_at,
            assigner.full_name AS assigned_by_name
     FROM user_quick_action_assignments a
     JOIN users u ON a.user_id = u.id
     LEFT JOIN veterinary_ranges vr ON u.range_id = vr.id
     LEFT JOIN users assigner ON a.assigned_by = assigner.id
-    WHERE (
+    WHERE u.role NOT IN ('government_veterinary_surgeon', 'veterinary_surgeon')
+      AND (
         vr.district_id = $district_id 
         OR u.district_id = $district_id 
         OR u.district = '$district_name' 
-        OR u.district = '{$district_name}i'
+        OR u.district = '$dist_alt'
     )
     GROUP BY u.id
     ORDER BY u.full_name ASC
 ";
 
 $overview_res = $mysqli->query($overview_sql);
-$district_assignments = [];
 if ($overview_res) {
     while ($row = $overview_res->fetch_assoc()) {
         $row['actions_array'] = $row['assigned_action_keys'] ? explode(',', $row['assigned_action_keys']) : [];
+        $row['is_role_target'] = false;
         $district_assignments[] = $row;
     }
 }
@@ -208,22 +288,35 @@ require_once '../../../includes/sidebar.php';
         <!-- Task Assignment Workflow Card -->
         <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-header bg-white py-3 px-4 border-bottom">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <div>
                         <h5 class="fw-bold mb-1" style="color: #370709;">
                             <i class="bi bi-person-gear me-2"></i>Task Assignment Form
                         </h5>
                         <p class="text-muted small mb-0">
-                            Use the cascading selection filters below to identify an officer and delegate specific Quick Action modules.
+                            Select user category and role to delegate Quick Actions district-wide across all ranges.
                         </p>
                     </div>
-                    <span class="badge bg-light text-muted border px-3 py-2">
-                        Jurisdiction: <strong><?= htmlspecialchars($district_name) ?> District Only</strong>
-                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-semibold">
+                            <i class="bi bi-globe2 me-1"></i> District-Wide Permission Scope
+                        </span>
+                        <span class="badge bg-light text-muted border px-3 py-2">
+                            Jurisdiction: <strong><?= htmlspecialchars($district_name) ?> District</strong>
+                        </span>
+                    </div>
                 </div>
             </div>
 
             <div class="card-body p-4">
+                <!-- District-Wide Scope Rule Banner -->
+                <div class="alert alert-primary-subtle border border-primary-subtle py-2 px-3 mb-4 rounded-3 d-flex align-items-center gap-3 small text-primary-emphasis">
+                    <i class="bi bi-info-circle-fill fs-4 text-primary flex-shrink-0"></i>
+                    <div>
+                        <strong>District-Wide Delegation Rule:</strong> When assigning Quick Actions to Government Veterinary Surgeons, there is no need to select or mention an individual range officer. Assigned tasks automatically apply <strong>to all veterinary ranges</strong> across <?= htmlspecialchars($district_name) ?> District.
+                    </div>
+                </div>
+
                 <form id="taskAssignmentForm">
                     
                     <!-- Row 1: Cascading Dropdowns 1, 2, and 3 -->
@@ -255,81 +348,119 @@ require_once '../../../includes/sidebar.php';
                             <small class="text-muted d-block mt-1">Select specific staff sub-role</small>
                         </div>
 
-                        <!-- Dropdown 3: Select Officer (Filtered by Jurisdiction) -->
+                        <!-- Dropdown 3: Select Target / Officer (Filtered by Jurisdiction) -->
                         <div class="col-md-4">
                             <label class="form-label fw-bold small text-muted text-uppercase">
-                                <span class="step-number">3</span> Select Officer (<?= htmlspecialchars($district_name) ?>)
+                                <span class="step-number">3</span> Assignment Target
                             </label>
                             <select class="form-select form-select-lg border-2" id="officerSelect" required>
-                                <option value="">-- Select Officer --</option>
+                                <option value="">-- Select Target --</option>
                             </select>
-                            <small class="text-muted d-block mt-1" id="officerWorkstationHint">Loading officers...</small>
+                            <small class="text-muted d-block mt-1" id="officerWorkstationHint">Loading targets...</small>
                         </div>
 
                     </div>
 
-                    <!-- Row 2: Dropdown 4 / Checklist of the 14 Quick Actions -->
+                    <!-- Row 2: Step 4 / 14 Quick Actions Matrix with Category Filter Tabs -->
                     <div class="mb-4 pt-2">
-                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-3 border-bottom gap-3">
                             <div>
-                                <label class="form-label fw-bold small text-muted text-uppercase mb-0">
-                                    <span class="step-number">4</span> Assign Quick Actions (14 Modules)
-                                </label>
-                                <span class="text-muted small ms-2 d-none d-md-inline">
-                                    &mdash; Check the modules to make visible on this officer's Range Details page
-                                </span>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <label class="form-label fw-bold small text-muted text-uppercase mb-0">
+                                        <span class="step-number">4</span> Assign Quick Actions (14 Modules &bull; District-Wide)
+                                    </label>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-semibold">
+                                        All Ranges Covered
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-0">
+                                    Click module cards to toggle visibility across all veterinary ranges in <?= htmlspecialchars($district_name) ?> District.
+                                </p>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-dark px-3 rounded-pill" id="btnSelectAll">
+
+                            <!-- Filter Pills & Batch Controls -->
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <div class="btn-group btn-group-sm p-1 bg-light rounded-pill border" role="group" id="filterPillsGroup">
+                                    <button type="button" class="btn btn-sm rounded-pill btn-dark active px-3 py-1 fw-semibold filter-pill-btn" data-filter="all">
+                                        All (14)
+                                    </button>
+                                    <button type="button" class="btn btn-sm rounded-pill btn-light px-3 py-1 fw-semibold filter-pill-btn text-muted" data-filter="clinical">
+                                        <i class="bi bi-heart-pulse-fill me-1 text-danger"></i> Clinical (4)
+                                    </button>
+                                    <button type="button" class="btn btn-sm rounded-pill btn-light px-3 py-1 fw-semibold filter-pill-btn text-muted" data-filter="reports">
+                                        <i class="bi bi-bar-chart-fill me-1 text-primary"></i> Reports (4)
+                                    </button>
+                                    <button type="button" class="btn btn-sm rounded-pill btn-light px-3 py-1 fw-semibold filter-pill-btn text-muted" data-filter="operations">
+                                        <i class="bi bi-briefcase-fill me-1 text-success"></i> Operations (6)
+                                    </button>
+                                </div>
+
+                                <div class="vr mx-1 d-none d-lg-block"></div>
+
+                                <button type="button" class="btn btn-sm btn-outline-dark px-3 rounded-pill fw-semibold shadow-xs" id="btnSelectAll">
                                     <i class="bi bi-check-all me-1"></i> Select All
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary px-3 rounded-pill" id="btnClearAll">
+                                <button type="button" class="btn btn-sm btn-outline-secondary px-3 rounded-pill fw-semibold shadow-xs" id="btnClearAll">
                                     <i class="bi bi-x-circle me-1"></i> Clear All
                                 </button>
                             </div>
                         </div>
 
                         <!-- 14 Interactive Action Cards Grid -->
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3" id="quickActionsGrid">
-                            <?php foreach ($quick_actions_list as $key => $act): ?>
-                                <div class="col">
-                                    <div class="action-card-select p-3 h-100 d-flex flex-column justify-content-between" data-action-key="<?= $key ?>">
-                                        <div class="check-indicator">
-                                            <i class="bi bi-check-lg"></i>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-3 mb-2 pe-4">
-                                            <div class="rounded-3 p-2 d-flex align-items-center justify-content-center text-light shadow-sm" style="background-color: <?= $act['color'] ?>; width: 44px; height: 44px; flex-shrink: 0;">
-                                                <i class="bi <?= $act['icon'] ?> fs-4"></i>
+                        <div class="row g-3" id="quickActionsGrid">
+                            <?php foreach ($quick_actions_list as $action_key => $action): ?>
+                                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 action-col" data-category="<?= $action['category'] ?>">
+                                    <div class="action-card-select" data-action-key="<?= $action_key ?>" style="--card-theme-color: <?= $action['color'] ?>;">
+                                        <!-- Top Color Accent Bar -->
+                                        <div class="action-card-accent" style="background-color: <?= $action['color'] ?>;"></div>
+                                        
+                                        <div class="p-3 d-flex flex-column h-100">
+                                            <!-- Card Header: Icon, ID Badge & Custom Check Indicator -->
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="action-icon-box" style="background: linear-gradient(135deg, <?= $action['color'] ?> 0%, <?= $action['color'] ?>cc 100%);">
+                                                        <i class="bi <?= $action['icon'] ?>"></i>
+                                                    </div>
+                                                    <span class="action-id-pill">#<?= sprintf('%02d', $action['id']) ?></span>
+                                                </div>
+                                                <div class="check-indicator" title="Toggle delegation">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.95rem;"><?= htmlspecialchars($act['title']) ?></h6>
-                                                <small class="text-muted font-monospace" style="font-size: 0.75rem;">ID: <?= $act['id'] ?></small>
+
+                                            <!-- Card Title & Description -->
+                                            <h6 class="action-title mb-1"><?= htmlspecialchars($action['title']) ?></h6>
+                                            <p class="action-desc mb-3"><?= htmlspecialchars($action['desc']) ?></p>
+
+                                            <!-- Card Footer: Status Pill & Category Tag -->
+                                            <div class="action-card-footer pt-2 border-top d-flex align-items-center justify-content-between mt-auto">
+                                                <span class="action-status-chip">
+                                                    <i class="status-dot"></i>
+                                                    <span class="status-text">Hidden</span>
+                                                </span>
+                                                <span class="action-category-label"><?= htmlspecialchars($action['category_label']) ?></span>
                                             </div>
+
+                                            <input type="checkbox" class="action-checkbox d-none" value="<?= $action_key ?>" id="chk_<?= $action_key ?>">
                                         </div>
-                                        <p class="text-muted small mb-0 mt-1" style="font-size: 0.8rem; line-height: 1.3;">
-                                            <?= htmlspecialchars($act['desc']) ?>
-                                        </p>
-                                        <input type="checkbox" name="actions[]" value="<?= $key ?>" class="d-none action-checkbox">
                                     </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
 
-                    <!-- Form Action Buttons -->
-                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill" id="selectedCountBadge">
-                                0 Actions Selected
-                            </span>
-                            <span class="text-muted small" id="officerStatusHint">Please select an officer to manage delegation.</span>
+                    <!-- Row 3: Action Controls -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span id="selectedCountBadge" class="badge bg-secondary px-3 py-2 fs-6 rounded-pill">0 Actions Selected</span>
+                            <span class="text-muted small" id="officerStatusHint">Select an officer or role to manage delegation.</span>
                         </div>
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-danger px-4" id="btnRevokeAll" style="display: none;">
+                            <button type="button" class="btn btn-outline-danger px-4 rounded-pill" id="btnRevokeAll" style="display: none;">
                                 <i class="bi bi-trash3 me-1"></i> Revoke All Tasks
                             </button>
-                            <button type="submit" class="btn btn-success px-4 py-2 fw-semibold shadow-sm" id="btnSaveAssignments">
-                                <i class="bi bi-check-circle me-1"></i> Save Task Assignments
+                            <button type="submit" class="btn btn-dark px-4 rounded-pill shadow-sm" id="btnSaveAssignments" style="background-color: #370709; border-color: #370709;">
+                                <i class="bi bi-check2-circle me-1"></i> Save Task Assignments
                             </button>
                         </div>
                     </div>
@@ -338,27 +469,32 @@ require_once '../../../includes/sidebar.php';
             </div>
         </div>
 
-        <!-- Assignments Summary & Management Table -->
+        <!-- Overview Directory Table -->
         <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div>
-                    <h5 class="fw-bold mb-0" style="color: #370709;">
-                        <i class="bi bi-card-checklist me-2"></i>Active Quick Action Delegations (<?= htmlspecialchars($district_name) ?> District)
-                    </h5>
-                    <p class="text-muted small mb-0">Overview of subordinates currently delegated Range Details Quick Action permissions.</p>
-                </div>
-                <div>
-                    <input type="text" id="filterTableInput" class="form-control form-control-sm" placeholder="Search officer or range..." style="width: 250px;">
+            <div class="card-header bg-white py-3 px-4 border-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color: #370709;">
+                            <i class="bi bi-people-fill me-2"></i>Active Staff Delegations Overview
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            Current visibility permissions across all veterinary ranges in <?= htmlspecialchars($district_name) ?> District.
+                        </p>
+                    </div>
+                    <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                        <?= count($district_assignments) ?> Configured Assignment(s)
+                    </span>
                 </div>
             </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" id="assignmentsTable">
                         <thead class="table-light">
                             <tr class="small text-uppercase text-muted">
-                                <th class="ps-4">Officer Name & Username</th>
+                                <th class="ps-4">Target Staff / Role</th>
                                 <th>Role & Designation</th>
-                                <th>Workstation / Range</th>
+                                <th>Assigned Scope & Base</th>
                                 <th>Delegated Quick Actions</th>
                                 <th>Last Updated</th>
                                 <th class="text-end pe-4">Manage</th>
@@ -374,17 +510,42 @@ require_once '../../../includes/sidebar.php';
                                     </td>
                                 </tr>
                             <?php else: ?>
-                                <?php foreach ($district_assignments as $item): ?>
+                                <?php foreach ($district_assignments as $item): 
+                                    $is_vs_target = ($item['user_id'] === 'all_veterinary_surgeons' || !empty($item['is_role_target']) || $item['role'] === 'government_veterinary_surgeon' || $item['role'] === 'veterinary_surgeon');
+                                ?>
                                     <tr data-user-id="<?= $item['user_id'] ?>">
                                         <td class="ps-4">
-                                            <div class="fw-bold text-dark"><?= htmlspecialchars($item['full_name']) ?></div>
-                                            <small class="text-muted font-monospace">@<?= htmlspecialchars($item['username']) ?></small>
+                                            <?php if ($is_vs_target): ?>
+                                                <div class="fw-bold text-dark"><i class="bi bi-people-fill text-primary me-1"></i>All Government Veterinary Surgeons</div>
+                                                <small class="text-primary fw-semibold">District-Wide Staff (All Ranges)</small>
+                                            <?php else: ?>
+                                                <div class="fw-bold text-dark"><?= htmlspecialchars($item['full_name']) ?></div>
+                                                <small class="text-muted font-monospace">@<?= htmlspecialchars($item['username']) ?></small>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary"><?= htmlspecialchars($item['designation'] ?: ucwords(str_replace('_', ' ', $item['role']))) ?></span>
+                                            <?php if ($is_vs_target): ?>
+                                                <span class="badge bg-primary">Government Veterinary Surgeon</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-secondary"><?= htmlspecialchars($item['designation'] ?: ucwords(str_replace('_', ' ', $item['role']))) ?></span>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
-                                            <?= htmlspecialchars($item['range_name'] ? "Range: " . $item['range_name'] : "District Office") ?>
+                                            <?php if ($is_vs_target): ?>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-1">
+                                                    <i class="bi bi-globe2 me-1"></i>District-Wide (All Ranges)
+                                                </span>
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-shield-check me-1 text-success"></i>Covers all ranges in <?= htmlspecialchars($district_name) ?> District
+                                                </div>
+                                            <?php else: ?>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 mb-1">
+                                                    <i class="bi bi-globe2 me-1"></i>District-Wide
+                                                </span>
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($item['range_name'] ? "Office: " . $item['range_name'] : "District Office") ?>
+                                                </div>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <div class="d-flex flex-wrap">
@@ -485,7 +646,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function loadOfficers(preselectUserId = null) {
         const cat = categorySelect.value;
         const subRole = roleSelect.value;
-        officerSelect.innerHTML = '<option value="">Loading officers...</option>';
+        officerSelect.innerHTML = '<option value="">Loading targets...</option>';
         officerWorkstationHint.textContent = 'Fetching staff in jurisdiction...';
 
         const url = `processors/task_assignment_crud.php?action=fetch_officers&category=${encodeURIComponent(cat)}&sub_role=${encodeURIComponent(subRole)}`;
@@ -493,34 +654,42 @@ document.addEventListener("DOMContentLoaded", function() {
         fetch(url)
             .then(res => res.json())
             .then(data => {
-                officerSelect.innerHTML = '<option value="">-- Select Officer --</option>';
+                officerSelect.innerHTML = '<option value="">-- Select Target --</option>';
                 if (data.status === 'success' && data.officers.length > 0) {
                     currentOfficers = data.officers;
                     data.officers.forEach(o => {
                         const opt = document.createElement('option');
                         opt.value = o.id;
                         const badgeTxt = o.assigned_count > 0 ? ` (${o.assigned_count} active tasks)` : ' (0 tasks)';
-                        opt.textContent = `${o.full_name} (@${o.username}) - ${o.workstation}${badgeTxt}`;
+                        if (o.is_role_target) {
+                            opt.textContent = `${o.full_name} (${o.workstation})${badgeTxt}`;
+                        } else {
+                            opt.textContent = `${o.full_name} (@${o.username}) - ${o.workstation}${badgeTxt}`;
+                        }
                         officerSelect.appendChild(opt);
                     });
-                    officerWorkstationHint.textContent = `${data.officers.length} officer(s) found in ${data.district_name} jurisdiction.`;
+                    officerWorkstationHint.textContent = `${data.officers.length} target(s) found in ${data.district_name} jurisdiction.`;
 
                     if (preselectUserId) {
                         officerSelect.value = preselectUserId;
+                        onOfficerChange();
+                    } else if (cat === 'range_veterinary_officer' && subRole === 'government_veterinary_surgeon') {
+                        // Automatically select the district-wide role target
+                        officerSelect.value = 'all_veterinary_surgeons';
                         onOfficerChange();
                     } else {
                         clearChecklist();
                     }
                 } else {
                     currentOfficers = [];
-                    officerSelect.innerHTML = '<option value="">-- No matching officers found --</option>';
-                    officerWorkstationHint.textContent = 'No active officers found for this filter in your district.';
+                    officerSelect.innerHTML = '<option value="">-- No matching targets found --</option>';
+                    officerWorkstationHint.textContent = 'No active staff or targets found for this filter in your district.';
                     clearChecklist();
                 }
             })
             .catch(err => {
                 console.error(err);
-                officerSelect.innerHTML = '<option value="">-- Error loading officers --</option>';
+                officerSelect.innerHTML = '<option value="">-- Error loading targets --</option>';
                 officerWorkstationHint.textContent = 'Error connecting to server.';
             });
     }
@@ -528,11 +697,14 @@ document.addEventListener("DOMContentLoaded", function() {
     // Helper: Update card selection visual state
     function updateCardVisual(card, isChecked) {
         const checkbox = card.querySelector('.action-checkbox');
-        checkbox.checked = isChecked;
+        if (checkbox) checkbox.checked = isChecked;
+        const statusText = card.querySelector('.status-text');
         if (isChecked) {
             card.classList.add('is-selected');
+            if (statusText) statusText.textContent = 'Delegated';
         } else {
             card.classList.remove('is-selected');
+            if (statusText) statusText.textContent = 'Hidden';
         }
     }
 
@@ -540,9 +712,9 @@ document.addEventListener("DOMContentLoaded", function() {
     function refreshSelectedCount() {
         const checkedBoxes = document.querySelectorAll('.action-checkbox:checked');
         const count = checkedBoxes.length;
-        selectedCountBadge.textContent = `${count} Actions Selected`;
+        selectedCountBadge.textContent = `${count} of 14 Actions Delegated`;
         if (count > 0) {
-            selectedCountBadge.className = 'badge bg-success px-3 py-2 fs-6 rounded-pill';
+            selectedCountBadge.className = 'badge bg-success px-3 py-2 fs-6 rounded-pill shadow-xs';
         } else {
             selectedCountBadge.className = 'badge bg-secondary px-3 py-2 fs-6 rounded-pill';
         }
@@ -554,7 +726,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         refreshSelectedCount();
         btnRevokeAll.style.display = 'none';
-        officerStatusHint.textContent = 'Please select an officer to manage delegation.';
+        officerStatusHint.textContent = 'Please select a target to manage delegation.';
     }
 
     function selectAllChecklist() {
@@ -578,6 +750,27 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('btnSelectAll').addEventListener('click', selectAllChecklist);
     document.getElementById('btnClearAll').addEventListener('click', clearChecklist);
 
+    // Category Filter Pills handler
+    document.querySelectorAll('.filter-pill-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-pill-btn').forEach(b => {
+                b.classList.remove('active', 'btn-dark');
+                b.classList.add('btn-light', 'text-muted');
+            });
+            this.classList.add('active', 'btn-dark');
+            this.classList.remove('btn-light', 'text-muted');
+
+            const filter = this.getAttribute('data-filter');
+            document.querySelectorAll('.action-col').forEach(col => {
+                if (filter === 'all' || col.getAttribute('data-category') === filter) {
+                    col.style.display = '';
+                } else {
+                    col.style.display = 'none';
+                }
+            });
+        });
+    });
+
     // Dropdown change events
     categorySelect.addEventListener('change', populateRoles);
     roleSelect.addEventListener('change', () => loadOfficers());
@@ -589,9 +782,14 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        const officer = currentOfficers.find(o => o.id == userId);
-        officerStatusHint.textContent = `Managing permissions for ${officer ? officer.full_name : 'selected officer'}.`;
-        officerWorkstationHint.textContent = officer ? `${officer.designation} | ${officer.workstation}` : '';
+        if (userId === 'all_veterinary_surgeons') {
+            officerStatusHint.textContent = `Managing district-wide permissions for All Government Veterinary Surgeons across <?= htmlspecialchars($district_name) ?> District.`;
+            officerWorkstationHint.innerHTML = `<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-semibold"><i class="bi bi-globe2 me-1"></i>District-Wide Delegation: Automatically applies across all ranges in <?= htmlspecialchars($district_name) ?> District. No individual range officer needed.</span>`;
+        } else {
+            const officer = currentOfficers.find(o => o.id == userId);
+            officerStatusHint.textContent = `Managing district-wide permissions for ${officer ? officer.full_name : 'selected officer'}.`;
+            officerWorkstationHint.innerHTML = officer ? `<strong>${officer.designation}</strong> &bull; Workstation: ${officer.workstation}<br><span class="text-primary fw-semibold"><i class="bi bi-globe2 me-1"></i>Scope: District-Wide (Covers all ranges in <?= htmlspecialchars($district_name) ?> District)</span>` : '';
+        }
 
         // Fetch officer's assigned tasks
         fetch(`processors/task_assignment_crud.php?action=fetch_officer_assignments&user_id=${encodeURIComponent(userId)}`)
@@ -737,12 +935,16 @@ document.addEventListener("DOMContentLoaded", function() {
             // Scroll smoothly to form
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            // Switch category to Range Veterinary Officer by default or match officer
             categorySelect.value = 'range_veterinary_officer';
             populateRoles();
             setTimeout(() => {
-                roleSelect.value = '';
-                loadOfficers(targetUserId);
+                if (targetUserId === 'all_veterinary_surgeons') {
+                    roleSelect.value = 'government_veterinary_surgeon';
+                    loadOfficers('all_veterinary_surgeons');
+                } else {
+                    roleSelect.value = '';
+                    loadOfficers(targetUserId);
+                }
             }, 100);
         });
     });

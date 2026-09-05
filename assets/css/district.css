@@ -26,48 +26,155 @@
 
 .action-card-select {
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
     position: relative;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     user-select: none;
-    background-color: #ffffff;
 }
 
 .action-card-select:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.1);
     border-color: #cbd5e1;
 }
 
 .action-card-select.is-selected {
-    border-color: #370709;
-    background-color: #fff8f8;
-    box-shadow: 0 6px 18px rgba(55, 7, 9, 0.12);
+    border-color: var(--card-theme-color, #820100);
+    background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
+    box-shadow: 0 8px 24px -4px rgba(130, 1, 0, 0.15);
 }
 
-.action-card-select .check-indicator {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 2px solid #cbd5e1;
-    background-color: #ffffff;
+.action-card-accent {
+    height: 4px;
+    width: 100%;
+    transition: height 0.2s ease;
+}
+
+.action-card-select.is-selected .action-card-accent {
+    height: 5px;
+}
+
+.action-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    color: #ffffff;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.action-card-select:hover .action-icon-box {
+    transform: scale(1.08);
+}
+
+.action-id-pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 2px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+}
+
+.action-card-select .check-indicator {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    background: #f8fafc;
     color: transparent;
-    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .action-card-select.is-selected .check-indicator {
-    background-color: #370709;
-    border-color: #370709;
+    background-color: var(--card-theme-color, #370709);
+    border-color: var(--card-theme-color, #370709);
     color: #ffffff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+}
+
+.action-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.35;
+    margin-top: 4px;
+    transition: color 0.15s ease;
+}
+
+.action-card-select.is-selected .action-title {
+    color: #0f172a;
+}
+
+.action-desc {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.4;
+    min-height: 2.5em;
+}
+
+.action-card-footer {
+    margin-top: auto;
+    border-color: #f1f5f9 !important;
+}
+
+.action-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: #f1f5f9;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #94a3b8;
+    display: inline-block;
+    transition: all 0.2s ease;
+}
+
+.action-card-select.is-selected .action-status-chip {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.action-card-select.is-selected .status-dot {
+    background: #10b981;
+    box-shadow: 0 0 6px #10b981;
+}
+
+.action-category-label {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
 }
 
 .badge-action-pill {
@@ -80,6 +187,7 @@
     gap: 4px;
     color: #ffffff;
     margin: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
 .step-number {
@@ -94,6 +202,19 @@
     align-items: center;
     justify-content: center;
     margin-right: 8px;
+    box-shadow: 0 2px 6px rgba(55, 7, 9, 0.3);
+}
+
+.filter-pill-btn {
+    transition: all 0.18s ease;
+    border: none;
+    font-size: 0.8rem;
+}
+
+.filter-pill-btn.active {
+    background-color: #370709 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(55, 7, 9, 0.3);
 }
 
 /* =========================================================================

@@ -56,6 +56,15 @@ require_once __DIR__ . '/approval_helper.php';
         transition: background 0.3s, color 0.3s;
     }
 
+    .sb-sidenav-menu .nav-link i {
+        font-size: 1.1rem;
+        width: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
     .sb-sidenav-menu a:hover {
         background: #500707 !important;
         color: white !important;
@@ -72,14 +81,6 @@ require_once __DIR__ . '/approval_helper.php';
         border-color: #ddd !important;
     }
 
-    .text-light,
-    .text-light-50 {
-        color: #333 !important;
-    }
-
-    .text-light-50 {
-        color: #777 !important;
-    }
 
     .text-danger {
         color: #dc3545 !important;
@@ -108,18 +109,18 @@ require_once __DIR__ . '/approval_helper.php';
                 <div class="sidebar-menu">
                     <a class="nav-link d-flex align-items-center px-4 py-3 <?= $is_dashboard ? 'bg-danger text-light' : '' ?>"
                         href="<?= $base_path ?>dashboard.php">
-                        Dashboard
+                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
                     </a>
 
                     <!-- Planning Deputy Director (H/Q-1) Menu -->
                     <?php if ($is_planning_dd): ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'planning_dd/range_details') !== false || in_array($current_file, ['range_statistics.php', 'annual_targets.php', 'monthly-annual-reports.php', 'regulatory_functions.php', 'animal_health.php', 'clinical_services.php', 'animal_breeding.php', 'livestock_production.php', 'dairy_hub.php', 'projects.php', 'monitoring.php', 'accounts.php', 'clean_sri_lanka.php', 'trainings.php'])) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/planning_dd/range_details.php">
-                            Range Details
+                            <i class="bi bi-geo-alt me-2"></i> Range Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'planning_dd/office_details') !== false) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/planning_dd/office_details.php">
-                            Office Details
+                            <i class="bi bi-building me-2"></i> Office Details
                         </a>
                     <?php endif; ?>
 
@@ -142,31 +143,31 @@ require_once __DIR__ . '/approval_helper.php';
 
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/pd/animal_health_reports.php">
-                            Animal Health Log
+                            <i class="bi bi-heart-pulse me-2"></i> Animal Health Log
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
-                            Breeding Metrics
+                            <i class="bi bi-diagram-3 me-2"></i> Breeding Metrics
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
-                            Hatchability
+                            <i class="bi bi-egg me-2"></i> Hatchability
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
-                            Vaccine Balances
+                            <i class="bi bi-capsule me-2"></i> Vaccine Balances
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
-                            Advanced Programs
+                            <i class="bi bi-calendar2-range me-2"></i> Advanced Programs
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
-                            Leave Reports
+                            <i class="bi bi-calendar-check me-2"></i> Leave Reports
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
-                            Asset Inventory
+                            <i class="bi bi-box-seam me-2"></i> Asset Inventory
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3" href="#">
-                            Dairy Hub Data
+                            <i class="bi bi-cup-hot me-2"></i> Dairy Hub Data
                         </a>
                     <?php endif; ?>
 
@@ -174,44 +175,44 @@ require_once __DIR__ . '/approval_helper.php';
                         <!-- HR Management Menu -->
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/hr/employee_managment.php">
-                            HR Management
+                            <i class="bi bi-people me-2"></i> HR Management
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/hr/leave_management.php">
-                            Leave Management
+                            <i class="bi bi-calendar-check me-2"></i> Leave Management
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/hr/inquiry_management.php">
-                            Documents
+                            <i class="bi bi-file-earmark-text me-2"></i> Documents
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/hr/todo_tasks.php">
-                            To-Do Tasks
+                            <i class="bi bi-check2-square me-2"></i> To-Do Tasks
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/hr/rti_management.php">
-                            RTI Management
+                            <i class="bi bi-shield-shaded me-2"></i> RTI Management
                         </a>
                     <?php endif; ?>
 
                     <?php if ($is_finance_admin): ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/finance/assets_management.php">
-                            Assets Management
+                            <i class="bi bi-cash-coin me-2"></i> Assets Management
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/finance/procurement_plan.php">
-                            Procurement Plan
+                            <i class="bi bi-cart-check me-2"></i> Procurement Plan
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/finance/finance_disbursementsources.php">
-                            Finance Disbursement
+                            <i class="bi bi-wallet2 me-2"></i> Finance Disbursement
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/finance/veterinary_stores.php">
-                            Veterinary Stores
+                            <i class="bi bi-shop me-2"></i> Veterinary Stores
                         </a>
                     <?php endif; ?>
 
@@ -219,42 +220,42 @@ require_once __DIR__ . '/approval_helper.php';
                         <!-- planning Officer Menu-->
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/project/psdg_projects.php">
-                            Development Projects (PSDG/CBG/NGO)
+                            <i class="bi bi-kanban me-2"></i> Development Projects (PSDG/CBG/NGO)
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/project/progress_physical_financial.php">
-                            Progress Reports (Physical & Financial)
+                            <i class="bi bi-graph-up-arrow me-2"></i> Progress Reports (Physical & Financial)
                         </a>
                     <?php endif; ?>
                     <?php if ($is_sms): ?>
                         <!-- Subject Matter Specialist Menu-->
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['office_details.php', 'lands_buildings.php', 'vehicles.php', 'furniture.php', 'machineries.php', 'instruments.php', 'counter_foilage.php', 'employee_managment.php']) && strpos($_SERVER['REQUEST_URI'], '/sms/') !== false ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/office_details.php">
-                            Office Details
+                            <i class="bi bi-building me-2"></i> Office Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'my_diary.php' || basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'advanced_programme.php' || basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'daily_diary.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/my_diary.php">
-                            Diary and Advanced Programme
+                            <i class="bi bi-journal-bookmark me-2"></i> Diary and Advanced Programme
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['immunization.php', 'vaccine_types.php']) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/immunization.php">
-                            Immunization
+                            <i class="bi bi-shield-plus me-2"></i> Immunization
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'mobile_clinics.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/mobile_clinics.php">
-                            Mobile Clinics
+                            <i class="bi bi-truck me-2"></i> Mobile Clinics
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_maintenance.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/drug_maintenance.php">
-                            Drug Maintenance
+                            <i class="bi bi-prescription2 me-2"></i> Drug Maintenance
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'outbreak_report.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/outbreak_report.php">
-                            Outbreak Report
+                            <i class="bi bi-exclamation-triangle me-2"></i> Outbreak Report
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'disease_control.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/disease_control.php">
-                            Disease Control
+                            <i class="bi bi-virus me-2"></i> Disease Control
                         </a>
                     <?php endif; ?>
 
@@ -262,83 +263,83 @@ require_once __DIR__ . '/approval_helper.php';
                         <!-- Farms Operations Menu -->
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'office_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/office_details.php">
-                            Office Details
+                            <i class="bi bi-building me-2"></i> Office Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'parent_stock_operations.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/parent_stock_operations.php">
-                            Parent Stock Operations
+                            <i class="bi bi-collection me-2"></i> Parent Stock Operations
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'hatchery_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/hatchery_register.php">
-                            Hatchery Register
+                            <i class="bi bi-egg-fried me-2"></i> Hatchery Register
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'chick_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/chick_details.php">
-                            Chick Details
+                            <i class="bi bi-twitter me-2"></i> Chick Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'feed_management.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/feed_management.php">
-                            Feed Management
+                            <i class="bi bi-basket me-2"></i> Feed Management
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'sales_of_eggs.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/sales_of_eggs.php">
-                            Sales of Eggs
+                            <i class="bi bi-cart me-2"></i> Sales of Eggs
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/drug_details.php">
-                            Drugs Details
+                            <i class="bi bi-capsule-pill me-2"></i> Drugs Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'production_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/production_details.php">
-                            Production Details
+                            <i class="bi bi-gear me-2"></i> Production Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'fuel_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/fuel_register.php">
-                            Fuel Register
+                            <i class="bi bi-fuel-pump me-2"></i> Fuel Register
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'cattle_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/cattle_register.php">
-                            Cattle
+                            <i class="bi bi-record-circle me-2"></i> Cattle
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'white_cattle_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/white_cattle_register.php">
-                            White Cattle
+                            <i class="bi bi-circle me-2"></i> White Cattle
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'buffalo_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/buffalo_register.php">
-                            Buffalo
+                            <i class="bi bi-diamond me-2"></i> Buffalo
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'goat_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/goat_register.php">
-                            Goat
+                            <i class="bi bi-star me-2"></i> Goat
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'accounts_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/farm/accounts_register.php">
-                            Accounts
+                            <i class="bi bi-calculator me-2"></i> Accounts
                         </a>
                     <?php endif; ?>
                     <?php if ($is_training_officer): ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['office_details.php', 'lands_buildings.php', 'vehicles.php', 'furniture.php', 'machineries.php', 'instruments.php', 'counter_foilage.php', 'employee_managment.php']) && strpos($_SERVER['REQUEST_URI'], '/training/') !== false ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/training/office_details.php">
-                            Office Details
+                            <i class="bi bi-building me-2"></i> Office Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'monthly_income_summary.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/training/monthly_income_summary.php">
-                            Monthly Income Summary
+                            <i class="bi bi-cash-stack me-2"></i> Monthly Income Summary
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'advanced_programme.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/training/advanced_programme.php">
-                            Advance Programme
+                            <i class="bi bi-calendar2-week me-2"></i> Advance Programme
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'produce_register.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/training/produce_register.php">
-                            Produce Register (Perishables)
+                            <i class="bi bi-journal-text me-2"></i> Produce Register (Perishables)
                         </a>
                     <?php endif; ?>
                     <?php if ($is_district_dd): ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'office_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/office_details.php">
-                            Office Details
+                            <i class="bi bi-building me-2"></i> Office Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'task_assignments.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/task_assignments.php">
@@ -346,45 +347,45 @@ require_once __DIR__ . '/approval_helper.php';
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_veterinary_officers.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/range_veterinary_officers.php">
-                            Range Veterinary Officer
+                            <i class="bi bi-person-badge me-2"></i> Range Veterinary Officer
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'regional_farms.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/regional_farms.php">
-                            Regional Farms
+                            <i class="bi bi-flower1 me-2"></i> Regional Farms
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'training_centers.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/training_centers.php">
-                            Training Center
+                            <i class="bi bi-mortarboard me-2"></i> Training Center
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'subject_matter_specialists.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/subject_matter_specialists.php">
-                            Subject Matter Specialist
+                            <i class="bi bi-award me-2"></i> Subject Matter Specialist
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'users_summary.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/users_summary.php">
-                            Users Summary
+                            <i class="bi bi-people me-2"></i> Users Summary
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'diary_management.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/diary_management.php">
-                            Diary Management
+                            <i class="bi bi-journal-text me-2"></i> Diary Management
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'revenue_management.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/revenue_management.php">
-                            Revenue Management
+                            <i class="bi bi-currency-exchange me-2"></i> Revenue Management
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'district_revenue_summary.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/district_revenue_summary.php">
-                            District Revenue Summary
+                            <i class="bi bi-bar-chart-line me-2"></i> District Revenue Summary
                         </a>
                     <?php endif; ?>
                     <?php if ($is_veterinary_surgeon): ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
-                            Office Details
+                            <i class="bi bi-building me-2"></i> Office Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
-                            Range Details
+                            <i class="bi bi-geo-alt me-2"></i> Range Details
                         </a>
 
                     <?php endif; ?>
@@ -396,16 +397,16 @@ require_once __DIR__ . '/approval_helper.php';
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/employee/my_diary.php">
-                            My Diary
+                            <i class="bi bi-journal-text me-2"></i> My Diary
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/employee/leave_requests.php">
-                            Leave Requests
+                            <i class="bi bi-calendar-minus me-2"></i> Leave Requests
                         </a>
                         <!-- profile -->
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'profile.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/profile.php">
-                            Profile
+                            <i class="bi bi-person-circle me-2"></i> Profile
                         </a>
 
                     <?php endif; ?>
