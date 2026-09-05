@@ -1,6 +1,9 @@
 <?php
 // pages/dashboard/sms.php
-if ($_SESSION['role'] !== 'sms') die("Access denied");
+$allowed_roles = ['sms', 'provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'district_dd', 'deputy_director_district', 'administrator'];
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
+    die("Access denied");
+}
 require_once './includes/header.php';
 require_once './includes/sidebar.php';
 ?>

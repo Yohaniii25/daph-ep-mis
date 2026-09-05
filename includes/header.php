@@ -249,9 +249,12 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
                             </div>
                         <?php endif; ?>
                     </div>
-                    <div class="p-2 bg-light text-center border-top">
-                        <a href="<?= $rel_path ?>pages/modules/hr/employee_managment.php" class="text-decoration-none small text-secondary fw-semibold">
-                            <i class="bi bi-people me-1"></i>View Employee Management
+                    <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center px-3">
+                        <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 text-dark fw-semibold small" data-bs-toggle="modal" data-bs-target="#allNotificationsModal">
+                            <i class="bi bi-window-stack me-1 text-danger"></i>Quick Modal
+                        </button>
+                        <a href="<?= $rel_path ?>pages/notifications.php" class="text-decoration-none small text-danger fw-bold">
+                            View All Hub <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
@@ -269,9 +272,62 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
         </div>
     </div>
 
+    <!-- Comprehensive All Notifications Modal -->
+    <div class="modal fade" id="allNotificationsModal" tabindex="-1" aria-labelledby="allNotificationsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header text-light px-4 py-3" style="background: linear-gradient(135deg, #500707 0%, #750d0d 100%);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-bell-fill fs-5"></i>
+                        <h5 class="modal-title fw-bold" id="allNotificationsModalLabel">Notifications & System Alerts</h5>
+                        <span class="badge bg-light text-dark rounded-pill ms-2 modal-unread-counter <?= $header_unread_count > 0 ? '' : 'd-none' ?>">
+                            <?= $header_unread_count ?> Unread
+                        </span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Modal Filter Controls -->
+                    <div class="p-3 bg-light border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="btn-group btn-group-sm" role="group" id="modalNotifFilterGroup">
+                            <button type="button" class="btn btn-danger active modal-filter-btn" data-filter="all">All</button>
+                            <button type="button" class="btn btn-outline-secondary modal-filter-btn" data-filter="unread">Unread</button>
+                            <button type="button" class="btn btn-outline-secondary modal-filter-btn" data-filter="approvals">Approvals</button>
+                            <button type="button" class="btn btn-outline-secondary modal-filter-btn" data-filter="transfers">Transfers</button>
+                            <button type="button" class="btn btn-outline-secondary modal-filter-btn" data-filter="roles">Roles</button>
+                        </div>
+                        <div class="input-group input-group-sm" style="max-width: 250px;">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="modalNotifSearch" placeholder="Filter alerts...">
+                        </div>
+                    </div>
+                    <!-- Modal Notification List -->
+                    <div class="list-group list-group-flush" id="modalNotifListGroup" style="min-height: 250px; max-height: 480px; overflow-y: auto;">
+                        <div class="text-center py-5 text-muted" id="modalNotifLoading">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+                            <span>Loading alerts...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light px-4 py-2.5 d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary mark-all-read-btn">
+                        <i class="bi bi-check2-all me-1"></i>Mark All Read
+                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="<?= $rel_path ?>pages/notifications.php" class="btn btn-sm btn-danger fw-semibold">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Open Full Hub
+                        </a>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Layout Container -->
     <div id="layoutSidenav">
         <?php require_once __DIR__ . '/sidebar.php'; ?>
+
 
         <div id="layoutSidenav_content">
             <main class="container-fluid px-4 py-3">

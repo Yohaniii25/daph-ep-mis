@@ -1,6 +1,6 @@
 <?php
 
-$vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
+$vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'range_veterinary_officer', 'district_dd', 'deputy_director_district', 'provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'administrator'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $vs_roles)) {
     header("Location: ../../index.php");
     exit();

@@ -265,6 +265,141 @@ if (!function_exists('format_time_ago')) {
     }
 }
 
+if (!function_exists('get_filtered_notifications')) {
+    /**
+     * Retrieve filtered notifications with detailed timestamps and category badges
+     */
+    function get_filtered_notifications($mysqli, $user_id = null, $filter_type = 'all', $unread_only = false, $limit = 50, $offset = 0) {
+        if ($user_id === null && isset($_SESSION['user_id'])) {
+            $user_id = (int)$_SESSION['user_id'];
+        }
+        $notifications = [];
+        if (!$mysqli || empty($user_id)) {
+            return $notifications;
+        }
+
+        $sql = "SELECT id, user_id, title, message, type, link, is_read, created_at 
+                FROM notifications 
+                WHERE user_id = ?";
+        $params = [$user_id];
+        $types = "i";
+
+        if ($unread_only) {
+            $sql .= " AND is_read = 0";
+        }
+
+        if (!empty($filter_type) && $filter_type !== 'all') {
+            if ($filter_type === 'approvals') {
+                $sql .= " AND type IN ('approval_required', 'approval_result')";
+            } elseif ($filter_type === 'transfers') {
+                $sql .= " AND type = 'transfer_alert'";
+            } elseif ($filter_type === 'roles') {
+                $sql .= " AND type = 'role_assignment'";
+            } elseif ($filter_type === 'officers') {
+                $sql .= " AND type = 'officer_change'";
+            } else {
+                $sql .= " AND type = ?";
+                $params[] = $filter_type;
+                $types .= "s";
+            }
+        }
+
+        $sql .= " ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= "ii";
+
+        $stmt = $mysqli->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $row['time_ago'] = format_time_ago($row['created_at']);
+                $row['formatted_date'] = date('M d, Y', strtotime($row['created_at']));
+                $row['formatted_time'] = date('h:i A', strtotime($row['created_at']));
+                
+                // Categorize for UI badge styling
+                $type_lower = strtolower($row['type'] ?? '');
+                if (strpos($type_lower, 'approval') !== false) {
+                    $row['badge_class'] = ($type_lower === 'approval_required') ? 'bg-danger' : 'bg-success';
+                    $row['badge_text'] = ($type_lower === 'approval_required') ? 'Pending Approval' : 'Authorized';
+                    $row['icon_class'] = 'bi-shield-check';
+                } elseif (strpos($type_lower, 'transfer') !== false) {
+                    $row['badge_class'] = 'bg-warning text-dark';
+                    $row['badge_text'] = 'Transfer Alert';
+                    $row['icon_class'] = 'bi-arrow-left-right';
+                } elseif (strpos($type_lower, 'role') !== false) {
+                    $row['badge_class'] = 'bg-primary';
+                    $row['badge_text'] = 'Role Assignment';
+                    $row['icon_class'] = 'bi-person-badge-fill';
+                } elseif (strpos($type_lower, 'officer') !== false) {
+                    $row['badge_class'] = 'bg-info text-dark';
+                    $row['badge_text'] = 'Officer Update';
+                    $row['icon_class'] = 'bi-person-lines-fill';
+                } else {
+                    $row['badge_class'] = 'bg-secondary';
+                    $row['badge_text'] = 'System Alert';
+                    $row['icon_class'] = 'bi-bell-fill';
+                }
+
+                $notifications[] = $row;
+            }
+            $stmt->close();
+        }
+        return $notifications;
+    }
+}
+
+if (!function_exists('get_notification_type_counts')) {
+    /**
+     * Get aggregate notification counts by category and unread status for tabs
+     */
+    function get_notification_type_counts($mysqli, $user_id = null) {
+        if ($user_id === null && isset($_SESSION['user_id'])) {
+            $user_id = (int)$_SESSION['user_id'];
+        }
+        $counts = [
+            'total' => 0,
+            'unread' => 0,
+            'approvals' => 0,
+            'transfers' => 0,
+            'roles' => 0,
+            'officers' => 0
+        ];
+        if (!$mysqli || empty($user_id)) {
+            return $counts;
+        }
+
+        $stmt = $mysqli->prepare("
+            SELECT 
+                COUNT(*) AS total_cnt,
+                SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) AS unread_cnt,
+                SUM(CASE WHEN type IN ('approval_required', 'approval_result') THEN 1 ELSE 0 END) AS approvals_cnt,
+                SUM(CASE WHEN type = 'transfer_alert' THEN 1 ELSE 0 END) AS transfers_cnt,
+                SUM(CASE WHEN type = 'role_assignment' THEN 1 ELSE 0 END) AS roles_cnt,
+                SUM(CASE WHEN type = 'officer_change' THEN 1 ELSE 0 END) AS officers_cnt
+            FROM notifications 
+            WHERE user_id = ?
+        ");
+        if ($stmt) {
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            if ($row = $res->fetch_assoc()) {
+                $counts['total'] = intval($row['total_cnt'] ?? 0);
+                $counts['unread'] = intval($row['unread_cnt'] ?? 0);
+                $counts['approvals'] = intval($row['approvals_cnt'] ?? 0);
+                $counts['transfers'] = intval($row['transfers_cnt'] ?? 0);
+                $counts['roles'] = intval($row['roles_cnt'] ?? 0);
+                $counts['officers'] = intval($row['officers_cnt'] ?? 0);
+            }
+            $stmt->close();
+        }
+        return $counts;
+    }
+}
+
 if (!function_exists('notify_assigned_officer')) {
     /**
      * Dispatch an automated direct assignment notification to an officer

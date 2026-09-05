@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['farms_dd', 'administrator', 'provincial_director'])) {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['farms_dd', 'administrator', 'provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'district_dd', 'deputy_director_district'])) {
     die("Access denied");
 }
 

@@ -99,8 +99,26 @@
             });
         }
 
-        // Notification Interactions (Dropdown, Mark Read)
+        // Notification Interactions (Dropdown, Modal, Mark Read)
         const notifApiUrl = '<?= $rel_path ?>includes/notifications_api.php';
+        let modalNotifsCache = [];
+        let modalFilter = 'all';
+
+        function syncNotificationBadges(unreadCount) {
+            const count = parseInt(unreadCount) || 0;
+            if (count > 0) {
+                $('#notificationBadge').removeClass('d-none').text(count > 99 ? '99+' : count);
+                $('#notificationHeaderBadge').removeClass('d-none').text(count + ' New');
+                $('.modal-unread-counter').removeClass('d-none').text(count + ' Unread');
+            } else {
+                $('#notificationBadge').addClass('d-none').text('0');
+                $('#notificationHeaderBadge').addClass('d-none').text('0 New');
+                $('.modal-unread-counter').addClass('d-none');
+                $('.notif-unread-dot').remove();
+                $('.notification-item').removeClass('bg-light fw-medium');
+                $('.mark-all-read-btn').fadeOut(200);
+            }
+        }
 
         $(document).on('click', '.mark-all-read-btn', function(e) {
             e.preventDefault();
@@ -113,11 +131,11 @@
                 dataType: 'json',
                 success: function(resp) {
                     if (resp && resp.success) {
-                        $('#notificationBadge').addClass('d-none').text('0');
-                        $('#notificationHeaderBadge').addClass('d-none').text('0 New');
-                        $('.notif-unread-dot').remove();
-                        $('.notification-item').removeClass('bg-light fw-medium');
-                        btn.fadeOut(200);
+                        syncNotificationBadges(0);
+                        if (modalNotifsCache.length) {
+                            modalNotifsCache.forEach(n => n.is_read = 1);
+                            renderModalNotifications();
+                        }
                     }
                 }
             });
@@ -126,20 +144,152 @@
         $(document).on('click', '.notification-item', function(e) {
             const item = $(this);
             const notifId = item.data('id');
-            const href = item.attr('href');
             if (notifId && item.find('.notif-unread-dot').length > 0) {
-                // Mark single notification as read
                 $.ajax({
                     url: notifApiUrl,
                     type: 'POST',
                     data: { action: 'mark_read', id: notifId },
                     dataType: 'json',
-                    success: function() {
+                    success: function(resp) {
                         item.removeClass('bg-light fw-medium');
                         item.find('.notif-unread-dot').remove();
+                        if (resp && typeof resp.unread_count !== 'undefined') {
+                            syncNotificationBadges(resp.unread_count);
+                        }
                     }
                 });
             }
+        });
+
+        // Load & Render Modal Notifications
+        function loadModalNotifications() {
+            $('#modalNotifListGroup').html('<div class="text-center py-5 text-muted" id="modalNotifLoading"><div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div><span>Loading alerts...</span></div>');
+            $.ajax({
+                url: notifApiUrl,
+                type: 'GET',
+                data: { action: 'fetch', limit: 80 },
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp && resp.success) {
+                        modalNotifsCache = resp.notifications || [];
+                        syncNotificationBadges(resp.unread_count);
+                        renderModalNotifications();
+                    } else {
+                        $('#modalNotifListGroup').html('<div class="text-center py-4 text-muted small">Could not load notifications.</div>');
+                    }
+                },
+                error: function() {
+                    $('#modalNotifListGroup').html('<div class="text-center py-4 text-danger small">Network error loading notifications.</div>');
+                }
+            });
+        }
+
+        function renderModalNotifications() {
+            const query = ($('#modalNotifSearch').val() || '').toLowerCase().trim();
+            const container = $('#modalNotifListGroup');
+            container.empty();
+
+            let filtered = modalNotifsCache.filter(n => {
+                const type = (n.type || '').toLowerCase();
+                const isRead = parseInt(n.is_read) === 1;
+                const text = ((n.title || '') + ' ' + (n.message || '')).toLowerCase();
+
+                let matchCat = true;
+                if (modalFilter === 'unread') matchCat = !isRead;
+                else if (modalFilter === 'approvals') matchCat = type.includes('approval');
+                else if (modalFilter === 'transfers') matchCat = type.includes('transfer');
+                else if (modalFilter === 'roles') matchCat = type.includes('role');
+
+                const matchQuery = !query || text.includes(query);
+                return matchCat && matchQuery;
+            });
+
+            if (filtered.length === 0) {
+                container.html('<div class="text-center py-5 text-muted"><i class="bi bi-bell-slash fs-2 d-block mb-2 text-secondary opacity-50"></i><span class="small">No alerts matching this filter</span></div>');
+                return;
+            }
+
+            filtered.forEach(item => {
+                const isRead = parseInt(item.is_read) === 1;
+                const badgeClass = item.badge_class || 'bg-secondary';
+                const badgeText = item.badge_text || 'Alert';
+                const iconClass = item.icon_class || 'bi-bell';
+                const link = item.link ? '<?= $rel_path ?>' + item.link.replace(/^\//, '') : '';
+
+                const rowHtml = `
+                    <div class="list-group-item p-3 border-bottom modal-notif-row ${!isRead ? 'bg-light-subtle border-start border-4 border-danger' : ''}" data-id="${item.id}">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="d-flex align-items-start gap-2.5">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 mt-1" style="width: 36px; height: 36px; background: rgba(0,0,0,0.05);">
+                                    <i class="bi ${iconClass} fs-6 text-danger"></i>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                        <span class="badge ${badgeClass} rounded-pill" style="font-size: 10px;">${badgeText}</span>
+                                        <strong class="small text-dark">${item.title}</strong>
+                                        ${!isRead ? '<span class="badge bg-danger rounded-pill py-0.5 px-1.5" style="font-size: 9px;">NEW</span>' : ''}
+                                    </div>
+                                    <p class="mb-1 text-muted small lh-sm" style="font-size: 12px;">${item.message}</p>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        <i class="bi bi-clock me-1"></i>${item.time_ago || ''} • ${item.formatted_date || ''} ${item.formatted_time || ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
+                                ${link ? `<a href="${link}" class="btn btn-sm btn-outline-danger py-0.5 px-2" style="font-size: 11px;">View</a>` : ''}
+                                ${!isRead ? `<button type="button" class="btn btn-sm btn-light border py-0.5 px-2 modal-mark-read-btn" data-id="${item.id}" style="font-size: 11px;"><i class="bi bi-check2"></i></button>` : '<i class="bi bi-check2-circle text-success" title="Read"></i>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.append(rowHtml);
+            });
+        }
+
+        const modalEl = document.getElementById('allNotificationsModal');
+        if (modalEl) {
+            modalEl.addEventListener('show.bs.modal', function() {
+                loadModalNotifications();
+            });
+        }
+
+        // Modal filter click
+        $(document).on('click', '.modal-filter-btn', function() {
+            $('.modal-filter-btn').removeClass('btn-danger active').addClass('btn-outline-secondary');
+            $(this).removeClass('btn-outline-secondary').addClass('btn-danger active');
+            modalFilter = $(this).data('filter') || 'all';
+            renderModalNotifications();
+        });
+
+        $(document).on('input', '#modalNotifSearch', function() {
+            renderModalNotifications();
+        });
+
+        // Mark read inside modal
+        $(document).on('click', '.modal-mark-read-btn', function() {
+            const btn = $(this);
+            const notifId = btn.data('id');
+            if (!notifId) return;
+
+            $.ajax({
+                url: notifApiUrl,
+                type: 'POST',
+                data: { action: 'mark_read', id: notifId },
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp && resp.success) {
+                        const row = btn.closest('.modal-notif-row');
+                        row.removeClass('bg-light-subtle border-start border-4 border-danger');
+                        row.find('.badge.bg-danger').remove();
+                        btn.replaceWith('<i class="bi bi-check2-circle text-success" title="Read"></i>');
+                        const cached = modalNotifsCache.find(n => parseInt(n.id) === parseInt(notifId));
+                        if (cached) cached.is_read = 1;
+                        if (resp.unread_count !== undefined) {
+                            syncNotificationBadges(resp.unread_count);
+                        }
+                    }
+                }
+            });
         });
     </script>
     <?php if (!empty($pageScripts)) echo $pageScripts; ?>

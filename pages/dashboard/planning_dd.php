@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$allowed_roles = ['deputy_director_hq_1'];
+$allowed_roles = ['deputy_director_hq_1', 'deputy_director_hq_2', 'provincial_director', 'district_dd', 'deputy_director_district', 'administrator', 'sms'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
     die("Access denied. Unauthorized role footprint.");
 }
