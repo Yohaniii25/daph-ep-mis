@@ -405,7 +405,9 @@ $current_view_param = $_GET['view'] ?? '';
                     <?php endif; ?>
 
                     <!-- Provincial Director Menu -->
-                    <?php if ($is_pd): ?>
+                    <?php if ($is_pd): 
+                        $is_pd_role_active = (strpos($current_path, 'role_hub.php') !== false || strpos($current_path, 'summary_') !== false);
+                    ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'pd/pending_approvals.php') !== false) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/pd/pending_approvals.php">
                             <i class="bi bi-shield-check me-2"></i> Pending Approvals
@@ -417,7 +419,45 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/pd/employee_managment.php">
                             <i class="bi bi-people me-2"></i> Global HR Directory
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'pd/animal_health_reports.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/pd/animal_health_reports.php">
+                            <i class="bi bi-heart-pulse me-2"></i> Animal Health Log
+                        </a>
 
+                        <!-- User Role Summaries Collapsible Submenu -->
+                        <a class="nav-link d-flex align-items-center justify-content-between px-4 py-3 category-toggle <?= $is_pd_role_active ? '' : 'collapsed' ?>"
+                           data-bs-toggle="collapse" href="#pdUserRolesSubmenu" role="button" aria-expanded="<?= $is_pd_role_active ? 'true' : 'false' ?>">
+                            <span class="d-flex align-items-center">
+                                <i class="bi bi-person-lines-fill me-2"></i> User Role Analytics
+                            </span>
+                            <i class="bi bi-chevron-down rotate-caret"></i>
+                        </a>
+                        <div class="collapse <?= $is_pd_role_active ? 'show' : '' ?>" id="pdUserRolesSubmenu">
+                            <a class="nav-link submenu-link <?= (strpos($current_path, 'role=vet_surgeon') !== false || strpos($current_path, 'summary_vet_surgeon.php') !== false) ? 'active' : '' ?>" 
+                               href="<?= $base_path ?>pages/modules/pd/role_hub.php?role=vet_surgeon">
+                                <i class="bi bi-hospital me-2"></i> Veterinary Surgeons
+                            </a>
+                            <a class="nav-link submenu-link <?= (strpos($current_path, 'role=ldo') !== false || strpos($current_path, 'summary_ldo.php') !== false) ? 'active' : '' ?>" 
+                               href="<?= $base_path ?>pages/modules/pd/role_hub.php?role=ldo">
+                                <i class="bi bi-person-badge me-2"></i> Livestock Dev Officers
+                            </a>
+                            <a class="nav-link submenu-link <?= (strpos($current_path, 'role=sms') !== false || strpos($current_path, 'summary_sms.php') !== false) ? 'active' : '' ?>" 
+                               href="<?= $base_path ?>pages/modules/pd/role_hub.php?role=sms">
+                                <i class="bi bi-journal-medical me-2"></i> Specialist (SMS)
+                            </a>
+                            <a class="nav-link submenu-link <?= (strpos($current_path, 'role=district_dd') !== false || strpos($current_path, 'summary_district_dd.php') !== false) ? 'active' : '' ?>" 
+                               href="<?= $base_path ?>pages/modules/pd/role_hub.php?role=district_dd">
+                                <i class="bi bi-geo-alt me-2"></i> District Deputy Directors
+                            </a>
+                            <a class="nav-link submenu-link <?= (strpos($current_path, 'role=training_officer') !== false || strpos($current_path, 'summary_training_officer.php') !== false) ? 'active' : '' ?>" 
+                               href="<?= $base_path ?>pages/modules/pd/role_hub.php?role=training_officer">
+                                <i class="bi bi-mortarboard me-2"></i> Training Officers
+                            </a>
+                            <a class="nav-link submenu-link <?= (strpos($current_path, 'role=farms') !== false || strpos($current_path, 'summary_farms.php') !== false) ? 'active' : '' ?>" 
+                               href="<?= $base_path ?>pages/modules/pd/role_hub.php?role=farms">
+                                <i class="bi bi-flower1 me-2"></i> Farm Officers
+                            </a>
+                        </div>
                     <?php endif; ?>
 
                     <?php if ($is_hr_user): ?>
