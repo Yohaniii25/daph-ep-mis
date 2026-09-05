@@ -187,6 +187,7 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_machinery_quantity').value = data.available_quantity || 1;
         document.getElementById('edit_machinery_purchase_date').value = data.purchase_date || '';
         document.getElementById('edit_machinery_remarks').value = data.remarks || '';
+        document.getElementById('edit_machinery_unit').value = data.unit || 'range_veterinary_officer';
         var modal = new bootstrap.Modal(document.getElementById('editMachineryModal'));
         modal.show();
     }

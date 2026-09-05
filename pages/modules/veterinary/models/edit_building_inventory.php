@@ -9,13 +9,28 @@
                 <input type="hidden" name="id" id="edit_inventory_id">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Select Target Location Property</label>
                             <select name="land_asset_id" id="edit_land_asset_id" class="form-select" required>
                                 <option value="" disabled selected>-- Select Property Site --</option>
                                 <?php foreach ($lands_cache as $land): ?>
                                     <option value="<?= $land['id'] ?>"><?= htmlspecialchars($land['property_name']) ?></option>
                                 <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Unit <span class="text-danger">*</span></label>
+                            <select name="unit" id="edit_inventory_unit" class="form-select" required>
+                                <option value="" disabled selected>-- Select Unit --</option>
+                                <option value="provincial_director">Provincial Director</option>
+                                <option value="additional_provincial_director">Additional Provincial Director</option>
+                                <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                                <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                                <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                                <option value="deputy_director_district">Deputy Director - District</option>
+                                <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                                <option value="training_centers">Training Centers</option>
+                                <option value="regional_farms">Regional Farms</option>
                             </select>
                         </div>
                         <div class="col-md-8">

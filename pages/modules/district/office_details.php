@@ -1256,6 +1256,21 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="edit_mac_id">
                     <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Unit *</label>
+                        <select name="unit" id="edit_mac_unit" class="form-select" required>
+                            <option value="" disabled selected>-- Select Unit --</option>
+                            <option value="provincial_director">Provincial Director</option>
+                            <option value="additional_provincial_director">Additional Provincial Director</option>
+                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">Deputy Director - District</option>
+                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                            <option value="training_centers">Training Centers</option>
+                            <option value="regional_farms">Regional Farms</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Machinery Type / Model *</label>
                         <input type="text" name="machinery_type" id="edit_mac_type" class="form-control" required>
                     </div>
@@ -1306,6 +1321,21 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
             <form id="editVehicleForm">
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="edit_veh_id">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Unit *</label>
+                        <select name="unit" id="edit_veh_unit" class="form-select" required>
+                            <option value="" disabled selected>-- Select Unit --</option>
+                            <option value="provincial_director">Provincial Director</option>
+                            <option value="additional_provincial_director">Additional Provincial Director</option>
+                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">Deputy Director - District</option>
+                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                            <option value="training_centers">Training Centers</option>
+                            <option value="regional_farms">Regional Farms</option>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Vehicle Type *</label>
                         <input type="text" name="vehicle_type" id="edit_veh_type" class="form-control" required>
@@ -1358,6 +1388,21 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="edit_fur_id">
                     <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Unit *</label>
+                        <select name="unit" id="edit_fur_unit" class="form-select" required>
+                            <option value="" disabled selected>-- Select Unit --</option>
+                            <option value="provincial_director">Provincial Director</option>
+                            <option value="additional_provincial_director">Additional Provincial Director</option>
+                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">Deputy Director - District</option>
+                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                            <option value="training_centers">Training Centers</option>
+                            <option value="regional_farms">Regional Farms</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Furniture Item / Type *</label>
                         <input type="text" name="furniture_type" id="edit_fur_type" class="form-control" required>
                     </div>
@@ -1408,6 +1453,21 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
             <form id="editInstrumentForm">
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="edit_ins_id">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Unit *</label>
+                        <select name="unit" id="edit_ins_unit" class="form-select" required>
+                            <option value="" disabled selected>-- Select Unit --</option>
+                            <option value="provincial_director">Provincial Director</option>
+                            <option value="additional_provincial_director">Additional Provincial Director</option>
+                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">Deputy Director - District</option>
+                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                            <option value="training_centers">Training Centers</option>
+                            <option value="regional_farms">Regional Farms</option>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Instrument Type *</label>
                         <input type="text" name="instrument_type" id="edit_ins_type" class="form-control" required>
@@ -1460,6 +1520,21 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="edit_cou_id">
                     <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Unit *</label>
+                        <select name="unit" id="edit_cou_unit" class="form-select" required>
+                            <option value="" disabled selected>-- Select Unit --</option>
+                            <option value="provincial_director">Provincial Director</option>
+                            <option value="additional_provincial_director">Additional Provincial Director</option>
+                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">Deputy Director - District</option>
+                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                            <option value="training_centers">Training Centers</option>
+                            <option value="regional_farms">Regional Farms</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Counterfoil / Book Type *</label>
                         <input type="text" name="counterfoil_type" id="edit_cou_type" class="form-control" required>
                     </div>
@@ -1511,6 +1586,21 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
             <form id="editLandForm">
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="edit_land_id">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Unit *</label>
+                        <select name="unit" id="edit_land_unit" class="form-select" required>
+                            <option value="" disabled selected>-- Select Unit --</option>
+                            <option value="provincial_director">Provincial Director</option>
+                            <option value="additional_provincial_director">Additional Provincial Director</option>
+                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">Deputy Director - District</option>
+                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                            <option value="training_centers">Training Centers</option>
+                            <option value="regional_farms">Regional Farms</option>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Property Name *</label>
                         <input type="text" name="property_name" id="edit_land_name" class="form-control" required>
@@ -1565,6 +1655,21 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                     <input type="hidden" name="id" id="edit_bld_id">
                     <input type="hidden" name="land_asset_id" id="edit_bld_land_asset_id">
                     <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Unit *</label>
+                        <select name="unit" id="edit_bld_unit" class="form-select" required>
+                            <option value="" disabled selected>-- Select Unit --</option>
+                            <option value="provincial_director">Provincial Director</option>
+                            <option value="additional_provincial_director">Additional Provincial Director</option>
+                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">Deputy Director - District</option>
+                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                            <option value="training_centers">Training Centers</option>
+                            <option value="regional_farms">Regional Farms</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Inventory Item Name *</label>
                         <input type="text" name="inventory_item" id="edit_bld_item" class="form-control" required>
                     </div>
@@ -1616,6 +1721,21 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="edit_staff_id">
                     <input type="hidden" name="ajax" value="1">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Unit *</label>
+                        <select name="unit" id="edit_staff_unit" class="form-select" required>
+                            <option value="" disabled selected>-- Select Unit --</option>
+                            <option value="provincial_director">Provincial Director</option>
+                            <option value="additional_provincial_director">Additional Provincial Director</option>
+                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
+                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
+                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">Deputy Director - District</option>
+                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
+                            <option value="training_centers">Training Centers</option>
+                            <option value="regional_farms">Regional Farms</option>
+                        </select>
+                    </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold small text-muted">Officer Full Name *</label>
@@ -1798,6 +1918,7 @@ function viewMachinery(data) {
 }
 function editMachinery(data) {
     $('#edit_mac_id').val(data.id || '');
+    $('#edit_mac_unit').val(data.unit || '');
     $('#edit_mac_type').val(data.machinery_type || '');
     $('#edit_mac_condition').val(data.current_condition || 'Good');
     $('#edit_mac_quantity').val(data.available_quantity || 1);
@@ -1819,6 +1940,7 @@ function viewVehicle(data) {
 }
 function editVehicle(data) {
     $('#edit_veh_id').val(data.id || '');
+    $('#edit_veh_unit').val(data.unit || '');
     $('#edit_veh_type').val(data.vehicle_type || '');
     $('#edit_veh_number').val(data.vehicle_number || '');
     $('#edit_veh_chassis').val(data.chassis_number || '');
@@ -1840,6 +1962,7 @@ function viewFurniture(data) {
 }
 function editFurniture(data) {
     $('#edit_fur_id').val(data.id || '');
+    $('#edit_fur_unit').val(data.unit || '');
     $('#edit_fur_type').val(data.furniture_type || data.item_name || '');
     $('#edit_fur_quantity').val(data.available_quantity || 1);
     $('#edit_fur_condition').val(data.current_condition || 'Good');
@@ -1861,6 +1984,7 @@ function viewInstrument(data) {
 }
 function editInstrument(data) {
     $('#edit_ins_id').val(data.id || '');
+    $('#edit_ins_unit').val(data.unit || '');
     $('#edit_ins_type').val(data.instrument_type || data.instrument_name || '');
     $('#edit_ins_condition').val(data.current_condition || 'Good');
     $('#edit_ins_quantity').val(data.available_quantity || 1);
@@ -1882,6 +2006,7 @@ function viewCounterfoil(data) {
 }
 function editCounterfoil(data) {
     $('#edit_cou_id').val(data.id || '');
+    $('#edit_cou_unit').val(data.unit || '');
     $('#edit_cou_type').val(data.counterfoil_type || data.book_type || '');
     $('#edit_cou_condition').val(data.current_condition || data.current_status || 'Good');
     $('#edit_cou_quantity').val(data.available_quantity || 1);
@@ -1904,6 +2029,7 @@ function viewLand(data) {
 }
 function editLand(data) {
     $('#edit_land_id').val(data.id || '');
+    $('#edit_land_unit').val(data.unit || '');
     $('#edit_land_name').val(data.property_name || data.land_name || '');
     $('#edit_land_extent').val(data.land_extent || '');
     $('#edit_land_building_area').val(data.building_area || '');
@@ -1927,6 +2053,7 @@ function viewBuilding(data) {
 }
 function editBuilding(data) {
     $('#edit_bld_id').val(data.id || '');
+    $('#edit_bld_unit').val(data.unit || '');
     $('#edit_bld_land_asset_id').val(data.land_asset_id || '');
     $('#edit_bld_item').val(data.inventory_item || data.building_name || '');
     $('#edit_bld_quantity').val(data.available_quantity || 1);
@@ -1951,6 +2078,7 @@ function viewStaff(data) {
 }
 function editStaff(data) {
     $('#edit_staff_id').val(data.id || '');
+    $('#edit_staff_unit').val(data.unit || '');
     $('#edit_staff_name').val(data.full_name || '');
     $('#edit_staff_number').val(data.service_number || data.emp_id || '');
     $('#edit_staff_designation').val(data.designation || '');

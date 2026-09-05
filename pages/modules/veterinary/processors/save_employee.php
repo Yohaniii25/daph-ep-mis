@@ -9,13 +9,20 @@ session_start();
 require_once '../../../../config/db_connect.php';
 require_once '../../../../includes/notification_helper.php';
 
-$vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
+$vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director', 'district_dd', 'deputy_director_district'];
+$is_ajax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || (isset($_POST['ajax']) && $_POST['ajax'] == 1);
+
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $vs_roles)) {
+    if ($is_ajax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
+        exit();
+    }
     header("Location: ../../../../index.php");
     exit();
 }
 
-if (isset($_POST['save_employee'])) {
+if (isset($_POST['save_employee']) || $is_ajax) {
     // Collect and sanitize form variables
     $service_number = trim($_POST['service_number'] ?? '');
     $officer_name   = trim($_POST['officer_name'] ?? '');
@@ -24,6 +31,7 @@ if (isset($_POST['save_employee'])) {
     $service_cat    = trim($_POST['service_category'] ?? '');
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
+    $unit           = trim($_POST['unit'] ?? '');
     
     $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
@@ -57,6 +65,11 @@ if (isset($_POST['save_employee'])) {
             $check_email->execute();
             if ($check_email->get_result()->num_rows > 0) {
                 $check_email->close();
+                if ($is_ajax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => "Error: An officer with email '" . htmlspecialchars($email) . "' already exists."]);
+                    exit();
+                }
                 $_SESSION['msg'] = "Error: An officer with email '" . htmlspecialchars($email) . "' already exists.";
                 $_SESSION['msg_type'] = "danger";
                 header("Location: ../employee_managment.php");
@@ -99,13 +112,13 @@ if (isset($_POST['save_employee'])) {
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
             district_id, range_id, date_of_birth, registered_date, appointment_date, 
-            appointment_date_current_position, is_active, district
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?)
+            appointment_date_current_position, is_active, district, unit
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?, ?)
     ");
 
     if ($insert_stmt) {
         $insert_stmt->bind_param(
-            "ssssssssssiissss",
+            "ssssssssssiisssss",
             $username,
             $default_password,
             $email,
@@ -121,21 +134,37 @@ if (isset($_POST['save_employee'])) {
             $dob,
             $app_date,
             $app_current,
-            $district_enum
+            $district_enum,
+            $unit
         );
 
         if ($insert_stmt->execute()) {
+            if ($is_ajax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Officer record successfully registered.']);
+                exit();
+            }
             $_SESSION['msg'] = "Officer record successfully created under your Range profile.";
             $_SESSION['msg_type'] = "success";
 
             // Automated notification trigger
             create_officer_notification($mysqli, 'New Officer Added', $officer_name, $service_number, $range_id, 'pages/modules/veterinary/employee_managment.php');
         } else {
+            if ($is_ajax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => "Database error: " . $insert_stmt->error]);
+                exit();
+            }
             $_SESSION['msg'] = "Database error: " . $insert_stmt->error;
             $_SESSION['msg_type'] = "danger";
         }
         $insert_stmt->close();
     } else {
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => "Failed to construct application transaction statement: " . $mysqli->error]);
+            exit();
+        }
         $_SESSION['msg'] = "Failed to construct application transaction statement: " . $mysqli->error;
         $_SESSION['msg_type'] = "danger";
     }

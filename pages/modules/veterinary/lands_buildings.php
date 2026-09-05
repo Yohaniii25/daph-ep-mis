@@ -387,6 +387,7 @@ require_once '../../../includes/header.php';
 
     function editLand(data) {
         document.getElementById('edit_land_id').value = data.id || '';
+        document.getElementById('edit_land_unit').value = data.unit || '';
         document.getElementById('edit_property_name').value = data.property_name || '';
         document.getElementById('edit_land_extent').value = data.land_extent || '';
         document.getElementById('edit_building_area').value = data.building_area || '';
@@ -410,6 +411,7 @@ require_once '../../../includes/header.php';
 
     function editInventory(data) {
         document.getElementById('edit_inventory_id').value = data.id || '';
+        document.getElementById('edit_inventory_unit').value = data.unit || '';
         document.getElementById('edit_land_asset_id').value = data.land_asset_id || '';
         document.getElementById('edit_inventory_item').value = data.inventory_item || '';
         document.getElementById('edit_available_quantity').value = data.available_quantity || 1;

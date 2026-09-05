@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $chassis_number    = isset($_POST['chassis_number']) ? trim(htmlspecialchars($_POST['chassis_number'])) : '';
     $current_condition = isset($_POST['current_condition']) ? trim(htmlspecialchars($_POST['current_condition'])) : '';
     $other_details     = isset($_POST['other_details']) ? trim(htmlspecialchars($_POST['other_details'])) : '';
+    $unit              = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
 
     if (!$id || empty($vehicle_type) || empty($vehicle_number)) {
         echo json_encode(['success' => false, 'message' => 'Validation error']);
@@ -35,6 +36,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Record not found']);
         exit();
     }
+
+    // Resolve unit fallback if not passed
+    if ($unit === '' && isset($old_data['unit'])) {
+        $unit = $old_data['unit'];
+    }
+
+    $target_desc = $vehicle_type . ' (' . $vehicle_number . ')';
+
+    // Detect Inter-Departmental Transfer & Notify Provincial Director
+    check_and_notify_unit_transfer(
+        $mysqli, 
+        $target_desc, 
+        $old_data['unit'] ?? '', 
+        $unit, 
+        'pages/modules/pd/pending_approvals.php'
+    );
 
     // Resolve district and range
     $district_id = !empty($old_data['district_id']) ? intval($old_data['district_id']) : intval($_SESSION['district_id'] ?? 0);
@@ -54,11 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'vehicle_number'    => $vehicle_number,
         'chassis_number'    => $chassis_number,
         'current_condition' => $current_condition,
-        'other_details'     => $other_details
+        'other_details'     => $other_details,
+        'unit'              => $unit
     ];
 
     // Staging evaluation
-    $target_desc = $vehicle_type . ' (' . $vehicle_number . ')';
     $staging_res = stage_or_apply_edit(
         $mysqli, 
         'inventory', 
@@ -81,9 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Direct update if pre-authorized
-    $stmt = $mysqli->prepare("UPDATE registered_vehicles SET vehicle_type = ?, vehicle_number = ?, chassis_number = ?, current_condition = ?, other_details = ? WHERE id = ?");
+    $stmt = $mysqli->prepare("UPDATE registered_vehicles SET vehicle_type = ?, vehicle_number = ?, chassis_number = ?, current_condition = ?, other_details = ?, unit = ? WHERE id = ?");
     if ($stmt) {
-        $stmt->bind_param("sssssi", $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $id);
+        $stmt->bind_param("ssssssi", $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $unit, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Vehicle updated successfully.']);
         } else {

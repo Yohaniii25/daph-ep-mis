@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $available_quantity = isset($_POST['available_quantity']) ? filter_var($_POST['available_quantity'], FILTER_VALIDATE_INT) : 0;
     $purchase_date      = isset($_POST['purchase_date']) ? trim(htmlspecialchars($_POST['purchase_date'])) : '';
     $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
+    $unit               = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
 
     if (!$id || empty($machinery_type) || !$available_quantity) {
         echo json_encode(['success' => false, 'message' => 'Validation failed']);
@@ -35,6 +36,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Record not found']);
         exit();
     }
+
+    // Resolve unit fallback if not passed
+    if ($unit === '' && isset($old_data['unit'])) {
+        $unit = $old_data['unit'];
+    }
+
+    // Detect Inter-Departmental Transfer & Notify Provincial Director
+    check_and_notify_unit_transfer(
+        $mysqli, 
+        $machinery_type, 
+        $old_data['unit'] ?? '', 
+        $unit, 
+        'pages/modules/pd/pending_approvals.php'
+    );
 
     // Resolve district and range
     $district_id = !empty($old_data['district_id']) ? intval($old_data['district_id']) : intval($_SESSION['district_id'] ?? 0);
@@ -54,7 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'current_condition'  => $current_condition,
         'available_quantity' => $available_quantity,
         'purchase_date'      => $purchase_date,
-        'remarks'            => $remarks
+        'remarks'            => $remarks,
+        'unit'               => $unit
     ];
 
     // Staging evaluation
@@ -80,9 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Direct update if pre-authorized
-    $stmt = $mysqli->prepare("UPDATE machinery_assets SET machinery_type = ?, current_condition = ?, available_quantity = ?, purchase_date = ?, remarks = ? WHERE id = ?");
+    $stmt = $mysqli->prepare("UPDATE machinery_assets SET machinery_type = ?, current_condition = ?, available_quantity = ?, purchase_date = ?, remarks = ?, unit = ? WHERE id = ?");
     if ($stmt) {
-        $stmt->bind_param("ssissi", $machinery_type, $current_condition, $available_quantity, $purchase_date, $remarks, $id);
+        $stmt->bind_param("ssisssi", $machinery_type, $current_condition, $available_quantity, $purchase_date, $remarks, $unit, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Machinery asset updated successfully.']);
         } else {

@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $current_condition  = isset($_POST['current_condition']) ? trim(htmlspecialchars($_POST['current_condition'])) : '';
     $specification      = isset($_POST['specification']) ? trim(htmlspecialchars($_POST['specification'])) : '';
     $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
+    $unit               = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
 
     if (!$id || !$land_asset_id || empty($inventory_item) || !$available_quantity) {
         echo json_encode(['success' => false, 'message' => 'Validation failed. Required values missing.']);
@@ -36,6 +37,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Record not found']);
         exit();
     }
+
+    // Resolve unit fallback if not passed
+    if ($unit === '' && isset($old_data['unit'])) {
+        $unit = $old_data['unit'];
+    }
+
+    // Detect Inter-Departmental Transfer & Notify Provincial Director
+    check_and_notify_unit_transfer(
+        $mysqli, 
+        $inventory_item, 
+        $old_data['unit'] ?? '', 
+        $unit, 
+        'pages/modules/pd/pending_approvals.php'
+    );
 
     // Resolve district and range from land asset
     $land_info = null;
@@ -63,7 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'specification'      => $specification,
         'current_condition'  => $current_condition,
         'available_quantity' => $available_quantity,
-        'remarks'            => $remarks
+        'remarks'            => $remarks,
+        'unit'               => $unit
     ];
 
     // Staging evaluation
@@ -96,12 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             specification = ?,
             current_condition = ?,
             available_quantity = ?,
-            remarks = ?
+            remarks = ?,
+            unit = ?
         WHERE id = ?
     ");
 
     if ($stmt) {
-        $stmt->bind_param("isssisi", $land_asset_id, $inventory_item, $specification, $current_condition, $available_quantity, $remarks, $id);
+        $stmt->bind_param("isssissi", $land_asset_id, $inventory_item, $specification, $current_condition, $available_quantity, $remarks, $unit, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Inventory item updated successfully.']);
         } else {

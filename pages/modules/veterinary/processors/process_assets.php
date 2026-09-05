@@ -12,6 +12,7 @@ $range_id = $_SESSION['range_id'];
 $type     = $_POST['asset_type'] ?? '';
 $name     = $_POST['display_name'] ?? '';
 $desc     = $_POST['description'] ?? '';
+$unit     = trim($_POST['unit'] ?? '');
 
 try {
     if ($type === 'immovable') {
@@ -19,8 +20,8 @@ try {
         $location = $_POST['location'] ?? 'N/A';
         $extent   = $_POST['extent'] ?? 'N/A';
 
-        $stmt = $mysqli->prepare("INSERT INTO assets_immovable (range_id, asset_name, description, location, extent) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("issss", $range_id, $name, $desc, $location, $extent);
+        $stmt = $mysqli->prepare("INSERT INTO assets_immovable (range_id, asset_name, description, location, extent, unit) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssss", $range_id, $name, $desc, $location, $extent, $unit);
 
     } elseif ($type === 'movable') {
         // Handle Vehicles/Equipment
@@ -28,8 +29,8 @@ try {
         $cond   = $_POST['condition'] ?? 'Good';
         $serial = $_POST['serial_no'] ?? 'N/A';
 
-        $stmt = $mysqli->prepare("INSERT INTO assets_movable (range_id, asset_category, item_name, serial_no, `condition`) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("issss", $range_id, $cat, $name, $serial, $cond);
+        $stmt = $mysqli->prepare("INSERT INTO assets_movable (range_id, asset_category, item_name, serial_no, `condition`, unit) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssss", $range_id, $cat, $name, $serial, $cond, $unit);
     } else {
         throw new Exception("Invalid Asset Type selected.");
     }

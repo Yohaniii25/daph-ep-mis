@@ -83,6 +83,7 @@ $query = "
         od.appointment_date,
         od.appointment_date_current_position,
         od.registered_date,
+        od.unit,
         vr.name as range_name, 
         d.name as district_name 
     FROM users od
@@ -356,6 +357,9 @@ require_once '../../../includes/header.php';
 
     function editEmployee(data) {
         document.getElementById('edit_id').value = data.id || '';
+        if (document.getElementById('edit_employee_unit')) {
+            document.getElementById('edit_employee_unit').value = data.unit || '';
+        }
         document.getElementById('edit_service_number').value = data.service_number || data.emp_id || '';
         document.getElementById('edit_officer_name').value = data.full_name || '';
 

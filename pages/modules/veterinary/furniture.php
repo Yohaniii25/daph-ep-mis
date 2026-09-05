@@ -188,6 +188,7 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_date_received').value = data.date_received || '';
         document.getElementById('edit_furniture_condition').value = data.current_condition || 'Good';
         document.getElementById('edit_furniture_remarks').value = data.remarks || '';
+        document.getElementById('edit_furniture_unit').value = data.unit || 'range_veterinary_officer';
         var modal = new bootstrap.Modal(document.getElementById('editFurnitureModal'));
         modal.show();
     }

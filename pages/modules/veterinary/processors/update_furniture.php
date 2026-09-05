@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date_received      = isset($_POST['date_received']) ? trim(htmlspecialchars($_POST['date_received'])) : '';
     $current_condition  = isset($_POST['current_condition']) ? trim(htmlspecialchars($_POST['current_condition'])) : '';
     $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
+    $unit               = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
 
     if (!$id || empty($furniture_type) || !$available_quantity) {
         echo json_encode(['success' => false, 'message' => 'Validation error']);
@@ -35,6 +36,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Record not found']);
         exit();
     }
+
+    // Resolve unit fallback if not passed
+    if ($unit === '' && isset($old_data['unit'])) {
+        $unit = $old_data['unit'];
+    }
+
+    // Detect Inter-Departmental Transfer & Notify Provincial Director
+    check_and_notify_unit_transfer(
+        $mysqli, 
+        $furniture_type, 
+        $old_data['unit'] ?? '', 
+        $unit, 
+        'pages/modules/pd/pending_approvals.php'
+    );
 
     // Resolve district and range
     $district_id = !empty($old_data['district_id']) ? intval($old_data['district_id']) : intval($_SESSION['district_id'] ?? 0);
@@ -54,7 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'available_quantity' => $available_quantity,
         'date_received' => $date_received,
         'current_condition' => $current_condition,
-        'remarks' => $remarks
+        'remarks' => $remarks,
+        'unit' => $unit
     ];
 
     // Staging evaluation
@@ -80,9 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Direct update if pre-authorized
-    $stmt = $mysqli->prepare("UPDATE furniture_assets SET furniture_type = ?, available_quantity = ?, date_received = ?, current_condition = ?, remarks = ? WHERE id = ?");
+    $stmt = $mysqli->prepare("UPDATE furniture_assets SET furniture_type = ?, available_quantity = ?, date_received = ?, current_condition = ?, remarks = ?, unit = ? WHERE id = ?");
     if ($stmt) {
-        $stmt->bind_param("sisssi", $furniture_type, $available_quantity, $date_received, $current_condition, $remarks, $id);
+        $stmt->bind_param("sissssi", $furniture_type, $available_quantity, $date_received, $current_condition, $remarks, $unit, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Furniture asset updated successfully.']);
         } else {

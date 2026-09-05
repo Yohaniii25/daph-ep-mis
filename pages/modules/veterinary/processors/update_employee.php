@@ -24,6 +24,7 @@ if (isset($_POST['update_employee']) || $is_ajax) {
     $service_cat    = trim($_POST['service_category'] ?? '');
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
+    $unit           = trim($_POST['unit'] ?? '');
     
     $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
@@ -79,6 +80,20 @@ if (isset($_POST['update_employee']) || $is_ajax) {
         exit();
     }
 
+    // Resolve unit fallback if not passed
+    if ($unit === '' && isset($old_user['unit'])) {
+        $unit = $old_user['unit'];
+    }
+
+    // Detect Inter-Departmental Transfer & Notify Provincial Director
+    check_and_notify_unit_transfer(
+        $mysqli, 
+        $officer_name, 
+        $old_user['unit'] ?? '', 
+        $unit, 
+        'pages/modules/pd/pending_approvals.php'
+    );
+
     // Resolve district and range
     $district_id = !empty($old_user['district_id']) ? intval($old_user['district_id']) : intval($_SESSION['district_id'] ?? 0);
     $range_id    = !empty($old_user['range_id']) ? intval($old_user['range_id']) : ($_SESSION['range_id'] ?? null);
@@ -109,7 +124,8 @@ if (isset($_POST['update_employee']) || $is_ajax) {
         'phone' => $contact_number,
         'date_of_birth' => $dob,
         'appointment_date' => $app_date,
-        'appointment_date_current_position' => $app_current
+        'appointment_date_current_position' => $app_current,
+        'unit' => $unit
     ];
 
     // Staging evaluation
@@ -154,13 +170,14 @@ if (isset($_POST['update_employee']) || $is_ajax) {
             phone = ?,
             date_of_birth = ?,
             appointment_date = ?,
-            appointment_date_current_position = ?
+            appointment_date_current_position = ?,
+            unit = ?
         WHERE id = ? AND district_id = ?
     ");
 
     if ($update_stmt) {
         $update_stmt->bind_param(
-            "sssssssssssii",
+            "ssssssssssssii",
             $service_number,
             $service_number,
             $officer_name,
@@ -172,6 +189,7 @@ if (isset($_POST['update_employee']) || $is_ajax) {
             $dob,
             $app_date,
             $app_current,
+            $unit,
             $id,
             $district_id
         );

@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $land_status      = isset($_POST['land_status']) ? trim(htmlspecialchars($_POST['land_status'])) : '';
     $deed_reference   = isset($_POST['deed_reference']) ? trim(htmlspecialchars($_POST['deed_reference'])) : '';
     $deed_description = isset($_POST['deed_description']) ? trim(htmlspecialchars($_POST['deed_description'])) : '';
+    $unit             = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
 
     if (!$id || empty($property_name)) {
         echo json_encode(['success' => false, 'message' => 'Validation failed. Required fields missing.']);
@@ -36,6 +37,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Record not found']);
         exit();
     }
+
+    // Resolve unit fallback if not passed
+    if ($unit === '' && isset($old_data['unit'])) {
+        $unit = $old_data['unit'];
+    }
+
+    // Detect Inter-Departmental Transfer & Notify Provincial Director
+    check_and_notify_unit_transfer(
+        $mysqli, 
+        $property_name, 
+        $old_data['unit'] ?? '', 
+        $unit, 
+        'pages/modules/pd/pending_approvals.php'
+    );
 
     // Resolve district and range
     $district_id = !empty($old_data['district_id']) ? intval($old_data['district_id']) : intval($_SESSION['district_id'] ?? 0);
@@ -56,7 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'building_area'    => $building_area,
         'land_status'      => $land_status,
         'deed_reference'   => $deed_reference,
-        'deed_description' => $deed_description
+        'deed_description' => $deed_description,
+        'unit'             => $unit
     ];
 
     // Staging evaluation
@@ -89,12 +105,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             building_area = ?,
             land_status = ?,
             deed_reference = ?,
-            deed_description = ?
-        WHERE id = ? AND district_id = ? AND range_id = ?
+            deed_description = ?,
+            unit = ?
+        WHERE id = ? AND district_id = ?
     ");
 
     if ($stmt) {
-        $stmt->bind_param("ssssssiii", $property_name, $land_extent, $building_area, $land_status, $deed_reference, $deed_description, $id, $district_id, $range_id);
+        $stmt->bind_param("sssssssii", $property_name, $land_extent, $building_area, $land_status, $deed_reference, $deed_description, $unit, $id, $district_id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Property asset record updated successfully.']);
         } else {

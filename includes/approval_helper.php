@@ -373,3 +373,76 @@ if (!function_exists('apply_changes_to_live_table')) {
         return $ok;
     }
 }
+
+if (!function_exists('get_unit_label')) {
+    /**
+     * Map unit category keys to formal labels (matches index.php)
+     */
+    function get_unit_label($key) {
+        $units = [
+            'provincial_director'            => 'Provincial Director',
+            'additional_provincial_director' => 'Additional Provincial Director',
+            'subject_matter_specialist'      => 'Subject Matter Specialist',
+            'deputy_director_hq_1'           => 'Deputy Director - H/Q-1',
+            'deputy_director_hq_2'           => 'Deputy Director - H/Q-2',
+            'deputy_director_district'       => 'Deputy Director - District',
+            'range_veterinary_officer'       => 'Range Veterinary Officer',
+            'training_centers'               => 'Training Centers',
+            'regional_farms'                 => 'Regional Farms',
+        ];
+        $k = trim((string)$key);
+        if ($k === '') return 'Unassigned';
+        return $units[$k] ?? ucwords(str_replace('_', ' ', $k));
+    }
+}
+
+if (!function_exists('check_and_notify_unit_transfer')) {
+    /**
+     * Check if a record's unit has changed and notify Provincial Director
+     * 
+     * @param mysqli $mysqli Database connection
+     * @param string $record_name Employee or Asset Name
+     * @param string|null $old_unit Previous Unit key
+     * @param string|null $new_unit Newly submitted Unit key
+     * @param string $link Direct link for the notification
+     * @return bool True if transfer detected and notification sent
+     */
+    function check_and_notify_unit_transfer($mysqli, $record_name, $old_unit, $new_unit, $link = '') {
+        if (!$mysqli) return false;
+
+        $old = trim((string)$old_unit);
+        $new = trim((string)$new_unit);
+
+        // Detect mismatch
+        if ($old !== $new && $new !== '') {
+            $old_label = get_unit_label($old);
+            $new_label = get_unit_label($new);
+
+            $notif_title = 'Transfer Alert';
+            $notif_msg = "Transfer Alert: {$record_name} was transferred from {$old_label} to {$new_label}";
+            $notif_type = 'transfer_alert';
+            $notif_link = !empty($link) ? $link : 'pages/modules/pd/pending_approvals.php';
+
+            // Query active Provincial Directors
+            $pd_res = $mysqli->query("SELECT id FROM users WHERE role = 'provincial_director' AND is_active = 1");
+            if ($pd_res) {
+                $ins_notif = $mysqli->prepare("
+                    INSERT INTO notifications (user_id, title, message, type, link, is_read, created_at) 
+                    VALUES (?, ?, ?, ?, ?, 0, NOW())
+                ");
+                if ($ins_notif) {
+                    while ($pd_user = $pd_res->fetch_assoc()) {
+                        $p_uid = intval($pd_user['id']);
+                        $ins_notif->bind_param("issss", $p_uid, $notif_title, $notif_msg, $notif_type, $notif_link);
+                        $ins_notif->execute();
+                    }
+                    $ins_notif->close();
+                }
+            }
+            return true;
+        }
+
+        return false;
+    }
+}
+

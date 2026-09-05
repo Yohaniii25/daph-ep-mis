@@ -305,6 +305,7 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_chassis_number').value = data.chassis_number || '';
         document.getElementById('edit_current_condition').value = data.current_condition || 'Running';
         document.getElementById('edit_other_details').value = data.other_details || '';
+        document.getElementById('edit_vehicle_unit').value = data.unit || 'range_veterinary_officer';
         var modal = new bootstrap.Modal(document.getElementById('editVehicleModal'));
         modal.show();
     }
