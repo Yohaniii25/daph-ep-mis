@@ -14,7 +14,6 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
 require_once '../../../config/db_connect.php';
 require_once 'processors/db_migration.php';
 
-ensure_quick_action_assignments_table($mysqli);
 
 // Resolve District context
 $district_id = $_SESSION['district_id'] ?? null;
@@ -179,80 +178,6 @@ if ($overview_res) {
 require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
 ?>
-
-<style>
-    .delegation-header {
-        background: linear-gradient(135deg, #370709 0%, #680d11 100%);
-        color: white;
-        border-radius: 12px;
-        padding: 24px 30px;
-        box-shadow: 0 10px 25px -5px rgba(55, 7, 9, 0.3);
-    }
-    .action-card-select {
-        cursor: pointer;
-        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-        border: 2px solid #e2e8f0;
-        border-radius: 10px;
-        position: relative;
-        overflow: hidden;
-        user-select: none;
-    }
-    .action-card-select:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-        border-color: #cbd5e1;
-    }
-    .action-card-select.is-selected {
-        border-color: #370709;
-        background-color: #fff8f8;
-        box-shadow: 0 6px 18px rgba(55, 7, 9, 0.12);
-    }
-    .action-card-select .check-indicator {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        border: 2px solid #cbd5e1;
-        background-color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        color: transparent;
-        transition: all 0.15s ease;
-    }
-    .action-card-select.is-selected .check-indicator {
-        background-color: #370709;
-        border-color: #370709;
-        color: #fff;
-    }
-    .badge-action-pill {
-        font-size: 0.72rem;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        color: #fff;
-        margin: 2px;
-    }
-    .step-number {
-        display: inline-flex;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background-color: #370709;
-        color: #fff;
-        font-weight: bold;
-        font-size: 0.85rem;
-        align-items: center;
-        justify-content: center;
-        margin-right: 8px;
-    }
-</style>
 
 <div id="layoutSidenav_content" class="bg-light">
     <main class="container-fluid px-4 pt-4 pb-5">

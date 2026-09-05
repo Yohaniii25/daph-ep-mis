@@ -47,25 +47,25 @@ require_once './includes/header.php';
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/hr/employee_managment.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/hr/employee_managment.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-light d-block">
                             <i style="color: white;" class="bi bi-person-add fs-4"></i><br>
                             <span style="color:white">Employee Management</span>
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/hr/animal_breeding.php" style="background-color: #b08723;" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/hr/animal_breeding.php" style="background-color: #b08723;" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-light d-block">
                             <i style="color: white;" class="bi bi-card-checklist fs-4"></i><br>
                             <span style="color:white">Leave Management</span>
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/hr/regulatory_functions.php" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/hr/regulatory_functions.php" class="btn btn-info w-100 py-3 shadow-sm border-0 text-light d-block">
                             <i style="color: white;" class="bi bi-envelope-plus fs-4"></i><br>
                             <span style="color:white">Inquiry Management</span>
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/hr/office_details_view.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/hr/office_details_view.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-light d-block">
                             <i style="color: white; " class="bi bi-people-fill fs-4"></i><br>
                             <span style="color:white">Advance Programmes</span>
                         </a>
@@ -109,7 +109,7 @@ require_once './includes/header.php';
                                         <td class="small fw-bold"><?= date('d M, Y', strtotime('+2 days')) ?></td>
                                         <td><small>Kantalai Range</small></td>
                                         <td class="fw-medium text-dark">Field Staff Training Session</td>
-                                        <td class="text-center"><span class="badge bg-info text-white rounded-pill px-3" style="font-size: 10px;">Medium</span></td>
+                                        <td class="text-center"><span class="badge bg-info text-light rounded-pill px-3" style="font-size: 10px;">Medium</span></td>
                                     </tr>
                                 </tbody>
                             </table>

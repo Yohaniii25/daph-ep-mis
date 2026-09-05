@@ -5,19 +5,19 @@ require_once '../../../../includes/approval_helper.php';
 
 header('Content-Type: application/json');
 
-$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director'];
+$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director', 'district_dd', 'deputy_director_district'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $allowed_roles)) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id                = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-    $vehicle_type      = trim(filter_input(INPUT_POST, 'vehicle_type', FILTER_SANITIZE_SPECIAL_CHARS));
-    $vehicle_number    = trim(filter_input(INPUT_POST, 'vehicle_number', FILTER_SANITIZE_SPECIAL_CHARS));
-    $chassis_number    = trim(filter_input(INPUT_POST, 'chassis_number', FILTER_SANITIZE_SPECIAL_CHARS));
-    $current_condition = trim(filter_input(INPUT_POST, 'current_condition', FILTER_SANITIZE_SPECIAL_CHARS));
-    $other_details     = trim(filter_input(INPUT_POST, 'other_details', FILTER_SANITIZE_SPECIAL_CHARS));
+    $id                = isset($_POST['id']) ? filter_var($_POST['id'], FILTER_VALIDATE_INT) : 0;
+    $vehicle_type      = isset($_POST['vehicle_type']) ? trim(htmlspecialchars($_POST['vehicle_type'])) : '';
+    $vehicle_number    = isset($_POST['vehicle_number']) ? trim(htmlspecialchars($_POST['vehicle_number'])) : '';
+    $chassis_number    = isset($_POST['chassis_number']) ? trim(htmlspecialchars($_POST['chassis_number'])) : '';
+    $current_condition = isset($_POST['current_condition']) ? trim(htmlspecialchars($_POST['current_condition'])) : '';
+    $other_details     = isset($_POST['other_details']) ? trim(htmlspecialchars($_POST['other_details'])) : '';
 
     if (!$id || empty($vehicle_type) || empty($vehicle_number)) {
         echo json_encode(['success' => false, 'message' => 'Validation error']);
@@ -31,6 +31,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old_data = $stmt_curr->get_result()->fetch_assoc();
     $stmt_curr->close();
 
+    if (!$old_data) {
+        echo json_encode(['success' => false, 'message' => 'Record not found']);
+        exit();
+    }
+
+    // Resolve district and range
+    $district_id = !empty($old_data['district_id']) ? intval($old_data['district_id']) : intval($_SESSION['district_id'] ?? 0);
+    $range_id    = !empty($old_data['range_id']) ? intval($old_data['range_id']) : ($_SESSION['range_id'] ?? null);
+
+    // Jurisdiction check for District DD
+    if (in_array($_SESSION['role'], ['district_dd', 'deputy_director_district'])) {
+        $user_dist = intval($_SESSION['district_id'] ?? 0);
+        if ($user_dist > 0 && $district_id > 0 && $district_id !== $user_dist) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized: Record does not belong to your assigned district.']);
+            exit();
+        }
+    }
+
     $new_data = [
         'vehicle_type'      => $vehicle_type,
         'vehicle_number'    => $vehicle_number,
@@ -40,8 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     // Staging evaluation
-    $district_id = $_SESSION['district_id'] ?? null;
-    $range_id    = $_SESSION['range_id'] ?? null;
     $target_desc = $vehicle_type . ' (' . $vehicle_number . ')';
     $staging_res = stage_or_apply_edit(
         $mysqli, 
@@ -59,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode([
             'success' => true,
             'staged'  => true,
-            'message' => 'Edit submitted successfully. Changes are pending authorization by the Provincial Director.'
+            'message' => 'Changes submitted successfully. Awaiting final approval from the Provincial Director.'
         ]);
         exit();
     }

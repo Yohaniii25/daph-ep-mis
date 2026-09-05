@@ -1,0 +1,259 @@
+/**
+ * assets/css/district.css
+ * Dedicated Stylesheet for District Deputy Director (DD) Module & Task Delegation
+ * DAPH - Eastern Province MIS
+ */
+
+:root {
+    --daph-maroon: #820100;
+    --daph-dark-maroon: #4a0000;
+    --daph-gold: #b08723;
+    --daph-gold-light: #fdf6e7;
+    --district-primary: #370709;
+    --district-primary-hover: #500707;
+}
+
+/* =========================================================================
+   1. Task Assignment & Delegation Hub (task_assignments.php)
+   ========================================================================= */
+.delegation-header {
+    background: linear-gradient(135deg, #370709 0%, #680d11 100%);
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 24px 30px;
+    box-shadow: 0 10px 25px -5px rgba(55, 7, 9, 0.3);
+}
+
+.action-card-select {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    background-color: #ffffff;
+}
+
+.action-card-select:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+}
+
+.action-card-select.is-selected {
+    border-color: #370709;
+    background-color: #fff8f8;
+    box-shadow: 0 6px 18px rgba(55, 7, 9, 0.12);
+}
+
+.action-card-select .check-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: transparent;
+    transition: all 0.15s ease;
+}
+
+.action-card-select.is-selected .check-indicator {
+    background-color: #370709;
+    border-color: #370709;
+    color: #ffffff;
+}
+
+.badge-action-pill {
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #ffffff;
+    margin: 2px;
+}
+
+.step-number {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #370709;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 0.85rem;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+/* =========================================================================
+   2. KPI Stat Cards & District Metrics
+   ========================================================================= */
+.kpi-stat-card {
+    border: none;
+    border-radius: 14px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.kpi-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+}
+
+.kpi-stat-card.kpi-maroon::after { background: linear-gradient(90deg, #820100, #b71c1c); }
+.kpi-stat-card.kpi-success::after { background: linear-gradient(90deg, #2e7d32, #43a047); }
+.kpi-stat-card.kpi-info::after { background: linear-gradient(90deg, #0288d1, #00acc1); }
+.kpi-stat-card.kpi-warning::after { background: linear-gradient(90deg, #f57c00, #ffa000); }
+
+.kpi-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+/* =========================================================================
+   3. Primary Module Buttons & Range Actions
+   ========================================================================= */
+.btn-range-action {
+    min-height: 100px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff !important;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    padding: 14px 10px;
+}
+
+.btn-range-action:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+    filter: brightness(1.1);
+    color: #ffffff !important;
+}
+
+.btn-range-action.active {
+    box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px var(--daph-maroon), 0 12px 24px rgba(130, 1, 0, 0.35);
+    filter: brightness(1.05);
+    font-weight: 700;
+}
+
+.btn-range-action.active::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    width: 14px;
+    height: 6px;
+    border-radius: 4px;
+    background: #ffffff;
+}
+
+.btn-range-action i {
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+}
+
+/* Sub-category pill buttons */
+.sub-stat-pill {
+    border-radius: 50px;
+    font-size: 0.82rem;
+    padding: 7px 16px;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    border-width: 1.5px;
+}
+
+.sub-stat-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.sub-stat-pill.active-pill {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    font-weight: 700;
+    transform: translateY(-1px);
+}
+
+/* Export Buttons Styling */
+.dt-buttons .btn {
+    margin-right: 6px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 5px 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    transition: all 0.15s ease;
+}
+
+.dt-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* Table Enhancements */
+#summaryDataTable thead th,
+#assignmentsTable thead th {
+    background-color: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 12px 14px;
+}
+
+#summaryDataTable tbody td,
+#assignmentsTable tbody td {
+    padding: 11px 14px;
+    font-size: 0.875rem;
+}
+
+#summaryDataTable tbody tr:hover,
+#assignmentsTable tbody tr:hover {
+    background-color: rgba(130, 1, 0, 0.03) !important;
+}
+
+.card-modern {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.04);
+    background: #ffffff;
+}

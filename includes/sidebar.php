@@ -72,12 +72,12 @@ require_once __DIR__ . '/approval_helper.php';
         border-color: #ddd !important;
     }
 
-    .text-white,
-    .text-white-50 {
+    .text-light,
+    .text-light-50 {
         color: #333 !important;
     }
 
-    .text-white-50 {
+    .text-light-50 {
         color: #777 !important;
     }
 
@@ -106,7 +106,7 @@ require_once __DIR__ . '/approval_helper.php';
 
                 <!-- Main Menu Items -->
                 <div class="sidebar-menu">
-                    <a class="nav-link d-flex align-items-center px-4 py-3 <?= $is_dashboard ? 'bg-danger text-white' : '' ?>"
+                    <a class="nav-link d-flex align-items-center px-4 py-3 <?= $is_dashboard ? 'bg-danger text-light' : '' ?>"
                         href="<?= $base_path ?>dashboard.php">
                         Dashboard
                     </a>

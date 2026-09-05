@@ -52,6 +52,7 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
     <link href="<?= $rel_path ?>assets/css/farm.css" rel="stylesheet">
     <link href="<?= $rel_path ?>assets/css/veterinary.css" rel="stylesheet">
     <link href="<?= $rel_path ?>assets/css/sms.css" rel="stylesheet">
+    <link href="<?= $rel_path ?>assets/css/district.css" rel="stylesheet">
 
     <link rel="icon" type="image/png" href="<?= $rel_path ?>assets/img/favicon.png">
 

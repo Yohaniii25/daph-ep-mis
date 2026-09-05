@@ -5,23 +5,20 @@ require_once '../../../../includes/approval_helper.php';
 
 header('Content-Type: application/json');
 
-$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director'];
+$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director', 'district_dd', 'deputy_director_district'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $allowed_roles)) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized entry request.']);
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id               = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-    $district_id      = $_SESSION['district_id'] ?? null;
-    $range_id         = $_SESSION['range_id'] ?? null;
-
-    $property_name    = trim(filter_input(INPUT_POST, 'property_name', FILTER_SANITIZE_SPECIAL_CHARS));
-    $land_extent      = trim(filter_input(INPUT_POST, 'land_extent', FILTER_SANITIZE_SPECIAL_CHARS));
-    $building_area    = trim(filter_input(INPUT_POST, 'building_area', FILTER_SANITIZE_SPECIAL_CHARS));
-    $land_status      = trim(filter_input(INPUT_POST, 'land_status', FILTER_SANITIZE_SPECIAL_CHARS));
-    $deed_reference   = trim(filter_input(INPUT_POST, 'deed_reference', FILTER_SANITIZE_SPECIAL_CHARS));
-    $deed_description = trim(filter_input(INPUT_POST, 'deed_description', FILTER_SANITIZE_SPECIAL_CHARS));
+    $id               = isset($_POST['id']) ? filter_var($_POST['id'], FILTER_VALIDATE_INT) : 0;
+    $property_name    = isset($_POST['property_name']) ? trim(htmlspecialchars($_POST['property_name'])) : '';
+    $land_extent      = isset($_POST['land_extent']) ? trim(htmlspecialchars($_POST['land_extent'])) : '';
+    $building_area    = isset($_POST['building_area']) ? trim(htmlspecialchars($_POST['building_area'])) : '';
+    $land_status      = isset($_POST['land_status']) ? trim(htmlspecialchars($_POST['land_status'])) : '';
+    $deed_reference   = isset($_POST['deed_reference']) ? trim(htmlspecialchars($_POST['deed_reference'])) : '';
+    $deed_description = isset($_POST['deed_description']) ? trim(htmlspecialchars($_POST['deed_description'])) : '';
 
     if (!$id || empty($property_name)) {
         echo json_encode(['success' => false, 'message' => 'Validation failed. Required fields missing.']);
@@ -34,6 +31,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt_curr->execute();
     $old_data = $stmt_curr->get_result()->fetch_assoc();
     $stmt_curr->close();
+
+    if (!$old_data) {
+        echo json_encode(['success' => false, 'message' => 'Record not found']);
+        exit();
+    }
+
+    // Resolve district and range
+    $district_id = !empty($old_data['district_id']) ? intval($old_data['district_id']) : intval($_SESSION['district_id'] ?? 0);
+    $range_id    = !empty($old_data['range_id']) ? intval($old_data['range_id']) : ($_SESSION['range_id'] ?? null);
+
+    // Jurisdiction check for District DD
+    if (in_array($_SESSION['role'], ['district_dd', 'deputy_director_district'])) {
+        $user_dist = intval($_SESSION['district_id'] ?? 0);
+        if ($user_dist > 0 && $district_id > 0 && $district_id !== $user_dist) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized: Record does not belong to your assigned district.']);
+            exit();
+        }
+    }
 
     $new_data = [
         'property_name'    => $property_name,
@@ -61,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode([
             'success' => true,
             'staged'  => true,
-            'message' => 'Edit submitted successfully. Changes are pending authorization by the Provincial Director.'
+            'message' => 'Changes submitted successfully. Awaiting final approval from the Provincial Director.'
         ]);
         exit();
     }

@@ -5,20 +5,20 @@ require_once '../../../../includes/approval_helper.php';
 
 header('Content-Type: application/json');
 
-$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director'];
+$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director', 'district_dd', 'deputy_director_district'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $allowed_roles)) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized entry request.']);
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id                 = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-    $land_asset_id      = filter_input(INPUT_POST, 'land_asset_id', FILTER_VALIDATE_INT);
-    $inventory_item     = trim(filter_input(INPUT_POST, 'inventory_item', FILTER_SANITIZE_SPECIAL_CHARS));
-    $available_quantity = filter_input(INPUT_POST, 'available_quantity', FILTER_VALIDATE_INT);
-    $current_condition  = trim(filter_input(INPUT_POST, 'current_condition', FILTER_SANITIZE_SPECIAL_CHARS));
-    $specification      = trim(filter_input(INPUT_POST, 'specification', FILTER_SANITIZE_SPECIAL_CHARS));
-    $remarks            = trim(filter_input(INPUT_POST, 'remarks', FILTER_SANITIZE_SPECIAL_CHARS));
+    $id                 = isset($_POST['id']) ? filter_var($_POST['id'], FILTER_VALIDATE_INT) : 0;
+    $land_asset_id      = isset($_POST['land_asset_id']) ? filter_var($_POST['land_asset_id'], FILTER_VALIDATE_INT) : 0;
+    $inventory_item     = isset($_POST['inventory_item']) ? trim(htmlspecialchars($_POST['inventory_item'])) : '';
+    $available_quantity = isset($_POST['available_quantity']) ? filter_var($_POST['available_quantity'], FILTER_VALIDATE_INT) : 0;
+    $current_condition  = isset($_POST['current_condition']) ? trim(htmlspecialchars($_POST['current_condition'])) : '';
+    $specification      = isset($_POST['specification']) ? trim(htmlspecialchars($_POST['specification'])) : '';
+    $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
 
     if (!$id || !$land_asset_id || empty($inventory_item) || !$available_quantity) {
         echo json_encode(['success' => false, 'message' => 'Validation failed. Required values missing.']);
@@ -32,6 +32,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old_data = $stmt_curr->get_result()->fetch_assoc();
     $stmt_curr->close();
 
+    if (!$old_data) {
+        echo json_encode(['success' => false, 'message' => 'Record not found']);
+        exit();
+    }
+
+    // Resolve district and range from land asset
+    $land_info = null;
+    $stmt_land = $mysqli->prepare("SELECT district_id, range_id FROM land_assets WHERE id = ?");
+    $stmt_land->bind_param("i", $land_asset_id);
+    $stmt_land->execute();
+    $land_info = $stmt_land->get_result()->fetch_assoc();
+    $stmt_land->close();
+
+    $district_id = !empty($land_info['district_id']) ? intval($land_info['district_id']) : intval($_SESSION['district_id'] ?? 0);
+    $range_id    = !empty($land_info['range_id']) ? intval($land_info['range_id']) : ($_SESSION['range_id'] ?? null);
+
+    // Jurisdiction check for District DD
+    if (in_array($_SESSION['role'], ['district_dd', 'deputy_director_district'])) {
+        $user_dist = intval($_SESSION['district_id'] ?? 0);
+        if ($user_dist > 0 && $district_id > 0 && $district_id !== $user_dist) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized: Record does not belong to your assigned district.']);
+            exit();
+        }
+    }
+
     $new_data = [
         'land_asset_id'      => $land_asset_id,
         'inventory_item'     => $inventory_item,
@@ -42,8 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     // Staging evaluation
-    $district_id = $_SESSION['district_id'] ?? null;
-    $range_id    = $_SESSION['range_id'] ?? null;
     $staging_res = stage_or_apply_edit(
         $mysqli, 
         'inventory', 
@@ -60,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode([
             'success' => true,
             'staged'  => true,
-            'message' => 'Edit submitted successfully. Changes are pending authorization by the Provincial Director.'
+            'message' => 'Changes submitted successfully. Awaiting final approval from the Provincial Director.'
         ]);
         exit();
     }

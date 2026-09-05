@@ -273,11 +273,11 @@ if ($logs_stmt) {
             <div class="card-body bg-white">
                 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3">
                     <div class="col">
-                        <a href="pages/modules/district/task_assignments.php" class="btn w-100 py-3 text-start shadow-sm d-flex align-items-center text-white" style="background: linear-gradient(135deg, #370709 0%, #680d11 100%);">
+                        <a href="pages/modules/district/task_assignments.php" class="btn w-100 py-3 text-start shadow-sm d-flex align-items-center text-light" style="background: linear-gradient(135deg, #370709 0%, #680d11 100%);">
                             <i class="bi bi-person-check-fill fs-3 me-3 text-warning"></i>
                             <div>
-                                <span class="d-block fw-bold text-light">Task Delegation</span>
-                                <small style="color: #fbd5d5;">Delegate Quick Actions &amp; tasks</small>
+                                <span style="color: white !important;" class="d-block fw-bold text-light">Task Delegation</span>
+                                <small style="color: white;">Delegate Quick Actions &amp; tasks</small>
                             </div>
                         </a>
                     </div>
@@ -285,14 +285,14 @@ if ($logs_stmt) {
                         <a href="pages/modules/district/range_veterinary_officers.php" class="btn btn-primary w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-people-fill fs-3 me-3 text-light"></i>
                             <div>
-                                <span class="d-block fw-bold text-light">Range Veterinary Officers</span>
+                                <span style="color: white !important;" class="d-block fw-bold text-light">Range Veterinary Officers</span>
                                 <small style="color: white;">Surgeons &amp; range staff summary</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
                         <a style="background-color: #c6aa4b;" href="pages/modules/district/regional_farms.php" class="btn btn-warning w-100 py-3 text-start shadow-sm d-flex align-items-center">
-                            <i class="bi bi-egg-fried fs-3 me-3 text-dark"></i>
+                            <i class="bi bi-house-fill fs-3 me-3 text-dark"></i>
                             <div>
                                 <span class="d-block fw-bold text-dark">Regional Farms</span>
                                 <small class="text-dark">Stations &amp; farm operations</small>
@@ -301,37 +301,37 @@ if ($logs_stmt) {
                     </div>
                     <div class="col">
                         <a href="pages/modules/district/office_details.php" class="btn btn-secondary w-100 py-3 text-start shadow-sm d-flex align-items-center">
-                            <i class="bi bi-building fs-3 me-3 text-light"></i>
+                            <i style="color: white !important;" class="bi bi-building fs-3 me-3 text-light"></i>
                             <div>
-                                <span class="d-block fw-bold text-light">Office Details</span>
-                                <small class="text-light">District &amp; VS range offices</small>
+                                <span style="color: white !important;" class="d-block fw-bold text-light">Office Details</span>
+                                <small style="color: white !important;">District &amp; VS range offices</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
                         <a href="pages/modules/district/training_centers.php" class="btn btn-success w-100 py-3 text-start shadow-sm d-flex align-items-center">
-                            <i class="bi bi-easel fs-3 me-3 text-light"></i>
+                            <i style="color: white !important;" class="bi bi-easel fs-3 me-3 text-light"></i>
                             <div>
-                                <span class="d-block fw-bold text-light">Training Centers</span>
-                                <small class="text-light">Centers &amp; training programmes</small>
+                                <span style="color: white !important;" class="d-block fw-bold text-light">Training Centers</span>
+                                <small style="color: white !important;">Centers &amp; training programmes</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
                         <a style="background-color: #8d170e;" href="pages/modules/district/subject_matter_specialists.php" class="btn btn-danger w-100 py-3 text-start shadow-sm d-flex align-items-center">
-                            <i class="bi bi-shield-shaded fs-3 me-3 text-light"></i>
+                            <i style="color: white !important;" class="bi bi-shield-shaded fs-3 me-3 text-light"></i>
                             <div>
-                                <span class="d-block fw-bold text-light">Subject Matter Specialists</span>
-                                <small class="text-light">SMS officers &amp; disease control</small>
+                                <span style="color: white !important;" class="d-block fw-bold text-light">Subject Matter Specialists</span>
+                                <small style="color: white !important;">SMS officers &amp; disease control</small>
                             </div>
                         </a>
                     </div>
                     <div class="col">
                         <a href="pages/modules/district/users_summary.php" class="btn btn-dark w-100 py-3 text-start shadow-sm d-flex align-items-center">
-                            <i class="bi bi-person-lines-fill fs-3 me-3 text-light"></i>
+                            <i style="color: white !important;" class="bi bi-person-lines-fill fs-3 me-3"></i>
                             <div>
-                                <span class="d-block fw-bold text-light">All Users Summary</span>
-                                <small class="text-light">Directory of all district staff</small>
+                                <span style="color: white !important;" class="d-block fw-bold text-light">All Users Summary</span>
+                                <small style="color: white !important;">Directory of all district staff</small>
                             </div>
                         </a>
                     </div>
@@ -344,71 +344,12 @@ if ($logs_stmt) {
                             </div>
                         </a>
                     </div>
-                    <div class="col">
-                        <a href="pages/modules/district/district_revenue_summary.php" class="btn btn-outline-success w-100 py-3 text-start shadow-sm d-flex align-items-center">
-                            <i class="bi bi-wallet2 fs-3 me-3 text-success"></i>
-                            <div>
-                                <span class="d-block fw-bold text-dark">Revenue Management</span>
-                                <small class="text-muted">Cash book summaries</small>
-                            </div>
-                        </a>
-                    </div>
+
                 </div>
             </div>
         </div>
 
-        <!-- Table of Ranges & Performance Chart -->
-        <div class="row g-4 mb-4">
-            <!-- Veterinary Ranges in District -->
-            <div class="col-xl-7">
-                <div class="card border-0 shadow-sm rounded-3 h-100">
-                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="m-0 fw-bold text-dark"><i class="bi bi-diagram-3 me-2 text-primary"></i>Veterinary Range Offices in <?= htmlspecialchars($district_name) ?></h5>
-                        <span class="badge bg-light text-dark border"><?= count($ranges_list) ?> Offices</span>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-striped align-middle mb-0 small">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Range Office</th>
-                                        <th>Location</th>
-                                        <th>Assigned Veterinary Surgeon</th>
-                                        <th class="text-center">Field Staff</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (!empty($ranges_list)): ?>
-                                        <?php foreach ($ranges_list as $range): ?>
-                                            <tr>
-                                                <td class="fw-bold text-dark"><?= htmlspecialchars($range['range_name']) ?></td>
-                                                <td><i class="bi bi-geo-alt text-muted me-1"></i><?= htmlspecialchars($range['location'] ?? 'N/A') ?></td>
-                                                <td>
-                                                    <?php if (!empty($range['vs_name'])): ?>
-                                                        <span class="text-primary fw-semibold"><?= htmlspecialchars($range['vs_name']) ?></span>
-                                                        <?php if (!empty($range['vs_phone'])): ?>
-                                                            <br><small class="text-muted"><i class="bi bi-telephone me-1"></i><?= htmlspecialchars($range['vs_phone']) ?></small>
-                                                        <?php endif; ?>
-                                                    <?php else: ?>
-                                                        <span class="badge bg-warning text-dark">Vacant / Unassigned</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td class="text-center font-monospace fw-bold"><?= (int)$range['staff_count'] ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted">No veterinary ranges registered in <?= htmlspecialchars($district_name) ?> District.</td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-        </div>
 
     </main>
 </div>
