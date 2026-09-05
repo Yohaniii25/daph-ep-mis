@@ -273,6 +273,15 @@ if ($logs_stmt) {
             <div class="card-body bg-white">
                 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-3">
                     <div class="col">
+                        <a href="pages/modules/district/task_assignments.php" class="btn w-100 py-3 text-start shadow-sm d-flex align-items-center text-white" style="background: linear-gradient(135deg, #370709 0%, #680d11 100%);">
+                            <i class="bi bi-person-check-fill fs-3 me-3 text-warning"></i>
+                            <div>
+                                <span class="d-block fw-bold text-light">Task Delegation</span>
+                                <small style="color: #fbd5d5;">Delegate Quick Actions &amp; tasks</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col">
                         <a href="pages/modules/district/range_veterinary_officers.php" class="btn btn-primary w-100 py-3 text-start shadow-sm d-flex align-items-center">
                             <i class="bi bi-people-fill fs-3 me-3 text-light"></i>
                             <div>

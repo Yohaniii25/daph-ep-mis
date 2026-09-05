@@ -340,6 +340,10 @@ require_once __DIR__ . '/approval_helper.php';
                             href="<?= $base_path ?>pages/modules/district/office_details.php">
                             Office Details
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'task_assignments.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/task_assignments.php">
+                            <i class="bi bi-person-check me-2"></i> Task Delegation
+                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_veterinary_officers.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/district/range_veterinary_officers.php">
                             Range Veterinary Officer
@@ -378,7 +382,7 @@ require_once __DIR__ . '/approval_helper.php';
                             href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
                             Office Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
                             Range Details
                         </a>
@@ -386,6 +390,10 @@ require_once __DIR__ . '/approval_helper.php';
                     <?php endif; ?>
                     <!-- employee sidebar -->
                     <?php if ($is_employee): ?>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_details.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
+                            <i class="bi bi-grid-3x3-gap me-2"></i> Range Details
+                        </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
                             href="<?= $base_path ?>pages/modules/employee/my_diary.php">
                             My Diary

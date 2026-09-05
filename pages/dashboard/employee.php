@@ -104,24 +104,29 @@ $leave_balance = 14;
                     </div>
                     <div class="card-body pt-0">
                         <div class="row g-3">
-                            <div class="col-md-3">
-                                <button class="btn btn-primary w-100 py-3 border-2 fw-bold">
-                                    <i class="bi bi-journal-plus fs-3 d-block mb-2"></i>Daily Diary
-                                </button>
+                            <div class="col-md-4 col-xl-2 col-6">
+                                <a href="pages/modules/veterinary/range_details.php" class="btn btn-outline-danger w-100 py-3 border-2 fw-bold text-decoration-none">
+                                    <i class="bi bi-grid-3x3-gap-fill fs-3 d-block mb-2 text-danger"></i>Range Actions
+                                </a>
                             </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-success w-100 py-3 border-2 fw-bold">
-                                    <i class="bi bi-calendar-plus fs-3 d-block mb-2"></i>Request Leave
-                                </button>
+                            <div class="col-md-4 col-xl-2 col-6">
+                                <a href="pages/modules/employee/my_diary.php" class="btn btn-outline-primary w-100 py-3 border-2 fw-bold text-decoration-none">
+                                    <i class="bi bi-journal-plus fs-3 d-block mb-2 text-primary"></i>Daily Diary
+                                </a>
                             </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-info w-100 py-3 border-2 fw-bold">
-                                    <i class="bi bi-person-vcard fs-3 d-block mb-2"></i>My Profile
-                                </button>
+                            <div class="col-md-4 col-xl-2 col-6">
+                                <a href="pages/modules/employee/leave_requests.php" class="btn btn-outline-success w-100 py-3 border-2 fw-bold text-decoration-none">
+                                    <i class="bi bi-calendar-plus fs-3 d-block mb-2 text-success"></i>Leave
+                                </a>
                             </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-dark w-100 py-3 border-2 fw-bold">
-                                    <i class="bi bi-megaphone fs-3 d-block mb-2"></i>Notices
+                            <div class="col-md-4 col-xl-3 col-6">
+                                <a href="pages/profile.php" class="btn btn-outline-info w-100 py-3 border-2 fw-bold text-decoration-none">
+                                    <i class="bi bi-person-vcard fs-3 d-block mb-2 text-info"></i>My Profile
+                                </a>
+                            </div>
+                            <div class="col-md-4 col-xl-3 col-12">
+                                <button class="btn btn-outline-dark w-100 py-3 border-2 fw-bold">
+                                    <i class="bi bi-megaphone fs-3 d-block mb-2 text-dark"></i>Notices
                                 </button>
                             </div>
                         </div>
