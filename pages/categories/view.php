@@ -5,6 +5,15 @@
  * Routes users to specific actions/functions, and onward to Summary Level dedicated dashboards with charts & metrics
  */
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'provincial_director') {
+    header("Location: ../../dashboard.php");
+    exit();
+}
+
 require_once __DIR__ . '/../../includes/header.php';
 
 $category_key = trim($_GET['cat'] ?? 'deputy_director_district');

@@ -26,12 +26,17 @@ $views_map = [
 
 $requested_view = trim($_GET['view'] ?? '');
 if (!empty($requested_view) && isset($views_map[$requested_view])) {
+    // Only Provincial Director can view the provincial director summary dashboard
+    if ($requested_view === 'provincial_director' && $role !== 'provincial_director') {
+        header("Location: dashboard.php");
+        exit();
+    }
     $target = $views_map[$requested_view];
 } else {
     $dashboard_map = [
         'provincial_director'            => 'pages/dashboard/provincial_director.php',
         'deputy_director_hq_1'           => 'pages/dashboard/planning_dd.php',
-        'deputy_director_hq_2'           => 'pages/dashboard/provincial_director.php',
+        'deputy_director_hq_2'           => 'pages/dashboard/planning_dd.php',
         'district_dd'                    => 'pages/dashboard/district.php',
         'deputy_director_district'       => 'pages/dashboard/district.php',
         'veterinary_surgeon'             => 'pages/dashboard/veterinary_office.php',
@@ -51,7 +56,7 @@ if (!empty($requested_view) && isset($views_map[$requested_view])) {
         'department_laborer'             => 'pages/dashboard/employee.php',
         'night_watcher'                  => 'pages/dashboard/employee.php'
     ];
-    $target = $dashboard_map[$role] ?? 'pages/dashboard/provincial_director.php';
+    $target = $dashboard_map[$role] ?? 'pages/dashboard/employee.php';
 }
 
 if (!file_exists($target)) {

@@ -1,7 +1,7 @@
 <?php
 require_once '../../../includes/header.php';
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'administrator'])) {
-    die("Access denied");
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'provincial_director') {
+    die("Access denied. Only the Provincial Director can view provincial reports.");
 }
 ?>
 

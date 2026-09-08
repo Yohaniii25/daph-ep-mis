@@ -3,9 +3,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$allowed_hq_roles = ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'administrator'];
+$allowed_hq_roles = ['provincial_director'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_hq_roles)) {
-    die("Access denied. Unauthorized role footprint.");
+    header("Location: dashboard.php");
+    exit();
 }
 
 require_once './config/db_connect.php';

@@ -9,9 +9,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$allowed_roles = ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'administrator'];
+$allowed_roles = ['provincial_director'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
-    header("Location: ../../../index.php");
+    header("Location: ../../../dashboard.php");
     exit();
 }
 

@@ -194,7 +194,8 @@ $current_view_param = $_GET['view'] ?? '';
                         <?php endif; ?>
                     </a>
 
-                    <!-- Core User Categories Navigation -->
+                    <!-- Core User Categories Navigation (Exclusively for Provincial Director) -->
+                    <?php if ($is_pd): ?>
                     <div class="sidebar-heading px-4 pt-3 pb-1">Core Categories</div>
 
                     <?php
@@ -387,8 +388,9 @@ $current_view_param = $_GET['view'] ?? '';
                             <i class="bi bi-record-circle me-2"></i> Cattle Register
                         </a>
                     </div>
-
                     <div class="horizontal-line my-2"></div>
+                    <?php endif; ?>
+
                     <div class="sidebar-heading px-4 pt-2 pb-1">Role Workspace</div>
 
 
