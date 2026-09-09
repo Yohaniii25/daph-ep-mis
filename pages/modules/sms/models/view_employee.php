@@ -24,6 +24,10 @@
                         <strong class="text-info" id="view_role">-</strong>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span class="text-muted small">Employment Type:</span>
+                        <strong class="text-dark" id="view_employment_type">-</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                         <span class="text-muted small">Service Category:</span>
                         <span class="text-dark fw-medium" id="view_service_category">-</span>
                     </li>

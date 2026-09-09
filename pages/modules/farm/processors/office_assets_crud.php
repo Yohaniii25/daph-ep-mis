@@ -3,6 +3,7 @@
 session_start();
 require_once '../../../../config/db_connect.php';
 require_once '../../../../includes/approval_helper.php';
+require_once '../../../../includes/notification_helper.php';
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'farms_dd') {
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)) {
@@ -521,6 +522,10 @@ if ($action === 'save_employee') {
     $designation    = trim($_POST['designation'] ?? '');
     $user_role      = trim($_POST['user_role'] ?? 'employee');
     $service_cat    = trim($_POST['service_category'] ?? '');
+    $employment_type = trim($_POST['employment_type'] ?? 'permanent');
+    if (!in_array($employment_type, ['permanent', 'temporary'])) {
+        $employment_type = 'permanent';
+    }
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
     $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
@@ -538,14 +543,14 @@ if ($action === 'save_employee') {
         INSERT INTO users (
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
-            district_id, range_id, farm_id, date_of_birth, registered_date, appointment_date, 
+            employment_type, district_id, range_id, farm_id, date_of_birth, registered_date, appointment_date, 
             appointment_date_current_position, is_active
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURDATE(), ?, ?, 1)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURDATE(), ?, ?, 1)
     ");
 
     if ($stmt) {
         $stmt->bind_param(
-            "ssssssssssissss",
+            "sssssssssssissss",
             $username,
             $default_password,
             $email,
@@ -556,6 +561,7 @@ if ($action === 'save_employee') {
             $designation,
             $user_role,
             $service_cat,
+            $employment_type,
             $district_id,
             $farm_id,
             $dob,
@@ -564,6 +570,12 @@ if ($action === 'save_employee') {
         );
 
         if ($stmt->execute()) {
+            $new_user_id = $stmt->insert_id;
+            $role_title = !empty($designation) ? $designation : $user_role;
+            if (!empty($new_user_id)) {
+                notify_assigned_officer($mysqli, $new_user_id, $role_title, 'dashboard.php');
+            }
+            create_officer_notification($mysqli, 'New Officer Added', $officer_name, $service_number, null, 'pages/modules/farm/employee_managment.php');
             respondJsonOrRedirect($is_ajax, true, 'Officer record successfully created under your farm profile.', '../employee_managment.php');
         } else {
             respondJsonOrRedirect($is_ajax, false, 'Database error creating officer account: ' . $stmt->error, '../employee_managment.php');
@@ -579,6 +591,10 @@ if ($action === 'update_employee') {
     $designation    = trim($_POST['designation'] ?? '');
     $user_role      = trim($_POST['user_role'] ?? 'employee');
     $service_cat    = trim($_POST['service_category'] ?? '');
+    $employment_type = trim($_POST['employment_type'] ?? 'permanent');
+    if (!in_array($employment_type, ['permanent', 'temporary'])) {
+        $employment_type = 'permanent';
+    }
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
     $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
@@ -602,6 +618,7 @@ if ($action === 'update_employee') {
         'designation'      => $designation,
         'role'             => $user_role,
         'service_category' => $service_cat,
+        'employment_type'  => $employment_type,
         'email'            => $email,
         'phone'            => $contact_number,
         'date_of_birth'    => $dob,
@@ -617,11 +634,11 @@ if ($action === 'update_employee') {
     $stmt = $mysqli->prepare("
         UPDATE users SET 
             service_number = ?, full_name = ?, designation = ?, role = ?, 
-            service_category = ?, email = ?, phone = ?, date_of_birth = ?, appointment_date = ?, 
+            service_category = ?, employment_type = ?, email = ?, phone = ?, date_of_birth = ?, appointment_date = ?, 
             appointment_date_current_position = ? 
         WHERE id = ? AND (farm_id = ? OR id = ?)
     ");
-    $stmt->bind_param("ssssssssssiii", $service_number, $officer_name, $designation, $user_role, $service_cat, $email, $contact_number, $dob, $app_date, $app_current, $id, $farm_id, $user_id);
+    $stmt->bind_param("sssssssssssiii", $service_number, $officer_name, $designation, $user_role, $service_cat, $employment_type, $email, $contact_number, $dob, $app_date, $app_current, $id, $farm_id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Officer details updated successfully.', '../employee_managment.php');

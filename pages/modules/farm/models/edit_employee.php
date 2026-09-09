@@ -35,6 +35,13 @@
                             </select>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small fw-bold">Employment Type <span class="text-danger">*</span></label>
+                            <select name="employment_type" id="edit_emp_employment_type" class="form-select fw-bold" required>
+                                <option value="permanent">Permanent</option>
+                                <option value="temporary">Temporary</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Service Category</label>
                             <input type="text" name="service_category" id="edit_emp_service_category" class="form-control">
                         </div>

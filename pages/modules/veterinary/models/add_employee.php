@@ -8,24 +8,10 @@
             <form action="processors/save_employee.php" method="POST">
                 <input type="hidden" name="district_id" value="<?= htmlspecialchars($_SESSION['district_id'] ?? $district_id ?? '') ?>">
                 <input type="hidden" name="range_id" value="<?= htmlspecialchars($_SESSION['range_id'] ?? $range_id ?? '') ?>">
+                <input type="hidden" name="unit" value="range_veterinary_officer">
 
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Unit <span class="text-danger">*</span></label>
-                            <select name="unit" class="form-select" required>
-                                <option value="" disabled selected>-- Select Unit --</option>
-                                <option value="provincial_director">Provincial Director</option>
-                                <option value="additional_provincial_director">Additional Provincial Director</option>
-                                <option value="subject_matter_specialist">Subject Matter Specialist</option>
-                                <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
-                                <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
-                                <option value="deputy_director_district">Deputy Director - District</option>
-                                <option value="range_veterinary_officer">Range Veterinary Officer</option>
-                                <option value="training_centers">Training Centers</option>
-                                <option value="regional_farms">Regional Farms</option>
-                            </select>
-                        </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Service Number</label>
                             <input type="text" name="service_number" class="form-control" placeholder="e.g. 025" required>
@@ -36,7 +22,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">User Role <span class="text-danger">*</span></label>
-                            <select name="user_role" id="add_user_role" class="form-select" required onchange="syncRoleToDesignation(this, 'add_designation')">
+                            <select name="user_role" id="add_user_role" class="form-select" required>
                                 <option value="">Select Role</option>
                                 <option value="government_veterinary_surgeon">Government Veterinary Surgeon</option>
                                 <option value="additional_veterinary_surgeon">Additional Veterinary Surgeon</option>
@@ -49,17 +35,10 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Designation <span class="text-danger">*</span></label>
-                            <select name="designation" id="add_designation" class="form-select" required>
-                                <option value="">Select Designation</option>
-                                <option value="Government Veterinary Surgeon (GVS)">Government Veterinary Surgeon (GVS)</option>
-                                <option value="Additional Veterinary Surgeon (AVS)">Additional Veterinary Surgeon (AVS)</option>
-                                <option value="Livestock Development Officer (or Instructor)">Livestock Development Officer (or Instructor)</option>
-                                <option value="Development Officer (DO)">Development Officer (DO)</option>
-                                <option value="Driver">Driver</option>
-                                <option value="Dispensary Assistant">Dispensary Assistant</option>
-                                <option value="Department Laborer">Department Laborer</option>
-                                <option value="Night Watcher">Night Watcher</option>
+                            <label class="form-label small fw-bold">Employment Type <span class="text-danger">*</span></label>
+                            <select name="employment_type" id="add_employment_type" class="form-select" required>
+                                <option value="permanent" selected>Permanent</option>
+                                <option value="temporary">Temporary</option>
                             </select>
                         </div>
                         <div class="col-md-6">

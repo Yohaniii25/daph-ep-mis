@@ -29,6 +29,10 @@
                         <span class="fw-semibold text-dark" id="view_service_category">-</span>
                     </div>
                     <div class="col-md-6">
+                        <small class="text-muted d-block fw-bold text-uppercase">Employment Type</small>
+                        <span class="fw-semibold text-dark" id="view_employment_type">-</span>
+                    </div>
+                    <div class="col-md-6">
                         <small class="text-muted d-block fw-bold text-uppercase">Email Address</small>
                         <span class="text-dark" id="view_email">-</span>
                     </div>

@@ -366,6 +366,7 @@ require_once '../../../includes/sidebar.php';
                                 <th>Officer Name / Contact</th>
                                 <th>Assigned Role</th>
                                 <th>Official Designation</th>
+                                <th>Type</th>
                                 <th>District / Scope</th>
                                 <th>Facility / Range</th>
                                 <th>Status</th>
@@ -432,6 +433,13 @@ require_once '../../../includes/sidebar.php';
                                         <span class="fw-medium text-secondary small">
                                             <?= htmlspecialchars($officer['designation'] ?: '—') ?>
                                         </span>
+                                    </td>
+                                    <td>
+                                        <?php if (($officer['employment_type'] ?? 'permanent') === 'temporary'): ?>
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2">Temporary</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2">Permanent</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <span class="badge bg-light text-dark border">
@@ -576,6 +584,7 @@ require_once '../../../includes/sidebar.php';
 
         $('#modal_role').val(officer.role);
         $('#modal_designation').val(officer.designation || '');
+        $('#modal_employment_type').val(officer.employment_type || 'permanent');
         $('#modal_district_id').val(officer.district_id || '');
         $('#modal_range_id').val(officer.range_id || '');
         $('#modal_farm_id').val(officer.farm_id || '');

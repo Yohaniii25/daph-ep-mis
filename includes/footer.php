@@ -132,6 +132,12 @@
                 success: function(resp) {
                     if (resp && resp.success) {
                         syncNotificationBadges(0);
+                        $('.notification-item').attr('data-read', '1').removeClass('bg-light fw-medium');
+                        $('.notif-unread-dot').remove();
+                        $('.dropdown-toggle-read-btn')
+                            .attr('title', 'Mark as unread')
+                            .css('color', '#198754')
+                            .html('<i class="bi bi-envelope"></i>');
                         if (modalNotifsCache.length) {
                             modalNotifsCache.forEach(n => n.is_read = 1);
                             renderModalNotifications();
@@ -141,22 +147,57 @@
             });
         });
 
-        $(document).on('click', '.notification-item', function(e) {
-            const item = $(this);
+        // Dropdown individual toggle read/unread
+        $(document).on('click', '.dropdown-toggle-read-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const btn = $(this);
+            const notifId = btn.data('id');
+            const item = btn.closest('.notification-item');
+            if (!notifId) return;
+
+            $.ajax({
+                url: notifApiUrl,
+                type: 'POST',
+                data: { action: 'toggle_read', id: notifId },
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp && resp.success) {
+                        const isRead = parseInt(resp.is_read) === 1;
+                        item.attr('data-read', isRead ? '1' : '0');
+                        btn.attr('data-read', isRead ? '1' : '0');
+                        if (isRead) {
+                            item.removeClass('bg-light fw-medium');
+                            item.find('.notif-unread-dot').remove();
+                            btn.attr('title', 'Mark as unread');
+                            btn.css('color', '#198754');
+                            btn.html('<i class="bi bi-envelope"></i>');
+                        } else {
+                            item.addClass('bg-light fw-medium');
+                            if (item.find('.notif-unread-dot').length === 0) {
+                                btn.parent().append('<span class="p-1 bg-danger rounded-circle notif-unread-dot" style="width: 6px; height: 6px;" title="Unread"></span>');
+                            }
+                            btn.attr('title', 'Mark as read');
+                            btn.css('color', '#dc3545');
+                            btn.html('<i class="bi bi-check2"></i>');
+                        }
+                        syncNotificationBadges(resp.unread_count);
+                    }
+                }
+            });
+        });
+
+        // Notification item click navigation
+        $(document).on('click', '.notif-item-link', function(e) {
+            const item = $(this).closest('.notification-item');
             const notifId = item.data('id');
-            if (notifId && item.find('.notif-unread-dot').length > 0) {
+            const isRead = item.attr('data-read') === '1';
+            if (notifId && !isRead) {
                 $.ajax({
                     url: notifApiUrl,
                     type: 'POST',
                     data: { action: 'mark_read', id: notifId },
-                    dataType: 'json',
-                    success: function(resp) {
-                        item.removeClass('bg-light fw-medium');
-                        item.find('.notif-unread-dot').remove();
-                        if (resp && typeof resp.unread_count !== 'undefined') {
-                            syncNotificationBadges(resp.unread_count);
-                        }
-                    }
+                    async: false
                 });
             }
         });
@@ -236,8 +277,10 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
-                                ${link ? `<a href="${link}" class="btn btn-sm btn-outline-danger py-0.5 px-2" style="font-size: 11px;">View</a>` : ''}
-                                ${!isRead ? `<button type="button" class="btn btn-sm btn-light border py-0.5 px-2 modal-mark-read-btn" data-id="${item.id}" style="font-size: 11px;"><i class="bi bi-check2"></i></button>` : '<i class="bi bi-check2-circle text-success" title="Read"></i>'}
+                                <button type="button" class="btn btn-sm ${!isRead ? 'btn-outline-success' : 'btn-outline-secondary'} py-0.5 px-2 modal-toggle-read-btn" data-id="${item.id}" data-read="${isRead ? '1' : '0'}" style="font-size: 11px;" title="${!isRead ? 'Mark as read' : 'Mark as unread'}">
+                                    <i class="bi ${!isRead ? 'bi-check2' : 'bi-envelope'}"></i>
+                                    <span>${!isRead ? 'Read' : 'Unread'}</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -265,8 +308,8 @@
             renderModalNotifications();
         });
 
-        // Mark read inside modal
-        $(document).on('click', '.modal-mark-read-btn', function() {
+        // Toggle read inside modal
+        $(document).on('click', '.modal-toggle-read-btn', function() {
             const btn = $(this);
             const notifId = btn.data('id');
             if (!notifId) return;
@@ -274,16 +317,50 @@
             $.ajax({
                 url: notifApiUrl,
                 type: 'POST',
-                data: { action: 'mark_read', id: notifId },
+                data: { action: 'toggle_read', id: notifId },
                 dataType: 'json',
                 success: function(resp) {
                     if (resp && resp.success) {
+                        const isRead = parseInt(resp.is_read) === 1;
                         const row = btn.closest('.modal-notif-row');
-                        row.removeClass('bg-light-subtle border-start border-4 border-danger');
-                        row.find('.badge.bg-danger').remove();
-                        btn.replaceWith('<i class="bi bi-check2-circle text-success" title="Read"></i>');
                         const cached = modalNotifsCache.find(n => parseInt(n.id) === parseInt(notifId));
-                        if (cached) cached.is_read = 1;
+                        if (cached) cached.is_read = isRead ? 1 : 0;
+
+                        if (isRead) {
+                            row.removeClass('bg-light-subtle border-start border-4 border-danger');
+                            row.find('.badge.bg-danger').remove();
+                            btn.removeClass('btn-outline-success').addClass('btn-outline-secondary');
+                            btn.attr('data-read', '1').attr('title', 'Mark as unread');
+                            btn.html('<i class="bi bi-envelope"></i> <span>Unread</span>');
+                        } else {
+                            row.addClass('bg-light-subtle border-start border-4 border-danger');
+                            if (row.find('.badge.bg-danger').length === 0) {
+                                row.find('.d-flex.align-items-center.gap-2.mb-1').append('<span class="badge bg-danger rounded-pill py-0.5 px-1.5" style="font-size: 9px;">NEW</span>');
+                            }
+                            btn.removeClass('btn-outline-secondary').addClass('btn-outline-success');
+                            btn.attr('data-read', '0').attr('title', 'Mark as read');
+                            btn.html('<i class="bi bi-check2"></i> <span>Read</span>');
+                        }
+
+                        // Also update header dropdown if item present
+                        const ddItem = $(`#notificationListGroup .notification-item[data-id="${notifId}"]`);
+                        if (ddItem.length) {
+                            const ddBtn = ddItem.find('.dropdown-toggle-read-btn');
+                            ddItem.attr('data-read', isRead ? '1' : '0');
+                            ddBtn.attr('data-read', isRead ? '1' : '0');
+                            if (isRead) {
+                                ddItem.removeClass('bg-light fw-medium');
+                                ddItem.find('.notif-unread-dot').remove();
+                                ddBtn.attr('title', 'Mark as unread').css('color', '#198754').html('<i class="bi bi-envelope"></i>');
+                            } else {
+                                ddItem.addClass('bg-light fw-medium');
+                                if (ddItem.find('.notif-unread-dot').length === 0) {
+                                    ddBtn.parent().append('<span class="p-1 bg-danger rounded-circle notif-unread-dot" style="width: 6px; height: 6px;" title="Unread"></span>');
+                                }
+                                ddBtn.attr('title', 'Mark as read').css('color', '#dc3545').html('<i class="bi bi-check2"></i>');
+                            }
+                        }
+
                         if (resp.unread_count !== undefined) {
                             syncNotificationBadges(resp.unread_count);
                         }

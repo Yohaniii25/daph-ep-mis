@@ -71,6 +71,7 @@ $stmt->close();
                         <th>Officer Name</th>
                         <th>Designation</th>
                         <th>Role</th>
+                        <th>Type</th>
                         <th>Service Category</th>
                         <th>Contact Number</th>
                         <th>Appointment Date</th>
@@ -87,6 +88,13 @@ $stmt->close();
                             </td>
                             <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($emp['designation'] ?: 'N/A') ?></span></td>
                             <td><span class="badge bg-info-subtle text-info border border-info px-2"><?= ucwords(str_replace('_', ' ', $emp['role'] ?? 'employee')) ?></span></td>
+                            <td>
+                                <?php if (($emp['employment_type'] ?? 'permanent') === 'temporary'): ?>
+                                    <span class="badge bg-warning-subtle text-warning border border-warning px-2">Temporary</span>
+                                <?php else: ?>
+                                    <span class="badge bg-success-subtle text-success border border-success px-2">Permanent</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="small"><?= htmlspecialchars($emp['service_category'] ?: '-') ?></td>
                             <td class="small"><?= htmlspecialchars($emp['phone'] ?: '-') ?></td>
                             <td class="small text-nowrap"><?= !empty($emp['appointment_date']) ? date('Y-m-d', strtotime($emp['appointment_date'])) : '-' ?></td>
@@ -97,6 +105,7 @@ $stmt->close();
                                     data-emp_id="<?= htmlspecialchars($emp['emp_id'] ?? '') ?>"
                                     data-designation="<?= htmlspecialchars($emp['designation'] ?? '') ?>"
                                     data-role="<?= htmlspecialchars(ucwords(str_replace('_', ' ', $emp['role'] ?? ''))) ?>"
+                                    data-employment_type="<?= htmlspecialchars(ucfirst($emp['employment_type'] ?? 'permanent')) ?>"
                                     data-service_category="<?= htmlspecialchars($emp['service_category'] ?? '') ?>"
                                     data-email="<?= htmlspecialchars($emp['email'] ?? '') ?>"
                                     data-phone="<?= htmlspecialchars($emp['phone'] ?? '') ?>"
@@ -114,6 +123,7 @@ $stmt->close();
                                     data-officer_name="<?= htmlspecialchars($emp['full_name']) ?>"
                                     data-designation="<?= htmlspecialchars($emp['designation'] ?? '') ?>"
                                     data-user_role="<?= htmlspecialchars($emp['role'] ?? '') ?>"
+                                    data-employment_type="<?= htmlspecialchars($emp['employment_type'] ?? 'permanent') ?>"
                                     data-service_category="<?= htmlspecialchars($emp['service_category'] ?? '') ?>"
                                     data-email="<?= htmlspecialchars($emp['email'] ?? '') ?>"
                                     data-contact_number="<?= htmlspecialchars($emp['phone'] ?? '') ?>"
@@ -151,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#view_emp_id').text(btn.data('emp_id') || '-');
         $('#view_designation').text(btn.data('designation') || '-');
         $('#view_role').text(btn.data('role') || '-');
+        $('#view_employment_type').text(btn.data('employment_type') || 'Permanent');
         $('#view_service_category').text(btn.data('service_category') || '-');
         $('#view_email').text(btn.data('email') || '-');
         $('#view_contact').text(btn.data('phone') || '-');
@@ -167,6 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#edit_emp_officer_name').val(btn.data('officer_name'));
         $('#edit_emp_designation').val(btn.data('designation'));
         $('#edit_emp_user_role').val(btn.data('user_role'));
+        $('#edit_emp_employment_type').val(btn.data('employment_type') || 'permanent');
         $('#edit_emp_service_category').val(btn.data('service_category'));
         $('#edit_emp_email').val(btn.data('email'));
         $('#edit_emp_contact_number').val(btn.data('contact_number'));

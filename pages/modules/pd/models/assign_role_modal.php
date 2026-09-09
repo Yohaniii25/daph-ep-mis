@@ -79,6 +79,14 @@
                         </div>
 
                         <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Employment Type</label>
+                            <select name="employment_type" id="modal_employment_type" class="form-select form-select-sm" required>
+                                <option value="permanent">Permanent</option>
+                                <option value="temporary">Temporary</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold text-dark">District Jurisdiction</label>
                             <select name="district_id" id="modal_district_id" class="form-select form-select-sm" onchange="filterModalRanges(this.value)">
                                 <option value="">Provincial / All Districts</option>

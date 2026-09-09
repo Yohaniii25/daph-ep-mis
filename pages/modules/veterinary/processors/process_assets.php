@@ -12,7 +12,10 @@ $range_id = $_SESSION['range_id'];
 $type     = $_POST['asset_type'] ?? '';
 $name     = $_POST['display_name'] ?? '';
 $desc     = $_POST['description'] ?? '';
-$unit     = trim($_POST['unit'] ?? '');
+$unit     = trim($_POST['unit'] ?? 'range_veterinary_officer');
+if (empty($unit)) {
+    $unit = 'range_veterinary_officer';
+}
 
 try {
     if ($type === 'immovable') {

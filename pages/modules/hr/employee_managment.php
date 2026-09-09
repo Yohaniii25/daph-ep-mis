@@ -360,6 +360,7 @@ require_once '../../../includes/sidebar.php';
                                 <th>Officer Name / Contact</th>
                                 <th>Assigned Role</th>
                                 <th>Designation</th>
+                                <th>Type</th>
                                 <th>District / Scope</th>
                                 <th>Facility / Range</th>
                                 <th>Status</th>
@@ -426,6 +427,13 @@ require_once '../../../includes/sidebar.php';
                                         <span class="fw-medium text-secondary small">
                                             <?= htmlspecialchars($officer['designation'] ?: '—') ?>
                                         </span>
+                                    </td>
+                                    <td>
+                                        <?php if (($officer['employment_type'] ?? 'permanent') === 'temporary'): ?>
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2">Temporary</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2">Permanent</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <span class="badge bg-light text-dark border">
@@ -541,6 +549,14 @@ require_once '../../../includes/sidebar.php';
                             <label class="form-label small fw-bold text-dark">Official Designation / Position Title</label>
                             <input type="text" name="designation" id="modal_designation" class="form-control form-control-sm" placeholder="e.g. Subject Matter Specialist / GVS">
                             <small class="text-muted" style="font-size: 11px;">Will be formatted into: <em>"You are assigned as the [Position Title]"</em></small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Employment Type</label>
+                            <select name="employment_type" id="modal_employment_type" class="form-select form-select-sm" required>
+                                <option value="permanent">Permanent</option>
+                                <option value="temporary">Temporary</option>
+                            </select>
                         </div>
 
                         <div class="col-md-6">
@@ -712,6 +728,7 @@ require_once '../../../includes/sidebar.php';
 
         $('#modal_role').val(officer.role);
         $('#modal_designation').val(officer.designation || '');
+        $('#modal_employment_type').val(officer.employment_type || 'permanent');
         $('#modal_district_id').val(officer.district_id || '');
         $('#modal_range_id').val(officer.range_id || '');
         $('#modal_farm_id').val(officer.farm_id || '');

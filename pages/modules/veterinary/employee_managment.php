@@ -78,6 +78,7 @@ $query = "
         od.phone AS contact_number,
         od.designation,
         od.role,
+        od.employment_type,
         od.service_category,
         od.date_of_birth,
         od.appointment_date,
@@ -137,6 +138,7 @@ require_once '../../../includes/header.php';
                                 <th>Officer Name</th>
                                 <th>Designation</th>
                                 <th>Role</th>
+                                <th>Type</th>
                                 <th>District</th>
                                 <th>Range</th>
                                 <th>Contact</th>
@@ -154,6 +156,13 @@ require_once '../../../includes/header.php';
                                     </td>
                                     <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($row['designation'] ?? 'N/A') ?></span></td>
                                     <td><span class="badge bg-info-soft text-info"><?= ucwords(str_replace('_', ' ', $row['role'] ?? 'N/A')) ?></span></td>
+                                    <td>
+                                        <?php if (($row['employment_type'] ?? 'permanent') === 'temporary'): ?>
+                                            <span class="badge bg-warning-soft text-warning border border-warning">Temporary</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success-soft text-success border border-success">Permanent</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= $row['district_name'] ?? '<span class="text-muted small">N/A</span>' ?></td>
                                     <td><?= $row['range_name'] ?? '<span class="text-muted small">N/A</span>' ?></td>
                                     <td class="small"><?= htmlspecialchars($row['contact_number'] ?? 'N/A') ?></td>
@@ -217,6 +226,10 @@ require_once '../../../includes/header.php';
                     <div class="col-md-6">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Role</small>
                         <span class="fw-semibold text-dark" id="view_role">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Employment Type</small>
+                        <span class="fw-semibold text-dark" id="view_employment_type">-</span>
                     </div>
                     <div class="col-md-6">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Service Category</small>
@@ -317,6 +330,7 @@ require_once '../../../includes/header.php';
         document.getElementById('view_emp_id').textContent = data.emp_id || '-';
         document.getElementById('view_designation').textContent = data.designation || '-';
         document.getElementById('view_role').textContent = data.role ? data.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-';
+        document.getElementById('view_employment_type').textContent = data.employment_type ? (data.employment_type.charAt(0).toUpperCase() + data.employment_type.slice(1)) : 'Permanent';
         document.getElementById('view_service_category').textContent = data.service_category || '-';
         document.getElementById('view_email').textContent = data.email || '-';
         document.getElementById('view_contact').textContent = data.contact_number || '-';
@@ -383,6 +397,11 @@ require_once '../../../includes/header.php';
             if (!roleElem.value && data.role) {
                 roleElem.value = 'employee';
             }
+        }
+
+        var empTypeElem = document.getElementById('edit_employment_type');
+        if (empTypeElem) {
+            empTypeElem.value = data.employment_type || 'permanent';
         }
 
         document.getElementById('edit_service_category').value = data.service_category || '';
@@ -463,6 +482,11 @@ require_once '../../../includes/header.php';
     .bg-success-soft {
         background-color: #e8fadf;
         color: #198754;
+    }
+
+    .bg-warning-soft {
+        background-color: #fff9e6;
+        color: #b78103;
     }
 
     .bg-danger-soft {

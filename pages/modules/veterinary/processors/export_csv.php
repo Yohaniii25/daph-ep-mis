@@ -2,7 +2,31 @@
 session_start();
 require_once '../../../../config/db_connect.php';
 
-$range_id = $_GET['range_id'];
+if (!isset($_SESSION['logged_in']) || empty($_SESSION['user_id'])) {
+    header("Location: ../../../../index.php");
+    exit();
+}
+
+$user_role = $_SESSION['role'] ?? '';
+$is_supervisory = in_array($user_role, [
+    'district_dd',
+    'deputy_director_district',
+    'administrator',
+    'provincial_director',
+    'deputy_director_hq_1',
+    'deputy_director_hq_2'
+]);
+
+// Non-supervisory veterinary users can ONLY access/export their own assigned range
+if (!$is_supervisory && !empty($_SESSION['range_id'])) {
+    $range_id = (int)$_SESSION['range_id'];
+} else {
+    $range_id = isset($_GET['range_id']) ? (int)$_GET['range_id'] : (int)($_SESSION['range_id'] ?? 0);
+}
+
+if (empty($range_id)) {
+    die("Unauthorized or missing range identification.");
+}
 $filename = "Animal_Health_Report_" . date('Y-m-d') . ".csv";
 
 header('Content-Type: text/csv');

@@ -218,20 +218,14 @@ $initial_notifications = get_filtered_notifications($mysqli, $current_user_id, '
                             </div>
                             <!-- Actions -->
                             <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto ms-md-0">
-                                <?php if (!empty($item['link']) && $item['link'] !== '#'): ?>
-                                    <a href="<?= $rel_path . ltrim($item['link'], '/') ?>" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 notif-link-btn" data-id="<?= $item['id'] ?>">
-                                        <span>View Action</span> <i class="bi bi-arrow-right-short"></i>
-                                    </a>
-                                <?php endif; ?>
-                                <?php if (empty($item['is_read'])): ?>
-                                    <button type="button" class="btn btn-sm btn-light border single-mark-read-btn text-muted" data-id="<?= $item['id'] ?>" title="Mark as read">
-                                        <i class="bi bi-check2"></i> Mark Read
-                                    </button>
-                                <?php else: ?>
-                                    <span class="text-muted small d-inline-flex align-items-center gap-1 pe-2">
-                                        <i class="bi bi-check2-circle text-success"></i> Read
-                                    </span>
-                                <?php endif; ?>
+                                <button type="button" 
+                                        class="btn btn-sm <?= empty($item['is_read']) ? 'btn-outline-success' : 'btn-outline-secondary' ?> single-toggle-read-btn d-inline-flex align-items-center gap-1" 
+                                        data-id="<?= $item['id'] ?>" 
+                                        data-read="<?= !empty($item['is_read']) ? '1' : '0' ?>"
+                                        title="<?= empty($item['is_read']) ? 'Mark as read' : 'Mark as unread' ?>">
+                                    <i class="bi <?= empty($item['is_read']) ? 'bi-check2' : 'bi-envelope' ?>"></i>
+                                    <span class="btn-text"><?= empty($item['is_read']) ? 'Mark Read' : 'Mark Unread' ?></span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -324,24 +318,62 @@ document.addEventListener('DOMContentLoaded', function() {
         location.reload();
     });
 
-    // Mark single notification as read
-    $(document).on('click', '.single-mark-read-btn, .notif-link-btn', function(e) {
-        const notifId = $(this).data('id');
-        const card = $(this).closest('.notif-row-card');
-        if (!notifId || card.attr('data-read') === '1') return;
+    // Toggle single notification read / unread
+    $(document).on('click', '.single-toggle-read-btn', function(e) {
+        e.preventDefault();
+        const btn = $(this);
+        const notifId = btn.data('id');
+        const card = btn.closest('.notif-row-card');
+        if (!notifId) return;
 
         $.ajax({
             url: apiEndpoint,
             type: 'POST',
-            data: { action: 'mark_read', id: notifId },
+            data: { action: 'toggle_read', id: notifId },
             dataType: 'json',
             success: function(resp) {
                 if (resp && resp.success) {
-                    card.attr('data-read', '1');
-                    card.removeClass('bg-light-subtle border-start border-4 border-danger');
-                    card.find('.unread-badge-tag').remove();
-                    card.find('.single-mark-read-btn').replaceWith('<span class="text-muted small d-inline-flex align-items-center gap-1 pe-2"><i class="bi bi-check2-circle text-success"></i> Read</span>');
+                    const isRead = parseInt(resp.is_read) === 1;
+                    card.attr('data-read', isRead ? '1' : '0');
+                    btn.attr('data-read', isRead ? '1' : '0');
+
+                    if (isRead) {
+                        card.removeClass('bg-light-subtle border-start border-4 border-danger');
+                        card.find('.unread-badge-tag').remove();
+                        btn.removeClass('btn-outline-success').addClass('btn-outline-secondary');
+                        btn.attr('title', 'Mark as unread');
+                        btn.html('<i class="bi bi-envelope"></i> <span class="btn-text">Mark Unread</span>');
+                    } else {
+                        card.addClass('bg-light-subtle border-start border-4 border-danger');
+                        if (card.find('.unread-badge-tag').length === 0) {
+                            card.find('.d-flex.flex-wrap.align-items-center.gap-2.mb-1').append('<span class="badge bg-danger rounded-pill px-2 py-0.5 unread-badge-tag" style="font-size: 10px;">NEW</span>');
+                        }
+                        btn.removeClass('btn-outline-secondary').addClass('btn-outline-success');
+                        btn.attr('title', 'Mark as read');
+                        btn.html('<i class="bi bi-check2"></i> <span class="btn-text">Mark Read</span>');
+                    }
+
+                    // Also sync topbar dropdown item if present
+                    const ddItem = $(`#notificationListGroup .notification-item[data-id="${notifId}"]`);
+                    if (ddItem.length) {
+                        const ddBtn = ddItem.find('.dropdown-toggle-read-btn');
+                        ddItem.attr('data-read', isRead ? '1' : '0');
+                        ddBtn.attr('data-read', isRead ? '1' : '0');
+                        if (isRead) {
+                            ddItem.removeClass('bg-light fw-medium');
+                            ddItem.find('.notif-unread-dot').remove();
+                            ddBtn.attr('title', 'Mark as unread').css('color', '#198754').html('<i class="bi bi-envelope"></i>');
+                        } else {
+                            ddItem.addClass('bg-light fw-medium');
+                            if (ddItem.find('.notif-unread-dot').length === 0) {
+                                ddBtn.parent().append('<span class="p-1 bg-danger rounded-circle notif-unread-dot" style="width: 6px; height: 6px;" title="Unread"></span>');
+                            }
+                            ddBtn.attr('title', 'Mark as read').css('color', '#dc3545').html('<i class="bi bi-check2"></i>');
+                        }
+                    }
+
                     updateHeaderAndStats(resp.unread_count, resp.counts);
+                    filterCards();
                 }
             }
         });
@@ -365,7 +397,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         card.attr('data-read', '1');
                         card.removeClass('bg-light-subtle border-start border-4 border-danger');
                         card.find('.unread-badge-tag').remove();
-                        card.find('.single-mark-read-btn').replaceWith('<span class="text-muted small d-inline-flex align-items-center gap-1 pe-2"><i class="bi bi-check2-circle text-success"></i> Read</span>');
+                        card.find('.single-toggle-read-btn')
+                            .removeClass('btn-outline-success')
+                            .addClass('btn-outline-secondary')
+                            .attr('data-read', '1')
+                            .attr('title', 'Mark as unread')
+                            .html('<i class="bi bi-envelope"></i> <span class="btn-text">Mark Unread</span>');
                     });
                     btn.addClass('disabled');
                     updateHeaderAndStats(resp.unread_count, resp.counts);

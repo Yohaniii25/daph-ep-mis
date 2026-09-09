@@ -3021,6 +3021,7 @@ CREATE TABLE `users` (
   `designation` varchar(100) DEFAULT NULL,
   `role` enum('provincial_director','district_dd','veterinary_surgeon','training_officer','sms','farms_dd','finance_admin','planning_officer','administrator','data_entry','employee','deputy_director_hq_1','deputy_director_hq_2','government_veterinary_surgeon','additional_veterinary_surgeon','livestock_development_officer','development_officer','driver','dispensary_assistant','department_laborer','night_watcher') NOT NULL,
   `service_category` varchar(150) DEFAULT NULL,
+  `employment_type` enum('permanent','temporary') NOT NULL DEFAULT 'permanent',
   `district_id` int(11) DEFAULT NULL,
   `range_id` int(11) DEFAULT NULL,
   `unit_id` int(11) DEFAULT NULL,

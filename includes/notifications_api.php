@@ -28,6 +28,35 @@ if ($action === 'mark_read') {
     $counts = get_notification_type_counts($mysqli, $user_id);
     echo json_encode([
         'success' => $ok,
+        'is_read' => 1,
+        'unread_count' => $unread_count,
+        'counts' => $counts
+    ]);
+    exit();
+}
+
+if ($action === 'mark_unread') {
+    $notification_id = isset($_POST['id']) ? intval($_POST['id']) : (isset($_GET['id']) ? intval($_GET['id']) : null);
+    $ok = mark_notification_as_unread($mysqli, $user_id, $notification_id);
+    $unread_count = get_unread_notification_count($mysqli, $user_id);
+    $counts = get_notification_type_counts($mysqli, $user_id);
+    echo json_encode([
+        'success' => $ok,
+        'is_read' => 0,
+        'unread_count' => $unread_count,
+        'counts' => $counts
+    ]);
+    exit();
+}
+
+if ($action === 'toggle_read') {
+    $notification_id = isset($_POST['id']) ? intval($_POST['id']) : (isset($_GET['id']) ? intval($_GET['id']) : null);
+    $res = toggle_notification_read_status($mysqli, $user_id, $notification_id);
+    $unread_count = get_unread_notification_count($mysqli, $user_id);
+    $counts = get_notification_type_counts($mysqli, $user_id);
+    echo json_encode([
+        'success' => $res['success'] ?? false,
+        'is_read' => $res['is_read'] ?? 0,
         'unread_count' => $unread_count,
         'counts' => $counts
     ]);

@@ -62,19 +62,33 @@ if (empty($user_district_id) && !empty($user_range_id)) {
     }
 }
 
-// Determine active range_id: requested via GET, or user's primary range, or session
-$range_id = $requested_range_id ?: ($user_range_id ?: ($_SESSION['range_id'] ?? null));
+// Determine active range_id based on role and assignment:
+// Non-supervisory veterinary users can ONLY access their own assigned range
+if (!$is_supervisory) {
+    $assigned_range = $user_range_id ?: (!empty($_SESSION['range_id']) ? (int)$_SESSION['range_id'] : null);
 
-// If still empty and we know user_district_id, default to first range in that district
-if (empty($range_id) && !empty($user_district_id)) {
-    $first_rng = $mysqli->prepare("SELECT id FROM veterinary_ranges WHERE district_id = ? ORDER BY id ASC LIMIT 1");
-    if ($first_rng) {
-        $first_rng->bind_param("i", $user_district_id);
-        $first_rng->execute();
-        if ($fr_row = $first_rng->get_result()->fetch_assoc()) {
-            $range_id = (int)$fr_row['id'];
+    // If an external range_id was requested via GET and doesn't match their assigned range, redirect
+    if ($requested_range_id !== null && $requested_range_id !== $assigned_range) {
+        header("Location: range_details.php");
+        exit();
+    }
+
+    $range_id = $assigned_range;
+} else {
+    // Supervisory roles (Admin, Provincial Director, District DD) can view specific ranges via GET or fallback
+    $range_id = $requested_range_id ?: ($user_range_id ?: (!empty($_SESSION['range_id']) ? (int)$_SESSION['range_id'] : null));
+
+    // If still empty and we know user_district_id, default to first range in that district
+    if (empty($range_id) && !empty($user_district_id)) {
+        $first_rng = $mysqli->prepare("SELECT id FROM veterinary_ranges WHERE district_id = ? ORDER BY id ASC LIMIT 1");
+        if ($first_rng) {
+            $first_rng->bind_param("i", $user_district_id);
+            $first_rng->execute();
+            if ($fr_row = $first_rng->get_result()->fetch_assoc()) {
+                $range_id = (int)$fr_row['id'];
+            }
+            $first_rng->close();
         }
-        $first_rng->close();
     }
 }
 
@@ -112,22 +126,6 @@ if (!empty($range_id)) {
             $iframe_url = $data['iframe_url'] ?? '';
         }
         $details_query->close();
-    }
-}
-
-// Fetch all veterinary ranges in this district for navigation / switching
-$district_ranges = [];
-$active_district_id = $range_district_id ?: $user_district_id;
-if (!empty($active_district_id)) {
-    $d_ranges_stmt = $mysqli->prepare("SELECT id, name, code FROM veterinary_ranges WHERE district_id = ? ORDER BY name ASC");
-    if ($d_ranges_stmt) {
-        $d_ranges_stmt->bind_param("i", $active_district_id);
-        $d_ranges_stmt->execute();
-        $d_res = $d_ranges_stmt->get_result();
-        while ($dr = $d_res->fetch_assoc()) {
-            $district_ranges[] = $dr;
-        }
-        $d_ranges_stmt->close();
     }
 }
 
@@ -296,20 +294,6 @@ require_once '../../../includes/header.php';
                 <p class="text-muted small mb-0">Official mapping profile metrics dynamically captured for <strong class="text-dark"><?= htmlspecialchars($range_name) ?> Range</strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <?php if (!empty($district_ranges) && count($district_ranges) > 1): ?>
-                    <form method="GET" action="range_details.php" class="d-flex align-items-center gap-2 m-0 bg-white p-2 rounded border shadow-sm">
-                        <label for="rangeSelector" class="form-label small fw-bold text-muted mb-0 text-nowrap">
-                            <i class="bi bi-geo-alt-fill me-1 text-danger"></i>Switch Range:
-                        </label>
-                        <select id="rangeSelector" name="range_id" class="form-select form-select-sm border-2 fw-semibold" style="min-width: 220px;" onchange="this.form.submit()">
-                            <?php foreach ($district_ranges as $dr): ?>
-                                <option value="<?= $dr['id'] ?>" <?= ($dr['id'] == $range_id) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($dr['name']) ?> Range
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </form>
-                <?php endif; ?>
                 <?php if (isset($_SESSION['msg'])): ?>
                     <div class="alert alert-<?= $_SESSION['msg_type'] ?> py-2 px-3 mb-0 small">
                         <?= $_SESSION['msg'] ?>
@@ -318,6 +302,15 @@ require_once '../../../includes/header.php';
                 <?php endif; ?>
             </div>
         </div>
+
+        <?php if (empty($range_id)): ?>
+            <div class="alert alert-warning border d-flex align-items-center gap-2 mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill fs-5 text-warning flex-shrink-0"></i>
+                <div>
+                    <strong>No Range Assigned:</strong> Your user account is currently not assigned to a specific veterinary range. Please contact your District Deputy Director or MIS Administrator.
+                </div>
+            </div>
+        <?php endif; ?>
 
         <div class="row g-4 mb-4">
             <div class="col-12 col-lg-4">
@@ -345,9 +338,15 @@ require_once '../../../includes/header.php';
                                     <tr>
                                         <th>Permission Scope</th>
                                         <td>
-                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-                                                <i class="bi bi-globe2 me-1"></i>District-Wide
-                                            </span>
+                                            <?php if ($is_supervisory): ?>
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                                    <i class="bi bi-globe2 me-1"></i><?= !empty($district_name) && $district_name !== 'Your District' ? htmlspecialchars($district_name) . ' District-Wide' : 'Supervisory' ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                    <i class="bi bi-geo-alt-fill me-1"></i>Assigned Range (<?= htmlspecialchars($range_name) ?>)
+                                                </span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -397,8 +396,8 @@ require_once '../../../includes/header.php';
                         <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small rounded-pill">
                             <i class="bi bi-check2-circle me-1"></i><?= count($visible_actions) ?> Module(s) Assigned
                         </span>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 small rounded-pill">
-                            <i class="bi bi-globe2 me-1"></i>District-Wide Access (<?= htmlspecialchars($district_name) ?>)
+                        <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 small rounded-pill">
+                            <i class="bi bi-geo-alt-fill me-1"></i>Assigned Range (<?= htmlspecialchars($range_name) ?>)
                         </span>
                     <?php endif; ?>
                 </div>

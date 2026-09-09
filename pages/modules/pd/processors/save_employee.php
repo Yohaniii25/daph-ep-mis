@@ -24,6 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $designation    = trim($_POST['designation'] ?? '');
     $user_role      = trim($_POST['user_role'] ?? 'employee');
     $service_cat    = trim($_POST['service_category'] ?? '');
+    $employment_type = trim($_POST['employment_type'] ?? 'permanent');
+    if (!in_array($employment_type, ['permanent', 'temporary'])) {
+        $employment_type = 'permanent';
+    }
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
 
@@ -102,15 +106,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         INSERT INTO users (
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
-            district_id, range_id, farm_id, training_center_id, 
+            employment_type, district_id, range_id, farm_id, training_center_id, 
             date_of_birth, registered_date, appointment_date, 
             appointment_date_current_position, is_active, district
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?)
     ");
 
     if ($insert_stmt) {
         $insert_stmt->bind_param(
-            "ssssssssssiiiissss",
+            "sssssssssssiiiissss",
             $username,
             $default_password,
             $email,
@@ -121,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $designation,
             $user_role,
             $service_cat,
+            $employment_type,
             $district_id,
             $range_id,
             $farm_id,

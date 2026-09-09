@@ -29,6 +29,10 @@
                         <span class="fw-semibold text-dark" id="view_role">-</span>
                     </div>
                     <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Employment Type</small>
+                        <span class="fw-semibold text-dark" id="view_employment_type">-</span>
+                    </div>
+                    <div class="col-md-6">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Service Category</small>
                         <span class="fw-semibold text-dark" id="view_service_category">-</span>
                     </div>

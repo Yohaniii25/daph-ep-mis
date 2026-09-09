@@ -21,6 +21,10 @@ if (isset($_POST['update_employee']) || $is_ajax) {
     $officer_name   = trim($_POST['officer_name'] ?? '');
     $designation    = trim($_POST['designation'] ?? '');
     $user_role      = trim($_POST['user_role'] ?? 'employee');
+    $employment_type = trim($_POST['employment_type'] ?? 'permanent');
+    if (!in_array($employment_type, ['permanent', 'temporary'])) {
+        $employment_type = 'permanent';
+    }
     $service_cat    = trim($_POST['service_category'] ?? '');
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
@@ -119,6 +123,7 @@ if (isset($_POST['update_employee']) || $is_ajax) {
         'full_name' => $officer_name,
         'designation' => $designation,
         'role' => $user_role,
+        'employment_type' => $employment_type,
         'service_category' => $service_cat,
         'email' => $email,
         'phone' => $contact_number,
@@ -166,6 +171,7 @@ if (isset($_POST['update_employee']) || $is_ajax) {
             designation = ?,
             role = ?,
             service_category = ?,
+            employment_type = ?,
             email = ?,
             phone = ?,
             date_of_birth = ?,
@@ -177,13 +183,14 @@ if (isset($_POST['update_employee']) || $is_ajax) {
 
     if ($update_stmt) {
         $update_stmt->bind_param(
-            "ssssssssssssii",
+            "sssssssssssssii",
             $service_number,
             $service_number,
             $officer_name,
             $designation,
             $user_role,
             $service_cat,
+            $employment_type,
             $email,
             $contact_number,
             $dob,

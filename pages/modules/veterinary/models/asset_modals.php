@@ -17,21 +17,7 @@
                         </select>
                     </div>
 
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold">Unit <span class="text-danger">*</span></label>
-                        <select name="unit" class="form-select form-select-sm" required>
-                            <option value="" disabled selected>-- Select Unit --</option>
-                            <option value="provincial_director">Provincial Director</option>
-                            <option value="additional_provincial_director">Additional Provincial Director</option>
-                            <option value="subject_matter_specialist">Subject Matter Specialist</option>
-                            <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
-                            <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
-                            <option value="deputy_director_district">Deputy Director - District</option>
-                            <option value="range_veterinary_officer">Range Veterinary Officer</option>
-                            <option value="training_centers">Training Centers</option>
-                            <option value="regional_farms">Regional Farms</option>
-                        </select>
-                    </div>
+                    <input type="hidden" name="unit" value="range_veterinary_officer">
 
                     <div class="mb-2">
                         <label class="form-label small fw-bold">Asset / Item Name</label>

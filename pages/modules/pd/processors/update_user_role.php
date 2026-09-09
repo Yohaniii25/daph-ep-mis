@@ -31,6 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $designation    = trim($_POST['designation'] ?? '');
     $full_name      = trim($_POST['full_name'] ?? '');
     $service_number = trim($_POST['service_number'] ?? '');
+    $employment_type = trim($_POST['employment_type'] ?? ($existing['employment_type'] ?? 'permanent'));
+    if (!in_array($employment_type, ['permanent', 'temporary'])) {
+        $employment_type = 'permanent';
+    }
 
     $district_id    = !empty($_POST['district_id']) ? intval($_POST['district_id']) : null;
     $range_id       = !empty($_POST['range_id']) ? intval($_POST['range_id']) : null;
@@ -86,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             designation = ?,
             full_name = ?,
             service_number = ?,
+            employment_type = ?,
             district_id = ?,
             range_id = ?,
             farm_id = ?,
@@ -97,11 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($update_stmt) {
         $update_stmt->bind_param(
-            "ssssiiiisi",
+            "sssssiiiisi",
             $role,
             $designation,
             $full_name,
             $service_number,
+            $employment_type,
             $district_id,
             $range_id,
             $farm_id,

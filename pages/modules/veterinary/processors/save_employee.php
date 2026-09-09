@@ -28,10 +28,32 @@ if (isset($_POST['save_employee']) || $is_ajax) {
     $officer_name   = trim($_POST['officer_name'] ?? '');
     $designation    = trim($_POST['designation'] ?? '');
     $user_role      = trim($_POST['user_role'] ?? 'employee');
+    $employment_type = trim($_POST['employment_type'] ?? 'permanent');
+    if (!in_array($employment_type, ['permanent', 'temporary'])) {
+        $employment_type = 'permanent';
+    }
     $service_cat    = trim($_POST['service_category'] ?? '');
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
     $unit           = trim($_POST['unit'] ?? '');
+    if (empty($unit)) {
+        $unit = 'range_veterinary_officer';
+    }
+
+    if (empty($designation)) {
+        $role_to_desig = [
+            'government_veterinary_surgeon' => 'Government Veterinary Surgeon (GVS)',
+            'additional_veterinary_surgeon' => 'Additional Veterinary Surgeon (AVS)',
+            'livestock_development_officer' => 'Livestock Development Officer (or Instructor)',
+            'development_officer'           => 'Development Officer (DO)',
+            'driver'                        => 'Driver',
+            'dispensary_assistant'          => 'Dispensary Assistant',
+            'department_laborer'            => 'Department Laborer',
+            'night_watcher'                 => 'Night Watcher',
+            'veterinary_surgeon'            => 'Veterinary Surgeon'
+        ];
+        $designation = $role_to_desig[$user_role] ?? ucwords(str_replace('_', ' ', $user_role));
+    }
     
     $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
@@ -111,14 +133,14 @@ if (isset($_POST['save_employee']) || $is_ajax) {
         INSERT INTO users (
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
-            district_id, range_id, date_of_birth, registered_date, appointment_date, 
+            employment_type, district_id, range_id, date_of_birth, registered_date, appointment_date, 
             appointment_date_current_position, is_active, district, unit
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?, ?)
     ");
 
     if ($insert_stmt) {
         $insert_stmt->bind_param(
-            "ssssssssssiisssss",
+            "sssssssssssiisssss",
             $username,
             $default_password,
             $email,
@@ -129,6 +151,7 @@ if (isset($_POST['save_employee']) || $is_ajax) {
             $designation,
             $user_role,
             $service_cat,
+            $employment_type,
             $district_id,
             $range_id,
             $dob,
@@ -139,6 +162,17 @@ if (isset($_POST['save_employee']) || $is_ajax) {
         );
 
         if ($insert_stmt->execute()) {
+            $new_user_id = $insert_stmt->insert_id;
+
+            // Trigger automated direct assignment notification to the assigned user
+            $role_title = !empty($designation) ? $designation : $user_role;
+            if (!empty($new_user_id)) {
+                notify_assigned_officer($mysqli, $new_user_id, $role_title, 'dashboard.php');
+            }
+
+            // Trigger automated notification to oversight officers
+            create_officer_notification($mysqli, 'New Officer Added', $officer_name, $service_number, $range_id, 'pages/modules/veterinary/employee_managment.php');
+
             if ($is_ajax) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'message' => 'Officer record successfully registered.']);
@@ -146,9 +180,6 @@ if (isset($_POST['save_employee']) || $is_ajax) {
             }
             $_SESSION['msg'] = "Officer record successfully created under your Range profile.";
             $_SESSION['msg_type'] = "success";
-
-            // Automated notification trigger
-            create_officer_notification($mysqli, 'New Officer Added', $officer_name, $service_number, $range_id, 'pages/modules/veterinary/employee_managment.php');
         } else {
             if ($is_ajax) {
                 header('Content-Type: application/json');

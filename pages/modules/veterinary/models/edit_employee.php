@@ -1,3 +1,4 @@
+
 <!-- Edit Employee Modal -->
 <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -10,22 +11,8 @@
                 <input type="hidden" name="id" id="edit_id">
 
                 <div class="modal-body p-4">
+                    <input type="hidden" name="unit" id="edit_employee_unit" value="range_veterinary_officer">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Unit <span class="text-danger">*</span></label>
-                            <select name="unit" id="edit_employee_unit" class="form-select" required>
-                                <option value="" disabled selected>-- Select Unit --</option>
-                                <option value="provincial_director">Provincial Director</option>
-                                <option value="additional_provincial_director">Additional Provincial Director</option>
-                                <option value="subject_matter_specialist">Subject Matter Specialist</option>
-                                <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
-                                <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
-                                <option value="deputy_director_district">Deputy Director - District</option>
-                                <option value="range_veterinary_officer">Range Veterinary Officer</option>
-                                <option value="training_centers">Training Centers</option>
-                                <option value="regional_farms">Regional Farms</option>
-                            </select>
-                        </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Service Number</label>
                             <input type="text" name="service_number" id="edit_service_number" class="form-control" required>
@@ -68,6 +55,13 @@
                                 <option value="PDO">PDO</option>
                                 <option value="CDO">CDO</option>
                                 <option value="Watcher">Watcher</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Employment Type <span class="text-danger">*</span></label>
+                            <select name="employment_type" id="edit_employment_type" class="form-select" required>
+                                <option value="permanent">Permanent</option>
+                                <option value="temporary">Temporary</option>
                             </select>
                         </div>
                         <div class="col-md-6">

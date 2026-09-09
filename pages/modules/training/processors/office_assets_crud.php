@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once '../../../../config/db_connect.php';
 require_once '../../../../includes/approval_helper.php';
+require_once '../../../../includes/notification_helper.php';
 
 $allowed_roles = ['training_officer', 'administrator', 'provincial_director', 'district_dd'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
@@ -538,6 +539,10 @@ if ($action === 'save_employee') {
     $officer_name       = trim($_POST['officer_name'] ?? '');
     $designation        = trim($_POST['designation'] ?? '');
     $user_role          = trim($_POST['user_role'] ?? 'employee');
+    $employment_type    = trim($_POST['employment_type'] ?? 'permanent');
+    if (!in_array($employment_type, ['permanent', 'temporary'])) {
+        $employment_type = 'permanent';
+    }
     $service_category   = trim($_POST['service_category'] ?? '');
     $email              = trim($_POST['email'] ?? '');
     $contact_number     = trim($_POST['contact_number'] ?? '');
@@ -551,10 +556,16 @@ if ($action === 'save_employee') {
         respondJsonOrRedirect($is_ajax, false, 'Officer Name and Service Number are required.', '../employee_managment.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO users (username, password, full_name, email, phone, designation, role, service_category, service_number, emp_id, training_center_id, district_id, date_of_birth, appointment_date, appointment_date_current_position, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
-    $stmt->bind_param("sssssssssiissss", $username, $default_password, $officer_name, $email, $contact_number, $designation, $user_role, $service_category, $service_number, $service_number, $training_center_id, $district_id, $date_of_birth, $appointment_date, $appointment_date_current_position);
+    $stmt = $mysqli->prepare("INSERT INTO users (username, password, full_name, email, phone, designation, role, employment_type, service_category, service_number, emp_id, training_center_id, district_id, date_of_birth, appointment_date, appointment_date_current_position, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+    $stmt->bind_param("ssssssssssiissss", $username, $default_password, $officer_name, $email, $contact_number, $designation, $user_role, $employment_type, $service_category, $service_number, $service_number, $training_center_id, $district_id, $date_of_birth, $appointment_date, $appointment_date_current_position);
 
     if ($stmt->execute()) {
+        $new_user_id = $stmt->insert_id;
+        $role_title = !empty($designation) ? $designation : $user_role;
+        if (!empty($new_user_id)) {
+            notify_assigned_officer($mysqli, $new_user_id, $role_title, 'dashboard.php');
+        }
+        create_officer_notification($mysqli, 'New Officer Added', $officer_name, $service_number, null, 'pages/modules/training/employee_managment.php');
         respondJsonOrRedirect($is_ajax, true, 'New staff officer registered successfully.', '../employee_managment.php');
     } else {
         respondJsonOrRedirect($is_ajax, false, 'Failed to register officer: ' . $stmt->error, '../employee_managment.php');
@@ -567,6 +578,10 @@ if ($action === 'update_employee') {
     $officer_name       = trim($_POST['officer_name'] ?? '');
     $designation        = trim($_POST['designation'] ?? '');
     $user_role          = trim($_POST['user_role'] ?? 'employee');
+    $employment_type    = trim($_POST['employment_type'] ?? 'permanent');
+    if (!in_array($employment_type, ['permanent', 'temporary'])) {
+        $employment_type = 'permanent';
+    }
     $service_category   = trim($_POST['service_category'] ?? '');
     $email              = trim($_POST['email'] ?? '');
     $contact_number     = trim($_POST['contact_number'] ?? '');
@@ -591,6 +606,7 @@ if ($action === 'update_employee') {
         'phone' => $contact_number,
         'designation' => $designation,
         'role' => $user_role,
+        'employment_type' => $employment_type,
         'service_category' => $service_category,
         'service_number' => $service_number,
         'date_of_birth' => $date_of_birth,
@@ -603,8 +619,8 @@ if ($action === 'update_employee') {
         respondJsonOrRedirect($is_ajax, true, 'Edit submitted successfully. Changes are pending authorization by the Provincial Director.', '../employee_managment.php', ['staged' => true]);
     }
 
-    $stmt = $mysqli->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, designation = ?, role = ?, service_category = ?, service_number = ?, date_of_birth = ?, appointment_date = ?, appointment_date_current_position = ? WHERE id = ? AND (training_center_id = ? OR id = ?)");
-    $stmt->bind_param("ssssssssssiii", $officer_name, $email, $contact_number, $designation, $user_role, $service_category, $service_number, $date_of_birth, $appointment_date, $appointment_date_current_position, $id, $training_center_id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, designation = ?, role = ?, employment_type = ?, service_category = ?, service_number = ?, date_of_birth = ?, appointment_date = ?, appointment_date_current_position = ? WHERE id = ? AND (training_center_id = ? OR id = ?)");
+    $stmt->bind_param("sssssssssssiii", $officer_name, $email, $contact_number, $designation, $user_role, $employment_type, $service_category, $service_number, $date_of_birth, $appointment_date, $appointment_date_current_position, $id, $training_center_id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Officer details updated successfully.', '../employee_managment.php');

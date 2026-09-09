@@ -214,9 +214,8 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
                         <?php else: ?>
                             <div class="list-group list-group-flush" id="notificationListGroup">
                                 <?php foreach ($header_notifications as $notif): ?>
-                                    <a href="<?= !empty($notif['link']) ? $rel_path . ltrim($notif['link'], '/') : '#' ?>" 
-                                       class="list-group-item list-group-item-action p-3 border-bottom notification-item <?= empty($notif['is_read']) ? 'bg-light fw-medium' : '' ?>"
-                                       data-id="<?= $notif['id'] ?>" style="transition: background 0.2s;">
+                                    <div class="list-group-item list-group-item-action p-3 border-bottom notification-item <?= empty($notif['is_read']) ? 'bg-light fw-medium' : '' ?>"
+                                         data-id="<?= $notif['id'] ?>" data-read="<?= !empty($notif['is_read']) ? '1' : '0' ?>" style="transition: background 0.2s;">
                                         <div class="d-flex align-items-start">
                                             <div class="me-3 mt-1">
                                                 <?php if (strpos(strtolower($notif['title']), 'add') !== false): ?>
@@ -233,18 +232,27 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
                                                     </div>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="flex-grow-1">
+                                            <a href="<?= !empty($notif['link']) ? $rel_path . ltrim($notif['link'], '/') : '#' ?>" class="flex-grow-1 text-decoration-none text-dark notif-item-link">
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <span class="fw-bold small text-dark"><?= htmlspecialchars($notif['title']) ?></span>
                                                     <small class="text-muted" style="font-size: 10px;"><?= htmlspecialchars($notif['time_ago']) ?></small>
                                                 </div>
                                                 <p class="mb-0 text-muted small lh-sm" style="font-size: 12px;"><?= htmlspecialchars($notif['message']) ?></p>
+                                            </a>
+                                            <div class="ms-2 d-flex flex-column align-items-center gap-1 flex-shrink-0">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-link p-0 dropdown-toggle-read-btn text-decoration-none" 
+                                                        data-id="<?= $notif['id'] ?>" 
+                                                        title="<?= empty($notif['is_read']) ? 'Mark as read' : 'Mark as unread' ?>"
+                                                        style="color: <?= empty($notif['is_read']) ? '#dc3545' : '#198754' ?>; font-size: 14px;">
+                                                    <i class="bi <?= empty($notif['is_read']) ? 'bi-check2' : 'bi-envelope' ?>"></i>
+                                                </button>
+                                                <?php if (empty($notif['is_read'])): ?>
+                                                    <span class="p-1 bg-danger rounded-circle notif-unread-dot" style="width: 6px; height: 6px;" title="Unread"></span>
+                                                <?php endif; ?>
                                             </div>
-                                            <?php if (empty($notif['is_read'])): ?>
-                                                <span class="ms-2 p-1 bg-danger rounded-circle align-self-center notif-unread-dot" style="width: 6px; height: 6px;" title="Unread"></span>
-                                            <?php endif; ?>
                                         </div>
-                                    </a>
+                                    </div>
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>

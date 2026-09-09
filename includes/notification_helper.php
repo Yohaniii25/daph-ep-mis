@@ -239,6 +239,72 @@ if (!function_exists('mark_notification_as_read')) {
     }
 }
 
+if (!function_exists('mark_notification_as_unread')) {
+    /**
+     * Mark a single notification as unread for a user
+     */
+    function mark_notification_as_unread($mysqli, $user_id, $notification_id) {
+        if (!$mysqli || empty($user_id) || empty($notification_id)) {
+            return false;
+        }
+
+        $stmt = $mysqli->prepare("
+            UPDATE notifications 
+            SET is_read = 0 
+            WHERE id = ? AND user_id = ?
+        ");
+        if ($stmt) {
+            $stmt->bind_param("ii", $notification_id, $user_id);
+            $ok = $stmt->execute();
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('toggle_notification_read_status')) {
+    /**
+     * Toggle read status (read <-> unread) for a specific notification
+     */
+    function toggle_notification_read_status($mysqli, $user_id, $notification_id) {
+        if (!$mysqli || empty($user_id) || empty($notification_id)) {
+            return ['success' => false, 'is_read' => 0];
+        }
+
+        $stmt = $mysqli->prepare("
+            SELECT is_read 
+            FROM notifications 
+            WHERE id = ? AND user_id = ?
+            LIMIT 1
+        ");
+        if ($stmt) {
+            $stmt->bind_param("ii", $notification_id, $user_id);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            if ($row = $res->fetch_assoc()) {
+                $stmt->close();
+                $new_status = (intval($row['is_read']) === 1) ? 0 : 1;
+
+                $update_stmt = $mysqli->prepare("
+                    UPDATE notifications 
+                    SET is_read = ? 
+                    WHERE id = ? AND user_id = ?
+                ");
+                if ($update_stmt) {
+                    $update_stmt->bind_param("iii", $new_status, $notification_id, $user_id);
+                    $ok = $update_stmt->execute();
+                    $update_stmt->close();
+                    return ['success' => $ok, 'is_read' => $new_status];
+                }
+            } else {
+                $stmt->close();
+            }
+        }
+        return ['success' => false, 'is_read' => 0];
+    }
+}
+
 if (!function_exists('format_time_ago')) {
     /**
      * Relative time string format helper

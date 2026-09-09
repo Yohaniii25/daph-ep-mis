@@ -136,6 +136,15 @@
                             <input type="text" name="service_category" class="form-control" placeholder="e.g. Veterinary, Animal Health, Administration">
                         </div>
 
+                        <!-- Employment Type -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Employment Type <span class="text-danger">*</span></label>
+                            <select name="employment_type" id="pd_add_employment_type" class="form-select" required>
+                                <option value="permanent" selected>Permanent</option>
+                                <option value="temporary">Temporary</option>
+                            </select>
+                        </div>
+
                         <!-- Email Address -->
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Email Address <span class="text-danger">*</span></label>

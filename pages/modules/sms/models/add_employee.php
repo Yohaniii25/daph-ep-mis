@@ -32,6 +32,13 @@
                             </select>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small fw-bold">Employment Type <span class="text-danger">*</span></label>
+                            <select name="employment_type" class="form-select fw-bold" required>
+                                <option value="permanent" selected>Permanent</option>
+                                <option value="temporary">Temporary</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Service Category</label>
                             <input type="text" name="service_category" class="form-control" placeholder="e.g. Epidemiology &amp; Surveillance / Mobile Clinic">
                         </div>

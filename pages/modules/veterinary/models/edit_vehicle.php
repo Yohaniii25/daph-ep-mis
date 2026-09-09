@@ -8,22 +8,8 @@
             <form id="editVehicleForm" action="processors/update_vehicle.php" method="POST">
                 <input type="hidden" name="id" id="edit_vehicle_id">
                 <div class="modal-body p-4">
+                    <input type="hidden" name="unit" id="edit_vehicle_unit" value="range_veterinary_officer">
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label small fw-bold">Unit <span class="text-danger">*</span></label>
-                            <select name="unit" id="edit_vehicle_unit" class="form-select" required>
-                                <option value="">-- Select Unit --</option>
-                                <option value="provincial_director">Provincial Director</option>
-                                <option value="additional_provincial_director">Additional Provincial Director</option>
-                                <option value="subject_matter_specialist">Subject Matter Specialist</option>
-                                <option value="deputy_director_hq_1">Deputy Director - H/Q-1</option>
-                                <option value="deputy_director_hq_2">Deputy Director - H/Q-2</option>
-                                <option value="deputy_director_district">Deputy Director - District</option>
-                                <option value="range_veterinary_officer">Range Veterinary Officer</option>
-                                <option value="training_centers">Training Centers</option>
-                                <option value="regional_farms">Regional Farms</option>
-                            </select>
-                        </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Vehicle Type</label>
                             <input type="text" name="vehicle_type" id="edit_vehicle_type" class="form-control" required>

@@ -217,7 +217,9 @@ require_once '../../../includes/sidebar.php';
                         </li>
                         <li class="flex justify-between items-center px-5 py-3">
                             <span class="text-slate-500">Type</span>
-                            <span class="font-semibold text-blue-700">Permanent</span>
+                            <span class="font-semibold <?= (($user_data['employment_type'] ?? 'permanent') === 'temporary') ? 'text-amber-600' : 'text-blue-700' ?>">
+                                <?= ucfirst(htmlspecialchars($user_data['employment_type'] ?? 'Permanent')) ?>
+                            </span>
                         </li>
                         <li class="flex justify-between items-center px-5 py-3">
                             <span class="text-slate-500">Designation</span>

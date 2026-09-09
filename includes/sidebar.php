@@ -1,6 +1,7 @@
 <?php
 $role = $_SESSION['role'] ?? '';
-$is_pd = in_array($role, ['provincial_director']);
+$user_role = $_SESSION['user_role'] ?? '';
+$is_pd = (in_array($role, ['provincial_director']) || $user_role === 'Provincial Director' || $role === 'Provincial Director');
 $is_planning_dd = ($role === 'deputy_director_hq_1');
 $is_hr_user = ($role === 'administrator');
 $is_finance_admin = ($role === 'finance_admin');
