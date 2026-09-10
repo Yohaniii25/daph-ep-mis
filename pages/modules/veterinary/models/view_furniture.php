@@ -7,11 +7,15 @@
             </div>
             <div class="modal-body p-4">
                 <div class="row g-3">
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Furniture Classification Type</small>
                         <span class="fw-bold fs-6 text-dark" id="view_furniture_type">-</span>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Initial Baseline Count</small>
+                        <span class="fw-bold text-dark fs-6" id="view_furniture_initial_count">-</span>
+                    </div>
+                    <div class="col-md-3">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Available Quantity</small>
                         <span class="fw-bold text-primary fs-6" id="view_furniture_quantity">-</span>
                     </div>

@@ -72,6 +72,11 @@ require_once '../../../includes/header.php';
                     <i class="bi bi-boxes me-2"></i>Building Inventory Items
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-link" id="bos-tab" data-bs-toggle="tab" data-bs-target="#bos-content" type="button" role="tab" style="--bs-nav-pills-link-active-bg: #820100;">
+                    <i class="bi bi-shield-check me-2"></i>Board of Survey Archive
+                </button>
+            </li>
         </ul>
 
         <div class="tab-content" id="propertyTabsContent">
@@ -149,7 +154,8 @@ require_once '../../../includes/header.php';
                                         <th>Located Property</th>
                                         <th>Item Specification</th>
                                         <th>Condition</th>
-                                        <th class="text-center">Qty</th>
+                                        <th class="text-center">Initial Baseline</th>
+                                        <th class="text-center">Available Qty</th>
                                         <th>Remarks</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
@@ -169,16 +175,18 @@ require_once '../../../includes/header.php';
 
                                     while ($row = $inv_result->fetch_assoc()):
                                         // Condition badge styling engine
+                                        $cond = $row['current_condition'];
                                         $badge_class = 'bg-secondary';
-                                        if ($row['current_condition'] === 'Excellent' || $row['current_condition'] === 'Good') $badge_class = 'bg-success';
-                                        elseif ($row['current_condition'] === 'Fair (Needs Service)') $badge_class = 'bg-warning text-dark';
-                                        elseif ($row['current_condition'] === 'Critical Failure' || $row['current_condition'] === 'Damaged') $badge_class = 'bg-danger';
+                                        if ($cond === 'Good' || $cond === 'Excellent') $badge_class = 'bg-success';
+                                        elseif ($cond === 'Fair' || $cond === 'Fair (Needs Service)') $badge_class = 'bg-warning text-dark';
+                                        elseif ($cond === 'Damaged' || $cond === 'Critical Failure') $badge_class = 'bg-danger';
                                     ?>
                                         <tr id="inventory-row-<?= $row['id'] ?>">
                                             <td class="fw-bold text-dark"><?= htmlspecialchars($row['inventory_item']) ?></td>
                                             <td><span class="text-secondary small fw-semibold"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($row['property_name']) ?></span></td>
                                             <td><small class="text-muted"><?= htmlspecialchars($row['specification']) ?></small></td>
                                             <td><span class="badge <?= $badge_class ?> rounded-pill px-2"><?= htmlspecialchars($row['current_condition']) ?></span></td>
+                                            <td class="text-center fw-semibold text-secondary"><?= sprintf("%02d", $row['initial_count'] ?? $row['available_quantity']) ?></td>
                                             <td class="text-center fw-bold text-primary"><?= sprintf("%02d", $row['available_quantity']) ?></td>
                                             <td><small class="text-muted"><?= htmlspecialchars($row['remarks']) ?></small></td>
                                             <td class="text-center">
@@ -189,14 +197,76 @@ require_once '../../../includes/header.php';
                                                     <button class="btn btn-sm btn-outline-primary me-1" title="Edit Item" onclick='editInventory(<?= json_encode($row) ?>)'>
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleInventoryDelete(<?= $row['id'] ?>)">
-                                                        <i class="bi bi-trash"></i>
+                                                    <button class="btn btn-sm btn-outline-danger" title="Board of Survey Decommission" onclick='openBoardOfSurveyModal(<?= json_encode($row) ?>)'>
+                                                        <i class="bi bi-shield-x me-1"></i>Decommission
                                                     </button>
                                                 </div>
                                             </td>
                                         </tr>
                                     <?php endwhile;
                                     $inv_query->close(); ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: BOARD OF SURVEY DECOMMISSIONED ARCHIVE -->
+            <div class="tab-pane fade" id="bos-content" role="tabpanel">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="fw-bold text-dark mb-1"><i class="bi bi-file-earmark-check-fill text-danger me-2"></i>Board of Survey Audited Disposals</h5>
+                                <p class="text-muted small mb-0">Statutory record of inventory items formally removed from active circulation under authorized Board of Survey proceedings.</p>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="bosTable" class="table table-hover align-middle w-100">
+                                <thead class="table-light text-uppercase small">
+                                    <tr>
+                                        <th>Inventory Item</th>
+                                        <th>Located Property</th>
+                                        <th>Removal Status</th>
+                                        <th class="text-center">Initial Count</th>
+                                        <th class="text-center">Decommissioned Qty</th>
+                                        <th>Board of Survey Ref</th>
+                                        <th>Removal Date</th>
+                                        <th>Disposal Findings / Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $bos_query = $mysqli->prepare("
+                                        SELECT bi.*, la.property_name 
+                                        FROM building_inventories bi
+                                        JOIN land_assets la ON bi.land_asset_id = la.id
+                                        WHERE la.district_id = ? AND la.range_id = ? AND bi.removal_status != 'Active'
+                                        ORDER BY bi.removal_date DESC, bi.id DESC
+                                    ");
+                                    $bos_query->bind_param("ii", $district_id, $range_id);
+                                    $bos_query->execute();
+                                    $bos_result = $bos_query->get_result();
+
+                                    while ($brow = $bos_result->fetch_assoc()):
+                                        $s_badge = 'bg-secondary';
+                                        if ($brow['removal_status'] === 'Destroyed') $s_badge = 'bg-danger';
+                                        elseif ($brow['removal_status'] === 'Repaired') $s_badge = 'bg-info text-dark';
+                                        elseif ($brow['removal_status'] === 'Sold') $s_badge = 'bg-success';
+                                    ?>
+                                        <tr>
+                                            <td class="fw-bold text-dark"><?= htmlspecialchars($brow['inventory_item']) ?></td>
+                                            <td><span class="text-secondary small fw-semibold"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($brow['property_name']) ?></span></td>
+                                            <td><span class="badge <?= $s_badge ?> rounded-pill px-2"><?= htmlspecialchars($brow['removal_status']) ?></span></td>
+                                            <td class="text-center fw-semibold text-secondary"><?= sprintf("%02d", $brow['initial_count']) ?></td>
+                                            <td class="text-center fw-bold text-danger"><?= sprintf("%02d", $brow['available_quantity']) ?></td>
+                                            <td><code class="text-dark fw-bold"><?= htmlspecialchars($brow['board_of_survey_ref'] ?? '-') ?></code></td>
+                                            <td><small class="text-muted"><?= htmlspecialchars($brow['removal_date'] ?? '-') ?></small></td>
+                                            <td><small class="text-muted"><?= htmlspecialchars($brow['removal_remarks'] ?? '-') ?></small></td>
+                                        </tr>
+                                    <?php endwhile;
+                                    $bos_query->close(); ?>
                                 </tbody>
                             </table>
                         </div>
@@ -215,6 +285,7 @@ require_once '../../../includes/header.php';
 <?php include 'models/add_building_inventory.php'; ?>
 <?php include 'models/edit_building_inventory.php'; ?>
 <?php include 'models/view_building_inventory.php'; ?>
+<?php include 'models/modal_board_of_survey.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -230,7 +301,7 @@ require_once '../../../includes/header.php';
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    var landsTable, inventoryTable;
+    var landsTable, inventoryTable, bosTable;
     $(document).ready(function() {
         landsTable = $('#landsTable').DataTable({
             "dom": '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
@@ -266,6 +337,28 @@ require_once '../../../includes/header.php';
                     className: 'btn btn-sm btn-danger shadow-sm',
                     text: '<i class="bi bi-file-pdf"></i> PDF',
                     title: 'Building Inventory Items'
+                },
+                {
+                    extend: 'print',
+                    className: 'btn btn-sm btn-dark shadow-sm',
+                    text: '<i class="bi bi-printer"></i> Print'
+                }
+            ],
+            "pageLength": 10
+        });
+
+        bosTable = $('#bosTable').DataTable({
+            "dom": '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
+            "buttons": [{
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-success shadow-sm',
+                    text: '<i class="bi bi-file-spreadsheet"></i> CSV'
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-sm btn-danger shadow-sm',
+                    text: '<i class="bi bi-file-pdf"></i> PDF',
+                    title: 'Board of Survey Decommissioned Archive'
                 },
                 {
                     extend: 'print',
@@ -519,6 +612,9 @@ require_once '../../../includes/header.php';
 
     function viewInventory(data) {
         document.getElementById('view_inventory_item').textContent = data.inventory_item || '-';
+        if (document.getElementById('view_initial_count')) {
+            document.getElementById('view_initial_count').textContent = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || '-');
+        }
         document.getElementById('view_available_quantity').textContent = data.available_quantity || '-';
         document.getElementById('view_inventory_property').textContent = data.property_name || '-';
         document.getElementById('view_inventory_condition').textContent = data.current_condition || '-';
@@ -539,6 +635,9 @@ require_once '../../../includes/header.php';
         }
 
         document.getElementById('edit_inventory_item').value = data.inventory_item || '';
+        if (document.getElementById('edit_initial_count')) {
+            document.getElementById('edit_initial_count').value = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 1);
+        }
         document.getElementById('edit_available_quantity').value = data.available_quantity || 1;
         document.getElementById('edit_current_condition').value = data.current_condition || 'Good';
         document.getElementById('edit_specification').value = data.specification || '';
@@ -546,6 +645,64 @@ require_once '../../../includes/header.php';
         var modal = new bootstrap.Modal(document.getElementById('editInventoryModal'));
         modal.show();
     }
+
+    function openBoardOfSurveyModal(data) {
+        document.getElementById('bos_asset_type').value = 'building_inventory';
+        document.getElementById('bos_item_id').value = data.id || '';
+        document.getElementById('bos_item_name').textContent = data.inventory_item || '-';
+        document.getElementById('bos_item_location').textContent = data.property_name || '-';
+        document.getElementById('bos_item_available_qty').textContent = data.available_quantity || '0';
+        
+        var availQty = parseInt(data.available_quantity) || 1;
+        var qtyInput = document.getElementById('bos_removal_quantity');
+        qtyInput.max = availQty;
+        qtyInput.value = availQty;
+        
+        document.getElementById('bos_removal_status').value = 'Destroyed';
+        document.getElementById('bos_ref').value = '';
+        document.getElementById('bos_removal_date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('bos_remarks').value = '';
+        
+        var modal = new bootstrap.Modal(document.getElementById('boardOfSurveyModal'));
+        modal.show();
+    }
+
+    $('#boardOfSurveyForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Processing...');
+
+        $.ajax({
+            url: 'processors/process_board_of_survey.php',
+            type: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(res) {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Execute Formal Removal');
+                if (res.success) {
+                    var modalEl = document.getElementById('boardOfSurveyModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Item Decommissioned',
+                        text: res.message,
+                        confirmButtonColor: '#820100'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Removal Failed', res.message, 'error');
+                }
+            },
+            error: function(xhr, status, err) {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Execute Formal Removal');
+                Swal.fire('Error', 'Server processing failure: ' + err, 'error');
+            }
+        });
+    });
 
     function handleAssetDelete(id) {
         Swal.fire({
@@ -580,32 +737,11 @@ require_once '../../../includes/header.php';
 
     function handleInventoryDelete(id) {
         Swal.fire({
-            title: 'Delete Inventory Item?',
-            text: "This will remove this specific item log from the building inventory.",
             icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#212529',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, Delete'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: 'processors/delete_building_inventory.php',
-                    type: 'POST',
-                    data: {
-                        id: id
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire('Removed!', response.message, 'success');
-                            inventoryTable.row('#inventory-row-' + id).remove().draw(false);
-                        } else {
-                            Swal.fire('Failed', response.message, 'error');
-                        }
-                    }
-                });
-            }
+            title: 'Direct Deletion Prohibited',
+            text: "Direct deletions are permanently disabled per formal auditing procedures. Items must be formally decommissioned under an authorized Board of Survey reference.",
+            confirmButtonColor: '#820100',
+            confirmButtonText: 'Understood'
         });
     }
 </script>

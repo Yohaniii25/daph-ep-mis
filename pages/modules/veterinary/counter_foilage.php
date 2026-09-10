@@ -62,6 +62,7 @@ require_once '../../../includes/header.php';
                             <tr>
                                 <th>Type</th>
                                 <th>Condition</th>
+                                <th class="text-center">Initial Baseline</th>
                                 <th class="text-center">Available Quantity</th>
                                 <th>Date of Purchase / Received</th>
                                 <th>Remarks</th>
@@ -76,14 +77,16 @@ require_once '../../../includes/header.php';
                             $cf_res = $cf_stmt->get_result();
 
                             while ($row = $cf_res->fetch_assoc()):
+                                $cond = $row['current_condition'];
                                 $badge_style = 'bg-secondary';
-                                if ($row['current_condition'] === 'Good' || $row['current_condition'] === 'New') $badge_style = 'bg-success';
-                                elseif ($row['current_condition'] === 'Needs Repair' || $row['current_condition'] === 'Half-Used') $badge_style = 'bg-warning text-dark';
-                                elseif ($row['current_condition'] === 'Unserviceable' || $row['current_condition'] === 'Exhausted') $badge_style = 'bg-danger';
+                                if ($cond === 'Good' || $cond === 'New') $badge_style = 'bg-success';
+                                elseif ($cond === 'Fair' || $cond === 'Needs Repair' || $cond === 'Half-Used') $badge_style = 'bg-warning text-dark';
+                                elseif ($cond === 'Damaged' || $cond === 'Unserviceable' || $cond === 'Exhausted') $badge_style = 'bg-danger';
                             ?>
                             <tr id="counterfoil-row-<?= $row['id'] ?>">
                                 <td><span class="fw-bold text-dark"><?= htmlspecialchars($row['counterfoil_type']) ?></span></td>
                                 <td><span class="badge <?= $badge_style ?> rounded-pill px-2.5 py-1.5"><?= htmlspecialchars($row['current_condition']) ?></span></td>
+                                <td class="text-center fw-semibold text-secondary"><?= sprintf("%02d", $row['initial_count'] ?? $row['available_quantity']) ?></td>
                                 <td class="text-center fw-bold text-dark"><?= sprintf("%02d", $row['available_quantity']) ?></td>
                                 <td class="text-secondary small fw-medium"><?= htmlspecialchars($row['purchase_date']) ?></td>
                                 <td><small class="text-muted"><?= !empty($row['remarks']) ? htmlspecialchars($row['remarks']) : '-' ?></small></td>
@@ -95,8 +98,8 @@ require_once '../../../includes/header.php';
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit Counterfoil" onclick='editCounterfoil(<?= json_encode($row) ?>)'>
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleCounterfoilDelete(<?= $row['id'] ?>)">
-                                            <i class="bi bi-trash"></i>
+                                        <button class="btn btn-sm btn-outline-danger" title="Board of Survey Decommission" onclick='openBoardOfSurveyModal(<?= json_encode($row) ?>)'>
+                                            <i class="bi bi-shield-x me-1"></i>Decommission
                                         </button>
                                     </div>
                                 </td>
@@ -113,6 +116,7 @@ require_once '../../../includes/header.php';
 <?php include 'models/add_counterfoil.php'; ?>
 <?php include 'models/edit_counterfoil.php'; ?>
 <?php include 'models/view_counterfoil.php'; ?>
+<?php include 'models/modal_board_of_survey.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -173,6 +177,9 @@ require_once '../../../includes/header.php';
     function viewCounterfoil(data) {
         document.getElementById('view_counterfoil_type').textContent = data.counterfoil_type || '-';
         document.getElementById('view_counterfoil_condition').textContent = data.current_condition || '-';
+        if (document.getElementById('view_counterfoil_initial_count')) {
+            document.getElementById('view_counterfoil_initial_count').textContent = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || '-');
+        }
         document.getElementById('view_counterfoil_quantity').textContent = data.available_quantity || '-';
         document.getElementById('view_counterfoil_purchase_date').textContent = data.purchase_date || '-';
         document.getElementById('view_counterfoil_remarks').textContent = data.remarks || '-';
@@ -184,6 +191,9 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_counterfoil_id').value = data.id || '';
         document.getElementById('edit_counterfoil_type').value = data.counterfoil_type || '';
         document.getElementById('edit_counterfoil_condition').value = data.current_condition || 'Good';
+        if (document.getElementById('edit_counterfoil_initial_count')) {
+            document.getElementById('edit_counterfoil_initial_count').value = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 1);
+        }
         document.getElementById('edit_counterfoil_quantity').value = data.available_quantity || 1;
         document.getElementById('edit_counterfoil_purchase_date').value = data.purchase_date || '';
         document.getElementById('edit_counterfoil_remarks').value = data.remarks || '';
@@ -192,32 +202,71 @@ require_once '../../../includes/header.php';
         modal.show();
     }
 
+    function openBoardOfSurveyModal(data) {
+        document.getElementById('bos_asset_type').value = 'counterfoil';
+        document.getElementById('bos_item_id').value = data.id || '';
+        document.getElementById('bos_item_name').textContent = data.counterfoil_type || '-';
+        document.getElementById('bos_item_location').textContent = data.remarks || 'Range Office';
+        document.getElementById('bos_item_available_qty').textContent = data.available_quantity || '0';
+        
+        var availQty = parseInt(data.available_quantity) || 1;
+        var qtyInput = document.getElementById('bos_removal_quantity');
+        qtyInput.max = availQty;
+        qtyInput.value = availQty;
+        
+        document.getElementById('bos_removal_status').value = 'Destroyed';
+        document.getElementById('bos_ref').value = '';
+        document.getElementById('bos_removal_date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('bos_remarks').value = '';
+        
+        var modal = new bootstrap.Modal(document.getElementById('boardOfSurveyModal'));
+        modal.show();
+    }
+
+    $('#boardOfSurveyForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Processing...');
+
+        $.ajax({
+            url: 'processors/process_board_of_survey.php',
+            type: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(res) {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Execute Formal Removal');
+                if (res.success) {
+                    var modalEl = document.getElementById('boardOfSurveyModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Item Decommissioned',
+                        text: res.message,
+                        confirmButtonColor: '#820100'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Removal Failed', res.message, 'error');
+                }
+            },
+            error: function(xhr, status, err) {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Execute Formal Removal');
+                Swal.fire('Error', 'Server processing failure: ' + err, 'error');
+            }
+        });
+    });
+
     function handleCounterfoilDelete(id) {
         Swal.fire({
-            title: 'Delete Counterfoil Entry?',
-            text: "This soft-deletes the counterfoil ledger block from active display structures safely.",
             icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#e67e22',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, Delete'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: 'processors/delete_counterfoil.php',
-                    type: 'POST',
-                    data: { id: id },
-                    dataType: 'json',
-                    success: function(res) {
-                        if (res.success) {
-                            Swal.fire('Removed!', res.message, 'success');
-                            dataTable.row('#counterfoil-row-' + id).remove().draw(false);
-                        } else {
-                            Swal.fire('Error', res.message, 'error');
-                        }
-                    }
-                });
-            }
+            title: 'Direct Deletion Prohibited',
+            text: "Direct deletions are permanently disabled per formal auditing procedures. Items must be formally decommissioned under an authorized Board of Survey reference.",
+            confirmButtonColor: '#820100',
+            confirmButtonText: 'Understood'
         });
     }
 </script>

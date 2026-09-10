@@ -54,15 +54,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_la->close();
     }
 
-    if (!$user_id || !$land_asset_id || empty($inventory_item) || !$available_quantity) {
+    $initial_count      = isset($_POST['initial_count']) ? intval($_POST['initial_count']) : $available_quantity;
+    if ($initial_count <= 0 && $available_quantity > 0) {
+        $initial_count = $available_quantity;
+    }
+
+    // Strict condition validation
+    $valid_conditions = ['Good', 'Fair', 'Damaged'];
+    if (!in_array($current_condition, $valid_conditions, true)) {
+        echo json_encode(['success' => false, 'message' => 'Validation failed: Condition must strictly be Good, Fair, or Damaged.']);
+        exit();
+    }
+
+    if (!$user_id || !$land_asset_id || empty($inventory_item) || $available_quantity === null) {
         echo json_encode(['success' => false, 'message' => 'Validation failed. Please select a valid location (Office or Quarters) and fill required values.']);
         exit();
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO building_inventories (land_asset_id, user_id, inventory_item, specification, current_condition, available_quantity, remarks, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $mysqli->prepare("INSERT INTO building_inventories (land_asset_id, user_id, inventory_item, specification, current_condition, available_quantity, initial_count, remarks, unit, removal_status, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
     
     if ($stmt) {
-        $stmt->bind_param("iisssiss", $land_asset_id, $user_id, $inventory_item, $specification, $current_condition, $available_quantity, $remarks, $unit);
+        $stmt->bind_param("iisssiiss", $land_asset_id, $user_id, $inventory_item, $specification, $current_condition, $available_quantity, $initial_count, $remarks, $unit);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Inventory item logged successfully.']);
         } else {

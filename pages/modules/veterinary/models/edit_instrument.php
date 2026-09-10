@@ -15,17 +15,22 @@
                             <input type="text" name="instrument_type" id="edit_instrument_type" class="form-control" required>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label small fw-bold">Condition</label>
+                            <label class="form-label small fw-bold">Condition <span class="text-danger">*</span></label>
                             <select name="current_condition" id="edit_instrument_condition" class="form-select" required>
                                 <option value="Good">Good</option>
-                                <option value="Operational">Operational</option>
-                                <option value="Needs Repair">Needs Repair</option>
-                                <option value="Unserviceable">Unserviceable</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Damaged">Damaged</option>
                             </select>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label small fw-bold">Available Quantity</label>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Total Initial Count (Fiscal Baseline) <span class="text-danger">*</span></label>
+                            <input type="number" name="initial_count" id="edit_instrument_initial_count" class="form-control" min="1" required>
+                            <small class="text-muted" style="font-size: 11px;">Baseline count at start of fiscal year</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Available Quantity <span class="text-danger">*</span></label>
                             <input type="number" name="available_quantity" id="edit_instrument_quantity" class="form-control" min="1" required>
+                            <small class="text-muted" style="font-size: 11px;">Current active quantity</small>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Date of Purchase / Received</label>

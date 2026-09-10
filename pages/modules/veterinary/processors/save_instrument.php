@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
 header('Content-Type: application/json');
 
 $allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director', 'district_dd', 'deputy_director_district'];
@@ -14,21 +14,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $district_id = !empty($_POST['district_id']) ? intval($_POST['district_id']) : ($_SESSION['district_id'] ?? null);
     $range_id    = !empty($_POST['range_id']) ? intval($_POST['range_id']) : ($_SESSION['range_id'] ?? null);
 
-    $instrument_type    = trim(filter_input(INPUT_POST, 'instrument_type', FILTER_SANITIZE_SPECIAL_CHARS));
-    $current_condition  = trim(filter_input(INPUT_POST, 'current_condition', FILTER_SANITIZE_SPECIAL_CHARS));
-    $available_quantity = filter_input(INPUT_POST, 'available_quantity', FILTER_VALIDATE_INT);
-    $purchase_date      = trim(filter_input(INPUT_POST, 'purchase_date', FILTER_SANITIZE_SPECIAL_CHARS));
-    $remarks            = trim(filter_input(INPUT_POST, 'remarks', FILTER_SANITIZE_SPECIAL_CHARS));
-    $unit               = trim(filter_input(INPUT_POST, 'unit', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $instrument_type    = trim(htmlspecialchars($_POST['instrument_type'] ?? ''));
+    $current_condition  = trim(htmlspecialchars($_POST['current_condition'] ?? ''));
+    $available_quantity = isset($_POST['available_quantity']) ? intval($_POST['available_quantity']) : 0;
+    $initial_count      = isset($_POST['initial_count']) ? intval($_POST['initial_count']) : $available_quantity;
+    $purchase_date      = trim(htmlspecialchars($_POST['purchase_date'] ?? ''));
+    $remarks            = trim(htmlspecialchars($_POST['remarks'] ?? ''));
+    $unit               = trim(htmlspecialchars($_POST['unit'] ?? ''));
 
-    if (!$user_id || empty($instrument_type) || !$available_quantity) {
+    if (!$user_id || empty($instrument_type) || $available_quantity < 0) {
         echo json_encode(['success' => false, 'message' => 'Validation error: Missing required field configurations.']);
         exit();
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO instrument_assets (user_id, district_id, range_id, instrument_type, current_condition, available_quantity, purchase_date, remarks, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $valid_conditions = ['Good', 'Fair', 'Damaged'];
+    if (!in_array($current_condition, $valid_conditions, true)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid condition. Allowed values: Good, Fair, Damaged.']);
+        exit();
+    }
+
+    $stmt = $mysqli->prepare("INSERT INTO instrument_assets (user_id, district_id, range_id, instrument_type, current_condition, available_quantity, initial_count, purchase_date, remarks, unit, removal_status, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
     if ($stmt) {
-        $stmt->bind_param("iiisssiss", $user_id, $district_id, $range_id, $instrument_type, $current_condition, $available_quantity, $purchase_date, $remarks, $unit);
+        $stmt->bind_param("iiisssisss", $user_id, $district_id, $range_id, $instrument_type, $current_condition, $available_quantity, $initial_count, $purchase_date, $remarks, $unit);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Instrument item saved successfully.']);
         } else {

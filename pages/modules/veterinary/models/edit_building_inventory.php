@@ -25,17 +25,21 @@
                             </div>
                             <div id="edit_inventory_item_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Available Quantity</label>
-                            <input type="number" name="available_quantity" id="edit_available_quantity" class="form-control" min="1" required>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Total Initial Count (Fiscal Baseline) <span class="text-danger">*</span></label>
+                            <input type="number" name="initial_count" id="edit_initial_count" class="form-control" min="0" required>
+                            <small class="text-muted" style="font-size: 11px;">Baseline count at start of fiscal year.</small>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Current Condition</label>
+                            <label class="form-label small fw-bold">Current Available Quantity <span class="text-danger">*</span></label>
+                            <input type="number" name="available_quantity" id="edit_available_quantity" class="form-control" min="0" required>
+                            <small class="text-muted" style="font-size: 11px;">Active circulation count in facility.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Condition <span class="text-danger">*</span></label>
                             <select name="current_condition" id="edit_current_condition" class="form-select" required>
-                                <option value="Excellent">Excellent</option>
                                 <option value="Good">Good</option>
-                                <option value="Fair (Needs Service)">Fair (Needs Service)</option>
-                                <option value="Critical Failure">Critical Failure</option>
+                                <option value="Fair">Fair</option>
                                 <option value="Damaged">Damaged</option>
                             </select>
                         </div>

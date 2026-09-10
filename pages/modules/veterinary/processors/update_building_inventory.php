@@ -22,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
     $unit               = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
 
+    $initial_count      = isset($_POST['initial_count']) ? filter_var($_POST['initial_count'], FILTER_VALIDATE_INT) : null;
+
     if (!empty($location) && in_array($location, ['Office', 'Quarters'])) {
         $district_id = !empty($_SESSION['district_id']) ? intval($_SESSION['district_id']) : 0;
         $range_id    = !empty($_SESSION['range_id']) ? intval($_SESSION['range_id']) : 0;
@@ -53,8 +55,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_la->close();
     }
 
-    if (!$id || !$land_asset_id || empty($inventory_item) || !$available_quantity) {
-        echo json_encode(['success' => false, 'message' => 'Validation failed. Required values missing.']);
+    if (!$id || !$land_asset_id || empty($inventory_item) || $available_quantity === false || $available_quantity < 0) {
+        echo json_encode(['success' => false, 'message' => 'Validation failed. Required values missing or invalid.']);
+        exit();
+    }
+
+    // Strict condition validation
+    $valid_conditions = ['Good', 'Fair', 'Damaged'];
+    if (!in_array($current_condition, $valid_conditions, true)) {
+        echo json_encode(['success' => false, 'message' => 'Validation failed: Condition must strictly be Good, Fair, or Damaged.']);
         exit();
     }
 
@@ -104,12 +113,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($initial_count === null || $initial_count === false) {
+        $initial_count = isset($old_data['initial_count']) ? intval($old_data['initial_count']) : $available_quantity;
+    }
+
     $new_data = [
         'land_asset_id'      => $land_asset_id,
         'inventory_item'     => $inventory_item,
         'specification'      => $specification,
         'current_condition'  => $current_condition,
         'available_quantity' => $available_quantity,
+        'initial_count'      => $initial_count,
         'remarks'            => $remarks,
         'unit'               => $unit
     ];
@@ -144,13 +158,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             specification = ?,
             current_condition = ?,
             available_quantity = ?,
+            initial_count = ?,
             remarks = ?,
             unit = ?
         WHERE id = ?
     ");
 
     if ($stmt) {
-        $stmt->bind_param("isssissi", $land_asset_id, $inventory_item, $specification, $current_condition, $available_quantity, $remarks, $unit, $id);
+        $stmt->bind_param("isssiissi", $land_asset_id, $inventory_item, $specification, $current_condition, $available_quantity, $initial_count, $remarks, $unit, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Inventory item updated successfully.']);
         } else {

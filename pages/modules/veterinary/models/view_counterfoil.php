@@ -11,11 +11,15 @@
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Counterfoil Type</small>
                         <span class="fw-bold fs-6 text-dark" id="view_counterfoil_type">-</span>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Condition / Status</small>
                         <span class="fw-semibold text-dark" id="view_counterfoil_condition">-</span>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Initial Baseline</small>
+                        <span class="fw-bold text-dark" id="view_counterfoil_initial_count">-</span>
+                    </div>
+                    <div class="col-md-4">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Available Quantity</small>
                         <span class="fw-bold text-dark" id="view_counterfoil_quantity">-</span>
                     </div>

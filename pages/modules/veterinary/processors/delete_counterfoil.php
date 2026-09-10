@@ -1,18 +1,17 @@
 <?php
-session_start();
-require_once '../../../../config/db_connect.php';
+/**
+ * pages/modules/veterinary/processors/delete_counterfoil.php
+ * Direct deletion disabled in compliance with statutory audit standards.
+ */
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-    if ($id) {
-        $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET is_active = 0 WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        if ($stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => 'Counterfoil deleted successfully.']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Database update logic mutation fault code returned.']);
-        }
-        $stmt->close();
-    }
-}
+echo json_encode([
+    'success' => false,
+    'message' => 'Direct deletion of inventory items is strictly prohibited. To remove items from circulation, execute the formal "Board of Survey" removal procedure with authorized documentation.'
+]);
+exit();

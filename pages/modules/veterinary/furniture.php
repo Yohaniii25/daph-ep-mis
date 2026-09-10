@@ -63,6 +63,7 @@ require_once '../../../includes/header.php';
                                 <th>Furniture Type</th>
                                 <th>Date Received / Purchased</th>
                                 <th>Condition Status</th>
+                                <th class="text-center">Initial Baseline</th>
                                 <th class="text-center">Available Qty</th>
                                 <th>Location Context / Remarks</th>
                                 <th class="text-center">Actions</th>
@@ -77,15 +78,17 @@ require_once '../../../includes/header.php';
 
                             while ($row = $furn_res->fetch_assoc()):
                                 // Condition contextual text color configuration
+                                $cond = $row['current_condition'];
                                 $badge_color = 'bg-secondary';
-                                if ($row['current_condition'] === 'Excellent' || $row['current_condition'] === 'Good') $badge_color = 'bg-success';
-                                elseif ($row['current_condition'] === 'Fair') $badge_color = 'bg-warning text-dark';
-                                elseif ($row['current_condition'] === 'Damaged' || $row['current_condition'] === 'Unserviceable') $badge_color = 'bg-danger';
+                                if ($cond === 'Excellent' || $cond === 'Good') $badge_color = 'bg-success';
+                                elseif ($cond === 'Fair') $badge_color = 'bg-warning text-dark';
+                                elseif ($cond === 'Damaged' || $cond === 'Unserviceable') $badge_color = 'bg-danger';
                             ?>
                             <tr id="furniture-row-<?= $row['id'] ?>">
                                 <td class="fw-bold text-dark"><?= htmlspecialchars($row['furniture_type']) ?></td>
                                 <td class="fw-semibold text-secondary"><?= htmlspecialchars($row['date_received']) ?></td>
                                 <td><span class="badge <?= $badge_color ?> rounded-pill px-2"><?= htmlspecialchars($row['current_condition']) ?></span></td>
+                                <td class="text-center fw-semibold text-secondary"><?= sprintf("%02d", $row['initial_count'] ?? $row['available_quantity']) ?></td>
                                 <td class="text-center fw-bold text-primary"><?= sprintf("%02d", $row['available_quantity']) ?></td>
                                 <td><small class="text-muted"><?= htmlspecialchars($row['remarks']) ?></small></td>
                                 <td class="text-center">
@@ -96,8 +99,8 @@ require_once '../../../includes/header.php';
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit Furniture" onclick='editFurniture(<?= json_encode($row) ?>)'>
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleFurnitureDelete(<?= $row['id'] ?>)">
-                                            <i class="bi bi-trash"></i>
+                                        <button class="btn btn-sm btn-outline-danger" title="Board of Survey Decommission" onclick='openBoardOfSurveyModal(<?= json_encode($row) ?>)'>
+                                            <i class="bi bi-shield-x me-1"></i>Decommission
                                         </button>
                                     </div>
                                 </td>
@@ -114,6 +117,7 @@ require_once '../../../includes/header.php';
 <?php include 'models/add_furniture.php'; ?>
 <?php include 'models/edit_furniture.php'; ?>
 <?php include 'models/view_furniture.php'; ?>
+<?php include 'models/modal_board_of_survey.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -173,6 +177,9 @@ require_once '../../../includes/header.php';
 
     function viewFurniture(data) {
         document.getElementById('view_furniture_type').textContent = data.furniture_type || '-';
+        if (document.getElementById('view_furniture_initial_count')) {
+            document.getElementById('view_furniture_initial_count').textContent = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || '-');
+        }
         document.getElementById('view_furniture_quantity').textContent = data.available_quantity || '-';
         document.getElementById('view_date_received').textContent = data.date_received || '-';
         document.getElementById('view_furniture_condition').textContent = data.current_condition || '-';
@@ -184,6 +191,9 @@ require_once '../../../includes/header.php';
     function editFurniture(data) {
         document.getElementById('edit_furniture_id').value = data.id || '';
         document.getElementById('edit_furniture_type').value = data.furniture_type || '';
+        if (document.getElementById('edit_furniture_initial_count')) {
+            document.getElementById('edit_furniture_initial_count').value = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 1);
+        }
         document.getElementById('edit_furniture_quantity').value = data.available_quantity || 1;
         document.getElementById('edit_date_received').value = data.date_received || '';
         document.getElementById('edit_furniture_condition').value = data.current_condition || 'Good';
@@ -193,32 +203,71 @@ require_once '../../../includes/header.php';
         modal.show();
     }
 
+    function openBoardOfSurveyModal(data) {
+        document.getElementById('bos_asset_type').value = 'furniture';
+        document.getElementById('bos_item_id').value = data.id || '';
+        document.getElementById('bos_item_name').textContent = data.furniture_type || '-';
+        document.getElementById('bos_item_location').textContent = data.remarks || 'Range Office';
+        document.getElementById('bos_item_available_qty').textContent = data.available_quantity || '0';
+        
+        var availQty = parseInt(data.available_quantity) || 1;
+        var qtyInput = document.getElementById('bos_removal_quantity');
+        qtyInput.max = availQty;
+        qtyInput.value = availQty;
+        
+        document.getElementById('bos_removal_status').value = 'Destroyed';
+        document.getElementById('bos_ref').value = '';
+        document.getElementById('bos_removal_date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('bos_remarks').value = '';
+        
+        var modal = new bootstrap.Modal(document.getElementById('boardOfSurveyModal'));
+        modal.show();
+    }
+
+    $('#boardOfSurveyForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Processing...');
+
+        $.ajax({
+            url: 'processors/process_board_of_survey.php',
+            type: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(res) {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Execute Formal Removal');
+                if (res.success) {
+                    var modalEl = document.getElementById('boardOfSurveyModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Item Decommissioned',
+                        text: res.message,
+                        confirmButtonColor: '#820100'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Removal Failed', res.message, 'error');
+                }
+            },
+            error: function(xhr, status, err) {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Execute Formal Removal');
+                Swal.fire('Error', 'Server processing failure: ' + err, 'error');
+            }
+        });
+    });
+
     function handleFurnitureDelete(id) {
         Swal.fire({
-            title: 'Remove Furniture Entry?',
-            text: "This will drop the item line sequence tracking code data.",
             icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#a07174',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, Delete Record'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: 'processors/delete_furniture.php',
-                    type: 'POST',
-                    data: { id: id },
-                    dataType: 'json',
-                    success: function(res) {
-                        if (res.success) {
-                            Swal.fire('Deleted!', res.message, 'success');
-                            dataTable.row('#furniture-row-' + id).remove().draw(false);
-                        } else {
-                            Swal.fire('Failed', res.message, 'error');
-                        }
-                    }
-                });
-            }
+            title: 'Direct Deletion Prohibited',
+            text: "Direct deletions are permanently disabled per formal auditing procedures. Items must be formally decommissioned under an authorized Board of Survey reference.",
+            confirmButtonColor: '#820100',
+            confirmButtonText: 'Understood'
         });
     }
 </script>

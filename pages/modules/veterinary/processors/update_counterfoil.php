@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once '../../../../config/db_connect.php';
-require_once '../../../../includes/approval_helper.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../includes/approval_helper.php';
 
 header('Content-Type: application/json');
 
@@ -20,8 +20,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
     $unit               = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
 
-    if (!$id || empty($counterfoil_type) || !$available_quantity) {
-        echo json_encode(['success' => false, 'message' => 'Validation failed']);
+    $initial_count      = isset($_POST['initial_count']) ? filter_var($_POST['initial_count'], FILTER_VALIDATE_INT) : null;
+
+    if (!$id || empty($counterfoil_type) || $available_quantity === false || $available_quantity < 0) {
+        echo json_encode(['success' => false, 'message' => 'Validation error: required fields missing or invalid.']);
+        exit();
+    }
+
+    $valid_conditions = ['Good', 'Fair', 'Damaged'];
+    if (!in_array($current_condition, $valid_conditions, true)) {
+        echo json_encode(['success' => false, 'message' => 'Validation failed: Condition must strictly be Good, Fair, or Damaged.']);
         exit();
     }
 
@@ -35,6 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$old_data) {
         echo json_encode(['success' => false, 'message' => 'Record not found']);
         exit();
+    }
+
+    if ($initial_count === null || $initial_count === false) {
+        $initial_count = isset($old_data['initial_count']) ? intval($old_data['initial_count']) : $available_quantity;
     }
 
     // Resolve unit fallback if not passed
@@ -68,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'counterfoil_type'   => $counterfoil_type,
         'current_condition'  => $current_condition,
         'available_quantity' => $available_quantity,
+        'initial_count'      => $initial_count,
         'purchase_date'      => $purchase_date,
         'remarks'            => $remarks,
         'unit'               => $unit
@@ -96,9 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Direct update if pre-authorized
-    $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET counterfoil_type = ?, current_condition = ?, available_quantity = ?, purchase_date = ?, remarks = ?, unit = ? WHERE id = ?");
+    $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET counterfoil_type = ?, current_condition = ?, available_quantity = ?, initial_count = ?, purchase_date = ?, remarks = ?, unit = ? WHERE id = ?");
     if ($stmt) {
-        $stmt->bind_param("ssisssi", $counterfoil_type, $current_condition, $available_quantity, $purchase_date, $remarks, $unit, $id);
+        $stmt->bind_param("ssiisssi", $counterfoil_type, $current_condition, $available_quantity, $initial_count, $purchase_date, $remarks, $unit, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Counterfoil asset record updated successfully.']);
         } else {
