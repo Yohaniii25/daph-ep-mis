@@ -11,8 +11,11 @@
                     <input type="hidden" name="unit" id="edit_land_unit" value="range_veterinary_officer">
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="form-label small fw-bold">Property Identification Name</label>
-                            <input type="text" name="property_name" id="edit_property_name" class="form-control" required>
+                            <label class="form-label small fw-bold">Property Identification Name <span class="text-danger">*</span></label>
+                            <select name="property_name" id="edit_property_name" class="form-select" required>
+                                <option value="Office">Office</option>
+                                <option value="Quarters">Quarters</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Land Extent</label>

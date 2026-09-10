@@ -16,13 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $district_id   = !empty($_POST['district_id']) ? intval($_POST['district_id']) : ($_SESSION['district_id'] ?? null);
     $range_id      = !empty($_POST['range_id']) ? intval($_POST['range_id']) : ($_SESSION['range_id'] ?? null);
     
-    $property_name    = trim(filter_input(INPUT_POST, 'property_name', FILTER_SANITIZE_SPECIAL_CHARS));
-    $land_extent      = trim(filter_input(INPUT_POST, 'land_extent', FILTER_SANITIZE_SPECIAL_CHARS));
-    $building_area    = trim(filter_input(INPUT_POST, 'building_area', FILTER_SANITIZE_SPECIAL_CHARS));
-    $land_status      = trim(filter_input(INPUT_POST, 'land_status', FILTER_SANITIZE_SPECIAL_CHARS));
-    $deed_reference   = trim(filter_input(INPUT_POST, 'deed_reference', FILTER_SANITIZE_SPECIAL_CHARS));
-    $deed_description = trim(filter_input(INPUT_POST, 'deed_description', FILTER_SANITIZE_SPECIAL_CHARS));
-    $unit             = trim(filter_input(INPUT_POST, 'unit', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $property_name    = trim($_POST['property_name'] ?? filter_input(INPUT_POST, 'property_name', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $land_extent      = trim($_POST['land_extent'] ?? filter_input(INPUT_POST, 'land_extent', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $building_area    = trim($_POST['building_area'] ?? filter_input(INPUT_POST, 'building_area', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $land_status      = trim($_POST['land_status'] ?? filter_input(INPUT_POST, 'land_status', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $deed_reference   = trim($_POST['deed_reference'] ?? filter_input(INPUT_POST, 'deed_reference', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $deed_description = trim($_POST['deed_description'] ?? filter_input(INPUT_POST, 'deed_description', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $unit             = trim($_POST['unit'] ?? filter_input(INPUT_POST, 'unit', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
 
     if (!$user_id || empty($property_name)) {
         echo json_encode(['success' => false, 'message' => 'Validation failed. Property name is required.']);

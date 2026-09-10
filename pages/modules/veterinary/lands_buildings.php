@@ -372,7 +372,115 @@ require_once '../../../includes/header.php';
                 }
             });
         });
+
+        // Initialize Auto-suggest for Building Inventory Item Names
+        setupInventoryAutocomplete('#add_inventory_item', '#add_inventory_item_suggestions');
+        setupInventoryAutocomplete('#edit_inventory_item', '#edit_inventory_item_suggestions');
     });
+
+    // Auto-suggest logic for Inventory Item Name querying database
+    function setupInventoryAutocomplete(inputSelector, dropdownSelector) {
+        var timer = null;
+        var activeIndex = -1;
+
+        $(inputSelector).on('input focus', function() {
+            var term = $(this).val().trim();
+            var $dropdown = $(dropdownSelector);
+
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                $.ajax({
+                    url: 'processors/get_inventory_suggestions.php',
+                    type: 'GET',
+                    data: { q: term },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.success && res.suggestions && res.suggestions.length > 0) {
+                            var html = '';
+                            res.suggestions.forEach(function(item) {
+                                var re = new RegExp('(' + escapeRegex(term) + ')', 'gi');
+                                var highlighted = term.length > 0 ? escapeHtml(item).replace(re, '<strong class="text-danger">$1</strong>') : escapeHtml(item);
+                                html += '<a class="dropdown-item py-2 px-3 d-flex align-items-center suggestion-item" href="javascript:void(0)" data-value="' + escapeHtml(item) + '">' +
+                                        '<i class="bi bi-box-seam me-2 text-muted" style="font-size: 13px;"></i>' +
+                                        '<span>' + highlighted + '</span>' +
+                                        '</a>';
+                            });
+                            $dropdown.html(html).show();
+                            activeIndex = -1;
+                        } else if (term.length > 0) {
+                            $dropdown.html('<div class="dropdown-header text-muted py-2 px-3 small"><i class="bi bi-pencil me-1"></i>New item: "' + escapeHtml(term) + '" (manual entry)</div>').show();
+                            activeIndex = -1;
+                        } else {
+                            $dropdown.hide();
+                        }
+                    },
+                    error: function() {
+                        $dropdown.hide();
+                    }
+                });
+            }, 200);
+        });
+
+        // Click suggestion item
+        $(document).on('click', dropdownSelector + ' .suggestion-item', function(e) {
+            e.preventDefault();
+            var selectedVal = $(this).data('value');
+            $(inputSelector).val(selectedVal);
+            $(dropdownSelector).hide();
+            $(inputSelector).focus();
+        });
+
+        // Keyboard navigation (Up/Down/Enter/Escape)
+        $(inputSelector).on('keydown', function(e) {
+            var $dropdown = $(dropdownSelector);
+            if (!$dropdown.is(':visible')) return;
+
+            var $items = $dropdown.find('.suggestion-item');
+            if ($items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = (activeIndex + 1) < $items.length ? activeIndex + 1 : 0;
+                $items.removeClass('active bg-light');
+                $items.eq(activeIndex).addClass('active bg-light');
+                $items.eq(activeIndex)[0].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = (activeIndex - 1) >= 0 ? activeIndex - 1 : $items.length - 1;
+                $items.removeClass('active bg-light');
+                $items.eq(activeIndex).addClass('active bg-light');
+                $items.eq(activeIndex)[0].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter') {
+                if (activeIndex >= 0 && activeIndex < $items.length) {
+                    e.preventDefault();
+                    $items.eq(activeIndex).trigger('click');
+                }
+            } else if (e.key === 'Escape') {
+                $dropdown.hide();
+            }
+        });
+
+        // Hide when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest(inputSelector + ', ' + dropdownSelector).length) {
+                $(dropdownSelector).hide();
+            }
+        });
+    }
+
+    function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
     function viewLand(data) {
         document.getElementById('view_property_name').textContent = data.property_name || '-';
@@ -388,9 +496,20 @@ require_once '../../../includes/header.php';
     function editLand(data) {
         document.getElementById('edit_land_id').value = data.id || '';
         document.getElementById('edit_land_unit').value = data.unit || '';
-        document.getElementById('edit_property_name').value = data.property_name || '';
+        
+        var propSelect = document.getElementById('edit_property_name');
+        if (propSelect) {
+            var pVal = data.property_name || 'Office';
+            if (!$(propSelect).find("option[value='" + pVal + "']").length) {
+                $(propSelect).append(new Option(pVal, pVal));
+            }
+            propSelect.value = pVal;
+        }
+
         document.getElementById('edit_land_extent').value = data.land_extent || '';
-        document.getElementById('edit_building_area').value = data.building_area || '';
+        if (document.getElementById('edit_building_area')) {
+            document.getElementById('edit_building_area').value = data.building_area || '';
+        }
         document.getElementById('edit_land_status').value = data.land_status || 'State Owned';
         document.getElementById('edit_deed_reference').value = data.deed_reference || '';
         document.getElementById('edit_deed_description').value = data.deed_description || '';
@@ -413,6 +532,12 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_inventory_id').value = data.id || '';
         document.getElementById('edit_inventory_unit').value = data.unit || '';
         document.getElementById('edit_land_asset_id').value = data.land_asset_id || '';
+        
+        var locSelect = document.getElementById('edit_inventory_location');
+        if (locSelect) {
+            locSelect.value = (data.property_name === 'Quarters') ? 'Quarters' : 'Office';
+        }
+
         document.getElementById('edit_inventory_item').value = data.inventory_item || '';
         document.getElementById('edit_available_quantity').value = data.available_quantity || 1;
         document.getElementById('edit_current_condition').value = data.current_condition || 'Good';

@@ -10,17 +10,29 @@
                     <input type="hidden" name="unit" value="range_veterinary_officer">
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="form-label small fw-bold">Select Target Location Property</label>
-                            <select name="land_asset_id" class="form-select" required>
-                                <option value="" disabled selected>-- Select Property Site --</option>
-                                <?php foreach ($lands_cache as $land): ?>
-                                    <option value="<?= $land['id'] ?>"><?= htmlspecialchars($land['property_name']) ?></option>
-                                <?php endforeach; ?>
+                            <label class="form-label small fw-bold">Assigned Location <span class="text-danger">*</span></label>
+                            <select name="location" id="add_inventory_location" class="form-select" required>
+                                <option value="" disabled selected>-- Select Location (Office / Quarters) --</option>
+                                <option value="Office">Office</option>
+                                <option value="Quarters">Quarters</option>
                             </select>
                         </div>
-                        <div class="col-md-8">
-                            <label class="form-label small fw-bold">Inventory Item Name</label>
-                            <input type="text" name="inventory_item" class="form-control" placeholder="e.g. Split Air Conditioner" required>
+                        <div class="col-md-8 position-relative">
+                            <label class="form-label small fw-bold">Inventory Item Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-box-seam text-muted"></i></span>
+                                <input type="text" 
+                                       name="inventory_item" 
+                                       id="add_inventory_item" 
+                                       class="form-control" 
+                                       placeholder="Type item name (e.g. Split Air Conditioner)..." 
+                                       autocomplete="off" 
+                                       required>
+                            </div>
+                            <div id="add_inventory_item_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
+                            <small class="text-muted" style="font-size: 11px;">
+                                <i class="bi bi-magic me-1"></i>Auto-suggests from previously saved inventory items as you type.
+                            </small>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">Available Quantity</label>

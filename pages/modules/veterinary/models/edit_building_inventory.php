@@ -10,17 +10,20 @@
                     <input type="hidden" name="unit" id="edit_inventory_unit" value="range_veterinary_officer">
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="form-label small fw-bold">Select Target Location Property</label>
-                            <select name="land_asset_id" id="edit_land_asset_id" class="form-select" required>
-                                <option value="" disabled selected>-- Select Property Site --</option>
-                                <?php foreach ($lands_cache as $land): ?>
-                                    <option value="<?= $land['id'] ?>"><?= htmlspecialchars($land['property_name']) ?></option>
-                                <?php endforeach; ?>
+                            <label class="form-label small fw-bold">Assigned Location <span class="text-danger">*</span></label>
+                            <select name="location" id="edit_inventory_location" class="form-select" required>
+                                <option value="Office">Office</option>
+                                <option value="Quarters">Quarters</option>
                             </select>
+                            <input type="hidden" name="land_asset_id" id="edit_land_asset_id">
                         </div>
-                        <div class="col-md-8">
-                            <label class="form-label small fw-bold">Inventory Item Name</label>
-                            <input type="text" name="inventory_item" id="edit_inventory_item" class="form-control" required>
+                        <div class="col-md-8 position-relative">
+                            <label class="form-label small fw-bold">Inventory Item Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-box-seam text-muted"></i></span>
+                                <input type="text" name="inventory_item" id="edit_inventory_item" class="form-control" autocomplete="off" required>
+                            </div>
+                            <div id="edit_inventory_item_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">Available Quantity</label>

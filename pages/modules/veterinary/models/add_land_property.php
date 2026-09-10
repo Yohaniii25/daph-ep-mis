@@ -10,19 +10,19 @@
                     <input type="hidden" name="unit" value="range_veterinary_officer">
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="form-label small fw-bold">Property Identification Name</label>
-                            <input type="text" name="property_name" class="form-control" placeholder="e.g. Sub-Office Complex Block B" required>
+                            <label class="form-label small fw-bold">Property Identification Name <span class="text-danger">*</span></label>
+                            <select name="property_name" class="form-select" required>
+                                <option value="" disabled selected>-- Select Property Type --</option>
+                                <option value="Office">Office</option>
+                                <option value="Quarters">Quarters</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Land Extent</label>
+                            <label class="form-label small fw-bold">Land Extent <span class="text-danger">*</span></label>
                             <input type="text" name="land_extent" class="form-control" placeholder="e.g. 1 Acre, 2 Roods" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Building Area</label>
-                            <input type="text" name="building_area" class="form-control" placeholder="e.g. 2,500 sq. ft." required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Land Ownership Status</label>
+                            <label class="form-label small fw-bold">Land Ownership Status <span class="text-danger">*</span></label>
                             <select name="land_status" class="form-select" required>
                                 <option value="State Owned">State Owned</option>
                                 <option value="Leased">Leased</option>
@@ -30,8 +30,8 @@
                                 <option value="Private">Private</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Deed Reference Code Number</label>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Deed Reference Code Number <span class="text-danger">*</span></label>
                             <input type="text" name="deed_reference" class="form-control" placeholder="e.g. Deed No: G-5421" required>
                         </div>
                         <div class="col-md-12">

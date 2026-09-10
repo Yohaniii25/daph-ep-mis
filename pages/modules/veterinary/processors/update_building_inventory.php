@@ -13,6 +13,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $allowed_role
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id                 = isset($_POST['id']) ? filter_var($_POST['id'], FILTER_VALIDATE_INT) : 0;
+    $location           = isset($_POST['location']) ? trim(htmlspecialchars($_POST['location'])) : '';
     $land_asset_id      = isset($_POST['land_asset_id']) ? filter_var($_POST['land_asset_id'], FILTER_VALIDATE_INT) : 0;
     $inventory_item     = isset($_POST['inventory_item']) ? trim(htmlspecialchars($_POST['inventory_item'])) : '';
     $available_quantity = isset($_POST['available_quantity']) ? filter_var($_POST['available_quantity'], FILTER_VALIDATE_INT) : 0;
@@ -20,6 +21,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $specification      = isset($_POST['specification']) ? trim(htmlspecialchars($_POST['specification'])) : '';
     $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
     $unit               = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
+
+    if (!empty($location) && in_array($location, ['Office', 'Quarters'])) {
+        $district_id = !empty($_SESSION['district_id']) ? intval($_SESSION['district_id']) : 0;
+        $range_id    = !empty($_SESSION['range_id']) ? intval($_SESSION['range_id']) : 0;
+        $user_id     = $_SESSION['user_id'] ?? 0;
+
+        $stmt_la = $mysqli->prepare("
+            SELECT id FROM land_assets 
+            WHERE property_name = ? 
+              AND (range_id = ? OR (range_id = 0 AND district_id = ?)) 
+              AND is_active = 1 
+            ORDER BY id DESC LIMIT 1
+        ");
+        $stmt_la->bind_param("sii", $location, $range_id, $district_id);
+        $stmt_la->execute();
+        $la_res = $stmt_la->get_result();
+        if ($la_row = $la_res->fetch_assoc()) {
+            $land_asset_id = intval($la_row['id']);
+        } else {
+            $stmt_ins = $mysqli->prepare("
+                INSERT INTO land_assets 
+                (user_id, district_id, range_id, property_name, land_extent, building_area, land_status, deed_reference, deed_description, unit, is_active)
+                VALUES (?, ?, ?, ?, 'Standard Facility', '', 'State Owned', 'Standard Registry', 'Designated facility', 'range_veterinary_officer', 1)
+            ");
+            $stmt_ins->bind_param("iiis", $user_id, $district_id, $range_id, $location);
+            $stmt_ins->execute();
+            $land_asset_id = $stmt_ins->insert_id;
+            $stmt_ins->close();
+        }
+        $stmt_la->close();
+    }
 
     if (!$id || !$land_asset_id || empty($inventory_item) || !$available_quantity) {
         echo json_encode(['success' => false, 'message' => 'Validation failed. Required values missing.']);
