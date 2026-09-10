@@ -99,6 +99,61 @@ $stmt->bind_param("ii", $district_id, $range_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Fetch available units & offices to populate the Transfer Request modal dropdown
+$all_ranges_list = [];
+$res_ranges = $mysqli->query("SELECT vr.id, vr.name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id ORDER BY d.name ASC, vr.name ASC");
+if ($res_ranges) {
+    while ($r = $res_ranges->fetch_assoc()) {
+        $dist_suffix = !empty($r['district_name']) ? " ({$r['district_name']})" : "";
+        $all_ranges_list[] = [
+            'id' => $r['id'],
+            'name' => "Range Office - {$r['name']}{$dist_suffix}"
+        ];
+    }
+}
+
+$all_districts_list = [];
+$res_districts = $mysqli->query("SELECT id, name FROM districts ORDER BY name ASC");
+if ($res_districts) {
+    while ($r = $res_districts->fetch_assoc()) {
+        $all_districts_list[] = $r;
+    }
+}
+
+$all_farms_list = [];
+$res_farms = $mysqli->query("SELECT id, farm_name FROM regional_farms ORDER BY farm_name ASC");
+if ($res_farms) {
+    while ($r = $res_farms->fetch_assoc()) {
+        $all_farms_list[] = [
+            'id' => $r['id'],
+            'name' => "Regional Farm - {$r['farm_name']}"
+        ];
+    }
+}
+
+$all_training_list = [];
+$res_training = $mysqli->query("SELECT id, center_name, location FROM training_centers ORDER BY center_name ASC");
+if ($res_training) {
+    while ($r = $res_training->fetch_assoc()) {
+        $loc_suffix = !empty($r['location']) ? " ({$r['location']})" : "";
+        $all_training_list[] = [
+            'id' => $r['id'],
+            'name' => "Training Center - {$r['center_name']}{$loc_suffix}"
+        ];
+    }
+}
+
+$all_master_units_list = [];
+$res_units = $mysqli->query("SELECT id, unit_name FROM master_units ORDER BY id ASC");
+if ($res_units) {
+    while ($r = $res_units->fetch_assoc()) {
+        $all_master_units_list[] = [
+            'id' => $r['id'],
+            'name' => "Unit - {$r['unit_name']}"
+        ];
+    }
+}
+
 require_once '../../../includes/header.php';
 ?>
 
@@ -173,6 +228,9 @@ require_once '../../../includes/header.php';
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-warning text-dark me-1" title="Request Transfer" onclick='openTransferModal(<?= json_encode($row) ?>)'>
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </button>
                                             <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewEmployee(<?= json_encode($row) ?>)'>
                                                 <i class="bi bi-eye"></i>
                                             </button>
@@ -196,6 +254,7 @@ require_once '../../../includes/header.php';
 
 <?php include 'models/add_employee.php'; ?>
 <?php include 'models/edit_employee.php'; ?>
+<?php include 'models/transfer_modal.php'; ?>
 
 <!-- View Employee Details Modal -->
 <div class="modal fade" id="viewEmployeeModal" tabindex="-1" aria-hidden="true">
@@ -461,6 +520,91 @@ require_once '../../../includes/header.php';
                             text: 'Failed to connect to the server.'
                         });
                     }
+                });
+            }
+        });
+    }
+
+    function openTransferModal(data) {
+        if (!data) return;
+        document.getElementById('transfer_employee_id').value = data.id || '';
+        document.getElementById('transfer_employee_name').innerText = data.full_name || 'Officer';
+        
+        var svc = data.service_number || data.emp_id || '-';
+        var desig = data.designation || data.role || 'Staff';
+        var range = data.range_name ? (data.range_name + ' Range') : '';
+        document.getElementById('transfer_employee_meta').innerText = 'Service #: ' + svc + ' | Designation: ' + desig + (range ? (' | ' + range) : '');
+        
+        document.getElementById('transfer_target_unit').value = '';
+        document.getElementById('transfer_reason').value = '';
+
+        var transferModal = new bootstrap.Modal(document.getElementById('transferRequestModal'));
+        transferModal.show();
+    }
+
+    function submitTransferRequest(e) {
+        e.preventDefault();
+        var form = document.getElementById('transferRequestForm');
+        var empId = document.getElementById('transfer_employee_id').value;
+        var targetUnit = document.getElementById('transfer_target_unit').value;
+        var reason = document.getElementById('transfer_reason').value.trim();
+        var submitBtn = document.getElementById('submitTransferBtn');
+
+        if (!empId || !targetUnit || !reason) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Required Fields',
+                text: 'Please select a target unit and provide a reason for the transfer request.'
+            });
+            return;
+        }
+
+        var originalBtnHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Routing Request...';
+
+        $.ajax({
+            url: 'processors/request_transfer.php',
+            type: 'POST',
+            data: {
+                employee_id: empId,
+                target_unit: targetUnit,
+                reason: reason
+            },
+            dataType: 'json',
+            success: function(response) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+
+                if (response.success) {
+                    var modalElem = document.getElementById('transferRequestModal');
+                    var modalInstance = bootstrap.Modal.getInstance(modalElem);
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Transfer Request Dispatched',
+                        text: response.message,
+                        confirmButtonColor: '#820100'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Request Failed',
+                        text: response.message || 'An error occurred while routing the transfer request.'
+                    });
+                }
+            },
+            error: function() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'Unable to connect to the server. Please try again.'
                 });
             }
         });

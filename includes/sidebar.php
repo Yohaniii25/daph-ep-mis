@@ -22,6 +22,7 @@ $current_file = basename(parse_url($current_path, PHP_URL_PATH) ?? '');
 $is_dashboard = (strpos($current_path, 'dashboard') !== false);
 require_once __DIR__ . '/approval_helper.php';
 $pd_pending_count = isset($mysqli) ? get_pending_approvals_count($mysqli) : 0;
+$pending_transfers_count = isset($mysqli) ? get_pending_transfers_count($mysqli) : 0;
 $current_cat_param = $_GET['cat'] ?? '';
 $current_view_param = $_GET['view'] ?? '';
 ?>
@@ -232,25 +233,33 @@ $current_view_param = $_GET['view'] ?? '';
 
                     <?php if ($is_hr_user): ?>
                         <!-- HR Management Menu -->
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'hr/employee_managment.php') !== false) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/hr/employee_managment.php">
-                            <i class="bi bi-people me-2"></i> HR Management
+                            <i class="bi bi-people me-2"></i> Global HR Directory
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'pd/pending_approvals.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/pd/pending_approvals.php">
+                            <i class="bi bi-shield-check me-2"></i> All Pending Approvals
+                            <?php if (!empty($pd_pending_count) && $pd_pending_count > 0): ?>
+                                <span class="badge rounded-pill bg-danger ms-auto"><?= $pd_pending_count ?></span>
+                            <?php endif; ?>
+                        </a>
+
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'hr/leave_management.php') !== false) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/hr/leave_management.php">
                             <i class="bi bi-calendar-check me-2"></i> Leave Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'hr/inquiry_management.php') !== false) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/hr/inquiry_management.php">
                             <i class="bi bi-file-earmark-text me-2"></i> Documents
                         </a>
 
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'hr/todo_tasks.php') !== false) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/hr/todo_tasks.php">
                             <i class="bi bi-check2-square me-2"></i> To-Do Tasks
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'hr/rti_management.php') !== false) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/hr/rti_management.php">
                             <i class="bi bi-shield-shaded me-2"></i> RTI Management
                         </a>

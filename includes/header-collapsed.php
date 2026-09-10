@@ -181,19 +181,23 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
                                          data-id="<?= $notif['id'] ?>" data-read="<?= !empty($notif['is_read']) ? '1' : '0' ?>" style="transition: background 0.2s;">
                                          <div class="d-flex align-items-start">
                                              <div class="me-3 mt-1">
-                                                 <?php if (strpos(strtolower($notif['title']), 'add') !== false): ?>
-                                                     <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
-                                                         <i class="bi bi-person-plus-fill"></i>
-                                                     </div>
-                                                 <?php elseif (strpos(strtolower($notif['title']), 'remov') !== false): ?>
-                                                     <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
-                                                         <i class="bi bi-person-x-fill"></i>
-                                                     </div>
-                                                 <?php else: ?>
-                                                     <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
-                                                         <i class="bi bi-info-circle-fill"></i>
-                                                     </div>
-                                                 <?php endif; ?>
+                                                  <?php if (strpos(strtolower($notif['title']), 'add') !== false): ?>
+                                                      <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                                          <i class="bi bi-person-plus-fill"></i>
+                                                      </div>
+                                                  <?php elseif (strpos(strtolower($notif['title']), 'remov') !== false): ?>
+                                                      <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                                          <i class="bi bi-person-x-fill"></i>
+                                                      </div>
+                                                  <?php elseif (strpos(strtolower($notif['title']), 'transfer') !== false || ($notif['type'] ?? '') === 'transfer_alert'): ?>
+                                                      <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                                          <i class="bi bi-arrow-left-right"></i>
+                                                      </div>
+                                                  <?php else: ?>
+                                                      <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                                          <i class="bi bi-info-circle-fill"></i>
+                                                      </div>
+                                                  <?php endif; ?>
                                              </div>
                                              <a href="<?= !empty($notif['link']) ? '../' . ltrim($notif['link'], '/') : '#' ?>" class="flex-grow-1 text-decoration-none text-dark notif-item-link">
                                                  <div class="d-flex justify-content-between align-items-center mb-1">

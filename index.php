@@ -498,6 +498,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                             <option value="range_veterinary_officer">7. Range Veterinary Officer</option>
                             <option value="training_centers">8. Training Centers</option>
                             <option value="regional_farms">9. Regional Farms</option>
+                            <option value="administrator">10. Administrator (Provincial HR / Admin Branch)</option>
                         </select>
                     </div>
                 </div>

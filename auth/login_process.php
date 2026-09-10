@@ -51,7 +51,8 @@ $category_to_role_map = [
         'employee'
     ],
     'training_centers'               => ['training_officer'],
-    'regional_farms'                 => ['farms_dd']
+    'regional_farms'                 => ['farms_dd'],
+    'administrator'                  => ['administrator']
 ];
 
 $allowed_roles_for_cat = $category_to_role_map[$user_category] ?? [$user_category];
@@ -182,8 +183,8 @@ if (password_verify($password, $user['password'])) {
     $_SESSION['user_category']            = $user_category;
     $_SESSION['training_center_location'] = $training_center_location;
 
-    // For HQ roles, ensure global/province-wide scope
-    if (in_array($user['role'], ['deputy_director_hq_1', 'deputy_director_hq_2', 'provincial_director'])) {
+    // For HQ and Administrator roles, ensure global/province-wide scope
+    if (in_array($user['role'], ['deputy_director_hq_1', 'deputy_director_hq_2', 'provincial_director', 'administrator'])) {
         $_SESSION['district_id'] = null;
         $_SESSION['district']    = 'Provincial';
     }

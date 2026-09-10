@@ -1,39 +1,76 @@
 <?php
-
 if ($_SESSION['role'] !== 'administrator') die("Access denied");
+require_once './config/db_connect.php';
+require_once './includes/approval_helper.php';
 require_once './includes/header.php';
 
+$total_staff = 0;
+$staff_res = $mysqli->query("SELECT COUNT(*) FROM users WHERE is_active = 1");
+if ($staff_res && $row = $staff_res->fetch_row()) {
+    $total_staff = intval($row[0]);
+}
+
+$pending_transfers_count = get_pending_transfers_count($mysqli);
+$pending_approvals_count = get_pending_approvals_count($mysqli);
 ?>
 
-        <h2 class="mb-5 text-dark">Administration Dashboard</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1 text-dark fw-bold">Administrator Executive Dashboard</h2>
+                <p class="text-muted small mb-0">Provincial HR & Administration Control Center • Eastern Province</p>
+            </div>
+            <div>
+                <a href="<?= BASE_PATH ?>pages/modules/hr/employee_managment.php" class="btn btn-outline-danger btn-sm shadow-sm">
+                    <i class="bi bi-people me-1"></i> Global Staff Directory
+                </a>
+            </div>
+        </div>
 
-        <!-- 4 Cards -->
-        <div class="row g-4 mb-5">
+        <!-- 4 Metric Cards -->
+        <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4">
-                    <h6 class="text-muted mb-3">Staff On Leave Today</h6>
-                    <h2 class="text-primary mb-2">15</h2>
-                    <small class="text-success"><i class="bi bi-arrow-up"></i> 8.5% Up from yesterday</small>
+                <div class="card border-0 shadow-sm h-100 p-4" style="border-left: 4px solid #500707 !important;">
+                    <h6 class="text-muted mb-2 text-uppercase fw-semibold" style="font-size: 11px;">Total Active Staff</h6>
+                    <h2 class="text-dark fw-bold mb-2"><?= $total_staff ?></h2>
+                    <small class="text-muted"><i class="bi bi-building me-1 text-danger"></i> Across all units & ranges</small>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4">
-                    <h6 class="text-muted mb-3">Pending Leave Requests</h6>
-                    <h2 class="text-warning mb-2">05</h2>
-                    <small class="text-success"><i class="bi bi-arrow-up"></i> 1.3% Up from past week</small>
-                </div>
+                <a href="<?= BASE_PATH ?>pages/modules/pd/pending_approvals.php?filter=transfers" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 p-4" style="border-left: 4px solid <?= $pending_transfers_count > 0 ? '#dc3545' : '#198754' ?> !important;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="text-muted mb-2 text-uppercase fw-semibold" style="font-size: 11px;">Pending Transfer Requests</h6>
+                                <h2 class="<?= $pending_transfers_count > 0 ? 'text-danger' : 'text-success' ?> fw-bold mb-2"><?= $pending_transfers_count ?></h2>
+                                <small class="text-muted"><i class="bi bi-arrow-left-right me-1 text-warning"></i> Maker-Checker Queue</small>
+                            </div>
+                            <?php if ($pending_transfers_count > 0): ?>
+                                <span class="badge bg-danger rounded-pill">Action Req</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4">
-                    <h6 class="text-muted mb-3">Pending RTI Requests</h6>
-                    <h2 class="text-danger mb-2">154</h2>
-                    <small class="text-danger"><i class="bi bi-arrow-down"></i> 4.3% Down from yesterday</small>
-                </div>
+                <a href="<?= BASE_PATH ?>pages/modules/pd/pending_approvals.php" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm h-100 p-4" style="border-left: 4px solid #b08723 !important;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="text-muted mb-2 text-uppercase fw-semibold" style="font-size: 11px;">All Staged Approvals</h6>
+                                <h2 class="fw-bold mb-2 text-warning"><?= $pending_approvals_count ?></h2>
+                                <small class="text-muted"><i class="bi bi-shield-check me-1 text-warning"></i> Staged system edits</small>
+                            </div>
+                            <?php if ($pending_approvals_count > 0): ?>
+                                <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </a>
             </div>
             <div class="col-xl-3 col-md-6">
-                <div class="card border-0 shadow-sm h-100 p-4">
-                    <h6 class="text-muted mb-3">To-Do Tasks</h6>
-                    <h2 class="text-info mb-2">36</h2>
+                <div class="card border-0 shadow-sm h-100 p-4" style="border-left: 4px solid #0d6efd !important;">
+                    <h6 class="text-muted mb-2 text-uppercase fw-semibold" style="font-size: 11px;">To-Do Tasks</h6>
+                    <h2 class="text-info fw-bold mb-2">36</h2>
                     <small class="text-success"><i class="bi bi-arrow-up"></i> 1.8% Up from yesterday</small>
                 </div>
             </div>
@@ -47,27 +84,32 @@ require_once './includes/header.php';
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/hr/employee_managment.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-light d-block">
-                            <i style="color: white;" class="bi bi-person-add fs-4"></i><br>
-                            <span style="color:white">Employee Management</span>
+                        <a href="<?= BASE_PATH ?>pages/modules/hr/employee_managment.php" class="btn w-100 py-3 shadow-sm border-0 text-light d-block" style="background-color: #500707;">
+                            <i style="color: white;" class="bi bi-people-fill fs-4"></i><br>
+                            <span style="color:white">Global HR Directory</span>
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/hr/animal_breeding.php" style="background-color: #b08723;" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-light d-block">
-                            <i style="color: white;" class="bi bi-card-checklist fs-4"></i><br>
+                        <a href="<?= BASE_PATH ?>pages/modules/pd/pending_approvals.php" class="btn w-100 py-3 shadow-sm border-0 text-light d-block position-relative" style="background-color: #721c24;">
+                            <i style="color: white;" class="bi bi-shield-check fs-4"></i><br>
+                            <span style="color:white">All Pending Approvals</span>
+                            <?php if ($pending_approvals_count > 0): ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light">
+                                    <?= $pending_approvals_count ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="<?= BASE_PATH ?>pages/modules/hr/leave_management.php" class="btn w-100 py-3 shadow-sm border-0 text-light d-block" style="background-color: #198754;">
+                            <i style="color: white;" class="bi bi-calendar-check fs-4"></i><br>
                             <span style="color:white">Leave Management</span>
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/hr/regulatory_functions.php" class="btn btn-info w-100 py-3 shadow-sm border-0 text-light d-block">
-                            <i style="color: white;" class="bi bi-envelope-plus fs-4"></i><br>
-                            <span style="color:white">Inquiry Management</span>
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/hr/office_details_view.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-light d-block">
-                            <i style="color: white; " class="bi bi-people-fill fs-4"></i><br>
-                            <span style="color:white">Advance Programmes</span>
+                        <a href="<?= BASE_PATH ?>pages/modules/hr/inquiry_management.php" class="btn w-100 py-3 shadow-sm border-0 text-light d-block" style="background-color: #0d6efd;">
+                            <i style="color: white;" class="bi bi-file-earmark-text fs-4"></i><br>
+                            <span style="color:white">HR Documents</span>
                         </a>
                     </div>
                 </div>

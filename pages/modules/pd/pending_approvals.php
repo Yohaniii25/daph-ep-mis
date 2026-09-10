@@ -7,7 +7,7 @@
 require_once '../../../includes/header.php';
 require_once '../../../includes/approval_helper.php';
 
-$allowed_roles = ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2'];
+$allowed_roles = ['administrator', 'provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
     echo "<script>window.location.href = '../../../dashboard.php';</script>";
     exit();
@@ -15,6 +15,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
 
 $pending_all       = get_pending_approvals($mysqli);
 $count_all         = count($pending_all);
+$count_transfers   = get_pending_transfers_count($mysqli);
 $count_hr          = get_pending_approvals_count($mysqli, 'hr');
 $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
 ?>
@@ -51,6 +52,10 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
         background-color: #fef3c7;
         color: #92400e;
     }
+    .badge-transfer {
+        background-color: #dc3545;
+        color: #ffffff;
+    }
 </style>
 
 <div id="layoutSidenav_content">
@@ -62,7 +67,7 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                     <i class="bi bi-shield-check me-2"></i>Pending Approvals Queue
                 </h2>
                 <p class="text-muted small mb-0">
-                    Review and authorize staged Human Resources & Inventory modifications before they take effect in live records.
+                    Centralized hub to review and authorize employee workstation transfers, HR updates, and inventory modifications.
                 </p>
             </div>
             <div>
@@ -72,10 +77,10 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
             </div>
         </div>
 
-        <!-- Metrics Overview -->
+        <!-- Metrics Overview (4 Consolidated Cards) -->
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm" style="border-left: 4px solid #500707 !important;">
+            <div class="col-xl-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #500707 !important;">
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -89,13 +94,28 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm" style="border-left: 4px solid #3730a3 !important;">
+            <div class="col-xl-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #dc3545 !important;">
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <small class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">HR Modifications</small>
-                                <h3 class="fw-bold mb-0 text-primary" id="statHr"><?= $count_hr ?></h3>
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Staff Transfer Requests</small>
+                                <h3 class="fw-bold mb-0 text-danger" id="statTransfers"><?= $count_transfers ?></h3>
+                            </div>
+                            <div class="rounded-circle p-3 text-light" style="background-color: #dc3545;">
+                                <i class="bi bi-arrow-left-right fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #3730a3 !important;">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">HR Record Edits</small>
+                                <h3 class="fw-bold mb-0 text-primary" id="statHr"><?= max(0, $count_hr - $count_transfers) ?></h3>
                             </div>
                             <div class="rounded-circle p-3 text-light" style="background-color: #3730a3;">
                                 <i class="bi bi-person-gear fs-4"></i>
@@ -104,8 +124,8 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm" style="border-left: 4px solid #b45309 !important;">
+            <div class="col-xl-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #b45309 !important;">
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -131,8 +151,13 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                         </button>
                     </li>
                     <li class="nav-link-item ms-2">
+                        <button class="nav-link filter-btn" data-filter="transfer_request">
+                            <i class="bi bi-arrow-left-right me-1"></i>Staff Transfers <span class="badge bg-danger ms-1" id="badgeTransferTab"><?= $count_transfers ?></span>
+                        </button>
+                    </li>
+                    <li class="nav-link-item ms-2">
                         <button class="nav-link filter-btn" data-filter="hr">
-                            <i class="bi bi-people me-1"></i>Human Resources <span class="badge bg-primary ms-1"><?= $count_hr ?></span>
+                            <i class="bi bi-people me-1"></i>HR Records <span class="badge bg-primary ms-1"><?= $count_hr ?></span>
                         </button>
                     </li>
                     <li class="nav-link-item ms-2">
@@ -148,7 +173,7 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                     <div class="text-center py-5" id="emptyStateContainer">
                         <i class="bi bi-check2-circle fs-1 text-success opacity-75 d-block mb-3"></i>
                         <h5 class="fw-bold text-dark">Queue is All Clear!</h5>
-                        <p class="text-muted small">No pending modifications requiring authorization at this time.</p>
+                        <p class="text-muted small">No pending modifications or transfer requests requiring authorization at this time.</p>
                     </div>
                 <?php else: ?>
                     <div class="table-responsive">
@@ -159,7 +184,7 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                                     <th>Target Entity</th>
                                     <th>Requested By</th>
                                     <th>Jurisdiction</th>
-                                    <th>Changes</th>
+                                    <th>Proposed Route / Changes</th>
                                     <th class="text-end pe-4">Actions</th>
                                 </tr>
                             </thead>
@@ -167,17 +192,28 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                                 <?php foreach ($pending_all as $item): 
                                     $diff_count = count($item['diff'] ?? []);
                                     $diff_json = htmlspecialchars(json_encode($item['diff'] ?? []), ENT_QUOTES, 'UTF-8');
+                                    $is_transfer = ($item['record_type'] === 'transfer_request');
                                 ?>
-                                    <tr id="row-<?= $item['id'] ?>" class="approval-row" data-module="<?= htmlspecialchars($item['module']) ?>">
+                                    <tr id="row-<?= $item['id'] ?>" class="approval-row" data-module="<?= htmlspecialchars($item['module']) ?>" data-record-type="<?= htmlspecialchars($item['record_type']) ?>">
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
-                                                <span class="badge <?= $item['module'] === 'hr' ? 'badge-hr' : 'badge-inventory' ?> me-2 px-2 py-1">
-                                                    <?= strtoupper($item['module']) ?>
-                                                </span>
-                                                <div>
-                                                    <small class="text-muted d-block" style="font-size: 11px;">#REQ-<?= str_pad($item['id'], 4, '0', STR_PAD_LEFT) ?></small>
-                                                    <span class="fw-semibold text-dark small"><?= ucwords(str_replace('_', ' ', $item['record_type'])) ?></span>
-                                                </div>
+                                                <?php if ($is_transfer): ?>
+                                                    <span class="badge bg-danger text-white me-2 px-2 py-1 shadow-sm">
+                                                        <i class="bi bi-arrow-left-right me-1"></i>TRANSFER
+                                                    </span>
+                                                    <div>
+                                                        <small class="text-muted d-block" style="font-size: 11px;">#REQ-<?= str_pad($item['id'], 4, '0', STR_PAD_LEFT) ?></small>
+                                                        <span class="fw-semibold text-danger small">Employee Transfer</span>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <span class="badge <?= $item['module'] === 'hr' ? 'badge-hr' : 'badge-inventory' ?> me-2 px-2 py-1">
+                                                        <?= strtoupper($item['module']) ?>
+                                                    </span>
+                                                    <div>
+                                                        <small class="text-muted d-block" style="font-size: 11px;">#REQ-<?= str_pad($item['id'], 4, '0', STR_PAD_LEFT) ?></small>
+                                                        <span class="fw-semibold text-dark small"><?= ucwords(str_replace('_', ' ', $item['record_type'])) ?></span>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                         </td>
                                         <td>
@@ -197,19 +233,39 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                                             <small class="text-muted"><?= htmlspecialchars($item['district_name'] ?? 'Provincial HQ') ?></small>
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-outline-info view-diff-btn py-1 px-2"
-                                                    data-id="<?= $item['id'] ?>"
-                                                    data-target="<?= htmlspecialchars($item['target_name']) ?>"
-                                                    data-requester="<?= htmlspecialchars($item['requester_name']) ?> (<?= ucwords(str_replace('_', ' ', $item['requester_role'])) ?>)"
-                                                    data-diff='<?= $diff_json ?>'>
-                                                <i class="bi bi-eye me-1"></i><?= $diff_count ?> field<?= $diff_count === 1 ? '' : 's' ?> modified
-                                            </button>
+                                            <?php if ($is_transfer && isset($item['diff']['target_unit'])): ?>
+                                                <div class="small">
+                                                    <div class="text-muted text-truncate" style="max-width: 230px;" title="<?= htmlspecialchars($item['diff']['target_unit']['old']) ?>">
+                                                        <i class="bi bi-geo-alt text-danger me-1"></i><?= htmlspecialchars($item['diff']['target_unit']['old']) ?>
+                                                    </div>
+                                                    <div class="text-primary fw-bold text-truncate mt-1" style="max-width: 230px;" title="<?= htmlspecialchars($item['diff']['target_unit']['new']) ?>">
+                                                        <i class="bi bi-box-arrow-in-right me-1"></i><?= htmlspecialchars($item['diff']['target_unit']['new']) ?>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none view-diff-btn mt-1"
+                                                        data-id="<?= $item['id'] ?>"
+                                                        data-target="<?= htmlspecialchars($item['target_name']) ?>"
+                                                        data-requester="<?= htmlspecialchars($item['requester_name']) ?> (<?= ucwords(str_replace('_', ' ', $item['requester_role'])) ?>)"
+                                                        data-type="<?= htmlspecialchars($item['record_type']) ?>"
+                                                        data-diff='<?= $diff_json ?>'>
+                                                    <i class="bi bi-chat-quote me-1"></i>View Transfer Details
+                                                </button>
+                                            <?php else: ?>
+                                                <button type="button" class="btn btn-sm btn-outline-info view-diff-btn py-1 px-2"
+                                                        data-id="<?= $item['id'] ?>"
+                                                        data-target="<?= htmlspecialchars($item['target_name']) ?>"
+                                                        data-requester="<?= htmlspecialchars($item['requester_name']) ?> (<?= ucwords(str_replace('_', ' ', $item['requester_role'])) ?>)"
+                                                        data-type="<?= htmlspecialchars($item['record_type']) ?>"
+                                                        data-diff='<?= $diff_json ?>'>
+                                                    <i class="bi bi-eye me-1"></i><?= $diff_count ?> field<?= $diff_count === 1 ? '' : 's' ?> modified
+                                                </button>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="text-end pe-4">
-                                            <button type="button" class="btn btn-sm btn-success px-3 me-1 approve-btn" data-id="<?= $item['id'] ?>" data-name="<?= htmlspecialchars($item['target_name']) ?>">
+                                            <button type="button" class="btn btn-sm btn-success px-3 me-1 approve-btn" data-id="<?= $item['id'] ?>" data-name="<?= htmlspecialchars($item['target_name']) ?>" data-type="<?= htmlspecialchars($item['record_type']) ?>">
                                                 <i class="bi bi-check-lg me-1"></i>Approve
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger px-3 reject-btn" data-id="<?= $item['id'] ?>" data-name="<?= htmlspecialchars($item['target_name']) ?>">
+                                            <button type="button" class="btn btn-sm btn-outline-danger px-3 reject-btn" data-id="<?= $item['id'] ?>" data-name="<?= htmlspecialchars($item['target_name']) ?>" data-type="<?= htmlspecialchars($item['record_type']) ?>">
                                                 <i class="bi bi-x-lg me-1"></i>Reject
                                             </button>
                                         </td>
@@ -228,7 +284,7 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
 <div class="modal fade" id="diffModal" tabindex="-1" aria-labelledby="diffModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header text-light" style="background: linear-gradient(135deg, #500707 0%, #750d0d 100%);">
+            <div class="modal-header text-light" id="diffModalHeader" style="background: linear-gradient(135deg, #500707 0%, #750d0d 100%);">
                 <div>
                     <h5 class="modal-title fw-bold" id="diffModalLabel"><i class="bi bi-sliders me-2"></i>Proposed Modifications Diff</h5>
                     <small class="text-light-50" id="diffModalSubtitle">Review Old Values vs New Values</small>
@@ -251,9 +307,9 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                     <table class="table table-bordered align-middle">
                         <thead class="bg-light">
                             <tr>
-                                <th style="width: 25%;">Field Name</th>
-                                <th style="width: 37.5%;" class="text-danger"><i class="bi bi-dash-circle me-1"></i>Old Value (Current)</th>
-                                <th style="width: 37.5%;" class="text-success"><i class="bi bi-plus-circle me-1"></i>New Value (Proposed)</th>
+                                <th style="width: 25%;" id="diffModalColField">Field Name</th>
+                                <th style="width: 37.5%;" class="text-danger" id="diffModalColOld"><i class="bi bi-dash-circle me-1"></i>Old Value (Current)</th>
+                                <th style="width: 37.5%;" class="text-success" id="diffModalColNew"><i class="bi bi-plus-circle me-1"></i>New Value (Proposed)</th>
                             </tr>
                         </thead>
                         <tbody id="diffModalBody">
@@ -279,6 +335,7 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
 $(document).ready(function() {
     let currentModalId = null;
     let currentModalTargetName = '';
+    let currentModalType = '';
 
     // Filter Tabs
     $('.filter-btn').on('click', function() {
@@ -288,29 +345,60 @@ $(document).ready(function() {
         const filter = $(this).data('filter');
         if (filter === 'all') {
             $('.approval-row').show();
+        } else if (filter === 'transfer_request') {
+            $('.approval-row').hide();
+            $('.approval-row[data-record-type="transfer_request"]').show();
         } else {
             $('.approval-row').hide();
             $('.approval-row[data-module="' + filter + '"]').show();
         }
     });
 
+    // Auto-select transfers tab if URL query ?filter=transfers
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('filter') === 'transfers') {
+        const transferBtn = $('.filter-btn[data-filter="transfer_request"]');
+        if (transferBtn.length) {
+            transferBtn.trigger('click');
+        }
+    }
+
     // View Diff Modal
     $(document).on('click', '.view-diff-btn', function() {
         const btn = $(this);
         currentModalId = btn.data('id');
         currentModalTargetName = btn.data('target');
+        currentModalType = btn.data('type') || '';
         const requester = btn.data('requester');
         const diffData = btn.data('diff');
 
         $('#modalTargetName').text(currentModalTargetName);
         $('#modalRequester').text(requester);
 
+        if (currentModalType === 'transfer_request') {
+            $('#diffModalLabel').html('<i class="bi bi-arrow-left-right me-2"></i>Staff Transfer Request Details');
+            $('#diffModalSubtitle').text('Review Current Station, Requested Station, and Reason');
+            $('#diffModalColField').text('Detail');
+            $('#diffModalColOld').html('<i class="bi bi-geo-alt me-1"></i>Current Station');
+            $('#diffModalColNew').html('<i class="bi bi-box-arrow-in-right me-1"></i>Requested Target Station');
+            $('#modalApproveBtn').html('<i class="bi bi-check-lg me-1"></i>Authorize Transfer');
+            $('#modalRejectBtn').html('<i class="bi bi-x-lg me-1"></i>Reject Transfer');
+        } else {
+            $('#diffModalLabel').html('<i class="bi bi-sliders me-2"></i>Proposed Modifications Diff');
+            $('#diffModalSubtitle').text('Review Old Values vs New Values');
+            $('#diffModalColField').text('Field Name');
+            $('#diffModalColOld').html('<i class="bi bi-dash-circle me-1"></i>Old Value (Current)');
+            $('#diffModalColNew').html('<i class="bi bi-plus-circle me-1"></i>New Value (Proposed)');
+            $('#modalApproveBtn').html('<i class="bi bi-check-lg me-1"></i>Approve & Apply');
+            $('#modalRejectBtn').html('<i class="bi bi-x-lg me-1"></i>Reject');
+        }
+
         let rowsHtml = '';
         if (typeof diffData === 'object' && Object.keys(diffData).length > 0) {
             for (const [key, item] of Object.entries(diffData)) {
                 rowsHtml += `
                     <tr>
-                        <td class="fw-bold text-secondary small">${item.label}</td>
+                        <td class="fw-bold text-secondary small">${escapeHtml(item.label || key)}</td>
                         <td><span class="diff-old-val">${escapeHtml(item.old)}</span></td>
                         <td><span class="diff-new-val">${escapeHtml(item.new)}</span></td>
                     </tr>
@@ -328,7 +416,7 @@ $(document).ready(function() {
     $('#modalApproveBtn').on('click', function() {
         if (currentModalId) {
             $('#diffModal').modal('hide');
-            executeApprove(currentModalId, currentModalTargetName);
+            executeApprove(currentModalId, currentModalTargetName, currentModalType);
         }
     });
 
@@ -336,7 +424,7 @@ $(document).ready(function() {
     $('#modalRejectBtn').on('click', function() {
         if (currentModalId) {
             $('#diffModal').modal('hide');
-            executeReject(currentModalId, currentModalTargetName);
+            executeReject(currentModalId, currentModalTargetName, currentModalType);
         }
     });
 
@@ -344,25 +432,34 @@ $(document).ready(function() {
     $(document).on('click', '.approve-btn', function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
-        executeApprove(id, name);
+        const type = $(this).data('type');
+        executeApprove(id, name, type);
     });
 
     // Reject from table row
     $(document).on('click', '.reject-btn', function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
-        executeReject(id, name);
+        const type = $(this).data('type');
+        executeReject(id, name, type);
     });
 
-    function executeApprove(id, name) {
+    function executeApprove(id, name, type) {
+        const isTransfer = (type === 'transfer_request');
+        const title = isTransfer ? 'Authorize Staff Transfer?' : 'Approve Modifications?';
+        const text = isTransfer
+            ? `Are you sure you want to authorize and officially transfer '${name}' to the requested unit/station? Station assignments will be updated immediately.`
+            : `Are you sure you want to authorize and officially apply changes for '${name}'?`;
+        const confirmBtnText = isTransfer ? 'Yes, Authorize Transfer' : 'Yes, Authorize Changes';
+
         Swal.fire({
-            title: 'Approve Modifications?',
-            text: `Are you sure you want to authorize and officially apply changes for '${name}'?`,
+            title: title,
+            text: text,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#198754',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, Authorize Changes',
+            confirmButtonText: confirmBtnText,
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -375,7 +472,7 @@ $(document).ready(function() {
                         if (resp && resp.success) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Authorized!',
+                                title: isTransfer ? 'Transfer Authorized!' : 'Authorized!',
                                 text: resp.message,
                                 timer: 2000,
                                 showConfirmButton: false
@@ -393,17 +490,27 @@ $(document).ready(function() {
         });
     }
 
-    function executeReject(id, name) {
+    function executeReject(id, name, type) {
+        const isTransfer = (type === 'transfer_request');
+        const title = isTransfer ? 'Reject Transfer Request?' : 'Reject Modifications?';
+        const text = isTransfer
+            ? `Please provide a reason for rejecting the transfer request for '${name}':`
+            : `Please provide a reason for rejecting the proposed changes for '${name}':`;
+        const placeholder = isTransfer
+            ? 'e.g. Inadequate staffing at current station / Pending project handover...'
+            : 'e.g. Invalid quantity specified / Incorrect designation...';
+        const confirmBtnText = isTransfer ? 'Reject Transfer' : 'Reject Modifications';
+
         Swal.fire({
-            title: 'Reject Modifications?',
-            text: `Please provide a reason for rejecting the proposed changes for '${name}':`,
+            title: title,
+            text: text,
             input: 'text',
-            inputPlaceholder: 'e.g. Invalid quantity specified / Incorrect designation...',
+            inputPlaceholder: placeholder,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Reject Modifications',
+            confirmButtonText: confirmBtnText,
             cancelButtonText: 'Cancel',
             inputValidator: (value) => {
                 if (!value) {
@@ -422,7 +529,7 @@ $(document).ready(function() {
                         if (resp && resp.success) {
                             Swal.fire({
                                 icon: 'info',
-                                title: 'Changes Discarded',
+                                title: isTransfer ? 'Transfer Rejected' : 'Changes Discarded',
                                 text: resp.message,
                                 timer: 2000,
                                 showConfirmButton: false

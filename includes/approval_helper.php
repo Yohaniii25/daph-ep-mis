@@ -131,6 +131,113 @@ if (!function_exists('get_pending_approvals_count')) {
     }
 }
 
+if (!function_exists('get_pending_transfers_count')) {
+    /**
+     * Get count of pending transfer requests
+     */
+    function get_pending_transfers_count($mysqli) {
+        if (!$mysqli) return 0;
+        $res = $mysqli->query("SELECT COUNT(*) AS cnt FROM pending_approvals WHERE status = 'pending' AND module = 'hr' AND record_type = 'transfer_request'");
+        if ($res && $row = $res->fetch_assoc()) {
+            return intval($row['cnt'] ?? 0);
+        }
+        return 0;
+    }
+}
+
+if (!function_exists('parse_transfer_target_unit')) {
+    /**
+     * Resolve target unit string into structured DB foreign key columns
+     */
+    function parse_transfer_target_unit($mysqli, $target_unit_str) {
+        $result = [
+            'target_unit' => $target_unit_str,
+            'target_range_id' => null,
+            'target_district_id' => null,
+            'target_farm_id' => null,
+            'target_training_center_id' => null,
+            'target_district' => 'Provincial'
+        ];
+
+        $trimmed = trim($target_unit_str);
+
+        // 1. Check Range Office
+        if (stripos($trimmed, 'Range Office - ') === 0) {
+            $raw_name = substr($trimmed, strlen('Range Office - '));
+            $clean_name = trim(preg_replace('/\s*\(.*?\)\s*/', '', $raw_name));
+            $stmt = $mysqli->prepare("SELECT id, district_id FROM veterinary_ranges WHERE name LIKE ? OR name = ? LIMIT 1");
+            if ($stmt) {
+                $like_param = "%{$clean_name}%";
+                $stmt->bind_param("ss", $like_param, $clean_name);
+                $stmt->execute();
+                $r = $stmt->get_result()->fetch_assoc();
+                if ($r) {
+                    $result['target_range_id'] = intval($r['id']);
+                    $result['target_district_id'] = intval($r['district_id']);
+                    $d_res = $mysqli->query("SELECT name FROM districts WHERE id = " . intval($r['district_id']));
+                    if ($d_res && $d_row = $d_res->fetch_assoc()) {
+                        $result['target_district'] = $d_row['name'];
+                    }
+                }
+                $stmt->close();
+            }
+        }
+        // 2. Check District Office
+        elseif (stripos($trimmed, 'District Office - ') === 0) {
+            $dist_name = trim(substr($trimmed, strlen('District Office - ')));
+            $stmt = $mysqli->prepare("SELECT id, name FROM districts WHERE name LIKE ? OR name = ? LIMIT 1");
+            if ($stmt) {
+                $like_param = "%{$dist_name}%";
+                $stmt->bind_param("ss", $like_param, $dist_name);
+                $stmt->execute();
+                $r = $stmt->get_result()->fetch_assoc();
+                if ($r) {
+                    $result['target_district_id'] = intval($r['id']);
+                    $result['target_district'] = $r['name'];
+                }
+                $stmt->close();
+            }
+        }
+        // 3. Check Regional Farm
+        elseif (stripos($trimmed, 'Regional Farm - ') === 0) {
+            $farm_name = trim(substr($trimmed, strlen('Regional Farm - ')));
+            $stmt = $mysqli->prepare("SELECT id FROM regional_farms WHERE farm_name LIKE ? OR farm_name = ? LIMIT 1");
+            if ($stmt) {
+                $like_param = "%{$farm_name}%";
+                $stmt->bind_param("ss", $like_param, $farm_name);
+                $stmt->execute();
+                $r = $stmt->get_result()->fetch_assoc();
+                if ($r) {
+                    $result['target_farm_id'] = intval($r['id']);
+                }
+                $stmt->close();
+            }
+        }
+        // 4. Check Training Center
+        elseif (stripos($trimmed, 'Training Center - ') === 0) {
+            $raw_tc = trim(substr($trimmed, strlen('Training Center - ')));
+            $clean_tc = trim(preg_replace('/\s*\(.*?\)\s*/', '', $raw_tc));
+            $stmt = $mysqli->prepare("SELECT id FROM training_centers WHERE center_name LIKE ? OR center_name = ? LIMIT 1");
+            if ($stmt) {
+                $like_param = "%{$clean_tc}%";
+                $stmt->bind_param("ss", $like_param, $clean_tc);
+                $stmt->execute();
+                $r = $stmt->get_result()->fetch_assoc();
+                if ($r) {
+                    $result['target_training_center_id'] = intval($r['id']);
+                }
+                $stmt->close();
+            }
+        }
+
+        if (strcasecmp($result['target_district'], 'Ampara') === 0) {
+            $result['target_district'] = 'Amparai';
+        }
+
+        return $result;
+    }
+}
+
 if (!function_exists('get_pending_approvals')) {
     /**
      * Retrieve all pending approval records
@@ -173,6 +280,24 @@ if (!function_exists('compute_record_diff')) {
      */
     function compute_record_diff($old_arr, $new_arr) {
         $diff = [];
+
+        // Special handling for employee transfer requests
+        if (isset($new_arr['target_unit'])) {
+            $diff['target_unit'] = [
+                'label' => 'Target Unit / Office',
+                'old'   => $old_arr['current_location'] ?? ($old_arr['unit'] ?? '(Current Workstation)'),
+                'new'   => $new_arr['target_unit']
+            ];
+            if (!empty($new_arr['reason'])) {
+                $diff['reason'] = [
+                    'label' => 'Reason for Transfer',
+                    'old'   => '—',
+                    'new'   => $new_arr['reason']
+                ];
+            }
+            return $diff;
+        }
+
         $ignored_keys = ['id', 'updated_at', 'created_at', 'password'];
 
         foreach ($new_arr as $key => $new_val) {
@@ -221,7 +346,44 @@ if (!function_exists('approve_pending_edit')) {
         }
 
         // Apply changes to the live table
-        $update_ok = apply_changes_to_live_table($mysqli, $record_type, $record_id, $new_data);
+        if ($record_type === 'transfer_request') {
+            $target_unit = $new_data['target_unit'] ?? '';
+            $t_range_id  = isset($new_data['target_range_id']) && $new_data['target_range_id'] !== '' ? intval($new_data['target_range_id']) : null;
+            $t_dist_id   = isset($new_data['target_district_id']) && $new_data['target_district_id'] !== '' ? intval($new_data['target_district_id']) : null;
+            $t_farm_id   = isset($new_data['target_farm_id']) && $new_data['target_farm_id'] !== '' ? intval($new_data['target_farm_id']) : null;
+            $t_tc_id     = isset($new_data['target_training_center_id']) && $new_data['target_training_center_id'] !== '' ? intval($new_data['target_training_center_id']) : null;
+            $t_district  = $new_data['target_district'] ?? 'Provincial';
+            if (strcasecmp($t_district, 'Ampara') === 0) {
+                $t_district = 'Amparai';
+            }
+
+            $upd_emp = $mysqli->prepare("
+                UPDATE users 
+                SET unit = ?, range_id = ?, district_id = ?, farm_id = ?, training_center_id = ?, district = ?
+                WHERE id = ?
+            ");
+            if ($upd_emp) {
+                $upd_emp->bind_param("siiiisi", $target_unit, $t_range_id, $t_dist_id, $t_farm_id, $t_tc_id, $t_district, $record_id);
+                $update_ok = $upd_emp->execute();
+                $upd_emp->close();
+            } else {
+                $update_ok = false;
+            }
+
+            // Also keep office_details in sync if a matching employee record exists
+            $old_data_arr = json_decode($approval['old_data'] ?? '{}', true) ?: [];
+            $emp_identifier = $old_data_arr['emp_id'] ?? ($old_data_arr['service_number'] ?? '');
+            if (!empty($emp_identifier)) {
+                $upd_od = $mysqli->prepare("UPDATE office_details SET range_id = ?, status = 'Active' WHERE emp_id = ?");
+                if ($upd_od) {
+                    $upd_od->bind_param("is", $t_range_id, $emp_identifier);
+                    $upd_od->execute();
+                    $upd_od->close();
+                }
+            }
+        } else {
+            $update_ok = apply_changes_to_live_table($mysqli, $record_type, $record_id, $new_data);
+        }
 
         if (!$update_ok) {
             return ['success' => false, 'message' => 'Failed to apply staged updates to live table: ' . $mysqli->error];
@@ -239,21 +401,52 @@ if (!function_exists('approve_pending_edit')) {
 
         // Send in-app notification to requester
         $req_id = intval($approval['requested_by']);
-        if ($req_id > 0) {
-            $notif_title = 'Modifications Authorized';
-            $notif_msg = "Your proposed modifications for '" . htmlspecialchars($approval['target_name']) . "' have been approved by the Provincial Director and updated in live records.";
-            $ins_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, 'approval_result', 0, NOW())");
-            if ($ins_n) {
-                $ins_n->bind_param("iss", $req_id, $notif_title, $notif_msg);
-                $ins_n->execute();
-                $ins_n->close();
+        if ($record_type === 'transfer_request') {
+            $notif_title = 'Employee Transfer Approved';
+            $notif_msg = "Transfer request for " . htmlspecialchars($approval['target_name']) . " to [" . htmlspecialchars($new_data['target_unit'] ?? '') . "] was officially approved and updated in live records.";
+            $notif_link = 'pages/modules/hr/employee_managment.php';
+            if ($req_id > 0) {
+                $ins_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, link, is_read, created_at) VALUES (?, ?, ?, 'transfer_alert', ?, 0, NOW())");
+                if ($ins_n) {
+                    $ins_n->bind_param("isss", $req_id, $notif_title, $notif_msg, $notif_link);
+                    $ins_n->execute();
+                    $ins_n->close();
+                }
             }
-        }
 
-        return [
-            'success' => true,
-            'message' => "Modifications for '" . htmlspecialchars($approval['target_name']) . "' successfully approved and applied."
-        ];
+            // Also notify the employee themselves
+            if ($record_id > 0 && $record_id !== $req_id) {
+                $emp_notif_title = 'Workstation Transfer Approved';
+                $emp_notif_msg = "Your official transfer to [" . htmlspecialchars($new_data['target_unit'] ?? '') . "] has been approved by the Provincial Administration. Your station records have been updated.";
+                $ins_emp_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, link, is_read, created_at) VALUES (?, ?, ?, 'transfer_alert', ?, 0, NOW())");
+                if ($ins_emp_n) {
+                    $ins_emp_n->bind_param("isss", $record_id, $emp_notif_title, $emp_notif_msg, $notif_link);
+                    $ins_emp_n->execute();
+                    $ins_emp_n->close();
+                }
+            }
+
+            return [
+                'success' => true,
+                'message' => "Transfer for '" . htmlspecialchars($approval['target_name']) . "' to [" . htmlspecialchars($new_data['target_unit'] ?? '') . "] successfully approved and executed."
+            ];
+        } else {
+            if ($req_id > 0) {
+                $notif_title = 'Modifications Authorized';
+                $notif_msg = "Your proposed modifications for '" . htmlspecialchars($approval['target_name']) . "' have been approved by the Provincial Director and updated in live records.";
+                $ins_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, 'approval_result', 0, NOW())");
+                if ($ins_n) {
+                    $ins_n->bind_param("iss", $req_id, $notif_title, $notif_msg);
+                    $ins_n->execute();
+                    $ins_n->close();
+                }
+            }
+
+            return [
+                'success' => true,
+                'message' => "Modifications for '" . htmlspecialchars($approval['target_name']) . "' successfully approved and applied."
+            ];
+        }
     }
 }
 
@@ -291,13 +484,26 @@ if (!function_exists('reject_pending_edit')) {
         // Send in-app notification to requester
         $req_id = intval($approval['requested_by']);
         if ($req_id > 0) {
-            $notif_title = 'Modifications Rejected';
-            $notif_msg = "Your proposed modifications for '" . htmlspecialchars($approval['target_name']) . "' were rejected by the Provincial Director." . (!empty($reason_clean) ? " Reason: {$reason_clean}" : "");
-            $ins_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, 'approval_result', 0, NOW())");
-            if ($ins_n) {
-                $ins_n->bind_param("iss", $req_id, $notif_title, $notif_msg);
-                $ins_n->execute();
-                $ins_n->close();
+            if ($approval['record_type'] === 'transfer_request') {
+                $new_data = json_decode($approval['new_data'] ?? '{}', true) ?: [];
+                $notif_title = 'Transfer Request Rejected';
+                $notif_msg = "Your transfer request for '" . htmlspecialchars($approval['target_name']) . "' to [" . htmlspecialchars($new_data['target_unit'] ?? '') . "] was rejected by the Provincial Administration." . (!empty($reason_clean) ? " Reason: {$reason_clean}" : "");
+                $notif_link = 'pages/modules/veterinary/employee_managment.php';
+                $ins_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, link, is_read, created_at) VALUES (?, ?, ?, 'transfer_alert', ?, 0, NOW())");
+                if ($ins_n) {
+                    $ins_n->bind_param("isss", $req_id, $notif_title, $notif_msg, $notif_link);
+                    $ins_n->execute();
+                    $ins_n->close();
+                }
+            } else {
+                $notif_title = 'Modifications Rejected';
+                $notif_msg = "Your proposed modifications for '" . htmlspecialchars($approval['target_name']) . "' were rejected by the Provincial Director." . (!empty($reason_clean) ? " Reason: {$reason_clean}" : "");
+                $ins_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, is_read, created_at) VALUES (?, ?, ?, 'approval_result', 0, NOW())");
+                if ($ins_n) {
+                    $ins_n->bind_param("iss", $req_id, $notif_title, $notif_msg);
+                    $ins_n->execute();
+                    $ins_n->close();
+                }
             }
         }
 

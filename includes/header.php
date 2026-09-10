@@ -226,6 +226,10 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
                                                     <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
                                                         <i class="bi bi-person-x-fill"></i>
                                                     </div>
+                                                <?php elseif (strpos(strtolower($notif['title']), 'transfer') !== false || ($notif['type'] ?? '') === 'transfer_alert'): ?>
+                                                    <div class="rounded-circle bg-warning-subtle text-warning-emphasis d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                                        <i class="bi bi-arrow-left-right"></i>
+                                                    </div>
                                                 <?php else: ?>
                                                     <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
                                                         <i class="bi bi-info-circle-fill"></i>

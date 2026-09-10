@@ -83,6 +83,10 @@ $districts = $mysqli->query("SELECT id, name FROM districts ORDER BY id ASC")->f
 $ranges = $mysqli->query("SELECT id, name, district_id FROM veterinary_ranges WHERE is_active = 1 ORDER BY name ASC")->fetch_all(MYSQLI_ASSOC);
 $farms = $mysqli->query("SELECT id, farm_name FROM regional_farms WHERE is_active = 1 ORDER BY farm_name ASC")->fetch_all(MYSQLI_ASSOC);
 $training_centers = $mysqli->query("SELECT id, center_name FROM training_centers WHERE is_active = 1 ORDER BY center_name ASC")->fetch_all(MYSQLI_ASSOC);
+$master_units = $mysqli->query("SELECT id, unit_name FROM master_units ORDER BY unit_name ASC")->fetch_all(MYSQLI_ASSOC);
+
+// Fetch Pending Transfer Requests Count for Administrator Alert Callout
+$pending_transfers_count = get_pending_transfers_count($mysqli);
 
 require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
@@ -188,10 +192,10 @@ require_once '../../../includes/sidebar.php';
                 <p class="text-muted small mb-0">Province-wide personnel registry, executive appointments, and instant role oversight</p>
             </div>
             <div class="d-flex gap-2 mt-2 mt-md-0">
-                <a href="../../../add_user.php" class="btn btn-outline-danger shadow-sm btn-sm px-3 d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-danger shadow-sm btn-sm px-3 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                     <i class="bi bi-person-plus-fill"></i>
                     <span>Register New Officer</span>
-                </a>
+                </button>
                 <button class="btn btn-danger shadow-sm btn-sm px-3 d-flex align-items-center gap-2" onclick="refreshDirectory()">
                     <i class="bi bi-arrow-clockwise"></i>
                     <span>Refresh</span>
@@ -206,6 +210,26 @@ require_once '../../../includes/sidebar.php';
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+        <?php endif; ?>
+
+        <!-- PENDING TRANSFERS ALERT BANNER (Maker-Checker Callout) -->
+        <?php if ($pending_transfers_count > 0): ?>
+            <div class="alert alert-warning border-0 shadow-sm d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 rounded-3" style="background: #fff8e6; border-left: 5px solid #f59e0b !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-warning text-white p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                        <i class="bi bi-arrow-left-right fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <span><?= $pending_transfers_count ?></span> Pending Transfer Request<?= $pending_transfers_count > 1 ? 's' : '' ?> Awaiting Administrative Approval
+                        </h6>
+                        <small class="text-muted">Staff rotational transfer requests submitted by Veterinary Surgeons are centralized in the All Pending Approvals hub.</small>
+                    </div>
+                </div>
+                <a href="../pd/pending_approvals.php?filter=transfers" class="btn btn-warning btn-sm px-3 fw-bold text-dark shadow-sm mt-2 mt-sm-0">
+                    <i class="bi bi-shield-check me-1"></i> Review in Central Approvals Hub
+                </a>
+            </div>
         <?php endif; ?>
 
         <!-- SECTION 1: KEY ROLE IDENTIFICATION CARDS -->
@@ -393,7 +417,9 @@ require_once '../../../includes/sidebar.php';
 
                                 // Location summary
                                 $workstation = 'Headquarters / Provincial';
-                                if (!empty($officer['range_name'])) {
+                                if (!empty($officer['unit'])) {
+                                    $workstation = $officer['unit'];
+                                } elseif (!empty($officer['range_name'])) {
                                     $workstation = $officer['range_name'] . ' Range';
                                 } elseif (!empty($officer['farm_name'])) {
                                     $workstation = $officer['farm_name'] . ' (Regional Farm)';
@@ -470,9 +496,9 @@ require_once '../../../includes/sidebar.php';
                 </div>
             </div>
         </div>
+        <!-- Global Add Employee Modal -->
 
-    </main>
-</div>
+        <?php require_once __DIR__ . '/models/add_employee.php'; ?>
 
 <!-- MODAL: EDIT / REASSIGN ROLE -->
 <div class="modal fade" id="assignRoleModal" tabindex="-1" aria-labelledby="assignRoleModalLabel" aria-hidden="true">

@@ -145,6 +145,96 @@ if (!function_exists('create_officer_notification')) {
     }
 }
 
+if (!function_exists('dispatch_transfer_request_notification')) {
+    /**
+     * Dispatch automated transfer request notification to the Provincial Admin Branch
+     * Triggered by Veterinary Surgeon submitting an employee transfer request
+     *
+     * @param mysqli $mysqli Database connection
+     * @param int $employee_id Target employee ID
+     * @param string $employee_name Target employee's full name
+     * @param string $service_number Officer service number or employee ID
+     * @param string $source_range Source range name
+     * @param string $target_unit Selected target unit/office
+     * @param string $reason Justification or transfer notes
+     * @param string $requested_by Requester name
+     * @return array Result summary
+     */
+    function dispatch_transfer_request_notification($mysqli, $employee_id, $employee_name, $service_number, $source_range, $target_unit, $reason, $requested_by = '') {
+        if (!$mysqli) {
+            return ['success' => false, 'sent_count' => 0, 'error' => 'No database connection'];
+        }
+
+        $emp_disp = trim($employee_name);
+        $svc_disp = !empty($service_number) ? " (" . trim($service_number) . ")" : "";
+        $from_text = !empty($source_range) ? " from {$source_range}" : "";
+        $by_text = !empty($requested_by) ? " by {$requested_by}" : "";
+
+        $title = "Employee Transfer Request: {$emp_disp}";
+        $message = "Transfer requested{$by_text} for {$emp_disp}{$svc_disp}{$from_text} to [{$target_unit}]. Reason: \"{$reason}\"";
+        $link = "pages/modules/pd/pending_approvals.php?filter=transfers";
+
+        // Identify recipients: Provincial Admin Branch (Administrator, Provincial Director, DD HQ-1, DD HQ-2)
+        $recipient_user_ids = [];
+        $admin_query = "
+            SELECT id, role, full_name, email 
+            FROM users 
+            WHERE role IN ('administrator', 'provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2') 
+              AND is_active = 1
+        ";
+        $admin_res = $mysqli->query($admin_query);
+        if ($admin_res) {
+            while ($u = $admin_res->fetch_assoc()) {
+                $recipient_user_ids[intval($u['id'])] = $u;
+            }
+        }
+
+        // Insert notification record for each admin branch recipient
+        $sent_count = 0;
+        $insert_stmt = $mysqli->prepare("
+            INSERT INTO notifications (user_id, title, message, type, link, is_read, created_at) 
+            VALUES (?, ?, ?, 'transfer_alert', ?, 0, NOW())
+        ");
+
+        if ($insert_stmt) {
+            foreach ($recipient_user_ids as $uid => $user_info) {
+                $insert_stmt->bind_param("isss", $uid, $title, $message, $link);
+                if ($insert_stmt->execute()) {
+                    $sent_count++;
+                }
+
+                // Email alert if email is available
+                if (!empty($user_info['email'])) {
+                    $to_email = $user_info['email'];
+                    $to_name = !empty($user_info['full_name']) ? $user_info['full_name'] : 'Provincial Administrator';
+                    $subject = "Transfer Request: {$emp_disp} - DAPH EP HR Branch";
+                    $body = "Dear {$to_name},\r\n\r\n";
+                    $body .= "A new official transfer request has been submitted by Veterinary Surgeon{$by_text}:\r\n\r\n";
+                    $body .= "• Employee: {$emp_disp}{$svc_disp}\r\n";
+                    $body .= "• Current Range: {$source_range}\r\n";
+                    $body .= "• Target Unit / Office: {$target_unit}\r\n";
+                    $body .= "• Reason / Justification: {$reason}\r\n\r\n";
+                    $body .= "Please review and officially process this request in the Department MIS HR directory:\r\n";
+                    $body .= "DAPH Eastern Province MIS Portal\r\n";
+                    $headers = "From: no-reply@daph.ep.gov.lk\r\n" .
+                               "Reply-To: info@daph.ep.gov.lk\r\n" .
+                               "X-Mailer: PHP/" . phpversion();
+                    @mail($to_email, $subject, $body, $headers);
+                }
+            }
+            $insert_stmt->close();
+        }
+
+        return [
+            'success' => ($sent_count > 0),
+            'sent_count' => $sent_count,
+            'title' => $title,
+            'message' => $message,
+            'recipients_count' => count($recipient_user_ids)
+        ];
+    }
+}
+
 if (!function_exists('get_user_notifications')) {
     /**
      * Retrieve recent notifications for a user
