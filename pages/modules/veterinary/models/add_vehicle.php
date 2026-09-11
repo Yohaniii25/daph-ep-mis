@@ -9,15 +9,22 @@
                 <div class="modal-body p-4">
                     <input type="hidden" name="unit" value="range_veterinary_officer">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Vehicle Type</label>
-                            <select name="vehicle_type" class="form-select" required>
-                                <option value="Motorbike">Motorbike</option>
-                                <option value="Single Cab (4x4)">Single Cab (4x4)</option>
-                                <option value="Double Cab">Double Cab</option>
-                                <option value="Truck Logistics">Truck Logistics</option>
-                                <option value="Van / Emergency Utility">Van / Emergency Utility</option>
-                            </select>
+                        <div class="col-md-6 position-relative">
+                            <label class="form-label small fw-bold">Vehicle Type <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-truck text-muted"></i></span>
+                                <input type="text" 
+                                       name="vehicle_type" 
+                                       id="add_vehicle_type" 
+                                       class="form-control" 
+                                       placeholder="Type or select type (e.g. Tractor, Trailer, Single Cab)..." 
+                                       autocomplete="off" 
+                                       required>
+                            </div>
+                            <div id="add_vehicle_type_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
+                            <small class="text-muted" style="font-size: 11px;">
+                                <i class="bi bi-magic me-1"></i>Auto-suggests from saved fleet types. Custom equipment allowed.
+                            </small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Vehicle Number (License Plate)</label>

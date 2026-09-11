@@ -192,18 +192,26 @@ $count_inventory   = get_pending_approvals_count($mysqli, 'inventory');
                                 <?php foreach ($pending_all as $item): 
                                     $diff_count = count($item['diff'] ?? []);
                                     $diff_json = htmlspecialchars(json_encode($item['diff'] ?? []), ENT_QUOTES, 'UTF-8');
-                                    $is_transfer = ($item['record_type'] === 'transfer_request');
+                                    $is_transfer = ($item['record_type'] === 'transfer_request' || $item['record_type'] === 'inventory_transfer');
                                 ?>
                                     <tr id="row-<?= $item['id'] ?>" class="approval-row" data-module="<?= htmlspecialchars($item['module']) ?>" data-record-type="<?= htmlspecialchars($item['record_type']) ?>">
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
-                                                <?php if ($is_transfer): ?>
+                                                <?php if ($item['record_type'] === 'transfer_request'): ?>
                                                     <span class="badge bg-danger text-white me-2 px-2 py-1 shadow-sm">
-                                                        <i class="bi bi-arrow-left-right me-1"></i>TRANSFER
+                                                        <i class="bi bi-arrow-left-right me-1"></i>STAFF TRANSFER
                                                     </span>
                                                     <div>
                                                         <small class="text-muted d-block" style="font-size: 11px;">#REQ-<?= str_pad($item['id'], 4, '0', STR_PAD_LEFT) ?></small>
                                                         <span class="fw-semibold text-danger small">Employee Transfer</span>
+                                                    </div>
+                                                <?php elseif ($item['record_type'] === 'inventory_transfer'): ?>
+                                                    <span class="badge bg-primary text-white me-2 px-2 py-1 shadow-sm">
+                                                        <i class="bi bi-arrow-left-right me-1"></i>ITEM TRANSFER
+                                                    </span>
+                                                    <div>
+                                                        <small class="text-muted d-block" style="font-size: 11px;">#REQ-<?= str_pad($item['id'], 4, '0', STR_PAD_LEFT) ?></small>
+                                                        <span class="fw-semibold text-primary small">Inventory Relocation</span>
                                                     </div>
                                                 <?php else: ?>
                                                     <span class="badge <?= $item['module'] === 'hr' ? 'badge-hr' : 'badge-inventory' ?> me-2 px-2 py-1">
@@ -375,12 +383,13 @@ $(document).ready(function() {
         $('#modalTargetName').text(currentModalTargetName);
         $('#modalRequester').text(requester);
 
-        if (currentModalType === 'transfer_request') {
-            $('#diffModalLabel').html('<i class="bi bi-arrow-left-right me-2"></i>Staff Transfer Request Details');
-            $('#diffModalSubtitle').text('Review Current Station, Requested Station, and Reason');
+        if (currentModalType === 'transfer_request' || currentModalType === 'inventory_transfer') {
+            const isInv = (currentModalType === 'inventory_transfer');
+            $('#diffModalLabel').html(isInv ? '<i class="bi bi-arrow-left-right me-2"></i>Inventory Transfer Request Details' : '<i class="bi bi-arrow-left-right me-2"></i>Staff Transfer Request Details');
+            $('#diffModalSubtitle').text(isInv ? 'Review Origin, Destination Unit, Transfer Quantity, and Reason' : 'Review Current Station, Requested Station, and Reason');
             $('#diffModalColField').text('Detail');
-            $('#diffModalColOld').html('<i class="bi bi-geo-alt me-1"></i>Current Station');
-            $('#diffModalColNew').html('<i class="bi bi-box-arrow-in-right me-1"></i>Requested Target Station');
+            $('#diffModalColOld').html('<i class="bi bi-geo-alt me-1"></i>Origin / Current Station');
+            $('#diffModalColNew').html('<i class="bi bi-box-arrow-in-right me-1"></i>Requested Destination');
             $('#modalApproveBtn').html('<i class="bi bi-check-lg me-1"></i>Authorize Transfer');
             $('#modalRejectBtn').html('<i class="bi bi-x-lg me-1"></i>Reject Transfer');
         } else {

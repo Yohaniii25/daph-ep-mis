@@ -281,13 +281,27 @@ if (!function_exists('compute_record_diff')) {
     function compute_record_diff($old_arr, $new_arr) {
         $diff = [];
 
-        // Special handling for employee transfer requests
+        // Special handling for transfer requests (employee & inventory)
         if (isset($new_arr['target_unit'])) {
             $diff['target_unit'] = [
                 'label' => 'Target Unit / Office',
-                'old'   => $old_arr['current_location'] ?? ($old_arr['unit'] ?? '(Current Workstation)'),
+                'old'   => $old_arr['from_unit'] ?? ($old_arr['current_location'] ?? ($old_arr['unit'] ?? '(Current Workstation)')),
                 'new'   => $new_arr['target_unit']
             ];
+            if (isset($new_arr['transfer_qty'])) {
+                $diff['transfer_qty'] = [
+                    'label' => 'Transfer Quantity',
+                    'old'   => 'Active: ' . ($old_arr['available_quantity'] ?? '0') . ' units (Intact pending approval)',
+                    'new'   => $new_arr['transfer_qty'] . ' unit(s)'
+                ];
+            }
+            if (!empty($new_arr['dispatch_reference'])) {
+                $diff['dispatch_reference'] = [
+                    'label' => 'Dispatch Reference',
+                    'old'   => '—',
+                    'new'   => $new_arr['dispatch_reference']
+                ];
+            }
             if (!empty($new_arr['reason'])) {
                 $diff['reason'] = [
                     'label' => 'Reason for Transfer',
@@ -381,6 +395,40 @@ if (!function_exists('approve_pending_edit')) {
                     $upd_od->close();
                 }
             }
+        } elseif ($record_type === 'inventory_transfer') {
+            $asset_type   = $new_data['asset_type'] ?? 'building_inventory';
+            $asset_id     = intval($new_data['asset_id'] ?? $record_id);
+            $transfer_qty = intval($new_data['transfer_qty'] ?? 1);
+            $transfer_id  = intval($new_data['transfer_id'] ?? 0);
+            $target_unit  = $new_data['target_unit'] ?? '';
+
+            $table_map = [
+                'building_inventory' => 'building_inventories',
+                'furniture'          => 'furniture_assets',
+                'machinery'          => 'machinery_assets',
+                'instrument'         => 'instrument_assets',
+                'counterfoil'        => 'counterfoil_assets'
+            ];
+            $table = $table_map[$asset_type] ?? 'building_inventories';
+
+            // Deduct transfer_qty from source item upon approval
+            $stmt_deduct = $mysqli->prepare("UPDATE `$table` SET available_quantity = GREATEST(0, available_quantity - ?) WHERE id = ?");
+            if ($stmt_deduct) {
+                $stmt_deduct->bind_param("ii", $transfer_qty, $asset_id);
+                $stmt_deduct->execute();
+                $stmt_deduct->close();
+            }
+
+            // Update status in inventory_transfers table
+            if ($transfer_id > 0) {
+                $upd_t = $mysqli->prepare("UPDATE inventory_transfers SET status = 'Approved', approved_by = ?, approved_at = NOW() WHERE id = ?");
+                if ($upd_t) {
+                    $upd_t->bind_param("ii", $reviewer_id, $transfer_id);
+                    $upd_t->execute();
+                    $upd_t->close();
+                }
+            }
+            $update_ok = true;
         } else {
             $update_ok = apply_changes_to_live_table($mysqli, $record_type, $record_id, $new_data);
         }
@@ -429,6 +477,23 @@ if (!function_exists('approve_pending_edit')) {
             return [
                 'success' => true,
                 'message' => "Transfer for '" . htmlspecialchars($approval['target_name']) . "' to [" . htmlspecialchars($new_data['target_unit'] ?? '') . "] successfully approved and executed."
+            ];
+        } elseif ($record_type === 'inventory_transfer') {
+            $notif_title = 'Inventory Transfer Approved';
+            $notif_msg = "Transfer request for " . intval($new_data['transfer_qty'] ?? 1) . " unit(s) of '" . htmlspecialchars($approval['target_name']) . "' to [" . htmlspecialchars($new_data['target_unit'] ?? '') . "] was officially approved.";
+            $notif_link = 'pages/modules/veterinary/lands_buildings.php';
+            if ($req_id > 0) {
+                $ins_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, link, is_read, created_at) VALUES (?, ?, ?, 'transfer_alert', ?, 0, NOW())");
+                if ($ins_n) {
+                    $ins_n->bind_param("isss", $req_id, $notif_title, $notif_msg, $notif_link);
+                    $ins_n->execute();
+                    $ins_n->close();
+                }
+            }
+
+            return [
+                'success' => true,
+                'message' => "Inventory transfer of " . intval($new_data['transfer_qty'] ?? 1) . " unit(s) of '" . htmlspecialchars($approval['target_name']) . "' to [" . htmlspecialchars($new_data['target_unit'] ?? '') . "] successfully approved and recorded."
             ];
         } else {
             if ($req_id > 0) {
@@ -495,6 +560,31 @@ if (!function_exists('reject_pending_edit')) {
                     $ins_n->execute();
                     $ins_n->close();
                 }
+            } elseif ($approval['record_type'] === 'inventory_transfer') {
+                $new_data = json_decode($approval['new_data'] ?? '{}', true) ?: [];
+                $transfer_id = intval($new_data['transfer_id'] ?? 0);
+                if ($transfer_id > 0) {
+                    $upd_t = $mysqli->prepare("UPDATE inventory_transfers SET status = 'Rejected', approved_by = ?, approved_at = NOW(), remarks = ? WHERE id = ?");
+                    if ($upd_t) {
+                        $upd_t->bind_param("isi", $reviewer_id, $reason_clean, $transfer_id);
+                        $upd_t->execute();
+                        $upd_t->close();
+                    }
+                }
+                $notif_title = 'Inventory Transfer Rejected';
+                $notif_msg = "Transfer request for '" . htmlspecialchars($approval['target_name']) . "' to [" . htmlspecialchars($new_data['target_unit'] ?? '') . "] was rejected." . (!empty($reason_clean) ? " Reason: {$reason_clean}" : "");
+                $notif_link = 'pages/modules/veterinary/lands_buildings.php';
+                $ins_n = $mysqli->prepare("INSERT INTO notifications (user_id, title, message, type, link, is_read, created_at) VALUES (?, ?, ?, 'transfer_alert', ?, 0, NOW())");
+                if ($ins_n) {
+                    $ins_n->bind_param("isss", $req_id, $notif_title, $notif_msg, $notif_link);
+                    $ins_n->execute();
+                    $ins_n->close();
+                }
+
+                return [
+                    'success' => true,
+                    'message' => "Inventory transfer request for '" . htmlspecialchars($approval['target_name']) . "' has been rejected. Source active quantity remains intact."
+                ];
             } else {
                 $notif_title = 'Modifications Rejected';
                 $notif_msg = "Your proposed modifications for '" . htmlspecialchars($approval['target_name']) . "' were rejected by the Provincial Director." . (!empty($reason_clean) ? " Reason: {$reason_clean}" : "");

@@ -98,6 +98,9 @@ require_once '../../../includes/header.php';
                                         <button class="btn btn-sm btn-outline-primary me-1" title="Edit Machinery" onclick='editMachinery(<?= json_encode($row) ?>)'>
                                             <i class="bi bi-pencil"></i>
                                         </button>
+                                        <button class="btn btn-sm btn-outline-warning text-dark me-1" title="Initiate Inter-Unit Transfer" onclick='openInventoryTransferModal(<?= json_encode($row) ?>, "machinery")'>
+                                            <i class="bi bi-arrow-left-right"></i>
+                                        </button>
                                         <button class="btn btn-sm btn-outline-danger" title="Board of Survey Decommission" onclick='openBoardOfSurveyModal(<?= json_encode($row) ?>)'>
                                             <i class="bi bi-shield-x me-1"></i>Decommission
                                         </button>
@@ -117,6 +120,7 @@ require_once '../../../includes/header.php';
 <?php include 'models/edit_machinery.php'; ?>
 <?php include 'models/view_machinery.php'; ?>
 <?php include 'models/modal_board_of_survey.php'; ?>
+<?php include 'models/modal_inventory_transfer.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -187,20 +191,162 @@ require_once '../../../includes/header.php';
         modal.show();
     }
 
+    var originalMachineryQty = 0;
+    var originalMachineryCondition = '';
+
     function editMachinery(data) {
         document.getElementById('edit_machinery_id').value = data.id || '';
         document.getElementById('edit_machinery_type').value = data.machinery_type || '';
-        document.getElementById('edit_machinery_condition').value = data.current_condition || 'Good';
         if (document.getElementById('edit_machinery_initial_count')) {
             document.getElementById('edit_machinery_initial_count').value = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 1);
         }
-        document.getElementById('edit_machinery_quantity').value = data.available_quantity || 1;
+        originalMachineryQty = parseInt(data.available_quantity) || 1;
+        originalMachineryCondition = data.current_condition || 'Good';
+
+        document.getElementById('edit_machinery_quantity').value = originalMachineryQty;
+        document.getElementById('edit_machinery_condition').value = originalMachineryCondition;
         document.getElementById('edit_machinery_purchase_date').value = data.purchase_date || '';
         document.getElementById('edit_machinery_remarks').value = data.remarks || '';
         document.getElementById('edit_machinery_unit').value = data.unit || 'range_veterinary_officer';
+        
+        var noticeEl = document.getElementById('edit_machinery_damaged_notice');
+        if (noticeEl) {
+            if (originalMachineryCondition === 'Damaged') {
+                noticeEl.classList.remove('d-none');
+                noticeEl.style.display = 'block';
+            } else {
+                noticeEl.classList.add('d-none');
+                noticeEl.style.display = 'none';
+            }
+        }
+
         var modal = new bootstrap.Modal(document.getElementById('editMachineryModal'));
         modal.show();
     }
+
+    $('#edit_machinery_condition').on('change', function() {
+        var selectedCond = $(this).val();
+        var noticeEl = document.getElementById('edit_machinery_damaged_notice');
+        var qtyInput = document.getElementById('edit_machinery_quantity');
+        
+        if (selectedCond === 'Damaged') {
+            if (noticeEl) {
+                noticeEl.classList.remove('d-none');
+                noticeEl.style.display = 'block';
+            }
+            if (qtyInput && originalMachineryCondition !== 'Damaged') {
+                qtyInput.value = Math.max(0, originalMachineryQty - 1);
+            }
+        } else {
+            if (noticeEl) {
+                noticeEl.classList.add('d-none');
+                noticeEl.style.display = 'none';
+            }
+            if (qtyInput && originalMachineryCondition !== 'Damaged') {
+                qtyInput.value = originalMachineryQty;
+            }
+        }
+    });
+
+    function openInventoryTransferModal(data, assetType) {
+        var modalEl = document.getElementById('inventoryTransferModal');
+        if (!modalEl) return;
+        
+        var assetMap = {
+            'building': 'building_inventory',
+            'furniture': 'furniture',
+            'machinery': 'machinery',
+            'instrument': 'instrument',
+            'counterfoil': 'counterfoil'
+        };
+        var normalizedType = assetMap[assetType] || assetType || 'machinery';
+        
+        if (document.getElementById('trans_item_id')) {
+            document.getElementById('trans_item_id').value = data.id || '';
+        }
+        if (document.getElementById('trans_asset_type')) {
+            document.getElementById('trans_asset_type').value = normalizedType;
+        }
+        
+        var itemName = data.machinery_type || data.machinery_name || '-';
+        
+        if (document.getElementById('trans_item_name')) {
+            document.getElementById('trans_item_name').textContent = itemName;
+        }
+        if (document.getElementById('trans_item_name_input')) {
+            document.getElementById('trans_item_name_input').value = itemName;
+        }
+        if (document.getElementById('trans_item_location')) {
+            document.getElementById('trans_item_location').textContent = data.remarks || 'Range Office';
+        }
+        if (document.getElementById('trans_item_condition')) {
+            document.getElementById('trans_item_condition').textContent = data.current_condition || 'Good';
+        }
+        
+        var availQty = parseInt(data.available_quantity) || 1;
+        if (document.getElementById('trans_item_available_qty')) {
+            document.getElementById('trans_item_available_qty').textContent = availQty;
+        }
+        
+        var qtyInput = document.getElementById('trans_transfer_quantity');
+        if (qtyInput) {
+            qtyInput.max = availQty;
+            qtyInput.value = 1;
+        }
+        
+        if (document.getElementById('trans_target_unit')) {
+            document.getElementById('trans_target_unit').selectedIndex = 0;
+        }
+        if (document.getElementById('trans_dispatch_reference')) {
+            document.getElementById('trans_dispatch_reference').value = '';
+        }
+        if (document.getElementById('trans_transfer_reason')) {
+            document.getElementById('trans_transfer_reason').value = '';
+        }
+        if (document.getElementById('trans_from_unit')) {
+            document.getElementById('trans_from_unit').value = data.unit || 'range_veterinary_officer';
+        }
+        
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+
+    $('#inventoryTransferForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Processing...');
+
+        $.ajax({
+            url: 'processors/process_inventory_transfer.php',
+            type: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(res) {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-send-check me-1"></i> Dispatch Transfer Request');
+                if (res.success) {
+                    var modalEl = document.getElementById('inventoryTransferModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Transfer Request Initiated',
+                        html: '<p>' + res.message + '</p><div class="alert alert-info py-2 small mb-0"><i class="bi bi-info-circle me-1"></i><strong>Notice:</strong> As required by inventory policy, the active count remains intact at <strong>' + res.current_available_quantity + '</strong> until formal executive approval.</div>',
+                        confirmButtonColor: '#820100'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Transfer Request Failed', res.message, 'error');
+                }
+            },
+            error: function(xhr, status, err) {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-send-check me-1"></i> Dispatch Transfer Request');
+                Swal.fire('Error', 'Server processing failure: ' + err, 'error');
+            }
+        });
+    });
 
     function openBoardOfSurveyModal(data) {
         document.getElementById('bos_asset_type').value = 'machinery';

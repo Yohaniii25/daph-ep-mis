@@ -49,6 +49,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $initial_count = isset($old_data['initial_count']) ? intval($old_data['initial_count']) : $available_quantity;
     }
 
+    // Automated Quantity Deduction: If condition updated to "Damaged", automatically deduct 1 from active circulating quantity
+    if ($current_condition === 'Damaged' && ($old_data['current_condition'] ?? '') !== 'Damaged') {
+        $old_available = intval($old_data['available_quantity'] ?? 0);
+        if ($available_quantity >= $old_available) {
+            $available_quantity = max(0, $old_available - 1);
+        } else {
+            $available_quantity = max(0, $available_quantity);
+        }
+    }
+
     // Resolve unit fallback if not passed
     if ($unit === '' && isset($old_data['unit'])) {
         $unit = $old_data['unit'];

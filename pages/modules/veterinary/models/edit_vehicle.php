@@ -10,9 +10,16 @@
                 <div class="modal-body p-4">
                     <input type="hidden" name="unit" id="edit_vehicle_unit" value="range_veterinary_officer">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Vehicle Type</label>
-                            <input type="text" name="vehicle_type" id="edit_vehicle_type" class="form-control" required>
+                        <div class="col-md-6 position-relative">
+                            <label class="form-label small fw-bold">Vehicle Type <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-truck text-muted"></i></span>
+                                <input type="text" name="vehicle_type" id="edit_vehicle_type" class="form-control" placeholder="Type or select type..." autocomplete="off" required>
+                            </div>
+                            <div id="edit_vehicle_type_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
+                            <small class="text-muted" style="font-size: 11px;">
+                                <i class="bi bi-magic me-1"></i>Auto-suggests from saved fleet types. Custom equipment allowed.
+                            </small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Vehicle Registration Number</label>
