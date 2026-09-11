@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/notification_helper.php';
 
 $current_user_id = intval($_SESSION['user_id'] ?? 0);
 $type_counts = get_notification_type_counts($mysqli, $current_user_id);
-$initial_notifications = get_filtered_notifications($mysqli, $current_user_id, 'all', false, 100);
+$initial_notifications = get_filtered_notifications($mysqli, $current_user_id, 'all', false, 1000);
 ?>
 
 <div class="container-fluid px-0 py-2">
@@ -36,6 +36,9 @@ $initial_notifications = get_filtered_notifications($mysqli, $current_user_id, '
             </button>
             <button type="button" class="btn btn-danger btn-sm d-flex align-items-center gap-1 mark-all-read-full-btn <?= $type_counts['unread'] > 0 ? '' : 'disabled' ?>">
                 <i class="bi bi-check2-all"></i> Mark All as Read
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 clear-all-read-btn" title="Delete all read notifications">
+                <i class="bi bi-trash"></i> Clear Read
             </button>
         </div>
     </div>
@@ -182,6 +185,11 @@ $initial_notifications = get_filtered_notifications($mysqli, $current_user_id, '
                     <p class="small text-muted mb-0">You're all caught up! There are currently no notifications matching this criteria.</p>
                 </div>
             <?php else: ?>
+                <div class="text-center py-5 text-muted d-none" id="feedEmptyState">
+                    <i class="bi bi-bell-slash text-secondary opacity-50" style="font-size: 3.5rem;"></i>
+                    <h5 class="fw-bold mt-3 text-dark">No Notifications Found</h5>
+                    <p class="small text-muted mb-0">There are currently no notifications matching this criteria.</p>
+                </div>
                 <?php foreach ($initial_notifications as $item): ?>
                     <div class="list-group-item p-3 notif-row-card <?= empty($item['is_read']) ? 'bg-light-subtle border-start border-4 border-danger' : '' ?>" 
                          data-id="<?= $item['id'] ?>" 
@@ -226,11 +234,30 @@ $initial_notifications = get_filtered_notifications($mysqli, $current_user_id, '
                                     <i class="bi <?= empty($item['is_read']) ? 'bi-check2' : 'bi-envelope' ?>"></i>
                                     <span class="btn-text"><?= empty($item['is_read']) ? 'Mark Read' : 'Mark Unread' ?></span>
                                 </button>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger single-delete-btn d-inline-flex align-items-center gap-1" 
+                                        data-id="<?= $item['id'] ?>" 
+                                        title="Delete notification">
+                                    <i class="bi bi-trash"></i>
+                                    <span class="btn-text">Delete</span>
+                                </button>
                             </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="card-footer bg-white border-top py-3 px-3 d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3" id="notifPaginationContainer">
+            <div class="text-muted small" id="paginationInfo">
+                Showing <span class="fw-semibold" id="pageStart">1</span> to <span class="fw-semibold" id="pageEnd">10</span> of <span class="fw-semibold" id="pageTotal">0</span> alerts
+            </div>
+            <nav aria-label="Notifications pagination" id="paginationNav">
+                <ul class="pagination pagination-sm mb-0" id="paginationList">
+                    <!-- Dynamic pagination items -->
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -254,17 +281,131 @@ $initial_notifications = get_filtered_notifications($mysqli, $current_user_id, '
     background-color: rgba(255,255,255,0.25) !important;
     color: #fff !important;
 }
+.pagination .page-item.active .page-link {
+    background-color: #500707 !important;
+    border-color: #500707 !important;
+    color: #fff !important;
+}
+.pagination .page-link {
+    color: #500707;
+}
+.pagination .page-link:hover {
+    color: #3b0505;
+    background-color: #f8fafc;
+}
+.single-delete-btn:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const apiEndpoint = '<?= $rel_path ?>includes/notifications_api.php';
+    const pageSize = 10;
+    let currentPage = 1;
     let currentFilter = 'all';
 
-    function filterCards() {
+    function renderPagination(totalItems) {
+        const totalPages = Math.ceil(totalItems / pageSize) || 1;
+        const paginationNav = document.getElementById('paginationNav');
+        const paginationList = document.getElementById('paginationList');
+        const paginationContainer = document.getElementById('notifPaginationContainer');
+        const pageStart = document.getElementById('pageStart');
+        const pageEnd = document.getElementById('pageEnd');
+        const pageTotal = document.getElementById('pageTotal');
+
+        if (pageTotal) pageTotal.textContent = totalItems;
+
+        if (totalItems === 0) {
+            if (paginationContainer) paginationContainer.style.display = 'none';
+            return;
+        }
+
+        if (paginationContainer) paginationContainer.style.display = 'flex';
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalItems);
+
+        if (pageStart) pageStart.textContent = totalItems > 0 ? (startIndex + 1) : 0;
+        if (pageEnd) pageEnd.textContent = endIndex;
+
+        if (!paginationList) return;
+
+        let html = '';
+
+        // Previous button
+        html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Previous">
+                <i class="bi bi-chevron-left"></i> Prev
+            </a>
+        </li>`;
+
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>`;
+            }
+        } else {
+            if (currentPage <= 4) {
+                for (let i = 1; i <= 5; i++) {
+                    html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>`;
+                }
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                html += `<li class="page-item ${totalPages === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
+                </li>`;
+            } else if (currentPage >= totalPages - 3) {
+                html += `<li class="page-item ${1 === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="1">1</a>
+                </li>`;
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                for (let i = totalPages - 4; i <= totalPages; i++) {
+                    html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>`;
+                }
+            } else {
+                html += `<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>`;
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>`;
+                }
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                html += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a></li>`;
+            }
+        }
+
+        // Next button
+        html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Next">
+                Next <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>`;
+
+        paginationList.innerHTML = html;
+
+        // Hide page nav buttons if total items is 10 or fewer
+        if (totalItems <= pageSize) {
+            if (paginationNav) paginationNav.classList.add('d-none');
+        } else {
+            if (paginationNav) paginationNav.classList.remove('d-none');
+        }
+    }
+
+    function filterCards(resetToPageOne = true) {
+        if (resetToPageOne) {
+            currentPage = 1;
+        }
+
         const query = document.getElementById('notifSearchInput').value.toLowerCase().trim();
-        const rows = document.querySelectorAll('.notif-row-card');
-        let visibleCount = 0;
+        const rows = Array.from(document.querySelectorAll('.notif-row-card'));
+        const matchedRows = [];
 
         rows.forEach(row => {
             const type = (row.dataset.type || '').toLowerCase();
@@ -287,8 +428,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const matchQuery = !query || text.includes(query);
 
             if (matchCategory && matchQuery) {
+                matchedRows.push(row);
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const totalItems = matchedRows.length;
+        const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+
+        matchedRows.forEach((row, idx) => {
+            if (idx >= startIndex && idx < endIndex) {
                 row.style.display = '';
-                visibleCount++;
             } else {
                 row.style.display = 'none';
             }
@@ -296,9 +457,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const emptyState = document.getElementById('feedEmptyState');
         if (emptyState) {
-            emptyState.style.display = (visibleCount === 0) ? 'block' : 'none';
+            emptyState.classList.toggle('d-none', totalItems > 0);
+            emptyState.style.display = (totalItems === 0) ? 'block' : 'none';
         }
+
+        renderPagination(totalItems);
     }
+
+    // Pagination link clicks
+    $(document).on('click', '#paginationList .page-link', function(e) {
+        e.preventDefault();
+        const targetPage = parseInt($(this).data('page'));
+        if (!isNaN(targetPage) && targetPage >= 1 && targetPage !== currentPage) {
+            currentPage = targetPage;
+            filterCards(false);
+            const feedContainer = document.getElementById('notificationFeedList');
+            if (feedContainer) {
+                feedContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    });
 
     // Tab filter click
     document.querySelectorAll('#notifFilterTabs .filter-btn').forEach(btn => {
@@ -306,12 +484,14 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('#notifFilterTabs .filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentFilter = this.dataset.filter;
-            filterCards();
+            filterCards(true);
         });
     });
 
     // Search input
-    document.getElementById('notifSearchInput').addEventListener('input', filterCards);
+    document.getElementById('notifSearchInput').addEventListener('input', function() {
+        filterCards(true);
+    });
 
     // Refresh button
     document.getElementById('refreshNotifsBtn').addEventListener('click', function() {
@@ -373,10 +553,155 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     updateHeaderAndStats(resp.unread_count, resp.counts);
-                    filterCards();
+                    filterCards(false);
                 }
             }
         });
+    });
+
+    // Delete single notification
+    $(document).on('click', '.single-delete-btn', function(e) {
+        e.preventDefault();
+        const btn = $(this);
+        const notifId = btn.data('id');
+        const card = btn.closest('.notif-row-card');
+        if (!notifId) return;
+
+        const performDelete = () => {
+            $.ajax({
+                url: apiEndpoint,
+                type: 'POST',
+                data: { action: 'delete', id: notifId },
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp && resp.success) {
+                        card.fadeOut(250, function() {
+                            $(this).remove();
+                            $(`#notificationListGroup .notification-item[data-id="${notifId}"]`).remove();
+                            updateHeaderAndStats(resp.unread_count, resp.counts);
+                            filterCards(false);
+                        });
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted',
+                                text: 'Notification deleted successfully.',
+                                timer: 1500,
+                                showConfirmButton: false,
+                                toast: true,
+                                position: 'top-end'
+                            });
+                        }
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire('Error', 'Failed to delete notification.', 'error');
+                        } else {
+                            alert('Failed to delete notification.');
+                        }
+                    }
+                },
+                error: function() {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Error', 'An error occurred while deleting the notification.', 'error');
+                    } else {
+                        alert('An error occurred while deleting the notification.');
+                    }
+                }
+            });
+        };
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Delete Alert?',
+                text: 'Are you sure you want to permanently delete this notification?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    performDelete();
+                }
+            });
+        } else {
+            if (confirm('Are you sure you want to delete this notification?')) {
+                performDelete();
+            }
+        }
+    });
+
+    // Clear all read notifications
+    $('.clear-all-read-btn').on('click', function(e) {
+        e.preventDefault();
+        const readRows = $('.notif-row-card[data-read="1"]');
+        if (readRows.length === 0) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Read Notifications',
+                    text: 'There are no read notifications to clear.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('No read notifications to clear.');
+            }
+            return;
+        }
+
+        const performClear = () => {
+            $.ajax({
+                url: apiEndpoint,
+                type: 'POST',
+                data: { action: 'delete_all_read' },
+                dataType: 'json',
+                success: function(resp) {
+                    if (resp && resp.success) {
+                        $('.notif-row-card[data-read="1"]').fadeOut(250, function() {
+                            $(this).remove();
+                            updateHeaderAndStats(resp.unread_count, resp.counts);
+                            filterCards(true);
+                        });
+
+                        $('#notificationListGroup .notification-item[data-read="1"]').remove();
+
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Read Alerts Cleared',
+                                text: 'All read notifications have been removed.',
+                                timer: 1800,
+                                showConfirmButton: false
+                            });
+                        }
+                    }
+                }
+            });
+        };
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Clear All Read Alerts?',
+                text: 'This will permanently remove all notifications that have been marked as read.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, clear them',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    performClear();
+                }
+            });
+        } else {
+            if (confirm('Are you sure you want to delete all read notifications?')) {
+                performClear();
+            }
+        }
     });
 
     // Mark all as read
@@ -406,7 +731,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     btn.addClass('disabled');
                     updateHeaderAndStats(resp.unread_count, resp.counts);
-                    filterCards();
+                    filterCards(false);
                 }
             }
         });
@@ -418,6 +743,7 @@ document.addEventListener('DOMContentLoaded', function() {
             $('#notificationBadge').removeClass('d-none').text(unreadCount > 99 ? '99+' : unreadCount);
             $('#notificationHeaderBadge').removeClass('d-none').text(unreadCount + ' New');
             $('.notif-main-unread-badge').removeClass('d-none').text(unreadCount + ' Unread');
+            $('.mark-all-read-full-btn').removeClass('disabled');
         } else {
             $('#notificationBadge').addClass('d-none').text('0');
             $('#notificationHeaderBadge').addClass('d-none').text('0 New');
@@ -426,7 +752,7 @@ document.addEventListener('DOMContentLoaded', function() {
             $('.mark-all-read-full-btn').addClass('disabled');
         }
 
-        // Stats cards
+        // Stats cards & pill badges
         if (counts) {
             $('#statTotal').text(counts.total);
             $('#statUnread').text(counts.unread);
@@ -443,6 +769,9 @@ document.addEventListener('DOMContentLoaded', function() {
             $('#pillOfficers').text(counts.officers);
         }
     }
+
+    // Initialize pagination on load
+    filterCards(true);
 });
 </script>
 

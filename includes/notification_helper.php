@@ -395,6 +395,46 @@ if (!function_exists('toggle_notification_read_status')) {
     }
 }
 
+if (!function_exists('delete_notification')) {
+    /**
+     * Delete a single notification for a specific user
+     */
+    function delete_notification($mysqli, $user_id, $notification_id) {
+        if (!$mysqli || empty($user_id) || empty($notification_id)) {
+            return false;
+        }
+
+        $stmt = $mysqli->prepare("DELETE FROM notifications WHERE id = ? AND user_id = ?");
+        if ($stmt) {
+            $stmt->bind_param("ii", $notification_id, $user_id);
+            $ok = $stmt->execute();
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('delete_all_read_notifications')) {
+    /**
+     * Delete all read notifications for a specific user
+     */
+    function delete_all_read_notifications($mysqli, $user_id) {
+        if (!$mysqli || empty($user_id)) {
+            return false;
+        }
+
+        $stmt = $mysqli->prepare("DELETE FROM notifications WHERE user_id = ? AND is_read = 1");
+        if ($stmt) {
+            $stmt->bind_param("i", $user_id);
+            $ok = $stmt->execute();
+            $stmt->close();
+            return $ok;
+        }
+        return false;
+    }
+}
+
 if (!function_exists('format_time_ago')) {
     /**
      * Relative time string format helper

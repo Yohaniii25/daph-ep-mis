@@ -63,6 +63,31 @@ if ($action === 'toggle_read') {
     exit();
 }
 
+if ($action === 'delete') {
+    $notification_id = isset($_POST['id']) ? intval($_POST['id']) : (isset($_GET['id']) ? intval($_GET['id']) : null);
+    $ok = delete_notification($mysqli, $user_id, $notification_id);
+    $unread_count = get_unread_notification_count($mysqli, $user_id);
+    $counts = get_notification_type_counts($mysqli, $user_id);
+    echo json_encode([
+        'success' => $ok,
+        'unread_count' => $unread_count,
+        'counts' => $counts
+    ]);
+    exit();
+}
+
+if ($action === 'delete_all_read') {
+    $ok = delete_all_read_notifications($mysqli, $user_id);
+    $unread_count = get_unread_notification_count($mysqli, $user_id);
+    $counts = get_notification_type_counts($mysqli, $user_id);
+    echo json_encode([
+        'success' => $ok,
+        'unread_count' => $unread_count,
+        'counts' => $counts
+    ]);
+    exit();
+}
+
 if ($action === 'fetch') {
     $limit = isset($_GET['limit']) ? max(1, min(100, intval($_GET['limit']))) : 50;
     $offset = isset($_GET['offset']) ? max(0, intval($_GET['offset'])) : 0;
