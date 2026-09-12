@@ -1,0 +1,244 @@
+================================================================================
+DAPH - EP MIS: ACCESSIBILITY & INCLUSIVE DESIGN RECOMMENDATIONS
+================================================================================
+Target Standard: WCAG 2.1 (Level AA Compliance)
+Platform: Department of Animal Production and Health (DAPH) MIS
+Date Generated: September 2026
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1. KEYBOARD NAVIGATION
+2. VISUAL CLARITY & FOCUS STATES
+3. SCREEN READER SUPPORT (ASSISTIVE TECH)
+4. FORM ACCESSIBILITY & DATA INTEGRITY
+5. PRIORITIZED PRE-LAUNCH IMPLEMENTATION ROADMAP
+6. QUICK CODE IMPLEMENTATION SNIPPETS
+
+================================================================================
+1. KEYBOARD NAVIGATION
+================================================================================
+
+Ensure all platform features, modals, navigation drawers, and data tables can
+be operated exclusively using a standard keyboard without a mouse.
+
+1.1 Skip Navigation Link (Priority: HIGH)
+    * Problem: Users tabbing into a page currently have to navigate through
+      every sidebar menu item and top-bar control before reaching the main 
+      content area.
+    * Solution: Place a "Skip to Main Content" link at the very top of the DOM
+      (inside includes/header.php):
+      <a href="#mainContent" class="visually-hidden-focusable btn btn-dark m-2 position-absolute" style="z-index:9999;">Skip to main content</a>
+    * Ensure the primary page wrapper has id="mainContent" and tabindex="-1" so
+      it programmatically accepts focus when jumped to.
+
+1.2 Responsive Data Tables Horizontal Scroll (Priority: HIGH)
+    * Problem: Wide tables (such as the 8-column Building Inventory table) are
+      wrapped in <div class="table-responsive">. Keyboard users cannot scroll
+      overflowing tables horizontally.
+    * Solution: Add tabindex="0", role="region", and an aria-label to all
+      .table-responsive containers:
+      <div class="table-responsive" tabindex="0" role="region" aria-label="Inventory items table, scrollable horizontally">
+
+1.3 Modal Focus Trapping & Restoration (Priority: HIGH)
+    * Problem: Dismissing a modal can cause focus to reset to the top <body>
+      element, forcing the user to tab through the whole page again.
+    * Solution: Store the triggering element (document.activeElement) before
+      opening the modal, and restore focus to that element when the modal is
+      hidden:
+      modalElement.addEventListener('hidden.bs.modal', function () {
+          if (triggeringBtn) triggeringBtn.focus();
+      });
+
+1.4 Collapsible Sidebar Navigation (Priority: MEDIUM)
+    * Problem: When the sidebar is collapsed or off-screen on mobile/tablet,
+      inner links can still receive tab focus invisibly.
+    * Solution: Ensure that when collapsed, the sidebar container receives
+      visibility: hidden or inert, and toggle buttons have appropriate
+      aria-expanded="false" / aria-expanded="true" attributes.
+
+1.5 Autocomplete & Datalist Keyboard Handling (Priority: MEDIUM)
+    * Maintain arrow key navigation (ArrowUp / ArrowDown), Enter to select,
+      and Escape to dismiss across all custom autocomplete dropdowns (such as
+      inventory item suggestion boxes).
+
+================================================================================
+2. VISUAL CLARITY & FOCUS STATES
+================================================================================
+
+Ensure interface elements, text contrast, and interactive feedback meet
+legibility standards for users with low vision or color vision deficiency.
+
+2.1 High-Contrast Focus Visible Rings (Priority: HIGH)
+    * Problem: Default browser focus rings are subtle and often blend into card
+      backgrounds or dark maroon accents.
+    * Solution: Add an unmistakable global :focus-visible outline in 
+      assets/css/style.css:
+      :focus-visible {
+          outline: 2.5px solid #820100 !important;
+          outline-offset: 2px !important;
+      }
+      a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+          box-shadow: 0 0 0 3px rgba(130, 1, 0, 0.25) !important;
+      }
+
+2.2 Minimum Readable Font Sizing (Priority: HIGH)
+    * Problem: Certain badge counters, timestamps, and calculation subtexts use
+      micro-fonts (10px or smaller), which are difficult to read on lower
+      resolution monitors.
+    * Solution: Enforce minimum font sizes across all views:
+      - Helper & subtitle text: Minimum 12px (0.75rem)
+      - Body text & form labels: Minimum 14px (0.875rem)
+      - Table data rows: Minimum 13px - 14px
+
+2.3 Color Contrast Calibration (WCAG AA Ratio >= 4.5:1) (Priority: MEDIUM)
+    * Primary Maroon (#370709 / #500707) on white achieves 15.5:1 (Excellent).
+    * Subdued badges like .badge.bg-secondary-subtle.text-secondary often
+      provide poor contrast. Replace with:
+      - .bg-secondary-subtle.text-dark (contrast ratio > 7:1)
+      - High-contrast pill borders for clarity.
+
+2.4 Avoid Relying on Color Alone for Status (Priority: MEDIUM)
+    * Problem: Condition badges (Good, Needs Repair, Unserviceable) or unread
+      notification dots rely heavily on red/green/yellow colors.
+    * Solution: Pair colors with distinct icons and descriptive labels:
+      - Good: Green badge + <i class="bi bi-check-circle-fill me-1"></i> Good
+      - Needs Repair: Amber badge + <i class="bi bi-exclamation-triangle-fill me-1"></i> Repair Needed
+      - Unserviceable: Red badge + <i class="bi bi-x-octagon-fill me-1"></i> Unserviceable
+
+================================================================================
+3. SCREEN READER SUPPORT (ASSISTIVE TECHNOLOGY)
+================================================================================
+
+Structure HTML semantics and ARIA tags so screen reading software (NVDA, JAWS,
+VoiceOver) can convey platform states accurately.
+
+3.1 Dynamic Notification Live Regions (Priority: HIGH)
+    * Problem: Incoming transfer alerts, status updates, or approval badges
+      update without audible notification to screen reader users.
+    * Solution: Wrap live status counters and alerts in aria-live regions:
+      <div id="liveAlerts" aria-live="polite" aria-atomic="true" class="visually-hidden"></div>
+      When an alert is received, injecting text here prompts the screen reader
+      to announce it automatically without disrupting user focus.
+
+3.2 Accessible Icon-Only Action Buttons (Priority: HIGH)
+    * Problem: Table action buttons (e.g. <button><i class="bi bi-pencil-square"></i></button>)
+      are read as "unlabeled button" by screen readers.
+    * Solution: Add descriptive aria-label attributes:
+      <button class="btn btn-sm btn-outline-primary" aria-label="Edit inventory item <?= htmlspecialchars($inv_num) ?>">
+          <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
+      </button>
+
+3.3 Semantic Landmark Structure (Priority: HIGH)
+    * Ensure each page has exactly one top-level <main id="mainContent" role="main">.
+    * Navigation regions should have clear labels:
+      <nav aria-label="Main Navigation"> ... </nav>
+      <ul class="nav nav-pills" role="tablist" aria-label="Asset Registry Tabs"> ... </ul>
+    * Proper Heading Hierarchy: Ensure each view starts with a single <h1>,
+      followed by logical <h2> and <h3> section headings without skipping levels.
+
+3.4 Dynamic Contextual Page Titles (Priority: MEDIUM)
+    * Update <title> in includes/header.php dynamically to announce current
+      location and role:
+      e.g., <title>Building Inventories - Regional Farm | DAPH MIS</title>
+
+================================================================================
+4. FORM ACCESSIBILITY & DATA INTEGRITY
+================================================================================
+
+Ensure complex input fields, dynamic suggestions, and auto-calculated numbers
+are transparent, error-tolerant, and easy to complete.
+
+4.1 Explicit Label-to-Input Association (Priority: HIGH)
+    * Ensure every form input has a unique id, and every <label> contains a
+      matching for="inputId" attribute. Screen readers announce this label text
+      upon field focus.
+
+4.2 Accessible Required Field Indicators (Priority: HIGH)
+    * Visual asterisks should be accompanied by standard HTML and ARIA attributes:
+      <label for="inv_item">Item Name <span class="text-danger" aria-hidden="true">*</span></label>
+      <input type="text" id="inv_item" name="inventory_item" required aria-required="true">
+
+4.3 Auto-Calculated Availability Guidance (Priority: MEDIUM)
+    * "Current Availability" is computed automatically from Baseline Stock +
+      Received Quantity.
+    * Screen reader users should be notified that this field is auto-computed:
+      <label for="calc_avail">Current Availability (Total)</label>
+      <input type="number" id="calc_avail" readonly aria-live="polite" aria-describedby="calcExplanation">
+      <div id="calcExplanation" class="form-text">Dynamically calculated as Baseline Stock + Received Quantity.</div>
+
+4.4 Clear Error Messaging & Form Validation (Priority: MEDIUM)
+    * When a form validation fails:
+      1. Set aria-invalid="true" on the failing input.
+      2. Link the input to the error message container using aria-describedby or
+         aria-errormessage="errorContainerId".
+      3. Focus the first invalid field automatically so the user immediately
+         knows where the error occurred.
+
+================================================================================
+5. PRIORITIZED PRE-LAUNCH IMPLEMENTATION ROADMAP
+================================================================================
+
+PHASE 1: Immediate High-Impact Fixes (1 - 2 Days)
+------------------------------------------------
+[ ] 1. Add "Skip to main content" link in includes/header.php.
+[ ] 2. Inject global :focus-visible styling in assets/css/style.css.
+[ ] 3. Add aria-label attributes to all icon-only buttons across tables and headers.
+[ ] 4. Add tabindex="0" and aria-label to all .table-responsive wrappers.
+
+PHASE 2: Form & Modal Hardening (2 - 3 Days)
+--------------------------------------------
+[ ] 5. Audit all <label for=""> and input id bindings across modal forms.
+[ ] 6. Ensure required fields have aria-required="true" and aria-hidden="true" on asterisks.
+[ ] 7. Add aria-describedby to auto-calculated availability boxes and datalist inputs.
+[ ] 8. Enforce modal focus restoration upon close.
+
+PHASE 3: Assistive Tech & Visual Polish (1 - 2 Days)
+---------------------------------------------------
+[ ] 9. Add aria-live="polite" live alert region for real-time notification badge updates.
+[ ] 10. Calibrate badge and button text contrast ratios to meet WCAG AA (4.5:1).
+[ ] 11. Increase small fonts (< 12px) to readable 12px - 14px standards.
+[ ] 12. Standardize contextual <title> tags across all module headers.
+
+================================================================================
+6. QUICK CODE IMPLEMENTATION SNIPPETS
+================================================================================
+
+A. Global Focus Visible Ring (assets/css/style.css):
+---------------------------------------------------
+:focus-visible {
+    outline: 2.5px solid #820100 !important;
+    outline-offset: 2px !important;
+}
+.btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible {
+    box-shadow: 0 0 0 3px rgba(130, 1, 0, 0.25) !important;
+    border-color: #820100 !important;
+}
+
+B. Skip to Main Content Link (includes/header.php):
+--------------------------------------------------
+<a href="#mainContent" class="visually-hidden-focusable btn btn-dark position-absolute m-2" style="z-index: 9999;">
+    Skip to main content
+</a>
+
+C. Accessible Horizontal Scroll Table Wrapper:
+----------------------------------------------
+<div class="table-responsive" tabindex="0" role="region" aria-label="Inventory Data Table, scrollable horizontally">
+    <table id="inventoryTable" class="table ...">
+        ...
+    </table>
+</div>
+
+D. Accessible Icon-Only Action Button:
+--------------------------------------
+<button type="button" 
+        class="btn btn-sm btn-outline-primary btn-edit-inv"
+        aria-label="Edit inventory item <?= htmlspecialchars($inv['inventory_item']) ?>"
+        data-id="<?= $inv['id'] ?>">
+    <i class="bi bi-pencil-square" aria-hidden="true"></i>
+    <span class="visually-hidden">Edit</span>
+</button>
+
+================================================================================
+End of Accessibility & Inclusive Design Recommendations
+================================================================================
