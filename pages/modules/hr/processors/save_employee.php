@@ -30,6 +30,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_employee'])) {
     if (!in_array($employment_type, ['permanent', 'temporary'])) {
         $employment_type = 'permanent';
     }
+
+    // Capture and standardize Current Station (Required)
+    $current_station = trim($_POST['current_station'] ?? '');
+    if (empty($current_station) && !empty($assigned_unit)) {
+        $current_station = $assigned_unit;
+    }
+
+    // Conditional Employment Status & Attachment Reason (Applicable when Employment Type is permanent)
+    $employment_status = null;
+    $attachment_reason = null;
+    if ($employment_type === 'permanent') {
+        $employment_status = trim($_POST['employment_status'] ?? 'Permanent');
+        if (!in_array($employment_status, ['Permanent', 'Attachment', 'Temporary Attachment'])) {
+            $employment_status = 'Permanent';
+        }
+        if ($employment_status === 'Attachment' || $employment_status === 'Temporary Attachment') {
+            $employment_status = 'Attachment';
+            $attachment_reason = trim($_POST['attachment_reason'] ?? '');
+            if (empty($attachment_reason)) {
+                $_SESSION['msg'] = "Error: Reason for Attachment is required when Employment Status is set to Attachment.";
+                $_SESSION['msg_type'] = "danger";
+                header("Location: ../employee_managment.php");
+                exit();
+            }
+        }
+    }
+
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
 
@@ -37,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_employee'])) {
     $reg_date       = !empty($_POST['registered_date']) ? $_POST['registered_date'] : date('Y-m-d');
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : date('Y-m-d');
     $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : date('Y-m-d');
+    $pos_location   = !empty($_POST['position_to_current_location']) ? $_POST['position_to_current_location'] : date('Y-m-d');
 
     $district_id    = !empty($_POST['district_id']) ? intval($_POST['district_id']) : null;
     $range_id       = !empty($_POST['range_id']) ? intval($_POST['range_id']) : null;
@@ -83,9 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_employee'])) {
         $district_enum = 'Trincomalee';
     }
 
-    // 1. Validation
-    if (empty($officer_name) || empty($email) || empty($user_role)) {
-        $_SESSION['msg'] = "Error: Officer name, email, and user role are mandatory.";
+    // 1. Validation (Requiring Officer Name, Email, User Role, and Current Station)
+    if (empty($officer_name) || empty($email) || empty($user_role) || empty($current_station)) {
+        $_SESSION['msg'] = "Error: Officer name, email, user role, and Current Station are mandatory.";
         $_SESSION['msg_type'] = "danger";
         header("Location: ../employee_managment.php");
         exit();
@@ -137,15 +165,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_employee'])) {
         INSERT INTO users (
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
-            employment_type, district_id, range_id, farm_id, training_center_id, 
+            employment_type, employment_status, attachment_reason, district_id, range_id, farm_id, training_center_id, 
             date_of_birth, registered_date, appointment_date, 
-            appointment_date_current_position, is_active, district, unit
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+            appointment_date_current_position, position_to_current_location, is_active, district, unit, current_station
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
     ");
 
     if ($insert_user) {
         $insert_user->bind_param(
-            "sssssssssssiiiissssss",
+            "sssssssssssssiiiissssssss",
             $username,
             $default_password,
             $email,
@@ -157,6 +185,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_employee'])) {
             $user_role,
             $service_cat,
             $employment_type,
+            $employment_status,
+            $attachment_reason,
             $district_id,
             $range_id,
             $farm_id,
@@ -165,8 +195,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_employee'])) {
             $reg_date,
             $app_date,
             $app_current,
+            $pos_location,
             $district_enum,
-            $assigned_unit
+            $assigned_unit,
+            $current_station
         );
 
         if ($insert_user->execute()) {

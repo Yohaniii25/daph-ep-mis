@@ -88,6 +88,10 @@
                             <label class="form-label small fw-bold">Appointment Date to Current Position</label>
                             <input type="date" name="appointment_date_current_position" id="edit_appointment_date_current_position" class="form-control">
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Position to Current Location</label>
+                            <input type="date" name="position_to_current_location" id="edit_position_to_current_location" class="form-control">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">

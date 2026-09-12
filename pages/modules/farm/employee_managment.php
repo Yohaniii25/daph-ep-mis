@@ -112,6 +112,7 @@ $stmt->close();
                                     data-date_of_birth="<?= htmlspecialchars($emp['date_of_birth'] ?? '') ?>"
                                     data-appointment_date="<?= htmlspecialchars($emp['appointment_date'] ?? '') ?>"
                                     data-appointment_current="<?= htmlspecialchars($emp['appointment_date_current_position'] ?? '') ?>"
+                                    data-position_to_current_location="<?= htmlspecialchars($emp['position_to_current_location'] ?? '') ?>"
                                     data-registered_date="<?= htmlspecialchars($emp['registered_date'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#viewEmployeeModal"
                                     title="View Officer Details">
@@ -130,6 +131,7 @@ $stmt->close();
                                     data-date_of_birth="<?= htmlspecialchars($emp['date_of_birth'] ?? '') ?>"
                                     data-appointment_date="<?= htmlspecialchars($emp['appointment_date'] ?? '') ?>"
                                     data-appointment_date_current_position="<?= htmlspecialchars($emp['appointment_date_current_position'] ?? '') ?>"
+                                    data-position_to_current_location="<?= htmlspecialchars($emp['position_to_current_location'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#editEmployeeModal"
                                     title="Edit Officer">
                                     <i class="bi bi-pencil-square"></i> Edit
@@ -146,28 +148,28 @@ $stmt->close();
     </div>
 </div>
 
+<!-- Include Modals -->
 <?php 
 include 'models/add_employee.php';
-include 'models/edit_employee.php';
 include 'models/view_employee.php';
+include 'models/edit_employee.php';
 ?>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
     $(document).on('click', '.btn-view-emp', function() {
         const btn = $(this);
-        $('#view_full_name').text(btn.data('full_name') || '-');
-        $('#view_service_number').text(btn.data('service_number') || '-');
-        $('#view_emp_id').text(btn.data('emp_id') || '-');
+        $('#view_full_name').text(btn.data('full_name'));
         $('#view_designation').text(btn.data('designation') || '-');
-        $('#view_role').text(btn.data('role') || '-');
-        $('#view_employment_type').text(btn.data('employment_type') || 'Permanent');
+        $('#view_role').text(btn.data('user_role') || '-');
+        $('#view_service_number').text(btn.data('service_number') || '-');
         $('#view_service_category').text(btn.data('service_category') || '-');
         $('#view_email').text(btn.data('email') || '-');
         $('#view_contact').text(btn.data('phone') || '-');
         $('#view_date_of_birth').text(btn.data('date_of_birth') || '-');
         $('#view_appointment_date').text(btn.data('appointment_date') || '-');
         $('#view_appointment_current').text(btn.data('appointment_current') || '-');
+        $('#view_position_to_current_location').text(btn.data('position_to_current_location') || '-');
         $('#view_registered_date').text(btn.data('registered_date') || '-');
     });
 
@@ -185,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#edit_emp_date_of_birth').val(btn.data('date_of_birth'));
         $('#edit_emp_appointment_date').val(btn.data('appointment_date'));
         $('#edit_emp_appointment_date_current_position').val(btn.data('appointment_date_current_position'));
+        $('#edit_emp_position_to_current_location').val(btn.data('position_to_current_location'));
     });
 });
 </script>

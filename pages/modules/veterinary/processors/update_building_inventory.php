@@ -16,7 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location           = isset($_POST['location']) ? trim(htmlspecialchars($_POST['location'])) : '';
     $land_asset_id      = isset($_POST['land_asset_id']) ? filter_var($_POST['land_asset_id'], FILTER_VALIDATE_INT) : 0;
     $inventory_item     = isset($_POST['inventory_item']) ? trim(htmlspecialchars($_POST['inventory_item'])) : '';
-    $available_quantity = isset($_POST['available_quantity']) ? filter_var($_POST['available_quantity'], FILTER_VALIDATE_INT) : 0;
+    $inventory_number   = isset($_POST['inventory_number']) ? trim(htmlspecialchars($_POST['inventory_number'])) : '';
+    $inventory_type     = isset($_POST['inventory_type']) ? trim(htmlspecialchars($_POST['inventory_type'])) : '';
+    $issue_order_no     = isset($_POST['issue_order_no']) ? trim(htmlspecialchars($_POST['issue_order_no'])) : '';
+    $received_from      = isset($_POST['received_from']) ? trim(htmlspecialchars($_POST['received_from'])) : '';
+    $receipt_no         = isset($_POST['receipt_no']) ? trim(htmlspecialchars($_POST['receipt_no'])) : '';
+    $received_quantity  = isset($_POST['received_quantity']) ? filter_var($_POST['received_quantity'], FILTER_VALIDATE_INT) : 0;
     $current_condition  = isset($_POST['current_condition']) ? trim(htmlspecialchars($_POST['current_condition'])) : '';
     $specification      = isset($_POST['specification']) ? trim(htmlspecialchars($_POST['specification'])) : '';
     $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
@@ -114,22 +119,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($initial_count === null || $initial_count === false) {
-        $initial_count = isset($old_data['initial_count']) ? intval($old_data['initial_count']) : $available_quantity;
+        $initial_count = isset($old_data['initial_count']) ? intval($old_data['initial_count']) : 0;
     }
 
-    // Automated Quantity Deduction: If condition updated to "Damaged", automatically deduct 1 from active circulating quantity
+    // Availability Auto-Calculation: initial baseline stock + received amounts
+    $available_quantity = $initial_count + $received_quantity;
+
+    // Automated Quantity Deduction: If condition updated to "Damaged", automatically deduct 1 from active quantity
     if ($current_condition === 'Damaged' && ($old_data['current_condition'] ?? '') !== 'Damaged') {
-        $old_available = intval($old_data['available_quantity'] ?? 0);
-        if ($available_quantity >= $old_available) {
-            $available_quantity = max(0, $old_available - 1);
-        } else {
-            $available_quantity = max(0, $available_quantity);
-        }
+        $available_quantity = max(0, $available_quantity - 1);
     }
 
     $new_data = [
         'land_asset_id'      => $land_asset_id,
         'inventory_item'     => $inventory_item,
+        'inventory_number'   => $inventory_number,
+        'inventory_type'     => $inventory_type,
+        'issue_order_no'     => $issue_order_no,
+        'received_from'      => $received_from,
+        'receipt_no'         => $receipt_no,
+        'received_quantity'  => $received_quantity,
         'specification'      => $specification,
         'current_condition'  => $current_condition,
         'available_quantity' => $available_quantity,
@@ -165,6 +174,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         UPDATE building_inventories SET 
             land_asset_id = ?,
             inventory_item = ?,
+            inventory_number = ?,
+            inventory_type = ?,
+            issue_order_no = ?,
+            received_from = ?,
+            receipt_no = ?,
+            received_quantity = ?,
             specification = ?,
             current_condition = ?,
             available_quantity = ?,
@@ -175,7 +190,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ");
 
     if ($stmt) {
-        $stmt->bind_param("isssiissi", $land_asset_id, $inventory_item, $specification, $current_condition, $available_quantity, $initial_count, $remarks, $unit, $id);
+        $stmt->bind_param("issssssississsi", 
+            $land_asset_id, 
+            $inventory_item, 
+            $inventory_number, 
+            $inventory_type, 
+            $issue_order_no, 
+            $received_from, 
+            $receipt_no, 
+            $received_quantity, 
+            $specification, 
+            $current_condition, 
+            $available_quantity, 
+            $initial_count, 
+            $remarks, 
+            $unit, 
+            $id
+        );
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Inventory item updated successfully.']);
         } else {

@@ -28,12 +28,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($employment_type, ['permanent', 'temporary'])) {
         $employment_type = 'permanent';
     }
+
+    // Conditional Employment Status & Attachment Reason
+    $employment_status = null;
+    $attachment_reason = null;
+    if ($employment_type === 'permanent') {
+        $employment_status = trim($_POST['employment_status'] ?? 'Permanent');
+        if (!in_array($employment_status, ['Permanent', 'Attachment', 'Temporary Attachment'])) {
+            $employment_status = 'Permanent';
+        }
+        if ($employment_status === 'Attachment' || $employment_status === 'Temporary Attachment') {
+            $employment_status = 'Attachment';
+            $attachment_reason = trim($_POST['attachment_reason'] ?? '');
+            if (empty($attachment_reason)) {
+                $_SESSION['msg'] = "Error: Reason for Attachment is required when Employment Status is set to Attachment.";
+                $_SESSION['msg_type'] = "danger";
+                header("Location: ../employee_managment.php");
+                exit();
+            }
+        }
+    }
     $email          = trim($_POST['email'] ?? '');
     $contact_number = trim($_POST['contact_number'] ?? '');
 
     $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
     $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : null;
+    $pos_location   = !empty($_POST['position_to_current_location']) ? $_POST['position_to_current_location'] : null;
 
     $district_id    = !empty($_POST['district_id']) ? intval($_POST['district_id']) : null;
     $range_id       = !empty($_POST['range_id']) ? intval($_POST['range_id']) : null;
@@ -106,15 +127,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         INSERT INTO users (
             username, password, email, phone, full_name, 
             emp_id, service_number, designation, role, service_category, 
-            employment_type, district_id, range_id, farm_id, training_center_id, 
+            employment_type, employment_status, attachment_reason, district_id, range_id, farm_id, training_center_id, 
             date_of_birth, registered_date, appointment_date, 
-            appointment_date_current_position, is_active, district
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, 1, ?)
+            appointment_date_current_position, position_to_current_location, is_active, district
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, 1, ?)
     ");
 
     if ($insert_stmt) {
         $insert_stmt->bind_param(
-            "sssssssssssiiiissss",
+            "sssssssssssssiiiisssss",
             $username,
             $default_password,
             $email,
@@ -126,6 +147,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user_role,
             $service_cat,
             $employment_type,
+            $employment_status,
+            $attachment_reason,
             $district_id,
             $range_id,
             $farm_id,
@@ -133,6 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dob,
             $app_date,
             $app_current,
+            $pos_location,
             $district_enum
         );
 

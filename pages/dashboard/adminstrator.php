@@ -36,7 +36,7 @@ $pending_approvals_count = get_pending_approvals_count($mysqli);
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
-                <a href="<?= BASE_PATH ?>pages/modules/pd/pending_approvals.php?filter=transfers" class="text-decoration-none">
+                <a href="<?= BASE_PATH ?>pages/modules/hr/transfer_management.php" class="text-decoration-none">
                     <div class="card border-0 shadow-sm h-100 p-4" style="border-left: 4px solid <?= $pending_transfers_count > 0 ? '#dc3545' : '#198754' ?> !important;">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>

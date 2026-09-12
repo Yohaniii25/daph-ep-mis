@@ -105,18 +105,46 @@ if ($action === 'delete_land') {
 
 if ($action === 'save_inventory') {
     $land_asset_id      = intval($_POST['land_asset_id'] ?? 0);
+    $property_name      = trim($_POST['property_name'] ?? '');
     $inventory_item     = trim($_POST['inventory_item'] ?? '');
+    $inventory_number   = trim($_POST['inventory_number'] ?? '');
+    $inventory_type     = trim($_POST['inventory_type'] ?? 'Equipment');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
     $specification      = trim($_POST['specification'] ?? '');
     $current_condition  = trim($_POST['current_condition'] ?? 'Good Condition');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = intval($_POST['initial_count'] ?? 0);
+    $received_quantity  = intval($_POST['received_quantity'] ?? 0);
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    // Availability Auto-Calculation: initial baseline stock + received amounts
+    $available_quantity = $initial_count + $received_quantity;
+
+    // Handle manual property text entry
+    if ($land_asset_id <= 0 && !empty($property_name)) {
+        $stmt_find = $mysqli->prepare("SELECT id FROM land_assets WHERE property_name = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?) AND is_active = 1 LIMIT 1");
+        $stmt_find->bind_param("si", $property_name, $user_id);
+        $stmt_find->execute();
+        $res_find = $stmt_find->get_result();
+        if ($rf = $res_find->fetch_assoc()) {
+            $land_asset_id = intval($rf['id']);
+        } else {
+            $stmt_new_la = $mysqli->prepare("INSERT INTO land_assets (user_id, user_category, property_name, land_status, is_active) VALUES (?, ?, ?, 'State Owned', 1)");
+            $stmt_new_la->bind_param("iss", $user_id, $user_category, $property_name);
+            $stmt_new_la->execute();
+            $land_asset_id = $stmt_new_la->insert_id;
+            $stmt_new_la->close();
+        }
+        $stmt_find->close();
+    }
 
     if (empty($inventory_item)) {
         respondJsonOrRedirect($is_ajax, false, 'Inventory Item name is required.', '../lands_buildings.php?tab=inventory');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO building_inventories (land_asset_id, user_id, user_category, inventory_item, specification, current_condition, available_quantity, remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("iissssis", $land_asset_id, $user_id, $user_category, $inventory_item, $specification, $current_condition, $available_quantity, $remarks);
+    $stmt = $mysqli->prepare("INSERT INTO building_inventories (land_asset_id, user_id, user_category, inventory_item, inventory_number, inventory_type, issue_order_no, received_from, receipt_no, received_quantity, initial_count, available_quantity, specification, current_condition, remarks, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+    $stmt->bind_param("iisssssssiiisss", $land_asset_id, $user_id, $user_category, $inventory_item, $inventory_number, $inventory_type, $issue_order_no, $received_from, $receipt_no, $received_quantity, $initial_count, $available_quantity, $specification, $current_condition, $remarks);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Building inventory item logged successfully.', '../lands_buildings.php?tab=inventory');
@@ -128,18 +156,46 @@ if ($action === 'save_inventory') {
 if ($action === 'update_inventory') {
     $id                 = intval($_POST['id'] ?? 0);
     $land_asset_id      = intval($_POST['land_asset_id'] ?? 0);
+    $property_name      = trim($_POST['property_name'] ?? '');
     $inventory_item     = trim($_POST['inventory_item'] ?? '');
+    $inventory_number   = trim($_POST['inventory_number'] ?? '');
+    $inventory_type     = trim($_POST['inventory_type'] ?? 'Equipment');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
     $specification      = trim($_POST['specification'] ?? '');
     $current_condition  = trim($_POST['current_condition'] ?? 'Good Condition');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = intval($_POST['initial_count'] ?? 0);
+    $received_quantity  = intval($_POST['received_quantity'] ?? 0);
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    // Availability Auto-Calculation: initial baseline stock + received amounts
+    $available_quantity = $initial_count + $received_quantity;
+
+    // Handle manual property text entry
+    if ($land_asset_id <= 0 && !empty($property_name)) {
+        $stmt_find = $mysqli->prepare("SELECT id FROM land_assets WHERE property_name = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?) AND is_active = 1 LIMIT 1");
+        $stmt_find->bind_param("si", $property_name, $user_id);
+        $stmt_find->execute();
+        $res_find = $stmt_find->get_result();
+        if ($rf = $res_find->fetch_assoc()) {
+            $land_asset_id = intval($rf['id']);
+        } else {
+            $stmt_new_la = $mysqli->prepare("INSERT INTO land_assets (user_id, user_category, property_name, land_status, is_active) VALUES (?, ?, ?, 'State Owned', 1)");
+            $stmt_new_la->bind_param("iss", $user_id, $user_category, $property_name);
+            $stmt_new_la->execute();
+            $land_asset_id = $stmt_new_la->insert_id;
+            $stmt_new_la->close();
+        }
+        $stmt_find->close();
+    }
 
     if ($id <= 0 || empty($inventory_item)) {
         respondJsonOrRedirect($is_ajax, false, 'Invalid item ID or missing details.', '../lands_buildings.php?tab=inventory');
     }
 
-    $stmt = $mysqli->prepare("UPDATE building_inventories SET land_asset_id = ?, inventory_item = ?, specification = ?, current_condition = ?, available_quantity = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
-    $stmt->bind_param("isssisii", $land_asset_id, $inventory_item, $specification, $current_condition, $available_quantity, $remarks, $id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE building_inventories SET land_asset_id = ?, inventory_item = ?, inventory_number = ?, inventory_type = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, received_quantity = ?, initial_count = ?, available_quantity = ?, specification = ?, current_condition = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
+    $stmt->bind_param("issssssiiisssiii", $land_asset_id, $inventory_item, $inventory_number, $inventory_type, $issue_order_no, $received_from, $receipt_no, $received_quantity, $initial_count, $available_quantity, $specification, $current_condition, $remarks, $id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Building inventory updated successfully.', '../lands_buildings.php?tab=inventory');
@@ -528,12 +584,31 @@ if ($action === 'save_employee') {
     if (!in_array($employment_type, ['permanent', 'temporary'])) {
         $employment_type = 'permanent';
     }
+
+    // Conditional Employment Status & Attachment Reason
+    $employment_status = null;
+    $attachment_reason = null;
+    if ($employment_type === 'permanent') {
+        $employment_status = trim($_POST['employment_status'] ?? 'Permanent');
+        if (!in_array($employment_status, ['Permanent', 'Attachment', 'Temporary Attachment'])) {
+            $employment_status = 'Permanent';
+        }
+        if ($employment_status === 'Attachment' || $employment_status === 'Temporary Attachment') {
+            $employment_status = 'Attachment';
+            $attachment_reason = trim($_POST['attachment_reason'] ?? '');
+            if (empty($attachment_reason)) {
+                respondJsonOrRedirect($is_ajax, false, 'Reason for Attachment is required when Employment Status is Attachment.', '../employee_managment.php');
+            }
+        }
+    }
+
     $service_category   = trim($_POST['service_category'] ?? 'Technical Support');
     $email              = trim($_POST['email'] ?? '');
     $contact_number     = trim($_POST['contact_number'] ?? '');
     $date_of_birth      = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $appointment_date   = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
     $appointment_date_current_position = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : null;
+    $position_to_current_location = !empty($_POST['position_to_current_location']) ? $_POST['position_to_current_location'] : null;
     $username           = !empty($email) ? strtolower(explode('@', $email)[0]) : 'sms_user_' . rand(1000, 9999);
     $default_password   = password_hash('Pass1234!', PASSWORD_DEFAULT);
 
@@ -541,8 +616,8 @@ if ($action === 'save_employee') {
         respondJsonOrRedirect($is_ajax, false, 'Officer Name and Service Number are required.', '../employee_managment.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO users (username, password, full_name, email, phone, designation, role, employment_type, service_category, service_number, emp_id, district_id, date_of_birth, appointment_date, appointment_date_current_position, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
-    $stmt->bind_param("sssssssssssisss", $username, $default_password, $officer_name, $email, $contact_number, $designation, $user_role, $employment_type, $service_category, $service_number, $service_number, $district_id, $date_of_birth, $appointment_date, $appointment_date_current_position);
+    $stmt = $mysqli->prepare("INSERT INTO users (username, password, full_name, email, phone, designation, role, employment_type, employment_status, attachment_reason, service_category, service_number, emp_id, district_id, date_of_birth, appointment_date, appointment_date_current_position, position_to_current_location, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+    $stmt->bind_param("sssssssssssssissss", $username, $default_password, $officer_name, $email, $contact_number, $designation, $user_role, $employment_type, $employment_status, $attachment_reason, $service_category, $service_number, $service_number, $district_id, $date_of_birth, $appointment_date, $appointment_date_current_position, $position_to_current_location);
 
     if ($stmt->execute()) {
         $new_user_id = $stmt->insert_id;
@@ -573,6 +648,7 @@ if ($action === 'update_employee') {
     $date_of_birth      = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $appointment_date   = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
     $appointment_date_current_position = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : null;
+    $position_to_current_location = !empty($_POST['position_to_current_location']) ? $_POST['position_to_current_location'] : null;
 
     if ($id <= 0 || empty($officer_name)) {
         respondJsonOrRedirect($is_ajax, false, 'Invalid officer ID or missing details.', '../employee_managment.php');
@@ -596,7 +672,8 @@ if ($action === 'update_employee') {
         'service_number' => $service_number,
         'date_of_birth' => $date_of_birth,
         'appointment_date' => $appointment_date,
-        'appointment_date_current_position' => $appointment_date_current_position
+        'appointment_date_current_position' => $appointment_date_current_position,
+        'position_to_current_location' => $position_to_current_location
     ];
 
     $staging_res = stage_or_apply_edit($mysqli, 'hr', 'users', $id, $officer_name, $old_user ?: [], $new_user_data, $district_id);
@@ -604,8 +681,8 @@ if ($action === 'update_employee') {
         respondJsonOrRedirect($is_ajax, true, 'Edit submitted successfully. Changes are pending authorization by the Provincial Director.', '../employee_managment.php', ['staged' => true]);
     }
 
-    $stmt = $mysqli->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, designation = ?, role = ?, employment_type = ?, service_category = ?, service_number = ?, date_of_birth = ?, appointment_date = ?, appointment_date_current_position = ? WHERE id = ?");
-    $stmt->bind_param("sssssssssssi", $officer_name, $email, $contact_number, $designation, $user_role, $employment_type, $service_category, $service_number, $date_of_birth, $appointment_date, $appointment_date_current_position, $id);
+    $stmt = $mysqli->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, designation = ?, role = ?, employment_type = ?, service_category = ?, service_number = ?, date_of_birth = ?, appointment_date = ?, appointment_date_current_position = ?, position_to_current_location = ? WHERE id = ?");
+    $stmt->bind_param("ssssssssssssi", $officer_name, $email, $contact_number, $designation, $user_role, $employment_type, $service_category, $service_number, $date_of_birth, $appointment_date, $appointment_date_current_position, $position_to_current_location, $id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Officer details updated successfully.', '../employee_managment.php');

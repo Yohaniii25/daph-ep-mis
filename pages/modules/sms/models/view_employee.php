@@ -51,6 +51,10 @@
                         <span class="text-muted small">Current Position Since:</span>
                         <span class="text-dark" id="view_appointment_date_current">-</span>
                     </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span class="text-muted small">Position to Current Location:</span>
+                        <span class="text-dark" id="view_position_to_current_location">-</span>
+                    </li>
                 </ul>
             </div>
             <div class="modal-footer bg-light">

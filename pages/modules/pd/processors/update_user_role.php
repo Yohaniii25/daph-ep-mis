@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Check existing officer
-    $check_stmt = $mysqli->prepare("SELECT id, full_name, username, role, designation FROM users WHERE id = ? LIMIT 1");
+    $check_stmt = $mysqli->prepare("SELECT id, full_name, username, role, designation, current_station, employment_status, attachment_reason, service_category, phone FROM users WHERE id = ? LIMIT 1");
     $check_stmt->bind_param("i", $user_id);
     $check_stmt->execute();
     $existing = $check_stmt->get_result()->fetch_assoc();
@@ -82,6 +82,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
+    $current_station = trim($_POST['current_station'] ?? ($existing['current_station'] ?? ''));
+    $employment_status = null;
+    $attachment_reason = null;
+    if ($employment_type === 'permanent') {
+        $employment_status = trim($_POST['employment_status'] ?? ($existing['employment_status'] ?? 'Permanent'));
+        if (!in_array($employment_status, ['Permanent', 'Attachment', 'Temporary Attachment'])) {
+            $employment_status = 'Permanent';
+        }
+        if ($employment_status === 'Attachment' || $employment_status === 'Temporary Attachment') {
+            $employment_status = 'Attachment';
+            $attachment_reason = trim($_POST['attachment_reason'] ?? ($existing['attachment_reason'] ?? ''));
+            if (empty($attachment_reason)) {
+                if ($is_ajax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Reason for Attachment is required when Employment Status is Attachment.']);
+                    exit();
+                }
+                $_SESSION['msg'] = "Error: Reason for Attachment is required when Employment Status is Attachment.";
+                $_SESSION['msg_type'] = "danger";
+                header("Location: ../employee_managment.php");
+                exit();
+            }
+        }
+    }
+    $service_category = trim($_POST['service_category'] ?? ($existing['service_category'] ?? ''));
+    $phone = trim($_POST['phone'] ?? ($_POST['contact_number'] ?? ($existing['phone'] ?? '')));
+
     // Update users record
     $update_stmt = $mysqli->prepare("
         UPDATE users 
@@ -91,6 +118,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             full_name = ?,
             service_number = ?,
             employment_type = ?,
+            employment_status = ?,
+            attachment_reason = ?,
+            service_category = ?,
+            phone = ?,
+            current_station = ?,
             district_id = ?,
             range_id = ?,
             farm_id = ?,
@@ -102,12 +134,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($update_stmt) {
         $update_stmt->bind_param(
-            "sssssiiiisi",
+            "ssssssssssiiiisi",
             $role,
             $designation,
             $full_name,
             $service_number,
             $employment_type,
+            $employment_status,
+            $attachment_reason,
+            $service_category,
+            $phone,
+            $current_station,
             $district_id,
             $range_id,
             $farm_id,

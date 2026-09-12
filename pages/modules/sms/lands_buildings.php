@@ -24,6 +24,26 @@ $inv_stmt->execute();
 $inventory_list = $inv_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $inv_stmt->close();
 
+// Fetch distinct inventory types across database for dynamic filtering and auto-suggestions
+$inv_types_res = $mysqli->query("
+    SELECT DISTINCT inventory_type 
+    FROM building_inventories 
+    WHERE inventory_type IS NOT NULL AND TRIM(inventory_type) != '' 
+    ORDER BY inventory_type ASC
+");
+$existing_inventory_types = [];
+if ($inv_types_res) {
+    while ($t_row = $inv_types_res->fetch_assoc()) {
+        $clean_type = trim($t_row['inventory_type']);
+        if (!empty($clean_type) && !in_array($clean_type, $existing_inventory_types)) {
+            $existing_inventory_types[] = $clean_type;
+        }
+    }
+}
+$default_inventory_types = ['Medical Equipment', 'Cold Chain Equipment', 'Office Equipment', 'Furniture & Fixtures', 'Lab & Diagnostic Tool', 'Vehicle / Transport', 'Consumables'];
+$all_inventory_type_suggestions = array_values(array_unique(array_merge($existing_inventory_types, $default_inventory_types)));
+sort($all_inventory_type_suggestions);
+
 $active_tab = $_GET['tab'] ?? 'lands';
 ?>
 
@@ -141,43 +161,89 @@ $active_tab = $_GET['tab'] ?? 'lands';
     <div class="tab-pane fade <?= ($active_tab === 'inventory') ? 'show active' : '' ?>" id="inventory-content" role="tabpanel">
         <div class="card shadow-sm border-0" style="border-radius: 12px;">
             <div class="card-body p-4">
+                <!-- Inventory Type Filter Bar -->
+                <div class="row align-items-center mb-3 g-2">
+                    <div class="col-md-5 col-lg-4">
+                        <div class="input-group">
+                            <label class="input-group-text bg-white fw-bold text-muted small" for="smsInventoryTypeFilter">
+                                <i class="bi bi-funnel-fill text-danger me-1"></i> Filter Type:
+                            </label>
+                            <select id="smsInventoryTypeFilter" class="form-select form-select-sm">
+                                <option value="">All Inventory Types (<?= count($existing_inventory_types) ?> available)</option>
+                                <?php foreach ($existing_inventory_types as $itype): ?>
+                                    <option value="<?= htmlspecialchars($itype) ?>"><?= htmlspecialchars($itype) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetSmsTypeFilter" title="Reset filter to show all types">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table id="inventoryTable" class="table table-hover align-middle w-100">
                         <thead class="table-dark" style="background-color: #370709;">
                             <tr>
-                                <th>Property Location</th>
-                                <th>Inventory Item / Room</th>
-                                <th>Specification</th>
-                                <th>Available Qty</th>
-                                <th>Current Condition</th>
-                                <th>Remarks</th>
+                                <th>Inventory Number</th>
+                                <th>Inventory Type</th>
+                                <th>Item</th>
+                                <th>Issue Order No.</th>
+                                <th>Received From</th>
+                                <th>Receipt No.</th>
+                                <th class="text-center">Quantity</th>
+                                <th>Specification / Remarks</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($inventory_list as $inv): ?>
+                            <?php foreach ($inventory_list as $inv): 
+                                $inv_num = !empty($inv['inventory_number']) ? $inv['inventory_number'] : ('INV-' . str_pad($inv['id'], 4, '0', STR_PAD_LEFT));
+                                $inv_type = !empty($inv['inventory_type']) ? $inv['inventory_type'] : 'Equipment';
+                                $cond = $inv['current_condition'] ?? 'Good Condition';
+                                $badge_class = (strpos($cond, 'Good') !== false || strpos($cond, 'Excellent') !== false) ? 'bg-success' : ((strpos($cond, 'Requires') !== false || strpos($cond, 'Needs') !== false) ? 'bg-warning text-dark' : 'bg-danger');
+                            ?>
                                 <tr>
-                                    <td class="fw-bold text-dark"><?= htmlspecialchars($inv['property_name'] ?: 'SMS Central Unit') ?></td>
-                                    <td><span class="fw-semibold text-primary"><?= htmlspecialchars($inv['inventory_item']) ?></span></td>
-                                    <td class="small text-muted"><?= htmlspecialchars($inv['specification'] ?: '-') ?></td>
-                                    <td><span class="badge bg-light text-dark border px-2 py-1"><?= intval($inv['available_quantity']) ?></span></td>
-                                    <td>
-                                        <?php
-                                            $cond = $inv['current_condition'];
-                                            $badge_class = (strpos($cond, 'Good') !== false || strpos($cond, 'Excellent') !== false) ? 'bg-success' : ((strpos($cond, 'Requires') !== false || strpos($cond, 'Needs') !== false) ? 'bg-warning text-dark' : 'bg-danger');
-                                        ?>
-                                        <span class="badge <?= $badge_class ?>"><?= htmlspecialchars($cond) ?></span>
+                                    <td><span class="fw-bold text-dark"><i class="bi bi-hash text-muted me-1"></i><?= htmlspecialchars($inv_num) ?></span></td>
+                                    <td data-search="<?= htmlspecialchars($inv_type) ?>" data-filter="<?= htmlspecialchars($inv_type) ?>">
+                                        <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><?= htmlspecialchars($inv_type) ?></span>
                                     </td>
-                                    <td class="small text-muted"><?= htmlspecialchars($inv['remarks'] ?: '-') ?></td>
+                                    <td>
+                                        <span class="fw-semibold text-primary"><?= htmlspecialchars($inv['inventory_item']) ?></span><br>
+                                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($inv['property_name'] ?: 'SMS Central Unit') ?> <span class="badge <?= $badge_class ?> rounded-pill px-2 py-0 ms-1" style="font-size:10px;"><?= htmlspecialchars($cond) ?></span></small>
+                                    </td>
+                                    <td><span class="text-dark fw-semibold"><?= htmlspecialchars($inv['issue_order_no'] ?: '-') ?></span></td>
+                                    <td><span class="text-dark small"><?= htmlspecialchars($inv['received_from'] ?: '-') ?></span></td>
+                                    <td><span class="text-dark fw-semibold"><?= htmlspecialchars($inv['receipt_no'] ?: '-') ?></span></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $inv['available_quantity']) ?></span><br>
+                                        <small class="text-muted" style="font-size:10px;">Base: <?= intval($inv['initial_count']) ?> | Recv: <?= intval($inv['received_quantity'] ?? 0) ?></small>
+                                    </td>
+                                    <td>
+                                        <div class="small fw-semibold text-dark"><?= htmlspecialchars($inv['specification'] ?: '-') ?></div>
+                                        <?php if (!empty($inv['remarks'])): ?>
+                                            <small class="text-muted d-block mt-1"><i class="bi bi-chat-left-text me-1"></i><?= htmlspecialchars($inv['remarks']) ?></small>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="text-center text-nowrap">
                                         <button class="btn btn-sm btn-outline-primary me-1 btn-edit-inv"
                                             data-id="<?= $inv['id'] ?>"
                                             data-land_id="<?= $inv['land_asset_id'] ?>"
+                                            data-property_name="<?= htmlspecialchars($inv['property_name'] ?? '') ?>"
                                             data-item="<?= htmlspecialchars($inv['inventory_item']) ?>"
-                                            data-spec="<?= htmlspecialchars($inv['specification']) ?>"
-                                            data-qty="<?= $inv['available_quantity'] ?>"
+                                            data-inventory_number="<?= htmlspecialchars($inv_num) ?>"
+                                            data-inventory_type="<?= htmlspecialchars($inv_type) ?>"
+                                            data-issue_order_no="<?= htmlspecialchars($inv['issue_order_no'] ?? '') ?>"
+                                            data-received_from="<?= htmlspecialchars($inv['received_from'] ?? '') ?>"
+                                            data-receipt_no="<?= htmlspecialchars($inv['receipt_no'] ?? '') ?>"
+                                            data-spec="<?= htmlspecialchars($inv['specification'] ?? '') ?>"
                                             data-cond="<?= htmlspecialchars($inv['current_condition']) ?>"
-                                            data-rem="<?= htmlspecialchars($inv['remarks']) ?>"
+                                            data-initial_count="<?= intval($inv['initial_count']) ?>"
+                                            data-received_quantity="<?= intval($inv['received_quantity'] ?? 0) ?>"
+                                            data-qty="<?= intval($inv['available_quantity']) ?>"
+                                            data-rem="<?= htmlspecialchars($inv['remarks'] ?? '') ?>"
                                             data-bs-toggle="modal" data-bs-target="#editBuildingInventoryModal"
                                             title="Edit Inventory">
                                             <i class="bi bi-pencil-square"></i> Edit
@@ -319,26 +385,68 @@ $active_tab = $_GET['tab'] ?? 'lands';
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Associated Property</label>
-                            <select name="land_asset_id" class="form-select">
-                                <option value="0">SMS Central Facility / Unassigned</option>
+                            <label class="form-label small fw-bold">Associated Property / Facility <span class="text-danger">*</span></label>
+                            <input type="text" name="property_name" class="form-control" list="smsPropertyDatalist" placeholder="e.g. Central Veterinary Clinic & Cold Depot" required>
+                            <datalist id="smsPropertyDatalist">
                                 <?php foreach ($lands_list as $l): ?>
-                                    <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['property_name']) ?></option>
+                                    <option value="<?= htmlspecialchars($l['property_name']) ?>">
                                 <?php endforeach; ?>
-                            </select>
+                            </datalist>
+                            <div class="form-text">Enter property name manually or select from suggestions.</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Inventory Item / Room <span class="text-danger">*</span></label>
-                            <input type="text" name="inventory_item" class="form-control" placeholder="e.g. Cold Chain Storage Room / Vaccine Storage Walk-in" required>
+                            <label class="form-label small fw-bold">Inventory Number</label>
+                            <input type="text" name="inventory_number" class="form-control" placeholder="e.g. INV-SMS-2026-001">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Specification / Dimensions</label>
-                            <input type="text" name="specification" class="form-control" placeholder="e.g. 18ft x 12ft, Insulated PUF Walls">
+                            <label class="form-label small fw-bold">Inventory Type <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_type" id="add_sms_inv_type" class="form-control" list="sms_inventory_type_list" placeholder="e.g. Medical Equipment, Cold Chain" autocomplete="off" required>
+                            <datalist id="sms_inventory_type_list">
+                                <?php foreach ($all_inventory_type_suggestions as $itype): ?>
+                                    <option value="<?= htmlspecialchars($itype) ?>">
+                                <?php endforeach; ?>
+                            </datalist>
+                            <small class="text-muted" style="font-size: 11px;"><i class="bi bi-lightbulb me-1"></i>Suggests existing types from database or enter new.</small>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Quantity / Unit Count</label>
-                            <input type="number" name="available_quantity" class="form-control" value="1" min="1">
+                            <label class="form-label small fw-bold">Item Name / Room <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_item" class="form-control" placeholder="e.g. Mobile Vaccine Cooler / Diagnostic Kit" required>
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" class="form-control" placeholder="e.g. IO-2026/09">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" class="form-control" placeholder="e.g. Provincial Medical Supplies Depot">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" class="form-control" placeholder="e.g. RN-89421">
+                        </div>
+
+                        <!-- Auto-Calculation Block -->
+                        <div class="col-12">
+                            <div class="card bg-light border-0 p-3 rounded-3">
+                                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator me-1"></i>Stock & Availability Calculation</h6>
+                                <p class="small text-muted mb-3">Availability is dynamically auto-calculated as <strong>Baseline Stock + Received Quantity</strong>.</p>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Initial Baseline Stock</label>
+                                        <input type="number" name="initial_count" id="sms_add_initial_count" class="form-control" value="0" min="0" oninput="calcSmsAddAvailability()">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Received Quantity</label>
+                                        <input type="number" name="received_quantity" id="sms_add_received_quantity" class="form-control" value="1" min="0" oninput="calcSmsAddAvailability()">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-primary">Current Availability (Total)</label>
+                                        <input type="number" name="available_quantity" id="sms_add_available_quantity" class="form-control bg-white fw-bold text-primary" value="1" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Current Physical Condition</label>
                             <select name="current_condition" class="form-select">
@@ -349,8 +457,12 @@ $active_tab = $_GET['tab'] ?? 'lands';
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Remarks / Inspection Notes</label>
-                            <input type="text" name="remarks" class="form-control" placeholder="e.g. Temperature monitored 24/7">
+                            <label class="form-label small fw-bold">Specification / Remarks (Brand, Model, Specs)</label>
+                            <input type="text" name="specification" class="form-control" placeholder="e.g. Dometic TCX 21, 12V DC/230V AC Portable">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">General Remarks / Notes</label>
+                            <input type="text" name="remarks" class="form-control" placeholder="e.g. Tested and calibrated upon delivery">
                         </div>
                     </div>
                 </div>
@@ -379,28 +491,65 @@ $active_tab = $_GET['tab'] ?? 'lands';
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Associated Property</label>
-                            <select name="land_asset_id" id="edit_inv_land_id" class="form-select">
-                                <option value="0">SMS Central Facility / Unassigned</option>
-                                <?php foreach ($lands_list as $l): ?>
-                                    <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['property_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <label class="form-label small fw-bold">Associated Property / Facility <span class="text-danger">*</span></label>
+                            <input type="text" name="property_name" id="edit_inv_property_name" class="form-control" list="smsPropertyDatalist" required>
+                            <div class="form-text">Enter property name manually or select from suggestions.</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Inventory Item / Room <span class="text-danger">*</span></label>
+                            <label class="form-label small fw-bold">Inventory Number</label>
+                            <input type="text" name="inventory_number" id="edit_inv_number" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Inventory Type <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_type" id="edit_inv_type" class="form-control" list="sms_edit_inventory_type_list" autocomplete="off" required>
+                            <datalist id="sms_edit_inventory_type_list">
+                                <?php foreach ($all_inventory_type_suggestions as $itype): ?>
+                                    <option value="<?= htmlspecialchars($itype) ?>">
+                                <?php endforeach; ?>
+                            </datalist>
+                            <small class="text-muted" style="font-size: 11px;"><i class="bi bi-lightbulb me-1"></i>Suggests existing types from database or enter new.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Item Name / Room <span class="text-danger">*</span></label>
                             <input type="text" name="inventory_item" id="edit_inv_item" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Specification</label>
-                            <input type="text" name="specification" id="edit_inv_spec" class="form-control">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_inv_issue_order_no" class="form-control">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Quantity</label>
-                            <input type="number" name="available_quantity" id="edit_inv_qty" class="form-control" min="1">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" id="edit_inv_received_from" class="form-control">
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_inv_receipt_no" class="form-control">
+                        </div>
+
+                        <!-- Auto-Calculation Block -->
+                        <div class="col-12">
+                            <div class="card bg-light border-0 p-3 rounded-3">
+                                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-calculator me-1"></i>Stock & Availability Calculation</h6>
+                                <p class="small text-muted mb-3">Availability is dynamically auto-calculated as <strong>Baseline Stock + Received Quantity</strong>.</p>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Initial Baseline Stock</label>
+                                        <input type="number" name="initial_count" id="edit_inv_initial_count" class="form-control" value="0" min="0" oninput="calcSmsEditAvailability()">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Received Quantity</label>
+                                        <input type="number" name="received_quantity" id="edit_inv_received_quantity" class="form-control" value="0" min="0" oninput="calcSmsEditAvailability()">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-primary">Current Availability (Total)</label>
+                                        <input type="number" name="available_quantity" id="edit_inv_qty" class="form-control bg-white fw-bold text-primary" value="0" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Current Condition</label>
+                            <label class="form-label small fw-bold">Current Physical Condition</label>
                             <select name="current_condition" id="edit_inv_cond" class="form-select">
                                 <option value="Excellent Condition">Excellent Condition</option>
                                 <option value="Good Condition">Good Condition</option>
@@ -409,7 +558,11 @@ $active_tab = $_GET['tab'] ?? 'lands';
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Remarks</label>
+                            <label class="form-label small fw-bold">Specification / Remarks (Brand, Model, Specs)</label>
+                            <input type="text" name="specification" id="edit_inv_spec" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold">General Remarks / Notes</label>
                             <input type="text" name="remarks" id="edit_inv_rem" class="form-control">
                         </div>
                     </div>
@@ -426,6 +579,18 @@ $active_tab = $_GET['tab'] ?? 'lands';
 </div>
 
 <script>
+function calcSmsAddAvailability() {
+    const base = parseInt(document.getElementById('sms_add_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('sms_add_received_quantity').value) || 0;
+    document.getElementById('sms_add_available_quantity').value = base + recv;
+}
+
+function calcSmsEditAvailability() {
+    const base = parseInt(document.getElementById('edit_inv_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_inv_received_quantity').value) || 0;
+    document.getElementById('edit_inv_qty').value = base + recv;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '.btn-edit-land', function() {
         const btn = $(this);
@@ -441,17 +606,37 @@ document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '.btn-edit-inv', function() {
         const btn = $(this);
         $('#edit_inv_id').val(btn.data('id'));
-        $('#edit_inv_land_id').val(btn.data('land_id'));
-        $('#edit_inv_item').val(btn.data('item'));
-        $('#edit_inv_spec').val(btn.data('spec'));
-        $('#edit_inv_qty').val(btn.data('qty'));
-        $('#edit_inv_cond').val(btn.data('cond'));
-        $('#edit_inv_rem').val(btn.data('rem'));
+        $('#edit_inv_property_name').val(btn.data('property_name') || '');
+        $('#edit_inv_number').val(btn.data('inventory_number') || '');
+        $('#edit_inv_type').val(btn.data('inventory_type') || 'Medical Equipment');
+        $('#edit_inv_item').val(btn.data('item') || '');
+        $('#edit_inv_issue_order_no').val(btn.data('issue_order_no') || '');
+        $('#edit_inv_received_from').val(btn.data('received_from') || '');
+        $('#edit_inv_receipt_no').val(btn.data('receipt_no') || '');
+        $('#edit_inv_initial_count').val(btn.data('initial_count') || 0);
+        $('#edit_inv_received_quantity').val(btn.data('received_quantity') || 0);
+        $('#edit_inv_qty').val(btn.data('qty') || 0);
+        $('#edit_inv_cond').val(btn.data('cond') || 'Good Condition');
+        $('#edit_inv_spec').val(btn.data('spec') || '');
+        $('#edit_inv_rem').val(btn.data('rem') || '');
     });
 
     if ($.fn.DataTable) {
         $('#landsTable').DataTable({ responsive: true, pageLength: 10 });
-        $('#inventoryTable').DataTable({ responsive: true, pageLength: 10 });
+        var invTable = $('#inventoryTable').DataTable({ responsive: true, pageLength: 10 });
+
+        $('#smsInventoryTypeFilter').on('change', function() {
+            var val = $(this).val();
+            if (val) {
+                invTable.column(1).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
+            } else {
+                invTable.column(1).search('').draw();
+            }
+        });
+
+        $('#resetSmsTypeFilter').on('click', function() {
+            $('#smsInventoryTypeFilter').val('').trigger('change');
+        });
     }
 });
 </script>

@@ -52,6 +52,10 @@
                         <small class="text-muted d-block fw-bold text-uppercase">Current Position Date</small>
                         <span class="text-dark" id="view_appointment_date_current">-</span>
                     </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block fw-bold text-uppercase">Position to Current Location</small>
+                        <span class="text-dark" id="view_position_to_current_location">-</span>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer bg-light">

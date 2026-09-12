@@ -57,6 +57,10 @@
                         <span class="fw-semibold text-dark" id="view_appointment_current">-</span>
                     </div>
                     <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Position to Current Location</small>
+                        <span class="fw-semibold text-dark" id="view_position_to_current_location">-</span>
+                    </div>
+                    <div class="col-md-6">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Registered Date</small>
                         <span class="fw-semibold text-dark" id="view_registered_date">-</span>
                     </div>

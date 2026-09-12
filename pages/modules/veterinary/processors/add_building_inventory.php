@@ -54,10 +54,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_la->close();
     }
 
-    $initial_count      = isset($_POST['initial_count']) ? intval($_POST['initial_count']) : $available_quantity;
-    if ($initial_count <= 0 && $available_quantity > 0) {
-        $initial_count = $available_quantity;
-    }
+    $inventory_number   = trim($_POST['inventory_number'] ?? filter_input(INPUT_POST, 'inventory_number', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $inventory_type     = trim($_POST['inventory_type'] ?? filter_input(INPUT_POST, 'inventory_type', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? filter_input(INPUT_POST, 'issue_order_no', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $received_from      = trim($_POST['received_from'] ?? filter_input(INPUT_POST, 'received_from', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? filter_input(INPUT_POST, 'receipt_no', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+    $received_quantity  = isset($_POST['received_quantity']) ? intval($_POST['received_quantity']) : 0;
+    $initial_count      = isset($_POST['initial_count']) ? intval($_POST['initial_count']) : 0;
+
+    // Availability Auto-Calculation: initial baseline stock + received amounts
+    $available_quantity = $initial_count + $received_quantity;
 
     // Strict condition validation
     $valid_conditions = ['Good', 'Fair', 'Damaged'];
@@ -66,15 +72,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    if (!$user_id || !$land_asset_id || empty($inventory_item) || $available_quantity === null) {
-        echo json_encode(['success' => false, 'message' => 'Validation failed. Please select a valid location (Office or Quarters) and fill required values.']);
+    if (!$user_id || !$land_asset_id || empty($inventory_item)) {
+        echo json_encode(['success' => false, 'message' => 'Validation failed. Please select a valid location and fill required values.']);
         exit();
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO building_inventories (land_asset_id, user_id, inventory_item, specification, current_condition, available_quantity, initial_count, remarks, unit, removal_status, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
+    $stmt = $mysqli->prepare("INSERT INTO building_inventories (land_asset_id, user_id, inventory_item, inventory_number, inventory_type, issue_order_no, received_from, receipt_no, received_quantity, specification, current_condition, available_quantity, initial_count, remarks, unit, removal_status, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
     
     if ($stmt) {
-        $stmt->bind_param("iisssiiss", $land_asset_id, $user_id, $inventory_item, $specification, $current_condition, $available_quantity, $initial_count, $remarks, $unit);
+        $stmt->bind_param("iissssssississs", $land_asset_id, $user_id, $inventory_item, $inventory_number, $inventory_type, $issue_order_no, $received_from, $receipt_no, $received_quantity, $specification, $current_condition, $available_quantity, $initial_count, $remarks, $unit);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Inventory item logged successfully.']);
         } else {

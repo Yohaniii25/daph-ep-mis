@@ -166,55 +166,131 @@
                             </select>
                         </div>
 
-                        <!-- Official Designation -->
+                        <!-- Official Designation (Standardized with DAPH Titles Datalist) -->
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Official Designation <span class="text-danger">*</span></label>
-                            <input type="text" name="designation" id="add_emp_designation" class="form-control form-control-sm" placeholder="e.g. Government Veterinary Surgeon" required oninput="updateAddEmpNotifPreview()">
+                            <input type="text" name="designation" id="add_emp_designation" list="daph_standard_designations" class="form-control form-control-sm" placeholder="Select or type official designation" required oninput="updateAddEmpNotifPreview()">
+                            <datalist id="daph_standard_designations">
+                                <option value="Provincial Director"></option>
+                                <option value="Deputy Director H/Q (1) - Operations"></option>
+                                <option value="Deputy Director H/Q (2) - Planning"></option>
+                                <option value="Subject Matter Specialist (SMS)"></option>
+                                <option value="District Deputy Director"></option>
+                                <option value="Government Veterinary Surgeon (GVS)"></option>
+                                <option value="Additional Veterinary Surgeon (AVS)"></option>
+                                <option value="Veterinary Surgeon"></option>
+                                <option value="Deputy Director (Farms)"></option>
+                                <option value="Training Officer"></option>
+                                <option value="Planning Officer"></option>
+                                <option value="Finance Administrator"></option>
+                                <option value="Livestock Development Officer (LDO)"></option>
+                                <option value="Development Officer (DO)"></option>
+                                <option value="Driver"></option>
+                                <option value="Dispensary Assistant"></option>
+                                <option value="Department Laborer"></option>
+                                <option value="Night Watcher"></option>
+                                <option value="Staff Officer"></option>
+                            </datalist>
                         </div>
 
-                        <!-- Employment Type -->
+                        <!-- Current Station (Required Input Field) -->
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Employment Type <span class="text-danger">*</span></label>
-                            <select name="employment_type" id="add_emp_employment_type" class="form-select form-select-sm" required>
+                            <label class="form-label small fw-bold text-danger">
+                                <i class="bi bi-geo-alt-fill me-1"></i>Current Station <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="current_station" id="add_emp_current_station" class="form-control form-control-sm border-danger" placeholder="e.g. Range Office - Kalmunai / Central HQ" required>
+                            <small class="text-muted" style="font-size: 11px;">Active office location / official workstation</small>
+                        </div>
+
+                        <!-- Primary Employee Type -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Employee Type <span class="text-danger">*</span></label>
+                            <select name="employment_type" id="add_emp_employment_type" class="form-select form-select-sm" required onchange="toggleAddEmpEmploymentStatus(this.value)">
                                 <option value="permanent" selected>Permanent</option>
                                 <option value="temporary">Temporary</option>
                             </select>
                         </div>
 
-                        <!-- Service Category -->
+                        <!-- Conditional Employment Status (Renders only when Employee Type is Permanent) -->
+                        <div class="col-md-6" id="add_emp_employment_status_col" style="display: block;">
+                            <label class="form-label small fw-bold text-primary">
+                                <i class="bi bi-briefcase-fill me-1"></i>Employment Status <span class="text-danger">*</span>
+                            </label>
+                            <select name="employment_status" id="add_emp_employment_status" class="form-select form-select-sm border-primary" onchange="toggleAddEmpAttachmentReason(this.value)">
+                                <option value="Permanent" selected>Permanent</option>
+                                <option value="Attachment">Attachment</option>
+                            </select>
+                            <small class="text-muted" style="font-size: 11px;">Select status for permanent cadre personnel</small>
+                        </div>
+
+                        <!-- Secondary Conditional Trigger: Reason for Attachment (Renders only when Employment Status is Attachment) -->
+                        <div class="col-md-12" id="add_emp_attachment_reason_col" style="display: none;">
+                            <label class="form-label small fw-bold text-danger">
+                                <i class="bi bi-pin-angle-fill me-1 text-danger"></i>Reason for Attachment <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="attachment_reason" id="add_emp_attachment_reason" class="form-control form-control-sm border-danger" rows="2" placeholder="Specify the reason for attachment (e.g., medical reasons, maternity leave, urgent operational cover)..." disabled></textarea>
+                            <small class="text-muted" style="font-size: 11px;">Mandatory justification for assigning an officer under temporary attachment to this station.</small>
+                        </div>
+
+                        <!-- Service Category (Standardized with DAPH Categories Datalist) -->
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Service Category</label>
-                            <input type="text" name="service_category" class="form-control form-control-sm" placeholder="e.g. Animal Health, Clinical, Administration">
+                            <input type="text" name="service_category" id="add_emp_service_category" list="daph_standard_service_categories" class="form-control form-control-sm" placeholder="Select or type service category">
+                            <datalist id="daph_standard_service_categories">
+                                <option value="Animal Health & Disease Control"></option>
+                                <option value="Clinical & Field Veterinary Services"></option>
+                                <option value="Animal Breeding & Genetics"></option>
+                                <option value="Livestock Development & Production"></option>
+                                <option value="Veterinary Public Health & Epidemiology"></option>
+                                <option value="Extension, Education & Training"></option>
+                                <option value="Administration & Human Resources"></option>
+                                <option value="Finance, Accounts & Procurement"></option>
+                                <option value="Technical Field Support"></option>
+                                <option value="General & Transport Services"></option>
+                            </datalist>
                         </div>
 
-                        <!-- Email Address -->
+                        <!-- Email Address (Standardized Contact Details) -->
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Email Address <span class="text-danger">*</span></label>
-                            <input type="email" name="email" class="form-control form-control-sm" placeholder="officer@daph.gov.lk" required>
+                            <label class="form-label small fw-bold">Official Email Address <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                                <input type="email" name="email" class="form-control" placeholder="officer@daph.ep.gov.lk" required>
+                            </div>
                         </div>
 
-                        <!-- Contact Number -->
+                        <!-- Contact Number (Standardized Contact Details) -->
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Contact Number</label>
-                            <input type="text" name="contact_number" class="form-control form-control-sm" placeholder="07XXXXXXXX">
+                            <label class="form-label small fw-bold">Contact Number (Mobile / Office)</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                                <input type="tel" name="contact_number" class="form-control" placeholder="07XXXXXXXX" pattern="0[0-9]{9}" maxlength="10" title="10-digit Sri Lankan phone number starting with 0">
+                            </div>
+                            <small class="text-muted" style="font-size: 11px;">Format: 10 digits starting with 0 (e.g. 0771234567)</small>
                         </div>
 
                         <!-- Date of Birth -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-bold">Date of Birth</label>
                             <input type="date" name="date_of_birth" class="form-control form-control-sm">
                         </div>
 
                         <!-- Appointment Date -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-bold">Appointment Date</label>
                             <input type="date" name="appointment_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
                         </div>
 
                         <!-- Current Position Date -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-bold">Current Position Date</label>
                             <input type="date" name="appointment_date_current_position" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
+                        </div>
+
+                        <!-- Position to Current Location -->
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Position to Current Location</label>
+                            <input type="date" name="position_to_current_location" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>">
                         </div>
                     </div>
                 </div>
@@ -238,6 +314,7 @@ function syncAddEmployeeUnit(selectElem) {
     var type = opt.getAttribute('data-type') || '';
     var id   = opt.getAttribute('data-id') || '';
     var dist = opt.getAttribute('data-district') || '';
+    var unitVal = selectElem.value || '';
 
     document.getElementById('add_emp_unit_type').value = type;
     document.getElementById('add_emp_unit_type_id').value = id;
@@ -245,13 +322,58 @@ function syncAddEmployeeUnit(selectElem) {
     document.getElementById('add_emp_district_id').value = (type === 'district') ? id : ((type === 'range') ? dist : '');
     document.getElementById('add_emp_farm_id').value = (type === 'farm') ? id : '';
     document.getElementById('add_emp_training_center_id').value = (type === 'training') ? id : '';
+
+    // Auto-sync Current Station with the selected Assigned Unit
+    var currentStationInput = document.getElementById('add_emp_current_station');
+    if (currentStationInput && unitVal) {
+        currentStationInput.value = unitVal;
+    }
+}
+
+// Conditional UI Logic: Render Employment Status only when Employee Type is 'permanent'
+function toggleAddEmpEmploymentStatus(empTypeValue) {
+    var col = document.getElementById('add_emp_employment_status_col');
+    var statusSelect = document.getElementById('add_emp_employment_status');
+    if (!col || !statusSelect) return;
+
+    if (empTypeValue && empTypeValue.toLowerCase() === 'permanent') {
+        col.style.display = 'block';
+        statusSelect.disabled = false;
+        if (!statusSelect.value) {
+            statusSelect.value = 'Permanent';
+        }
+        toggleAddEmpAttachmentReason(statusSelect.value);
+    } else {
+        col.style.display = 'none';
+        statusSelect.disabled = true;
+        statusSelect.value = '';
+        toggleAddEmpAttachmentReason('');
+    }
+}
+
+// Secondary Conditional Trigger: Render Reason field only when Employment Status is 'Attachment'
+function toggleAddEmpAttachmentReason(statusVal) {
+    var reasonCol = document.getElementById('add_emp_attachment_reason_col');
+    var reasonInput = document.getElementById('add_emp_attachment_reason');
+    if (!reasonCol || !reasonInput) return;
+
+    if (statusVal === 'Attachment') {
+        reasonCol.style.display = 'block';
+        reasonInput.disabled = false;
+        reasonInput.required = true;
+    } else {
+        reasonCol.style.display = 'none';
+        reasonInput.disabled = true;
+        reasonInput.required = false;
+        reasonInput.value = '';
+    }
 }
 
 function syncAddEmpRoleToDesignation(selectElem) {
     var val = selectElem.value;
     var desInput = document.getElementById('add_emp_designation');
     var roleTitleMap = {
-        'sms': 'Subject Matter Specialist',
+        'sms': 'Subject Matter Specialist (SMS)',
         'deputy_director_hq_1': 'Deputy Director H/Q (1) - Operations',
         'deputy_director_hq_2': 'Deputy Director H/Q (2) - Planning',
         'provincial_director': 'Provincial Director',
@@ -264,8 +386,8 @@ function syncAddEmpRoleToDesignation(selectElem) {
         'training_officer': 'Training Officer',
         'planning_officer': 'Planning Officer',
         'finance_admin': 'Finance Administrator',
-        'livestock_development_officer': 'Livestock Development Officer',
-        'development_officer': 'Development Officer',
+        'livestock_development_officer': 'Livestock Development Officer (LDO)',
+        'development_officer': 'Development Officer (DO)',
         'driver': 'Driver',
         'dispensary_assistant': 'Dispensary Assistant',
         'department_laborer': 'Department Laborer',
@@ -289,4 +411,12 @@ function updateAddEmpNotifPreview() {
         prevElem.innerText = '"You are assigned as the ' + title + '"';
     }
 }
+
+// Initialize conditional state on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+    var typeElem = document.getElementById('add_emp_employment_type');
+    if (typeElem) {
+        toggleAddEmpEmploymentStatus(typeElem.value);
+    }
+});
 </script>

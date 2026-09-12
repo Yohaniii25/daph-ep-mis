@@ -11,11 +11,7 @@
                     <div class="row g-3">
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Property Identification Name <span class="text-danger">*</span></label>
-                            <select name="property_name" class="form-select" required>
-                                <option value="" disabled selected>-- Select Property Type --</option>
-                                <option value="Office">Office</option>
-                                <option value="Quarters">Quarters</option>
-                            </select>
+                            <input type="text" name="property_name" class="form-control" placeholder="e.g. Range Veterinary Office, Staff Quarters, Sub-Office" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Land Extent <span class="text-danger">*</span></label>

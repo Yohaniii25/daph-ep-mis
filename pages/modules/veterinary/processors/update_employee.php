@@ -33,6 +33,7 @@ if (isset($_POST['update_employee']) || $is_ajax) {
     $dob            = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
     $app_date       = !empty($_POST['appointment_date']) ? $_POST['appointment_date'] : null;
     $app_current    = !empty($_POST['appointment_date_current_position']) ? $_POST['appointment_date_current_position'] : null;
+    $pos_location   = !empty($_POST['position_to_current_location']) ? $_POST['position_to_current_location'] : null;
 
     if ($id <= 0) {
         if ($is_ajax) {
@@ -130,6 +131,7 @@ if (isset($_POST['update_employee']) || $is_ajax) {
         'date_of_birth' => $dob,
         'appointment_date' => $app_date,
         'appointment_date_current_position' => $app_current,
+        'position_to_current_location' => $pos_location,
         'unit' => $unit
     ];
 
@@ -177,13 +179,14 @@ if (isset($_POST['update_employee']) || $is_ajax) {
             date_of_birth = ?,
             appointment_date = ?,
             appointment_date_current_position = ?,
+            position_to_current_location = ?,
             unit = ?
         WHERE id = ? AND district_id = ?
     ");
 
     if ($update_stmt) {
         $update_stmt->bind_param(
-            "sssssssssssssii",
+            "ssssssssssssssii",
             $service_number,
             $service_number,
             $officer_name,
@@ -196,6 +199,7 @@ if (isset($_POST['update_employee']) || $is_ajax) {
             $dob,
             $app_date,
             $app_current,
+            $pos_location,
             $unit,
             $id,
             $district_id

@@ -212,7 +212,7 @@ require_once '../../../includes/sidebar.php';
             <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
         <?php endif; ?>
 
-        <!-- PENDING TRANSFERS ALERT BANNER (Maker-Checker Callout) -->
+        <!-- PENDING TRANSFERS ALERT BANNER (Admin Branch Workflow Callout) -->
         <?php if ($pending_transfers_count > 0): ?>
             <div class="alert alert-warning border-0 shadow-sm d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 rounded-3" style="background: #fff8e6; border-left: 5px solid #f59e0b !important;">
                 <div class="d-flex align-items-center gap-3">
@@ -221,13 +221,13 @@ require_once '../../../includes/sidebar.php';
                     </div>
                     <div>
                         <h6 class="fw-bold mb-0 text-dark">
-                            <span><?= $pending_transfers_count ?></span> Pending Transfer Request<?= $pending_transfers_count > 1 ? 's' : '' ?> Awaiting Administrative Approval
+                            <span><?= $pending_transfers_count ?></span> Pending Transfer Request<?= $pending_transfers_count > 1 ? 's' : '' ?> Awaiting Admin Branch Approval
                         </h6>
-                        <small class="text-muted">Staff rotational transfer requests submitted by Veterinary Surgeons are centralized in the All Pending Approvals hub.</small>
+                        <small class="text-muted">Staff rotational transfer requests submitted across ranges are centralized in the Admin Branch Transfer Management interface.</small>
                     </div>
                 </div>
-                <a href="../pd/pending_approvals.php?filter=transfers" class="btn btn-warning btn-sm px-3 fw-bold text-dark shadow-sm mt-2 mt-sm-0">
-                    <i class="bi bi-shield-check me-1"></i> Review in Central Approvals Hub
+                <a href="transfer_management.php" class="btn btn-danger btn-sm px-3 fw-bold text-white shadow-sm mt-2 mt-sm-0" style="background-color: #500707;">
+                    <i class="bi bi-arrow-left-right me-1"></i> Admin Branch Transfer Workflow
                 </a>
             </div>
         <?php endif; ?>
@@ -384,7 +384,8 @@ require_once '../../../includes/sidebar.php';
                                 <th>Officer Name / Contact</th>
                                 <th>Assigned Role</th>
                                 <th>Designation</th>
-                                <th>Type</th>
+                                <th>Current Station</th>
+                                <th>Type &amp; Status</th>
                                 <th>District / Scope</th>
                                 <th>Facility / Range</th>
                                 <th>Status</th>
@@ -416,16 +417,19 @@ require_once '../../../includes/sidebar.php';
                                 elseif ($officer_role === 'training_officer') $badge_class = 'badge-soft-success';
 
                                 // Location summary
-                                $workstation = 'Headquarters / Provincial';
-                                if (!empty($officer['unit'])) {
-                                    $workstation = $officer['unit'];
-                                } elseif (!empty($officer['range_name'])) {
-                                    $workstation = $officer['range_name'] . ' Range';
-                                } elseif (!empty($officer['farm_name'])) {
-                                    $workstation = $officer['farm_name'] . ' (Regional Farm)';
-                                } elseif (!empty($officer['training_center_name'])) {
-                                    $workstation = $officer['training_center_name'] . ' (Training Center)';
+                                $workstation = !empty($officer['current_station']) ? $officer['current_station'] : 'Headquarters / Provincial';
+                                if (empty($officer['current_station'])) {
+                                    if (!empty($officer['unit'])) {
+                                        $workstation = $officer['unit'];
+                                    } elseif (!empty($officer['range_name'])) {
+                                        $workstation = $officer['range_name'] . ' Range';
+                                    } elseif (!empty($officer['farm_name'])) {
+                                        $workstation = $officer['farm_name'] . ' (Regional Farm)';
+                                    } elseif (!empty($officer['training_center_name'])) {
+                                        $workstation = $officer['training_center_name'] . ' (Training Center)';
+                                    }
                                 }
+                                $active_station = !empty($officer['current_station']) ? $officer['current_station'] : $workstation;
                             ?>
                                 <tr id="officer-row-<?= $officer['id'] ?>" data-role="<?= htmlspecialchars($role_display) ?>">
                                     <td>
@@ -453,12 +457,26 @@ require_once '../../../includes/sidebar.php';
                                         <span class="fw-medium text-secondary small">
                                             <?= htmlspecialchars($officer['designation'] ?: '—') ?>
                                         </span>
+                                        <?php if (!empty($officer['service_category'])): ?>
+                                            <small class="text-muted d-block" style="font-size: 10px;"><i class="bi bi-tag me-1"></i><?= htmlspecialchars($officer['service_category']) ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border border-danger-subtle d-inline-flex align-items-center gap-1 py-1 px-2">
+                                            <i class="bi bi-geo-alt-fill text-danger"></i>
+                                            <span class="fw-semibold text-truncate" style="max-width: 170px;" title="<?= htmlspecialchars($active_station) ?>">
+                                                <?= htmlspecialchars($active_station) ?>
+                                            </span>
+                                        </span>
                                     </td>
                                     <td>
                                         <?php if (($officer['employment_type'] ?? 'permanent') === 'temporary'): ?>
                                             <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2">Temporary</span>
                                         <?php else: ?>
                                             <span class="badge bg-success-subtle text-success border border-success-subtle px-2">Permanent</span>
+                                            <?php if (!empty($officer['employment_status']) && ($officer['employment_status'] === 'Attachment' || $officer['employment_status'] === 'Temporary Attachment')): ?>
+                                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-1 mt-1 d-block" style="font-size: 9px;" title="<?= htmlspecialchars($officer['attachment_reason'] ?? 'Staff Attachment') ?>">Attachment</span>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -572,17 +590,97 @@ require_once '../../../includes/sidebar.php';
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Official Designation / Position Title</label>
-                            <input type="text" name="designation" id="modal_designation" class="form-control form-control-sm" placeholder="e.g. Subject Matter Specialist / GVS">
-                            <small class="text-muted" style="font-size: 11px;">Will be formatted into: <em>"You are assigned as the [Position Title]"</em></small>
+                            <label class="form-label small fw-bold text-dark">Official Designation / Position Title <span class="text-danger">*</span></label>
+                            <input type="text" name="designation" id="modal_designation" list="daph_standard_designations_edit" class="form-control form-control-sm" placeholder="e.g. Government Veterinary Surgeon" required>
+                            <datalist id="daph_standard_designations_edit">
+                                <option value="Provincial Director"></option>
+                                <option value="Deputy Director H/Q (1) - Operations"></option>
+                                <option value="Deputy Director H/Q (2) - Planning"></option>
+                                <option value="Subject Matter Specialist (SMS)"></option>
+                                <option value="District Deputy Director"></option>
+                                <option value="Government Veterinary Surgeon (GVS)"></option>
+                                <option value="Additional Veterinary Surgeon (AVS)"></option>
+                                <option value="Veterinary Surgeon"></option>
+                                <option value="Deputy Director (Farms)"></option>
+                                <option value="Training Officer"></option>
+                                <option value="Planning Officer"></option>
+                                <option value="Finance Administrator"></option>
+                                <option value="Livestock Development Officer (LDO)"></option>
+                                <option value="Development Officer (DO)"></option>
+                                <option value="Driver"></option>
+                                <option value="Dispensary Assistant"></option>
+                                <option value="Department Laborer"></option>
+                                <option value="Night Watcher"></option>
+                                <option value="Staff Officer"></option>
+                            </datalist>
+                            <small class="text-muted" style="font-size: 11px;">Formatted into: <em>"You are assigned as the [Position Title]"</em></small>
                         </div>
 
+                        <!-- Current Station (Required Field) -->
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Employment Type</label>
-                            <select name="employment_type" id="modal_employment_type" class="form-select form-select-sm" required>
+                            <label class="form-label small fw-bold text-danger">
+                                <i class="bi bi-geo-alt-fill me-1"></i>Current Station <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="current_station" id="modal_current_station" class="form-control form-control-sm border-danger" placeholder="e.g. Range Office - Kalmunai / Central HQ" required>
+                            <small class="text-muted" style="font-size: 11px;">Active office location / official workstation</small>
+                        </div>
+
+                        <!-- Primary Employee Type -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Employee Type <span class="text-danger">*</span></label>
+                            <select name="employment_type" id="modal_employment_type" class="form-select form-select-sm" required onchange="toggleEditEmpEmploymentStatus(this.value)">
                                 <option value="permanent">Permanent</option>
                                 <option value="temporary">Temporary</option>
                             </select>
+                        </div>
+
+                        <!-- Conditional Employment Status (Renders only when Employee Type is Permanent) -->
+                        <div class="col-md-6" id="modal_employment_status_wrapper" style="display: block;">
+                            <label class="form-label small fw-bold text-primary">
+                                <i class="bi bi-briefcase-fill me-1"></i>Employment Status <span class="text-danger">*</span>
+                            </label>
+                            <select name="employment_status" id="modal_employment_status" class="form-select form-select-sm border-primary" onchange="toggleEditEmpAttachmentReason(this.value)">
+                                <option value="Permanent" selected>Permanent</option>
+                                <option value="Attachment">Attachment</option>
+                            </select>
+                            <small class="text-muted" style="font-size: 11px;">Select status for permanent cadre personnel</small>
+                        </div>
+
+                        <!-- Secondary Conditional Trigger: Reason for Attachment in Edit Modal -->
+                        <div class="col-md-12" id="modal_attachment_reason_wrapper" style="display: none;">
+                            <label class="form-label small fw-bold text-danger">
+                                <i class="bi bi-pin-angle-fill me-1 text-danger"></i>Reason for Attachment <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="attachment_reason" id="modal_attachment_reason" class="form-control form-control-sm border-danger" rows="2" placeholder="Specify the reason for attachment (e.g., medical reasons, maternity leave, urgent operational cover)..." disabled></textarea>
+                            <small class="text-muted" style="font-size: 11px;">Mandatory justification when assigning an officer under temporary attachment.</small>
+                        </div>
+
+                        <!-- Service Category (Standardized with DAPH Categories Datalist) -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Service Category</label>
+                            <input type="text" name="service_category" id="modal_service_category" list="daph_standard_service_categories_edit" class="form-control form-control-sm" placeholder="Select or type service category">
+                            <datalist id="daph_standard_service_categories_edit">
+                                <option value="Animal Health & Disease Control"></option>
+                                <option value="Clinical & Field Veterinary Services"></option>
+                                <option value="Animal Breeding & Genetics"></option>
+                                <option value="Livestock Development & Production"></option>
+                                <option value="Veterinary Public Health & Epidemiology"></option>
+                                <option value="Extension, Education & Training"></option>
+                                <option value="Administration & Human Resources"></option>
+                                <option value="Finance, Accounts & Procurement"></option>
+                                <option value="Technical Field Support"></option>
+                                <option value="General & Transport Services"></option>
+                            </datalist>
+                        </div>
+
+                        <!-- Contact Number (Standardized Contact Details) -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Contact Number</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                                <input type="tel" name="phone" id="modal_phone" class="form-control" placeholder="07XXXXXXXX" pattern="0[0-9]{9}" maxlength="10" title="10-digit Sri Lankan phone number starting with 0">
+                            </div>
+                            <small class="text-muted" style="font-size: 11px;">Format: 10 digits starting with 0 (e.g. 0771234567)</small>
                         </div>
 
                         <div class="col-md-6">
@@ -663,13 +761,50 @@ require_once '../../../includes/sidebar.php';
 <script>
     var dataTable;
 
+    function toggleEditEmpEmploymentStatus(empTypeValue) {
+        var wrapper = document.getElementById('modal_employment_status_wrapper');
+        var statusSelect = document.getElementById('modal_employment_status');
+        if (!wrapper || !statusSelect) return;
+
+        if (empTypeValue && empTypeValue.toLowerCase() === 'permanent') {
+            wrapper.style.display = 'block';
+            statusSelect.disabled = false;
+            if (!statusSelect.value) {
+                statusSelect.value = 'Permanent';
+            }
+            toggleEditEmpAttachmentReason(statusSelect.value);
+        } else {
+            wrapper.style.display = 'none';
+            statusSelect.disabled = true;
+            statusSelect.value = '';
+            toggleEditEmpAttachmentReason('');
+        }
+    }
+
+    function toggleEditEmpAttachmentReason(statusVal) {
+        var reasonWrapper = document.getElementById('modal_attachment_reason_wrapper');
+        var reasonTextarea = document.getElementById('modal_attachment_reason');
+        if (!reasonWrapper || !reasonTextarea) return;
+
+        if (statusVal === 'Attachment') {
+            reasonWrapper.style.display = 'block';
+            reasonTextarea.disabled = false;
+            reasonTextarea.required = true;
+        } else {
+            reasonWrapper.style.display = 'none';
+            reasonTextarea.disabled = true;
+            reasonTextarea.required = false;
+            reasonTextarea.value = '';
+        }
+    }
+
     $(document).ready(function() {
         dataTable = $('#globalHrTable').DataTable({
             "pageLength": 15,
             "order": [],
             "language": {
                 "search": "",
-                "searchPlaceholder": "Search officer, role, designation, district..."
+                "searchPlaceholder": "Search officer, role, designation, district, station..."
             }
         });
 
@@ -754,12 +889,28 @@ require_once '../../../includes/sidebar.php';
 
         $('#modal_role').val(officer.role);
         $('#modal_designation').val(officer.designation || '');
+        $('#modal_current_station').val(officer.current_station || officer.unit || (officer.range_name ? (officer.range_name + ' Range') : 'Central Provincial Office'));
         $('#modal_employment_type').val(officer.employment_type || 'permanent');
+        var empStatus = officer.employment_status || 'Permanent';
+        if (empStatus === 'Temporary Attachment') empStatus = 'Attachment';
+        $('#modal_employment_status').val(empStatus);
+        $('#modal_attachment_reason').val(officer.attachment_reason || '');
+        $('#modal_service_category').val(officer.service_category || '');
+        $('#modal_phone').val(officer.phone || '');
+
         $('#modal_district_id').val(officer.district_id || '');
         $('#modal_range_id').val(officer.range_id || '');
         $('#modal_farm_id').val(officer.farm_id || '');
         $('#modal_training_center_id').val(officer.training_center_id || '');
         $('#modal_service_number').val(officer.service_number || officer.emp_id || '');
+
+        toggleEditEmpEmploymentStatus(officer.employment_type || 'permanent');
+        if ((officer.employment_type || 'permanent') === 'permanent') {
+            toggleEditEmpAttachmentReason(empStatus);
+            if (empStatus === 'Attachment') {
+                $('#modal_attachment_reason').val(officer.attachment_reason || '');
+            }
+        }
 
         var title = officer.designation || $('#modal_role option:selected').text();
         $('#preview_notification_text').text('You are assigned as the ' + (title || '...'));

@@ -50,7 +50,7 @@ $vs_district_id = $_SESSION['district_id'] ?? null;
 $vs_name        = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Veterinary Surgeon';
 
 $stmt_emp = $mysqli->prepare("
-    SELECT u.id, u.full_name, u.service_number, u.emp_id, u.designation, u.role, u.range_id, u.district_id, u.unit,
+    SELECT u.id, u.full_name, u.service_number, u.emp_id, u.designation, u.role, u.range_id, u.district_id, u.unit, u.current_station,
            vr.name AS range_name, d.name AS district_name
     FROM users u
     LEFT JOIN veterinary_ranges vr ON u.range_id = vr.id
@@ -175,6 +175,7 @@ $target_meta = parse_transfer_target_unit($mysqli, $target_unit);
 // Stage into pending_approvals table for maker-checker review by the Administrator
 $old_data = [
     'unit'             => !empty($employee['unit']) ? $employee['unit'] : $source_range,
+    'current_station'  => !empty($employee['current_station']) ? $employee['current_station'] : (!empty($employee['unit']) ? $employee['unit'] : $source_range),
     'range_id'         => $employee['range_id'],
     'district_id'      => $employee['district_id'],
     'full_name'        => $employee['full_name'],

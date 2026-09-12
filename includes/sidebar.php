@@ -227,7 +227,13 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/pd/employee_managment.php">
                             <i class="bi bi-people me-2"></i> Global HR Directory
                         </a>
-
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'hr/transfer_management.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/hr/transfer_management.php">
+                            <i class="bi bi-arrow-left-right me-2"></i> Transfer Management
+                            <?php if (!empty($pending_transfers_count) && $pending_transfers_count > 0): ?>
+                                <span class="badge rounded-pill bg-danger ms-auto"><?= $pending_transfers_count ?></span>
+                            <?php endif; ?>
+                        </a>
 
                     <?php endif; ?>
 
@@ -236,6 +242,14 @@ $current_view_param = $_GET['view'] ?? '';
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'hr/employee_managment.php') !== false) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/hr/employee_managment.php">
                             <i class="bi bi-people me-2"></i> Global HR Directory
+                        </a>
+
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'hr/transfer_management.php') !== false) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/hr/transfer_management.php">
+                            <i class="bi bi-arrow-left-right me-2"></i> Transfer Management
+                            <?php if (!empty($pending_transfers_count) && $pending_transfers_count > 0): ?>
+                                <span class="badge rounded-pill bg-danger ms-auto"><?= $pending_transfers_count ?></span>
+                            <?php endif; ?>
                         </a>
 
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'pd/pending_approvals.php') !== false) ? 'active' : '' ?>"

@@ -36,6 +36,26 @@ $inv_stmt->execute();
 $inventory_list = $inv_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $inv_stmt->close();
 
+// Fetch distinct inventory types across database for dynamic filtering and auto-suggestions
+$inv_types_res = $mysqli->query("
+    SELECT DISTINCT inventory_type 
+    FROM building_inventories 
+    WHERE inventory_type IS NOT NULL AND TRIM(inventory_type) != '' 
+    ORDER BY inventory_type ASC
+");
+$existing_inventory_types = [];
+if ($inv_types_res) {
+    while ($t_row = $inv_types_res->fetch_assoc()) {
+        $clean_type = trim($t_row['inventory_type']);
+        if (!empty($clean_type) && !in_array($clean_type, $existing_inventory_types)) {
+            $existing_inventory_types[] = $clean_type;
+        }
+    }
+}
+$default_inventory_types = ['Equipment', 'Furniture', 'Machinery', 'Office Equipment', 'Audio/Visual Equipment', 'Training Consumables', 'Vehicle / Transport', 'IT & Computer Lab'];
+$all_inventory_type_suggestions = array_values(array_unique(array_merge($existing_inventory_types, $default_inventory_types)));
+sort($all_inventory_type_suggestions);
+
 $active_tab = $_GET['tab'] ?? 'lands';
 ?>
 
@@ -168,41 +188,88 @@ $active_tab = $_GET['tab'] ?? 'lands';
     <div class="tab-pane fade <?= ($active_tab === 'inventory') ? 'show active' : '' ?>" id="inventory-content" role="tabpanel">
         <div class="card shadow-sm border-0" style="border-radius: 12px;">
             <div class="card-body p-4">
+                <!-- Inventory Type Filter Bar -->
+                <div class="row align-items-center mb-3 g-2">
+                    <div class="col-md-5 col-lg-4">
+                        <div class="input-group">
+                            <label class="input-group-text bg-white fw-bold text-muted small" for="trainInventoryTypeFilter">
+                                <i class="bi bi-funnel-fill text-danger me-1"></i> Filter Type:
+                            </label>
+                            <select id="trainInventoryTypeFilter" class="form-select form-select-sm">
+                                <option value="">All Inventory Types (<?= count($existing_inventory_types) ?> available)</option>
+                                <?php foreach ($existing_inventory_types as $itype): ?>
+                                    <option value="<?= htmlspecialchars($itype) ?>"><?= htmlspecialchars($itype) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetTrainTypeFilter" title="Reset filter to show all types">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table id="inventoryTable" class="table table-hover align-middle w-100">
                         <thead class="table-dark" style="background-color: #370709;">
                             <tr>
-                                <th>Associated Property</th>
-                                <th>Inventory Item / Facility</th>
-                                <th>Specification</th>
-                                <th>Condition</th>
-                                <th>Quantity</th>
-                                <th>Remarks</th>
+                                <th>Inventory Number</th>
+                                <th>Inventory Type</th>
+                                <th>Item</th>
+                                <th>Issue Order No.</th>
+                                <th>Received From</th>
+                                <th>Receipt No.</th>
+                                <th class="text-center">Quantity</th>
+                                <th>Specification / Remarks</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($inventory_list as $inv): ?>
+                            <?php foreach ($inventory_list as $inv): 
+                                $inv_num = !empty($inv['inventory_number']) ? $inv['inventory_number'] : ('INV-' . str_pad($inv['id'], 4, '0', STR_PAD_LEFT));
+                                $inv_type = !empty($inv['inventory_type']) ? $inv['inventory_type'] : 'Equipment';
+                                $cond = $inv['current_condition'] ?? 'Good Condition';
+                                $c_class = (strpos($cond, 'Good') !== false) ? 'bg-success' : ((strpos($cond, 'Fair') !== false) ? 'bg-warning text-dark' : 'bg-danger');
+                            ?>
                                 <tr>
-                                    <td class="fw-bold text-dark"><?= htmlspecialchars($inv['property_name'] ?? 'General') ?></td>
-                                    <td><strong class="text-primary"><?= htmlspecialchars($inv['inventory_item']) ?></strong></td>
-                                    <td><?= htmlspecialchars($inv['specification'] ?: '-') ?></td>
-                                    <td>
-                                        <?php
-                                            $c_class = (strpos($inv['current_condition'], 'Good') !== false) ? 'bg-success' : ((strpos($inv['current_condition'], 'Fair') !== false) ? 'bg-warning text-dark' : 'bg-danger');
-                                        ?>
-                                        <span class="badge <?= $c_class ?>"><?= htmlspecialchars($inv['current_condition']) ?></span>
+                                    <td><span class="fw-bold text-dark"><i class="bi bi-hash text-muted me-1"></i><?= htmlspecialchars($inv_num) ?></span></td>
+                                    <td data-search="<?= htmlspecialchars($inv_type) ?>" data-filter="<?= htmlspecialchars($inv_type) ?>">
+                                        <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><?= htmlspecialchars($inv_type) ?></span>
                                     </td>
-                                    <td class="fw-bold"><?= intval($inv['available_quantity']) ?></td>
-                                    <td class="small text-muted"><?= htmlspecialchars($inv['remarks'] ?: '-') ?></td>
+                                    <td>
+                                        <strong class="text-primary"><?= htmlspecialchars($inv['inventory_item']) ?></strong><br>
+                                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($inv['property_name'] ?? 'General') ?> <span class="badge <?= $c_class ?> rounded-pill px-2 py-0 ms-1" style="font-size:10px;"><?= htmlspecialchars($cond) ?></span></small>
+                                    </td>
+                                    <td><span class="text-dark fw-semibold"><?= htmlspecialchars($inv['issue_order_no'] ?: '-') ?></span></td>
+                                    <td><span class="text-dark small"><?= htmlspecialchars($inv['received_from'] ?: '-') ?></span></td>
+                                    <td><span class="text-dark fw-semibold"><?= htmlspecialchars($inv['receipt_no'] ?: '-') ?></span></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $inv['available_quantity']) ?></span><br>
+                                        <small class="text-muted" style="font-size:10px;">Base: <?= intval($inv['initial_count']) ?> | Recv: <?= intval($inv['received_quantity'] ?? 0) ?></small>
+                                    </td>
+                                    <td>
+                                        <div class="small fw-semibold text-dark"><?= htmlspecialchars($inv['specification'] ?: '-') ?></div>
+                                        <?php if (!empty($inv['remarks'])): ?>
+                                            <small class="text-muted d-block mt-1"><i class="bi bi-chat-left-text me-1"></i><?= htmlspecialchars($inv['remarks']) ?></small>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="text-center text-nowrap">
                                         <button class="btn btn-sm btn-outline-primary me-1 btn-edit-inv"
                                             data-id="<?= $inv['id'] ?>"
                                             data-land_asset_id="<?= $inv['land_asset_id'] ?>"
+                                            data-property_name="<?= htmlspecialchars($inv['property_name'] ?? '') ?>"
                                             data-inventory_item="<?= htmlspecialchars($inv['inventory_item']) ?>"
+                                            data-inventory_number="<?= htmlspecialchars($inv_num) ?>"
+                                            data-inventory_type="<?= htmlspecialchars($inv_type) ?>"
+                                            data-issue_order_no="<?= htmlspecialchars($inv['issue_order_no'] ?? '') ?>"
+                                            data-received_from="<?= htmlspecialchars($inv['received_from'] ?? '') ?>"
+                                            data-receipt_no="<?= htmlspecialchars($inv['receipt_no'] ?? '') ?>"
                                             data-specification="<?= htmlspecialchars($inv['specification'] ?? '') ?>"
                                             data-current_condition="<?= htmlspecialchars($inv['current_condition']) ?>"
-                                            data-available_quantity="<?= $inv['available_quantity'] ?>"
+                                            data-initial_count="<?= intval($inv['initial_count']) ?>"
+                                            data-received_quantity="<?= intval($inv['received_quantity'] ?? 0) ?>"
+                                            data-available_quantity="<?= intval($inv['available_quantity']) ?>"
                                             data-remarks="<?= htmlspecialchars($inv['remarks'] ?? '') ?>"
                                             data-bs-toggle="modal" data-bs-target="#editBuildingInventoryModal"
                                             title="Edit Inventory">
@@ -333,7 +400,7 @@ $active_tab = $_GET['tab'] ?? 'lands';
 
 <!-- Modal 3: Log Building Inventory -->
 <div class="modal fade" id="addBuildingInventoryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-light">
                 <h5 class="modal-title fw-bold"><i class="bi bi-box-seam-fill me-2"></i>Log Building Inventory Item</h5>
@@ -342,24 +409,77 @@ $active_tab = $_GET['tab'] ?? 'lands';
             <form action="processors/office_assets_crud.php" method="POST">
                 <input type="hidden" name="action" value="save_building_inventory">
                 <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Associated Property <span class="text-danger">*</span></label>
-                        <select name="land_asset_id" class="form-select fw-bold" required>
-                            <?php foreach ($lands_list as $l): ?>
-                                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['property_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Inventory Item / Room <span class="text-danger">*</span></label>
-                        <input type="text" name="inventory_item" class="form-control fw-bold" placeholder="e.g. Lecture Hall A / Audio Room" required>
-                    </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" class="form-control fw-bold" value="1" min="1" required>
+                            <label class="form-label fw-bold">Inventory Number <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_number" id="add_train_inv_number" class="form-control" placeholder="e.g. INV-TRN-001" required>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label fw-bold">Inventory Type <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_type" id="add_train_inv_type" class="form-control" list="train_inventory_type_list" placeholder="e.g. Equipment, Furniture, Audio/Visual" autocomplete="off" required>
+                            <datalist id="train_inventory_type_list">
+                                <?php foreach ($all_inventory_type_suggestions as $itype): ?>
+                                    <option value="<?= htmlspecialchars($itype) ?>">
+                                <?php endforeach; ?>
+                            </datalist>
+                            <small class="text-muted" style="font-size: 11px;"><i class="bi bi-lightbulb me-1"></i>Suggests existing types from database or enter new.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Property Identification <span class="text-danger">*</span></label>
+                            <input type="text" name="property_name" id="add_train_property_name" class="form-control" list="train_property_list" placeholder="e.g. Main Training Center, Hostel A" required>
+                            <datalist id="train_property_list">
+                                <?php foreach ($lands_list as $l): ?>
+                                    <option value="<?= htmlspecialchars($l['property_name']) ?>">
+                                <?php endforeach; ?>
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Inventory Item / Room <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_item" class="form-control fw-bold" placeholder="e.g. Lecture Hall A / Audio Projector" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" class="form-control" placeholder="e.g. IO-2026-030">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Received From</label>
+                            <input type="text" name="received_from" class="form-control" placeholder="e.g. DAPH HQ / Training Division">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" class="form-control" placeholder="e.g. REC-7812">
+                        </div>
+                    </div>
+
+                    <!-- Availability Auto-Calculation Block -->
+                    <div class="p-3 bg-light rounded border mb-3">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-secondary mb-1">
+                                    <i class="bi bi-lock-fill me-1"></i>Baseline Stock <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" name="initial_count" id="add_train_initial_count" class="form-control fw-bold" min="0" value="1" required oninput="calcTrainAddAvailability()">
+                                <small class="text-muted" style="font-size: 10px;">Manually entered initial baseline stock</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-success mb-1">
+                                    <i class="bi bi-plus-circle-fill me-1"></i>Received Quantity <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" name="received_quantity" id="add_train_received_quantity" class="form-control fw-bold border-success" min="0" value="0" required oninput="calcTrainAddAvailability()">
+                                <small class="text-muted" style="font-size: 10px;">Newly received / logged amount</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-primary mb-1">
+                                    <i class="bi bi-calculator-fill me-1"></i>Current Availability (Auto)
+                                </label>
+                                <input type="number" name="available_quantity" id="add_train_available_quantity" class="form-control fw-bold bg-white text-primary border-primary fs-5" readonly value="1">
+                                <small class="text-primary fw-semibold" style="font-size: 10px;"><i class="bi bi-check2-circle me-1"></i>Baseline + Received Amount</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Condition <span class="text-danger">*</span></label>
                             <select name="current_condition" class="form-select fw-bold" required>
                                 <option value="Good Condition">Good Condition</option>
@@ -367,10 +487,10 @@ $active_tab = $_GET['tab'] ?? 'lands';
                                 <option value="Requires Repair">Requires Repair</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Specification</label>
-                        <input type="text" name="specification" class="form-control" placeholder="e.g. Air-conditioned, Capacity 50">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Specification / Remarks (Brand, Model, Specs)</label>
+                            <input type="text" name="specification" class="form-control" placeholder="e.g. Brand: Sony, Model: VPL-DX221, 3300 Lumens">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Remarks</label>
@@ -390,7 +510,7 @@ $active_tab = $_GET['tab'] ?? 'lands';
 
 <!-- Modal 4: Edit Building Inventory -->
 <div class="modal fade" id="editBuildingInventoryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header text-light" style="background-color: var(--color-c10, #185dbd);">
                 <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Building Inventory</h5>
@@ -399,25 +519,74 @@ $active_tab = $_GET['tab'] ?? 'lands';
             <form action="processors/office_assets_crud.php" method="POST">
                 <input type="hidden" name="action" value="update_building_inventory">
                 <input type="hidden" name="id" id="edit_inv_id">
+                <input type="hidden" name="land_asset_id" id="edit_inv_land_id">
                 <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Associated Property <span class="text-danger">*</span></label>
-                        <select name="land_asset_id" id="edit_inv_land_id" class="form-select fw-bold" required>
-                            <?php foreach ($lands_list as $l): ?>
-                                <option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['property_name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Inventory Item / Room <span class="text-danger">*</span></label>
-                        <input type="text" name="inventory_item" id="edit_inv_item" class="form-control fw-bold" required>
-                    </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" id="edit_inv_qty" class="form-control fw-bold" min="1" required>
+                            <label class="form-label fw-bold">Inventory Number <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_number" id="edit_inv_number" class="form-control" required>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label fw-bold">Inventory Type <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_type" id="edit_inv_type" class="form-control" list="train_edit_inventory_type_list" autocomplete="off" required>
+                            <datalist id="train_edit_inventory_type_list">
+                                <?php foreach ($all_inventory_type_suggestions as $itype): ?>
+                                    <option value="<?= htmlspecialchars($itype) ?>">
+                                <?php endforeach; ?>
+                            </datalist>
+                            <small class="text-muted" style="font-size: 11px;"><i class="bi bi-lightbulb me-1"></i>Suggests existing types from database or enter new.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Property Identification <span class="text-danger">*</span></label>
+                            <input type="text" name="property_name" id="edit_inv_property_name" class="form-control" list="train_property_list" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Inventory Item / Room <span class="text-danger">*</span></label>
+                            <input type="text" name="inventory_item" id="edit_inv_item" class="form-control fw-bold" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_inv_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Received From</label>
+                            <input type="text" name="received_from" id="edit_inv_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_inv_receipt_no" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Availability Auto-Calculation Block -->
+                    <div class="p-3 bg-light rounded border mb-3">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-secondary mb-1">
+                                    <i class="bi bi-lock-fill me-1"></i>Baseline Stock <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" name="initial_count" id="edit_inv_initial_count" class="form-control fw-bold" min="0" required oninput="calcTrainEditAvailability()">
+                                <small class="text-muted" style="font-size: 10px;">Manually entered baseline stock</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-success mb-1">
+                                    <i class="bi bi-plus-circle-fill me-1"></i>Received Quantity <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" name="received_quantity" id="edit_inv_received_quantity" class="form-control fw-bold border-success" min="0" required oninput="calcTrainEditAvailability()">
+                                <small class="text-muted" style="font-size: 10px;">Newly received / logged amount</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-primary mb-1">
+                                    <i class="bi bi-calculator-fill me-1"></i>Current Availability (Auto)
+                                </label>
+                                <input type="number" name="available_quantity" id="edit_inv_qty" class="form-control fw-bold bg-white text-primary border-primary fs-5" readonly>
+                                <small class="text-primary fw-semibold" style="font-size: 10px;"><i class="bi bi-check2-circle me-1"></i>Baseline + Received Amount</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Condition <span class="text-danger">*</span></label>
                             <select name="current_condition" id="edit_inv_cond" class="form-select fw-bold" required>
                                 <option value="Good Condition">Good Condition</option>
@@ -425,10 +594,10 @@ $active_tab = $_GET['tab'] ?? 'lands';
                                 <option value="Requires Repair">Requires Repair</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Specification</label>
-                        <input type="text" name="specification" id="edit_inv_spec" class="form-control">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Specification / Remarks (Brand, Model, Specs)</label>
+                            <input type="text" name="specification" id="edit_inv_spec" class="form-control">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Remarks</label>
@@ -447,6 +616,18 @@ $active_tab = $_GET['tab'] ?? 'lands';
 </div>
 
 <script>
+function calcTrainAddAvailability() {
+    var base = parseInt(document.getElementById('add_train_initial_count').value) || 0;
+    var recv = parseInt(document.getElementById('add_train_received_quantity').value) || 0;
+    document.getElementById('add_train_available_quantity').value = base + recv;
+}
+
+function calcTrainEditAvailability() {
+    var base = parseInt(document.getElementById('edit_inv_initial_count').value) || 0;
+    var recv = parseInt(document.getElementById('edit_inv_received_quantity').value) || 0;
+    document.getElementById('edit_inv_qty').value = base + recv;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Edit Land Handler
     $(document).on('click', '.btn-edit-land', function() {
@@ -465,7 +646,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const btn = $(this);
         $('#edit_inv_id').val(btn.data('id'));
         $('#edit_inv_land_id').val(btn.data('land_asset_id'));
+        $('#edit_inv_property_name').val(btn.data('property_name'));
+        $('#edit_inv_number').val(btn.data('inventory_number'));
+        $('#edit_inv_type').val(btn.data('inventory_type'));
         $('#edit_inv_item').val(btn.data('inventory_item'));
+        $('#edit_inv_issue_order_no').val(btn.data('issue_order_no'));
+        $('#edit_inv_received_from').val(btn.data('received_from'));
+        $('#edit_inv_receipt_no').val(btn.data('receipt_no'));
+        $('#edit_inv_initial_count').val(btn.data('initial_count'));
+        $('#edit_inv_received_quantity').val(btn.data('received_quantity'));
         $('#edit_inv_qty').val(btn.data('available_quantity'));
         $('#edit_inv_cond').val(btn.data('current_condition'));
         $('#edit_inv_spec').val(btn.data('specification'));
@@ -481,9 +670,22 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#filterLandStatus').on('change', function() {
             landsTable.column(3).search(this.value).draw();
         });
-        $('#inventoryTable').DataTable({
+        var invTable = $('#inventoryTable').DataTable({
             responsive: true,
             pageLength: 10
+        });
+
+        $('#trainInventoryTypeFilter').on('change', function() {
+            var val = $(this).val();
+            if (val) {
+                invTable.column(1).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
+            } else {
+                invTable.column(1).search('').draw();
+            }
+        });
+
+        $('#resetTrainTypeFilter').on('click', function() {
+            $('#trainInventoryTypeFilter').val('').trigger('change');
         });
     }
 });

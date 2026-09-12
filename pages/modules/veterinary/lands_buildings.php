@@ -30,6 +30,26 @@ if (!empty($range_id)) {
     $rng_stmt->close();
 }
 
+// Fetch distinct inventory types from the database for dynamic filtering and auto-suggestions
+$inv_types_res = $mysqli->query("
+    SELECT DISTINCT inventory_type 
+    FROM building_inventories 
+    WHERE inventory_type IS NOT NULL AND TRIM(inventory_type) != '' 
+    ORDER BY inventory_type ASC
+");
+$existing_inventory_types = [];
+if ($inv_types_res) {
+    while ($t_row = $inv_types_res->fetch_assoc()) {
+        $clean_type = trim($t_row['inventory_type']);
+        if (!empty($clean_type) && !in_array($clean_type, $existing_inventory_types)) {
+            $existing_inventory_types[] = $clean_type;
+        }
+    }
+}
+$default_inventory_types = ['Equipment', 'Furniture', 'Machinery', 'Office Equipment', 'Medical Equipment', 'Cold Chain Equipment', 'Electronics & IT', 'Clinical & Lab Tools', 'Vehicle / Transport', 'Consumables'];
+$all_inventory_type_suggestions = array_values(array_unique(array_merge($existing_inventory_types, $default_inventory_types)));
+sort($all_inventory_type_suggestions);
+
 require_once '../../../includes/header.php';
 ?>
 
@@ -75,11 +95,6 @@ require_once '../../../includes/header.php';
             <li class="nav-item">
                 <button class="nav-link" id="bos-tab" data-bs-toggle="tab" data-bs-target="#bos-content" type="button" role="tab" style="--bs-nav-pills-link-active-bg: #820100;">
                     <i class="bi bi-shield-check me-2"></i>Board of Survey Archive
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="transfers-tab" data-bs-toggle="tab" data-bs-target="#transfers-content" type="button" role="tab" style="--bs-nav-pills-link-active-bg: #820100;">
-                    <i class="bi bi-arrow-left-right me-2"></i>Inventory Transfers
                 </button>
             </li>
         </ul>
@@ -151,17 +166,40 @@ require_once '../../../includes/header.php';
             <div class="tab-pane fade" id="inventory-content" role="tabpanel">
                 <div class="card shadow-sm border-0">
                     <div class="card-body p-4">
+                        <!-- Inventory Type Filter Bar -->
+                        <div class="row align-items-center mb-3 g-2">
+                            <div class="col-md-5 col-lg-4">
+                                <div class="input-group">
+                                    <label class="input-group-text bg-white fw-bold text-muted small" for="inventoryTypeFilter">
+                                        <i class="bi bi-funnel-fill text-danger me-1"></i> Filter Type:
+                                    </label>
+                                    <select id="inventoryTypeFilter" class="form-select form-select-sm">
+                                        <option value="">All Inventory Types (<?= count($existing_inventory_types) ?> available)</option>
+                                        <?php foreach ($existing_inventory_types as $itype): ?>
+                                            <option value="<?= htmlspecialchars($itype) ?>"><?= htmlspecialchars($itype) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="resetInventoryTypeFilter" title="Reset filter to show all types">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table id="inventoryTable" class="table table-hover align-middle w-100">
                                 <thead class="table-light text-uppercase small">
                                     <tr>
-                                        <th>Inventory Item</th>
-                                        <th>Located Property</th>
-                                        <th>Item Specification</th>
-                                        <th>Condition</th>
-                                        <th class="text-center">Initial Baseline</th>
-                                        <th class="text-center">Available Qty</th>
-                                        <th>Remarks</th>
+                                        <th>Inventory Number</th>
+                                        <th>Inventory Type</th>
+                                        <th>Item</th>
+                                        <th>Issue Order No.</th>
+                                        <th>Received From</th>
+                                        <th>Receipt No.</th>
+                                        <th class="text-center">Quantity</th>
+                                        <th>Specification / Remarks</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -179,21 +217,47 @@ require_once '../../../includes/header.php';
                                     $inv_result = $inv_query->get_result();
 
                                     while ($row = $inv_result->fetch_assoc()):
-                                        // Condition badge styling engine
                                         $cond = $row['current_condition'];
                                         $badge_class = 'bg-secondary';
                                         if ($cond === 'Good' || $cond === 'Excellent') $badge_class = 'bg-success';
                                         elseif ($cond === 'Fair' || $cond === 'Fair (Needs Service)') $badge_class = 'bg-warning text-dark';
                                         elseif ($cond === 'Damaged' || $cond === 'Critical Failure') $badge_class = 'bg-danger';
+
+                                        $inv_num = !empty($row['inventory_number']) ? $row['inventory_number'] : ('INV-' . str_pad($row['id'], 4, '0', STR_PAD_LEFT));
+                                        $inv_type = !empty($row['inventory_type']) ? $row['inventory_type'] : 'Equipment';
                                     ?>
                                         <tr id="inventory-row-<?= $row['id'] ?>">
-                                            <td class="fw-bold text-dark"><?= htmlspecialchars($row['inventory_item']) ?></td>
-                                            <td><span class="text-secondary small fw-semibold"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($row['property_name']) ?></span></td>
-                                            <td><small class="text-muted"><?= htmlspecialchars($row['specification']) ?></small></td>
-                                            <td><span class="badge <?= $badge_class ?> rounded-pill px-2"><?= htmlspecialchars($row['current_condition']) ?></span></td>
-                                            <td class="text-center fw-semibold text-secondary"><?= sprintf("%02d", $row['initial_count'] ?? $row['available_quantity']) ?></td>
-                                            <td class="text-center fw-bold text-primary"><?= sprintf("%02d", $row['available_quantity']) ?></td>
-                                            <td><small class="text-muted"><?= htmlspecialchars($row['remarks']) ?></small></td>
+                                            <td>
+                                                <span class="fw-bold text-dark"><i class="bi bi-hash text-muted me-1"></i><?= htmlspecialchars($inv_num) ?></span>
+                                            </td>
+                                            <td data-search="<?= htmlspecialchars($inv_type) ?>" data-filter="<?= htmlspecialchars($inv_type) ?>">
+                                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><?= htmlspecialchars($inv_type) ?></span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold text-primary"><?= htmlspecialchars($row['inventory_item']) ?></span>
+                                                <br>
+                                                <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($row['property_name']) ?> <span class="badge <?= $badge_class ?> rounded-pill px-2 py-0 ms-1" style="font-size:10px;"><?= htmlspecialchars($row['current_condition']) ?></span></small>
+                                            </td>
+                                            <td>
+                                                <span class="text-dark fw-semibold"><?= htmlspecialchars($row['issue_order_no'] ?: '-') ?></span>
+                                            </td>
+                                            <td>
+                                                <span class="text-dark small"><?= htmlspecialchars($row['received_from'] ?: '-') ?></span>
+                                            </td>
+                                            <td>
+                                                <span class="text-dark fw-semibold"><?= htmlspecialchars($row['receipt_no'] ?: '-') ?></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $row['available_quantity']) ?></span>
+                                                <br>
+                                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($row['initial_count']) ?> | Recv: <?= intval($row['received_quantity'] ?? 0) ?></small>
+                                            </td>
+                                            <td>
+                                                <div class="small fw-semibold text-dark"><?= htmlspecialchars($row['specification'] ?: '-') ?></div>
+                                                <?php if (!empty($row['remarks'])): ?>
+                                                    <small class="text-muted d-block mt-1"><i class="bi bi-chat-left-text me-1"></i><?= htmlspecialchars($row['remarks']) ?></small>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
                                                     <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewInventory(<?= json_encode($row) ?>)'>
@@ -201,9 +265,6 @@ require_once '../../../includes/header.php';
                                                     </button>
                                                     <button class="btn btn-sm btn-outline-primary me-1" title="Edit Item" onclick='editInventory(<?= json_encode($row) ?>)'>
                                                         <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-warning text-dark me-1" title="Initiate Inter-Unit Transfer" onclick='openInventoryTransferModal(<?= json_encode($row) ?>, "building")'>
-                                                        <i class="bi bi-arrow-left-right"></i>
                                                     </button>
                                                     <button class="btn btn-sm btn-outline-danger" title="Board of Survey Decommission" onclick='openBoardOfSurveyModal(<?= json_encode($row) ?>)'>
                                                         <i class="bi bi-shield-x me-1"></i>Decommission
@@ -282,69 +343,6 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
 
-            <!-- TAB 4: INVENTORY TRANSFERS & RELOCATIONS -->
-            <div class="tab-pane fade" id="transfers-content" role="tabpanel">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h5 class="fw-bold text-dark mb-1"><i class="bi bi-arrow-left-right text-warning me-2"></i>Unit Inventory Transfer Log</h5>
-                                <p class="text-muted small mb-0">Record of items pending, in-transit, or completed for inter-unit transfer. Initiating a transfer keeps the unit active count intact until approved.</p>
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table id="transfersTable" class="table table-hover align-middle w-100">
-                                <thead class="table-light text-uppercase small">
-                                    <tr>
-                                        <th>Transfer Code</th>
-                                        <th>Item Name</th>
-                                        <th>Destination Unit</th>
-                                        <th class="text-center">Transfer Qty</th>
-                                        <th>Status</th>
-                                        <th>Dispatch Ref</th>
-                                        <th>Requested Date</th>
-                                        <th>Remarks / Reason</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $tr_query = $mysqli->prepare("
-                                        SELECT it.* 
-                                        FROM inventory_transfers it
-                                        WHERE it.asset_type = 'building' AND (it.from_district_id = ? AND it.from_range_id = ?)
-                                        ORDER BY it.id DESC
-                                    ");
-                                    $tr_query->bind_param("ii", $district_id, $range_id);
-                                    $tr_query->execute();
-                                    $tr_result = $tr_query->get_result();
-
-                                    while ($trow = $tr_result->fetch_assoc()):
-                                        $t_badge = 'bg-secondary';
-                                        if ($trow['status'] === 'Pending') $t_badge = 'bg-warning text-dark';
-                                        elseif ($trow['status'] === 'Approved') $t_badge = 'bg-primary';
-                                        elseif ($trow['status'] === 'In-Transit') $t_badge = 'bg-info text-dark';
-                                        elseif ($trow['status'] === 'Completed') $t_badge = 'bg-success';
-                                        elseif ($trow['status'] === 'Rejected') $t_badge = 'bg-danger';
-                                    ?>
-                                        <tr>
-                                            <td><code class="fw-bold text-primary"><?= htmlspecialchars($trow['transfer_code']) ?></code></td>
-                                            <td class="fw-bold text-dark"><?= htmlspecialchars($trow['item_name']) ?></td>
-                                            <td><span class="badge bg-light text-dark border"><i class="bi bi-box-arrow-right me-1"></i><?= htmlspecialchars(ucwords(str_replace('_', ' ', $trow['to_unit_type']))) ?> #<?= $trow['to_unit_id'] ?></span></td>
-                                            <td class="text-center fw-bold"><?= sprintf("%02d", $trow['transfer_qty']) ?></td>
-                                            <td><span class="badge <?= $t_badge ?> rounded-pill px-2"><?= htmlspecialchars($trow['status']) ?></span></td>
-                                            <td><small class="text-muted"><?= htmlspecialchars($trow['dispatch_reference'] ?: '-') ?></small></td>
-                                            <td><small class="text-muted"><?= htmlspecialchars(substr($trow['requested_at'], 0, 10)) ?></small></td>
-                                            <td><small class="text-muted"><?= htmlspecialchars($trow['reason'] ?: '-') ?></small></td>
-                                        </tr>
-                                    <?php endwhile;
-                                    $tr_query->close(); ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </main>
 </div>
@@ -357,7 +355,6 @@ require_once '../../../includes/header.php';
 <?php include 'models/edit_building_inventory.php'; ?>
 <?php include 'models/view_building_inventory.php'; ?>
 <?php include 'models/modal_board_of_survey.php'; ?>
-<?php include 'models/modal_inventory_transfer.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -373,7 +370,7 @@ require_once '../../../includes/header.php';
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    var landsTable, inventoryTable, bosTable, transfersTable;
+    var landsTable, inventoryTable, bosTable;
     $(document).ready(function() {
         landsTable = $('#landsTable').DataTable({
             "dom": '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
@@ -419,6 +416,20 @@ require_once '../../../includes/header.php';
             "pageLength": 10
         });
 
+        // Dynamic Inventory Type Filter Handler
+        $('#inventoryTypeFilter').on('change', function() {
+            var val = $(this).val();
+            if (val) {
+                inventoryTable.column(1).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
+            } else {
+                inventoryTable.column(1).search('').draw();
+            }
+        });
+
+        $('#resetInventoryTypeFilter').on('click', function() {
+            $('#inventoryTypeFilter').val('').trigger('change');
+        });
+
         bosTable = $('#bosTable').DataTable({
             "dom": '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
             "buttons": [{
@@ -431,28 +442,6 @@ require_once '../../../includes/header.php';
                     className: 'btn btn-sm btn-danger shadow-sm',
                     text: '<i class="bi bi-file-pdf"></i> PDF',
                     title: 'Board of Survey Decommissioned Archive'
-                },
-                {
-                    extend: 'print',
-                    className: 'btn btn-sm btn-dark shadow-sm',
-                    text: '<i class="bi bi-printer"></i> Print'
-                }
-            ],
-            "pageLength": 10
-        });
-
-        transfersTable = $('#transfersTable').DataTable({
-            "dom": '<"d-flex justify-content-between align-items-center mb-3"Bf>rtip',
-            "buttons": [{
-                    extend: 'csv',
-                    className: 'btn btn-sm btn-success shadow-sm',
-                    text: '<i class="bi bi-file-spreadsheet"></i> CSV'
-                },
-                {
-                    extend: 'pdf',
-                    className: 'btn btn-sm btn-danger shadow-sm',
-                    text: '<i class="bi bi-file-pdf"></i> PDF',
-                    title: 'Inventory Transfers'
                 },
                 {
                     extend: 'print',
@@ -684,13 +673,9 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_land_id').value = data.id || '';
         document.getElementById('edit_land_unit').value = data.unit || '';
         
-        var propSelect = document.getElementById('edit_property_name');
-        if (propSelect) {
-            var pVal = data.property_name || 'Office';
-            if (!$(propSelect).find("option[value='" + pVal + "']").length) {
-                $(propSelect).append(new Option(pVal, pVal));
-            }
-            propSelect.value = pVal;
+        var propInput = document.getElementById('edit_property_name');
+        if (propInput) {
+            propInput.value = data.property_name || '';
         }
 
         document.getElementById('edit_land_extent').value = data.land_extent || '';
@@ -705,15 +690,48 @@ require_once '../../../includes/header.php';
     }
 
     function viewInventory(data) {
-        document.getElementById('view_inventory_item').textContent = data.inventory_item || '-';
-        if (document.getElementById('view_initial_count')) {
-            document.getElementById('view_initial_count').textContent = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || '-');
+        var invNum = data.inventory_number || ('INV-' + String(data.id || '').padStart(4, '0'));
+        var invType = data.inventory_type || 'Equipment';
+
+        if (document.getElementById('view_inventory_number')) {
+            document.getElementById('view_inventory_number').textContent = invNum;
         }
-        document.getElementById('view_available_quantity').textContent = data.available_quantity || '-';
-        document.getElementById('view_inventory_property').textContent = data.property_name || '-';
-        document.getElementById('view_inventory_condition').textContent = data.current_condition || '-';
-        document.getElementById('view_inventory_specification').textContent = data.specification || '-';
-        document.getElementById('view_inventory_remarks').textContent = data.remarks || '-';
+        if (document.getElementById('view_inventory_type')) {
+            document.getElementById('view_inventory_type').textContent = invType;
+        }
+        if (document.getElementById('view_inventory_item')) {
+            document.getElementById('view_inventory_item').textContent = data.inventory_item || '-';
+        }
+        if (document.getElementById('view_inventory_property')) {
+            document.getElementById('view_inventory_property').textContent = data.property_name || '-';
+        }
+        if (document.getElementById('view_issue_order_no')) {
+            document.getElementById('view_issue_order_no').textContent = data.issue_order_no || '-';
+        }
+        if (document.getElementById('view_received_from')) {
+            document.getElementById('view_received_from').textContent = data.received_from || '-';
+        }
+        if (document.getElementById('view_receipt_no')) {
+            document.getElementById('view_receipt_no').textContent = data.receipt_no || '-';
+        }
+        if (document.getElementById('view_initial_count')) {
+            document.getElementById('view_initial_count').textContent = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 0);
+        }
+        if (document.getElementById('view_received_quantity')) {
+            document.getElementById('view_received_quantity').textContent = data.received_quantity || 0;
+        }
+        if (document.getElementById('view_available_quantity')) {
+            document.getElementById('view_available_quantity').textContent = data.available_quantity || 0;
+        }
+        if (document.getElementById('view_inventory_condition')) {
+            document.getElementById('view_inventory_condition').textContent = data.current_condition || '-';
+        }
+        if (document.getElementById('view_inventory_specification')) {
+            document.getElementById('view_inventory_specification').textContent = data.specification || '-';
+        }
+        if (document.getElementById('view_inventory_remarks')) {
+            document.getElementById('view_inventory_remarks').textContent = data.remarks || '-';
+        }
         var modal = new bootstrap.Modal(document.getElementById('viewInventoryModal'));
         modal.show();
     }
@@ -726,17 +744,40 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_inventory_unit').value = data.unit || '';
         document.getElementById('edit_land_asset_id').value = data.land_asset_id || '';
         
-        var locSelect = document.getElementById('edit_inventory_location');
-        if (locSelect) {
-            locSelect.value = (data.property_name === 'Quarters') ? 'Quarters' : 'Office';
-        }
+        var invNum = data.inventory_number || ('INV-' + String(data.id || '').padStart(4, '0'));
+        var invType = data.inventory_type || 'Equipment';
 
+        if (document.getElementById('edit_inventory_number')) {
+            document.getElementById('edit_inventory_number').value = invNum;
+        }
+        if (document.getElementById('edit_inventory_type')) {
+            document.getElementById('edit_inventory_type').value = invType;
+        }
+        if (document.getElementById('edit_inventory_location')) {
+            document.getElementById('edit_inventory_location').value = data.property_name || 'Office';
+        }
+        if (document.getElementById('edit_issue_order_no')) {
+            document.getElementById('edit_issue_order_no').value = data.issue_order_no || '';
+        }
+        if (document.getElementById('edit_received_from')) {
+            document.getElementById('edit_received_from').value = data.received_from || '';
+        }
+        if (document.getElementById('edit_receipt_no')) {
+            document.getElementById('edit_receipt_no').value = data.receipt_no || '';
+        }
         document.getElementById('edit_inventory_item').value = data.inventory_item || '';
+
+        var baseStock = (data.initial_count !== undefined && data.initial_count !== null) ? parseInt(data.initial_count) : parseInt(data.available_quantity || 1);
+        var recvStock = parseInt(data.received_quantity || 0);
+
         if (document.getElementById('edit_initial_count')) {
-            document.getElementById('edit_initial_count').value = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 1);
+            document.getElementById('edit_initial_count').value = baseStock;
+        }
+        if (document.getElementById('edit_received_quantity')) {
+            document.getElementById('edit_received_quantity').value = recvStock;
         }
         
-        originalInvQty = parseInt(data.available_quantity) || 1;
+        originalInvQty = parseInt(data.available_quantity) || (baseStock + recvStock);
         originalInvCondition = data.current_condition || 'Good';
 
         document.getElementById('edit_available_quantity').value = originalInvQty;
@@ -770,117 +811,21 @@ require_once '../../../includes/header.php';
                 noticeEl.style.display = 'block';
             }
             if (qtyInput && originalInvCondition !== 'Damaged') {
-                qtyInput.value = Math.max(0, originalInvQty - 1);
+                var base = parseInt(document.getElementById('edit_initial_count').value) || 0;
+                var recv = parseInt(document.getElementById('edit_received_quantity').value) || 0;
+                qtyInput.value = Math.max(0, base + recv - 1);
             }
         } else {
             if (noticeEl) {
                 noticeEl.classList.add('d-none');
                 noticeEl.style.display = 'none';
             }
-            if (qtyInput && originalInvCondition !== 'Damaged') {
-                qtyInput.value = originalInvQty;
+            if (qtyInput) {
+                var base = parseInt(document.getElementById('edit_initial_count').value) || 0;
+                var recv = parseInt(document.getElementById('edit_received_quantity').value) || 0;
+                qtyInput.value = base + recv;
             }
         }
-    });
-
-    function openInventoryTransferModal(data, assetType) {
-        var modalEl = document.getElementById('inventoryTransferModal');
-        if (!modalEl) return;
-        
-        var assetMap = {
-            'building': 'building_inventory',
-            'furniture': 'furniture',
-            'machinery': 'machinery',
-            'instrument': 'instrument',
-            'counterfoil': 'counterfoil'
-        };
-        var normalizedType = assetMap[assetType] || assetType || 'building_inventory';
-        
-        if (document.getElementById('trans_item_id')) {
-            document.getElementById('trans_item_id').value = data.id || '';
-        }
-        if (document.getElementById('trans_asset_type')) {
-            document.getElementById('trans_asset_type').value = normalizedType;
-        }
-        
-        var itemName = data.inventory_item || data.furniture_type || data.furniture_name || data.machinery_type || data.machinery_name || data.instrument_type || data.counterfoil_type || '-';
-        
-        if (document.getElementById('trans_item_name')) {
-            document.getElementById('trans_item_name').textContent = itemName;
-        }
-        if (document.getElementById('trans_item_name_input')) {
-            document.getElementById('trans_item_name_input').value = itemName;
-        }
-        if (document.getElementById('trans_item_location')) {
-            document.getElementById('trans_item_location').textContent = data.property_name || data.remarks || 'Range Station';
-        }
-        if (document.getElementById('trans_item_condition')) {
-            document.getElementById('trans_item_condition').textContent = data.current_condition || 'Good';
-        }
-        
-        var availQty = parseInt(data.available_quantity) || 1;
-        if (document.getElementById('trans_item_available_qty')) {
-            document.getElementById('trans_item_available_qty').textContent = availQty;
-        }
-        
-        var qtyInput = document.getElementById('trans_transfer_quantity');
-        if (qtyInput) {
-            qtyInput.max = availQty;
-            qtyInput.value = 1;
-        }
-        
-        if (document.getElementById('trans_target_unit')) {
-            document.getElementById('trans_target_unit').selectedIndex = 0;
-        }
-        if (document.getElementById('trans_dispatch_reference')) {
-            document.getElementById('trans_dispatch_reference').value = '';
-        }
-        if (document.getElementById('trans_transfer_reason')) {
-            document.getElementById('trans_transfer_reason').value = '';
-        }
-        if (document.getElementById('trans_from_unit')) {
-            document.getElementById('trans_from_unit').value = data.unit || 'range_veterinary_officer';
-        }
-        
-        var modal = new bootstrap.Modal(modalEl);
-        modal.show();
-    }
-
-    $('#inventoryTransferForm').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var submitBtn = form.find('button[type="submit"]');
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Processing...');
-
-        $.ajax({
-            url: 'processors/process_inventory_transfer.php',
-            type: 'POST',
-            data: form.serialize(),
-            dataType: 'json',
-            success: function(res) {
-                submitBtn.prop('disabled', false).html('<i class="bi bi-send-check me-1"></i> Dispatch Transfer Request');
-                if (res.success) {
-                    var modalEl = document.getElementById('inventoryTransferModal');
-                    var modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Transfer Request Initiated',
-                        html: '<p>' + res.message + '</p><div class="alert alert-info py-2 small mb-0"><i class="bi bi-info-circle me-1"></i><strong>Notice:</strong> As required by inventory policy, the active count remains intact at <strong>' + res.current_available_quantity + '</strong> until formal executive approval.</div>',
-                        confirmButtonColor: '#820100'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire('Transfer Request Failed', res.message, 'error');
-                }
-            },
-            error: function(xhr, status, err) {
-                submitBtn.prop('disabled', false).html('<i class="bi bi-send-check me-1"></i> Dispatch Transfer Request');
-                Swal.fire('Error', 'Server processing failure: ' + err, 'error');
-            }
-        });
     });
 
     function openBoardOfSurveyModal(data) {

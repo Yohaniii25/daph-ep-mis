@@ -373,11 +373,11 @@ if (!function_exists('approve_pending_edit')) {
 
             $upd_emp = $mysqli->prepare("
                 UPDATE users 
-                SET unit = ?, range_id = ?, district_id = ?, farm_id = ?, training_center_id = ?, district = ?
+                SET unit = ?, current_station = ?, range_id = ?, district_id = ?, farm_id = ?, training_center_id = ?, district = ?, position_to_current_location = CURDATE()
                 WHERE id = ?
             ");
             if ($upd_emp) {
-                $upd_emp->bind_param("siiiisi", $target_unit, $t_range_id, $t_dist_id, $t_farm_id, $t_tc_id, $t_district, $record_id);
+                $upd_emp->bind_param("ssiiiisi", $target_unit, $target_unit, $t_range_id, $t_dist_id, $t_farm_id, $t_tc_id, $t_district, $record_id);
                 $update_ok = $upd_emp->execute();
                 $upd_emp->close();
             } else {

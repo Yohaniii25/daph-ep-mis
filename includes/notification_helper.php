@@ -172,7 +172,7 @@ if (!function_exists('dispatch_transfer_request_notification')) {
 
         $title = "Employee Transfer Request: {$emp_disp}";
         $message = "Transfer requested{$by_text} for {$emp_disp}{$svc_disp}{$from_text} to [{$target_unit}]. Reason: \"{$reason}\"";
-        $link = "pages/modules/pd/pending_approvals.php?filter=transfers";
+        $link = "pages/modules/hr/transfer_management.php";
 
         // Identify recipients: Provincial Admin Branch (Administrator, Provincial Director, DD HQ-1, DD HQ-2)
         $recipient_user_ids = [];

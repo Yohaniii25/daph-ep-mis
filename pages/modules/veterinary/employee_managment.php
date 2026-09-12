@@ -83,6 +83,7 @@ $query = "
         od.date_of_birth,
         od.appointment_date,
         od.appointment_date_current_position,
+        od.position_to_current_location,
         od.registered_date,
         od.unit,
         vr.name as range_name, 
@@ -323,6 +324,10 @@ require_once '../../../includes/header.php';
                         <span class="fw-semibold text-dark" id="view_appointment_current">-</span>
                     </div>
                     <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Position to Current Location</small>
+                        <span class="fw-semibold text-dark" id="view_position_to_current_location">-</span>
+                    </div>
+                    <div class="col-md-6">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Registered Date</small>
                         <span class="fw-semibold text-dark" id="view_registered_date">-</span>
                     </div>
@@ -398,6 +403,9 @@ require_once '../../../includes/header.php';
         document.getElementById('view_date_of_birth').textContent = data.date_of_birth || '-';
         document.getElementById('view_appointment_date').textContent = data.appointment_date || '-';
         document.getElementById('view_appointment_current').textContent = data.appointment_date_current_position || '-';
+        if (document.getElementById('view_position_to_current_location')) {
+            document.getElementById('view_position_to_current_location').textContent = data.position_to_current_location || '-';
+        }
         document.getElementById('view_registered_date').textContent = data.registered_date || '-';
         var modal = new bootstrap.Modal(document.getElementById('viewEmployeeModal'));
         modal.show();
@@ -469,6 +477,9 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_date_of_birth').value = data.date_of_birth || '';
         document.getElementById('edit_appointment_date').value = data.appointment_date || '';
         document.getElementById('edit_appointment_date_current_position').value = data.appointment_date_current_position || '';
+        if (document.getElementById('edit_position_to_current_location')) {
+            document.getElementById('edit_position_to_current_location').value = data.position_to_current_location || '';
+        }
 
         var editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
         editModal.show();

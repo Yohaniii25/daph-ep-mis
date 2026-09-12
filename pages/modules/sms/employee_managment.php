@@ -113,6 +113,7 @@ if ($stmt) {
                                     data-date_of_birth="<?= htmlspecialchars($emp['date_of_birth'] ?? '') ?>"
                                     data-appointment_date="<?= htmlspecialchars($emp['appointment_date'] ?? '') ?>"
                                     data-appointment_date_current="<?= htmlspecialchars($emp['appointment_date_current_position'] ?? '') ?>"
+                                    data-position_to_current_location="<?= htmlspecialchars($emp['position_to_current_location'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#viewEmployeeModal"
                                     title="View Profile">
                                     <i class="bi bi-eye"></i> View
@@ -130,6 +131,7 @@ if ($stmt) {
                                     data-date_of_birth="<?= htmlspecialchars($emp['date_of_birth'] ?? '') ?>"
                                     data-appointment_date="<?= htmlspecialchars($emp['appointment_date'] ?? '') ?>"
                                     data-appointment_date_current="<?= htmlspecialchars($emp['appointment_date_current_position'] ?? '') ?>"
+                                    data-position_to_current_location="<?= htmlspecialchars($emp['position_to_current_location'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#editEmployeeModal"
                                     title="Edit Officer">
                                     <i class="bi bi-pencil-square"></i> Edit
@@ -151,12 +153,12 @@ if ($stmt) {
 <!-- Include Modals -->
 <?php
 require_once __DIR__ . '/models/add_employee.php';
-require_once __DIR__ . '/models/edit_employee.php';
 require_once __DIR__ . '/models/view_employee.php';
+require_once __DIR__ . '/models/edit_employee.php';
 ?>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
     $(document).on('click', '.btn-view-emp', function() {
         const btn = $(this);
         $('#view_full_name').text(btn.data('full_name'));
@@ -170,6 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#view_date_of_birth').text(btn.data('date_of_birth') || 'N/A');
         $('#view_appointment_date').text(btn.data('appointment_date') || 'N/A');
         $('#view_appointment_date_current').text(btn.data('appointment_date_current') || 'N/A');
+        $('#view_position_to_current_location').text(btn.data('position_to_current_location') || 'N/A');
     });
 
     $(document).on('click', '.btn-edit-emp', function() {
@@ -186,6 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#edit_date_of_birth').val(btn.data('date_of_birth'));
         $('#edit_appointment_date').val(btn.data('appointment_date'));
         $('#edit_appointment_date_current').val(btn.data('appointment_date_current'));
+        $('#edit_position_to_current_location').val(btn.data('position_to_current_location'));
     });
 
     if ($.fn.DataTable) {
