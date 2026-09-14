@@ -47,10 +47,13 @@ require_once '../../../includes/header.php';
                     District: <strong class="text-dark"><?= htmlspecialchars($district_name) ?></strong>
                 </p>
             </div>
-            <div>
+            <div class="d-flex gap-2">
                 <button class="btn text-light shadow-sm" style="background-color: #003ddc;" data-bs-toggle="modal" data-bs-target="#addInstrumentModal">
                     <i class="bi bi-plus-circle-fill me-2"></i>Add Instrument Record
                 </button>
+                <a href="office_details.php" class="btn btn-secondary shadow-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
             </div>
         </div>
 
@@ -61,11 +64,13 @@ require_once '../../../includes/header.php';
                         <thead class="table-light text-uppercase small">
                             <tr>
                                 <th>Type</th>
-                                <th>Condition</th>
-                                <th class="text-center">Initial Baseline</th>
-                                <th class="text-center">Available Quantity</th>
+                                <th>Issue Order No.</th>
+                                <th>Received From</th>
+                                <th>Receipt No.</th>
+                                <th class="text-center">Quantity</th>
                                 <th>Date of Purchase / Received</th>
-                                <th>Remarks</th>
+                                <th>Condition</th>
+                                <th>Specification / Remarks</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -85,11 +90,26 @@ require_once '../../../includes/header.php';
                             ?>
                             <tr id="instrument-row-<?= $row['id'] ?>">
                                 <td><span class="fw-bold text-dark"><?= htmlspecialchars($row['instrument_type']) ?></span></td>
-                                <td><span class="badge <?= $badge_style ?> rounded-pill px-2.5 py-1.5"><?= htmlspecialchars($row['current_condition']) ?></span></td>
-                                <td class="text-center fw-semibold text-secondary"><?= sprintf("%02d", $row['initial_count'] ?? $row['available_quantity']) ?></td>
-                                <td class="text-center fw-bold text-dark"><?= sprintf("%02d", $row['available_quantity']) ?></td>
+                                <td><span class="badge bg-light text-dark border font-monospace"><?= !empty($row['issue_order_no']) ? htmlspecialchars($row['issue_order_no']) : '-' ?></span></td>
+                                <td><small class="text-secondary"><?= !empty($row['received_from']) ? htmlspecialchars($row['received_from']) : '-' ?></small></td>
+                                <td><span class="badge bg-light text-dark border font-monospace"><?= !empty($row['receipt_no']) ? htmlspecialchars($row['receipt_no']) : '-' ?></span></td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $row['available_quantity']) ?></span>
+                                    <br>
+                                    <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($row['initial_count']) ?> | Recv: <?= intval($row['received_quantity'] ?? 0) ?></small>
+                                </td>
                                 <td class="text-secondary small fw-medium"><?= htmlspecialchars($row['purchase_date']) ?></td>
-                                <td><small class="text-muted"><?= !empty($row['remarks']) ? htmlspecialchars($row['remarks']) : '-' ?></small></td>
+                                <td><span class="badge <?= $badge_style ?> rounded-pill px-2.5 py-1.5"><?= htmlspecialchars($row['current_condition']) ?></span></td>
+                                <td>
+                                    <?php if (!empty($row['specification'])): ?>
+                                        <div class="fw-semibold text-dark small"><?= htmlspecialchars($row['specification']) ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($row['remarks'])): ?>
+                                        <small class="text-muted"><?= htmlspecialchars($row['remarks']) ?></small>
+                                    <?php elseif (empty($row['specification'])): ?>
+                                        <small class="text-muted">-</small>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-center">
                                     <div class="btn-group">
                                         <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewInstrument(<?= json_encode($row) ?>)'>
@@ -184,14 +204,28 @@ require_once '../../../includes/header.php';
         if (document.getElementById('view_instrument_initial_count')) {
             document.getElementById('view_instrument_initial_count').textContent = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || '-');
         }
+        if (document.getElementById('view_instrument_received_quantity')) {
+            document.getElementById('view_instrument_received_quantity').textContent = (data.received_quantity !== undefined && data.received_quantity !== null) ? data.received_quantity : 0;
+        }
         document.getElementById('view_instrument_quantity').textContent = data.available_quantity || '-';
         document.getElementById('view_instrument_purchase_date').textContent = data.purchase_date || '-';
+        if (document.getElementById('view_instrument_issue_order_no')) {
+            document.getElementById('view_instrument_issue_order_no').textContent = data.issue_order_no || '-';
+        }
+        if (document.getElementById('view_instrument_received_from')) {
+            document.getElementById('view_instrument_received_from').textContent = data.received_from || '-';
+        }
+        if (document.getElementById('view_instrument_receipt_no')) {
+            document.getElementById('view_instrument_receipt_no').textContent = data.receipt_no || '-';
+        }
+        if (document.getElementById('view_instrument_specification')) {
+            document.getElementById('view_instrument_specification').textContent = data.specification || '-';
+        }
         document.getElementById('view_instrument_remarks').textContent = data.remarks || '-';
         var modal = new bootstrap.Modal(document.getElementById('viewInstrumentModal'));
         modal.show();
     }
 
-    var originalInstrumentQty = 0;
     var originalInstrumentCondition = '';
 
     function editInstrument(data) {
@@ -200,15 +234,30 @@ require_once '../../../includes/header.php';
         if (document.getElementById('edit_instrument_initial_count')) {
             document.getElementById('edit_instrument_initial_count').value = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 1);
         }
-        originalInstrumentQty = parseInt(data.available_quantity) || 1;
+        if (document.getElementById('edit_instrument_received_quantity')) {
+            document.getElementById('edit_instrument_received_quantity').value = (data.received_quantity !== undefined && data.received_quantity !== null) ? data.received_quantity : 0;
+        }
         originalInstrumentCondition = data.current_condition || 'Good';
 
-        document.getElementById('edit_instrument_quantity').value = originalInstrumentQty;
         document.getElementById('edit_instrument_condition').value = originalInstrumentCondition;
         document.getElementById('edit_instrument_purchase_date').value = data.purchase_date || '';
+        if (document.getElementById('edit_instrument_issue_order_no')) {
+            document.getElementById('edit_instrument_issue_order_no').value = data.issue_order_no || '';
+        }
+        if (document.getElementById('edit_instrument_received_from')) {
+            document.getElementById('edit_instrument_received_from').value = data.received_from || '';
+        }
+        if (document.getElementById('edit_instrument_receipt_no')) {
+            document.getElementById('edit_instrument_receipt_no').value = data.receipt_no || '';
+        }
+        if (document.getElementById('edit_instrument_specification')) {
+            document.getElementById('edit_instrument_specification').value = data.specification || '';
+        }
         document.getElementById('edit_instrument_remarks').value = data.remarks || '';
         document.getElementById('edit_instrument_unit').value = data.unit || 'range_veterinary_officer';
         
+        calcEditInstrumentAvailability();
+
         var noticeEl = document.getElementById('edit_instrument_damaged_notice');
         if (noticeEl) {
             if (originalInstrumentCondition === 'Damaged') {
@@ -224,28 +273,36 @@ require_once '../../../includes/header.php';
         modal.show();
     }
 
+    function calcAddInstrumentAvailability() {
+        var base = parseInt(document.getElementById('add_instrument_initial_count').value) || 0;
+        var recv = parseInt(document.getElementById('add_instrument_received_quantity').value) || 0;
+        var avail = base + recv;
+        var condSelect = document.querySelector('#addInstrumentForm select[name="current_condition"]');
+        if (condSelect && condSelect.value === 'Damaged') {
+            avail = Math.max(0, avail - 1);
+        }
+        document.getElementById('add_instrument_available_quantity').value = avail;
+    }
+
     $('#edit_instrument_condition').on('change', function() {
         var selectedCond = $(this).val();
         var noticeEl = document.getElementById('edit_instrument_damaged_notice');
-        var qtyInput = document.getElementById('edit_instrument_quantity');
-        
         if (selectedCond === 'Damaged') {
             if (noticeEl) {
                 noticeEl.classList.remove('d-none');
                 noticeEl.style.display = 'block';
-            }
-            if (qtyInput && originalInstrumentCondition !== 'Damaged') {
-                qtyInput.value = Math.max(0, originalInstrumentQty - 1);
             }
         } else {
             if (noticeEl) {
                 noticeEl.classList.add('d-none');
                 noticeEl.style.display = 'none';
             }
-            if (qtyInput && originalInstrumentCondition !== 'Damaged') {
-                qtyInput.value = originalInstrumentQty;
-            }
         }
+        calcEditInstrumentAvailability();
+    });
+
+    $('#addInstrumentForm select[name="current_condition"]').on('change', function() {
+        calcAddInstrumentAvailability();
     });
 
     function openInventoryTransferModal(data, assetType) {

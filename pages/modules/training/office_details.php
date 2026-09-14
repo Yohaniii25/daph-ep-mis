@@ -114,7 +114,11 @@ $cnt_staff       = getAssetCount($mysqli, 'users', $current_center_id, $user_id)
         </h3>
         <p class="text-muted mb-0 small">Official inventory directory and asset management for <strong class="text-dark"><?= htmlspecialchars($center_name) ?></strong> (<?= htmlspecialchars($center_location) ?>)</p>
     </div>
-
+    <div class="d-flex gap-2">
+        <a href="../../../dashboard.php" class="btn btn-secondary shadow-sm fw-bold">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
 </div>
 
 <!-- Notification Status SweetAlert -->

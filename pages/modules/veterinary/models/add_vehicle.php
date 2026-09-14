@@ -42,9 +42,53 @@
                                 <option value="Inactive / Out of Commission">Inactive / Out of Commission</option>
                             </select>
                         </div>
+                        <!-- Availability Auto-Calculation Block -->
                         <div class="col-md-12">
-                            <label class="form-label small fw-bold">Other Relevant Details / Assignments</label>
-                            <textarea name="other_details" class="form-control" rows="2" placeholder="e.g. Assigned to Field Officer. Heavy load rear leaf springs installed..."></textarea>
+                            <div class="p-3 bg-light rounded border">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary mb-1">
+                                            <i class="bi bi-lock-fill me-1"></i>Initial Baseline Stock <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" name="initial_count" id="add_vehicle_initial_count" class="form-control fw-bold" min="0" value="1" required oninput="calcAddVehicleAvailability()">
+                                        <small class="text-muted" style="font-size: 10px;">Manually entered baseline fleet</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-success mb-1">
+                                            <i class="bi bi-plus-circle-fill me-1"></i>Received Quantity <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" name="received_quantity" id="add_vehicle_received_quantity" class="form-control fw-bold border-success" min="0" value="0" required oninput="calcAddVehicleAvailability()">
+                                        <small class="text-muted" style="font-size: 10px;">Newly received / allocated fleet</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-primary mb-1">
+                                            <i class="bi bi-calculator-fill me-1"></i>Current Availability (Auto)
+                                        </label>
+                                        <input type="number" name="available_quantity" id="add_vehicle_available_quantity" class="form-control fw-bold bg-white text-primary border-primary fs-5" readonly value="1">
+                                        <small class="text-primary fw-semibold" style="font-size: 10px;"><i class="bi bi-check2-circle me-1"></i>Baseline + Received Amount</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Specification (Make / Model / Capacity)</label>
+                            <input type="text" name="specification" class="form-control" placeholder="e.g. Toyota Hilux 2.4L Diesel 4WD">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" class="form-control" placeholder="e.g. IO-2024-001">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" class="form-control" placeholder="e.g. Ministry Pool / Provincial Council">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" class="form-control" placeholder="e.g. REC-77401">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification / Remarks / Assignments</label>
+                            <textarea name="remarks" class="form-control" rows="2" placeholder="e.g. Assigned to Field Officer. Heavy load rear leaf springs installed..."></textarea>
                         </div>
                     </div>
                 </div>

@@ -60,10 +60,13 @@ $stmt->close();
                 <thead class="table-dark" style="background-color: #370709;">
                     <tr>
                         <th>Machinery / Equipment Specification</th>
-                        <th>Available Qty</th>
+                        <th>Issue Order No.</th>
+                        <th>Received From</th>
+                        <th>Receipt No.</th>
+                        <th>Quantity</th>
                         <th>Commission Date</th>
                         <th>Current Condition</th>
-                        <th>Operational Notes / Temperature Scope</th>
+                        <th>Specification / Remarks</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -71,7 +74,14 @@ $stmt->close();
                     <?php foreach ($machinery_list as $mac): ?>
                         <tr>
                             <td class="fw-bold text-dark"><?= htmlspecialchars($mac['machinery_type']) ?></td>
-                            <td class="fw-bold fs-6"><span class="badge bg-light text-dark border px-3 py-2 fs-6"><?= intval($mac['available_quantity']) ?></span></td>
+                            <td><?= htmlspecialchars($mac['issue_order_no'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($mac['received_from'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($mac['receipt_no'] ?: '-') ?></td>
+                            <td class="text-center">
+                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $mac['available_quantity'] ?? 1) ?></span>
+                                <br>
+                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($mac['initial_count'] ?? 1) ?> | Recv: <?= intval($mac['received_quantity'] ?? 0) ?></small>
+                            </td>
                             <td><?= !empty($mac['purchase_date']) ? date('Y-m-d', strtotime($mac['purchase_date'])) : '-' ?></td>
                             <td>
                                 <?php
@@ -80,14 +90,25 @@ $stmt->close();
                                 ?>
                                 <span class="badge <?= $badge_class ?>"><?= htmlspecialchars($cond) ?></span>
                             </td>
-                            <td class="small text-muted"><?= htmlspecialchars($mac['remarks'] ?: '-') ?></td>
+                            <td>
+                                <?php if (!empty($mac['specification'])): ?>
+                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($mac['specification']) ?></div>
+                                <?php endif; ?>
+                                <div class="small text-muted"><?= htmlspecialchars($mac['remarks'] ?: '-') ?></div>
+                            </td>
                             <td class="text-center text-nowrap">
                                 <button class="btn btn-sm btn-outline-primary me-1 btn-edit-machinery"
                                     data-id="<?= $mac['id'] ?>"
                                     data-machinery_type="<?= htmlspecialchars($mac['machinery_type']) ?>"
+                                    data-issue_order_no="<?= htmlspecialchars($mac['issue_order_no'] ?? '') ?>"
+                                    data-received_from="<?= htmlspecialchars($mac['received_from'] ?? '') ?>"
+                                    data-receipt_no="<?= htmlspecialchars($mac['receipt_no'] ?? '') ?>"
+                                    data-initial_count="<?= intval($mac['initial_count'] ?? 1) ?>"
+                                    data-received_quantity="<?= intval($mac['received_quantity'] ?? 0) ?>"
                                     data-available_quantity="<?= $mac['available_quantity'] ?>"
                                     data-purchase_date="<?= htmlspecialchars($mac['purchase_date'] ?? '') ?>"
                                     data-current_condition="<?= htmlspecialchars($mac['current_condition']) ?>"
+                                    data-specification="<?= htmlspecialchars($mac['specification'] ?? '') ?>"
                                     data-remarks="<?= htmlspecialchars($mac['remarks'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#editMachineryModal"
                                     title="Edit Machinery">
@@ -117,26 +138,50 @@ $stmt->close();
                 <input type="hidden" name="action" value="save_machinery">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Machinery Type / Name <span class="text-danger">*</span></label>
                             <input type="text" name="machinery_type" class="form-control" placeholder="e.g. Solar Ice-Lined Vaccine Refrigerator (ILR)" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Quantity Available <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" class="form-control" value="1" min="1" required>
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" class="form-control" placeholder="e.g. IO-2024-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" class="form-control" placeholder="e.g. Ministry Store / Supplier">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" class="form-control" placeholder="e.g. REC-1234">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Commission / Purchase Date</label>
                             <input type="date" name="purchase_date" class="form-control" value="<?= date('Y-m-d') ?>">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="add_mac_initial_count" class="form-control fw-bold" value="1" min="0" required oninput="calcAddMachinery()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="add_mac_received_quantity" class="form-control fw-bold" value="0" min="0" required oninput="calcAddMachinery()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="add_mac_available_quantity" class="form-control fw-bold bg-light" value="1" readonly>
+                        </div>
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Operational Condition</label>
-                            <select name="current_condition" class="form-select">
+                            <select name="current_condition" id="add_mac_condition" class="form-select" onchange="calcAddMachinery()">
                                 <option value="Operational (Optimal)" selected>Operational (Optimal)</option>
                                 <option value="Operational (Needs Calibration)">Operational (Needs Calibration)</option>
                                 <option value="Requires Service / Repair">Requires Service / Repair</option>
                                 <option value="Decommissioned / Non-Functional">Decommissioned / Non-Functional</option>
                             </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification (Brand / Model / Specs)</label>
+                            <textarea name="specification" class="form-control" rows="2" placeholder="e.g. Vestfrost VLS 024 GreenLine, 43.5L capacity..."></textarea>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Technical Specifications &amp; Temperature Profile</label>
@@ -168,26 +213,50 @@ $stmt->close();
                 <input type="hidden" name="id" id="edit_machinery_id">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Machinery Type / Name <span class="text-danger">*</span></label>
                             <input type="text" name="machinery_type" id="edit_machinery_type" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Quantity Available <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" id="edit_machinery_qty" class="form-control" min="1" required>
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_machinery_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" id="edit_machinery_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_machinery_receipt_no" class="form-control">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Commission / Purchase Date</label>
                             <input type="date" name="purchase_date" id="edit_machinery_date" class="form-control">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_mac_initial_count" class="form-control fw-bold" min="0" required oninput="calcEditMachinery()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_mac_received_quantity" class="form-control fw-bold" min="0" required oninput="calcEditMachinery()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_machinery_qty" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Operational Condition</label>
-                            <select name="current_condition" id="edit_machinery_cond" class="form-select">
+                            <select name="current_condition" id="edit_machinery_cond" class="form-select" onchange="calcEditMachinery()">
                                 <option value="Operational (Optimal)">Operational (Optimal)</option>
                                 <option value="Operational (Needs Calibration)">Operational (Needs Calibration)</option>
                                 <option value="Requires Service / Repair">Requires Service / Repair</option>
                                 <option value="Decommissioned / Non-Functional">Decommissioned / Non-Functional</option>
                             </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification (Brand / Model / Specs)</label>
+                            <textarea name="specification" id="edit_machinery_specification" class="form-control" rows="2"></textarea>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Technical Specifications &amp; Notes</label>
@@ -207,15 +276,42 @@ $stmt->close();
 </div>
 
 <script>
+function calcAddMachinery() {
+    const base = parseInt(document.getElementById('add_mac_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('add_mac_received_quantity').value) || 0;
+    const cond = document.getElementById('add_mac_condition').value;
+    let qty = base + recv;
+    if (cond.includes('Decommissioned') || cond.includes('Non-Functional') || cond.includes('Requires Service') || cond.includes('Repair')) {
+        qty = Math.max(0, qty - 1);
+    }
+    document.getElementById('add_mac_available_quantity').value = Math.max(0, qty);
+}
+function calcEditMachinery() {
+    const base = parseInt(document.getElementById('edit_mac_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_mac_received_quantity').value) || 0;
+    const cond = document.getElementById('edit_machinery_cond').value;
+    let qty = base + recv;
+    if (cond.includes('Decommissioned') || cond.includes('Non-Functional') || cond.includes('Requires Service') || cond.includes('Repair')) {
+        qty = Math.max(0, qty - 1);
+    }
+    document.getElementById('edit_machinery_qty').value = Math.max(0, qty);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '.btn-edit-machinery', function() {
         const btn = $(this);
         $('#edit_machinery_id').val(btn.data('id'));
         $('#edit_machinery_type').val(btn.data('machinery_type'));
-        $('#edit_machinery_qty').val(btn.data('available_quantity'));
+        $('#edit_machinery_issue_order_no').val(btn.data('issue_order_no'));
+        $('#edit_machinery_received_from').val(btn.data('received_from'));
+        $('#edit_machinery_receipt_no').val(btn.data('receipt_no'));
+        $('#edit_mac_initial_count').val(btn.data('initial_count') !== undefined ? btn.data('initial_count') : btn.data('available_quantity'));
+        $('#edit_mac_received_quantity').val(btn.data('received_quantity') !== undefined ? btn.data('received_quantity') : 0);
         $('#edit_machinery_date').val(btn.data('purchase_date'));
         $('#edit_machinery_cond').val(btn.data('current_condition'));
+        $('#edit_machinery_specification').val(btn.data('specification'));
         $('#edit_machinery_rem').val(btn.data('remarks'));
+        calcEditMachinery();
     });
 
     if ($.fn.DataTable) {

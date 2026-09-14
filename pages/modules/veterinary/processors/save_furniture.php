@@ -15,12 +15,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $range_id    = !empty($_POST['range_id']) ? intval($_POST['range_id']) : ($_SESSION['range_id'] ?? null);
 
     $furniture_type     = trim(htmlspecialchars($_POST['furniture_type'] ?? ''));
-    $available_quantity = isset($_POST['available_quantity']) ? intval($_POST['available_quantity']) : 0;
-    $initial_count      = isset($_POST['initial_count']) ? intval($_POST['initial_count']) : $available_quantity;
+    $initial_count      = isset($_POST['initial_count']) ? max(0, intval($_POST['initial_count'])) : 0;
+    $received_quantity  = isset($_POST['received_quantity']) ? max(0, intval($_POST['received_quantity'])) : 0;
+    $available_quantity = $initial_count + $received_quantity;
     $date_received      = trim(htmlspecialchars($_POST['date_received'] ?? ''));
     $current_condition  = trim(htmlspecialchars($_POST['current_condition'] ?? ''));
     $remarks            = trim(htmlspecialchars($_POST['remarks'] ?? ''));
     $unit               = trim(htmlspecialchars($_POST['unit'] ?? ''));
+
+    $issue_order_no     = trim(htmlspecialchars($_POST['issue_order_no'] ?? ''));
+    $received_from      = trim(htmlspecialchars($_POST['received_from'] ?? ''));
+    $receipt_no         = trim(htmlspecialchars($_POST['receipt_no'] ?? ''));
+    $specification      = trim(htmlspecialchars($_POST['specification'] ?? ''));
 
     if (!$user_id || empty($furniture_type) || $available_quantity < 0) {
         echo json_encode(['success' => false, 'message' => 'Validation checklist incomplete. Required values missing.']);
@@ -33,9 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO furniture_assets (user_id, district_id, range_id, furniture_type, current_condition, available_quantity, initial_count, date_received, remarks, unit, removal_status, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
+
+    $stmt = $mysqli->prepare("INSERT INTO furniture_assets (user_id, district_id, range_id, furniture_type, current_condition, available_quantity, initial_count, received_quantity, date_received, remarks, unit, issue_order_no, received_from, receipt_no, specification, removal_status, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
     if ($stmt) {
-        $stmt->bind_param("iiisssisss", $user_id, $district_id, $range_id, $furniture_type, $current_condition, $available_quantity, $initial_count, $date_received, $remarks, $unit);
+        $stmt->bind_param("iiisssiisssssss", $user_id, $district_id, $range_id, $furniture_type, $current_condition, $available_quantity, $initial_count, $received_quantity, $date_received, $remarks, $unit, $issue_order_no, $received_from, $receipt_no, $specification);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Furniture item saved successfully.']);
         } else {

@@ -611,10 +611,13 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                     <tr>
                                         <th>Range Office</th>
                                         <th>Machinery Type</th>
+                                        <th>Issue Order No.</th>
+                                        <th>Received From</th>
+                                        <th>Receipt No.</th>
+                                        <th class="text-center">Quantity</th>
                                         <th>Condition</th>
-                                        <th class="text-center">Available Quantity</th>
                                         <th>Purchase / Received Date</th>
-                                        <th>Remarks</th>
+                                        <th>Specification / Remarks</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -625,14 +628,26 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                                 <i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($item['range_name'] ?? 'District Central') ?>
                                             </td>
                                             <td class="fw-bold text-dark"><?= htmlspecialchars($item['machinery_type']) ?></td>
+                                            <td><?= htmlspecialchars($item['issue_order_no'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['received_from'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['receipt_no'] ?: '-') ?></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $item['available_quantity'] ?? 1) ?></span>
+                                                <br>
+                                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($item['initial_count'] ?? 1) ?> | Recv: <?= intval($item['received_quantity'] ?? 0) ?></small>
+                                            </td>
                                             <td>
                                                 <span class="badge bg-<?= ($item['current_condition'] === 'Good' || $item['current_condition'] === 'Operational') ? 'success' : (($item['current_condition'] === 'Needs Repair') ? 'warning text-dark' : 'danger') ?>">
                                                     <?= htmlspecialchars($item['current_condition']) ?>
                                                 </span>
                                             </td>
-                                            <td class="text-center fw-bold"><?= sprintf("%02d", $item['available_quantity']) ?></td>
                                             <td><?= htmlspecialchars($item['purchase_date'] ?: '-') ?></td>
-                                            <td><?= htmlspecialchars($item['remarks'] ?: '-') ?></td>
+                                            <td>
+                                                <?php if (!empty($item['specification'])): ?>
+                                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($item['specification']) ?></div>
+                                                <?php endif; ?>
+                                                <div class="small text-muted"><?= htmlspecialchars($item['remarks'] ?: '-') ?></div>
+                                            </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-info me-1" onclick='viewMachinery(<?= json_encode($item) ?>)' title="View Details">
                                                     <i class="bi bi-eye"></i>
@@ -691,8 +706,12 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                         <th>Vehicle Type</th>
                                         <th>Vehicle Number</th>
                                         <th>Chassis Number</th>
+                                        <th>Issue Order No.</th>
+                                        <th>Received From</th>
+                                        <th>Receipt No.</th>
+                                        <th class="text-center">Quantity</th>
                                         <th>Condition</th>
-                                        <th>Other Details</th>
+                                        <th>Specification / Remarks</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -705,12 +724,25 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                             <td class="fw-bold text-dark"><?= htmlspecialchars($item['vehicle_type']) ?></td>
                                             <td class="font-monospace fw-bold text-dark"><?= htmlspecialchars($item['vehicle_number']) ?></td>
                                             <td class="font-monospace text-muted"><?= htmlspecialchars($item['chassis_number'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['issue_order_no'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['received_from'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['receipt_no'] ?: '-') ?></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $item['available_quantity'] ?? 1) ?></span>
+                                                <br>
+                                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($item['initial_count'] ?? 1) ?> | Recv: <?= intval($item['received_quantity'] ?? 0) ?></small>
+                                            </td>
                                             <td>
                                                 <span class="badge bg-<?= ($item['current_condition'] === 'Good' || $item['current_condition'] === 'Operational') ? 'success' : (($item['current_condition'] === 'Needs Repair') ? 'warning text-dark' : 'danger') ?>">
                                                     <?= htmlspecialchars($item['current_condition']) ?>
                                                 </span>
                                             </td>
-                                            <td><?= htmlspecialchars($item['other_details'] ?: '-') ?></td>
+                                            <td>
+                                                <?php if (!empty($item['specification'])): ?>
+                                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($item['specification']) ?></div>
+                                                <?php endif; ?>
+                                                <div class="small text-muted"><?= htmlspecialchars($item['remarks'] ?: ($item['other_details'] ?: '-')) ?></div>
+                                            </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-info me-1" onclick='viewVehicle(<?= json_encode($item) ?>)' title="View Details">
                                                     <i class="bi bi-eye"></i>
@@ -767,10 +799,13 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                     <tr>
                                         <th>Range Office</th>
                                         <th>Furniture Type / Item</th>
-                                        <th class="text-center">Available Quantity</th>
+                                        <th>Issue Order No.</th>
+                                        <th>Received From</th>
+                                        <th>Receipt No.</th>
+                                        <th class="text-center">Quantity</th>
                                         <th>Date Received</th>
                                         <th>Condition</th>
-                                        <th>Remarks</th>
+                                        <th>Specification / Remarks</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -781,14 +816,26 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                                 <i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($item['range_name'] ?? 'District Store') ?>
                                             </td>
                                             <td class="fw-bold text-dark"><?= htmlspecialchars($item['furniture_type'] ?? $item['item_name']) ?></td>
-                                            <td class="text-center fw-bold"><?= sprintf("%02d", $item['available_quantity']) ?></td>
+                                            <td><?= htmlspecialchars($item['issue_order_no'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['received_from'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['receipt_no'] ?: '-') ?></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $item['available_quantity'] ?? 1) ?></span>
+                                                <br>
+                                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($item['initial_count'] ?? 1) ?> | Recv: <?= intval($item['received_quantity'] ?? 0) ?></small>
+                                            </td>
                                             <td><?= htmlspecialchars($item['date_received'] ?? $item['purchase_date'] ?: '-') ?></td>
                                             <td>
                                                 <span class="badge bg-<?= ($item['current_condition'] === 'Good' || $item['current_condition'] === 'Operational') ? 'success' : (($item['current_condition'] === 'Needs Repair') ? 'warning text-dark' : 'danger') ?>">
                                                     <?= htmlspecialchars($item['current_condition']) ?>
                                                 </span>
                                             </td>
-                                            <td><?= htmlspecialchars($item['remarks'] ?: '-') ?></td>
+                                            <td>
+                                                <?php if (!empty($item['specification'])): ?>
+                                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($item['specification']) ?></div>
+                                                <?php endif; ?>
+                                                <div class="small text-muted"><?= htmlspecialchars($item['remarks'] ?: '-') ?></div>
+                                            </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-info me-1" onclick='viewFurniture(<?= json_encode($item) ?>)' title="View Details">
                                                     <i class="bi bi-eye"></i>
@@ -845,10 +892,13 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                     <tr>
                                         <th>Range Office</th>
                                         <th>Instrument Type</th>
+                                        <th>Issue Order No.</th>
+                                        <th>Received From</th>
+                                        <th>Receipt No.</th>
+                                        <th class="text-center">Quantity</th>
                                         <th>Condition</th>
-                                        <th class="text-center">Available Quantity</th>
                                         <th>Purchase / Received Date</th>
-                                        <th>Remarks</th>
+                                        <th>Specification / Remarks</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -859,14 +909,26 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                                 <i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($item['range_name'] ?? 'District Central') ?>
                                             </td>
                                             <td class="fw-bold text-dark"><?= htmlspecialchars($item['instrument_type'] ?? $item['instrument_name']) ?></td>
+                                            <td><?= htmlspecialchars($item['issue_order_no'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['received_from'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['receipt_no'] ?: '-') ?></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $item['available_quantity'] ?? 1) ?></span>
+                                                <br>
+                                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($item['initial_count'] ?? 1) ?> | Recv: <?= intval($item['received_quantity'] ?? 0) ?></small>
+                                            </td>
                                             <td>
                                                 <span class="badge bg-<?= ($item['current_condition'] === 'Good' || $item['current_condition'] === 'Operational') ? 'success' : (($item['current_condition'] === 'Needs Repair') ? 'warning text-dark' : 'danger') ?>">
                                                     <?= htmlspecialchars($item['current_condition']) ?>
                                                 </span>
                                             </td>
-                                            <td class="text-center fw-bold"><?= sprintf("%02d", $item['available_quantity']) ?></td>
                                             <td><?= htmlspecialchars($item['purchase_date'] ?: '-') ?></td>
-                                            <td><?= htmlspecialchars($item['remarks'] ?: '-') ?></td>
+                                            <td>
+                                                <?php if (!empty($item['specification'])): ?>
+                                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($item['specification']) ?></div>
+                                                <?php endif; ?>
+                                                <div class="small text-muted"><?= htmlspecialchars($item['remarks'] ?: '-') ?></div>
+                                            </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-info me-1" onclick='viewInstrument(<?= json_encode($item) ?>)' title="View Details">
                                                     <i class="bi bi-eye"></i>
@@ -923,10 +985,13 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                     <tr>
                                         <th>Range Office</th>
                                         <th>Counterfoil / Book Type</th>
+                                        <th>Issue Order No.</th>
+                                        <th>Received From</th>
+                                        <th>Receipt No.</th>
+                                        <th class="text-center">Quantity</th>
                                         <th>Status / Condition</th>
-                                        <th class="text-center">Available Quantity</th>
                                         <th>Received Date</th>
-                                        <th>Remarks</th>
+                                        <th>Specification / Remarks</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -937,14 +1002,26 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                                 <i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($item['range_name'] ?? 'District Office') ?>
                                             </td>
                                             <td class="fw-bold text-dark"><?= htmlspecialchars($item['counterfoil_type'] ?? $item['book_type']) ?></td>
+                                            <td><?= htmlspecialchars($item['issue_order_no'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['received_from'] ?: '-') ?></td>
+                                            <td><?= htmlspecialchars($item['receipt_no'] ?: '-') ?></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $item['available_quantity'] ?? 1) ?></span>
+                                                <br>
+                                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($item['initial_count'] ?? 1) ?> | Recv: <?= intval($item['received_quantity'] ?? 0) ?></small>
+                                            </td>
                                             <td>
                                                 <span class="badge bg-<?= ($item['current_condition'] === 'Good' || $item['current_condition'] === 'Operational' || $item['current_condition'] === 'Active') ? 'success' : 'secondary' ?>">
                                                     <?= htmlspecialchars($item['current_condition'] ?? $item['current_status'] ?? 'Active') ?>
                                                 </span>
                                             </td>
-                                            <td class="text-center fw-bold"><?= sprintf("%02d", $item['available_quantity']) ?></td>
                                             <td><?= htmlspecialchars($item['purchase_date'] ?? $item['received_date'] ?: '-') ?></td>
-                                            <td><?= htmlspecialchars($item['remarks'] ?: '-') ?></td>
+                                            <td>
+                                                <?php if (!empty($item['specification'])): ?>
+                                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($item['specification']) ?></div>
+                                                <?php endif; ?>
+                                                <div class="small text-muted"><?= htmlspecialchars($item['remarks'] ?: '-') ?></div>
+                                            </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-info me-1" onclick='viewCounterfoil(<?= json_encode($item) ?>)' title="View Details">
                                                     <i class="bi bi-eye"></i>
@@ -1275,23 +1352,52 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                         <input type="text" name="machinery_type" id="edit_mac_type" class="form-control" required>
                     </div>
                     <div class="row g-2 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label fw-bold small text-muted">Current Condition *</label>
-                            <select name="current_condition" id="edit_mac_condition" class="form-select" required>
+                            <select name="current_condition" id="edit_mac_condition" class="form-select" required onchange="calcDistrictEditMac()">
                                 <option value="Good">Good</option>
-                                <option value="Operational">Operational</option>
-                                <option value="Needs Repair">Needs Repair</option>
-                                <option value="Unserviceable">Unserviceable</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Damaged">Damaged</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_mac_initial_count" class="form-control fw-bold" min="0" required oninput="calcDistrictEditMac()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_mac_received_quantity" class="form-control fw-bold" min="0" required oninput="calcDistrictEditMac()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_mac_quantity" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small text-muted">Available Quantity *</label>
-                            <input type="number" name="available_quantity" id="edit_mac_quantity" class="form-control" min="1" required>
+                            <label class="form-label fw-bold small text-muted">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_mac_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_mac_receipt_no" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Received From</label>
+                            <input type="text" name="received_from" id="edit_mac_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Purchase / Received Date</label>
+                            <input type="date" name="purchase_date" id="edit_mac_purchase_date" class="form-control">
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Purchase / Received Date</label>
-                        <input type="date" name="purchase_date" id="edit_mac_purchase_date" class="form-control">
+                        <label class="form-label fw-bold small text-muted">Specification / Remarks (to capture specific brand and model information)</label>
+                        <input type="text" name="specification" id="edit_mac_specification" class="form-control" placeholder="Brand, model, technical details">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Remarks</label>
@@ -1336,28 +1442,67 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                             <option value="regional_farms">Regional Farms</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Vehicle Type *</label>
-                        <input type="text" name="vehicle_type" id="edit_veh_type" class="form-control" required>
-                    </div>
                     <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Vehicle Type *</label>
+                            <input type="text" name="vehicle_type" id="edit_veh_type" class="form-control" required>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold small text-muted">Vehicle Registration No. *</label>
                             <input type="text" name="vehicle_number" id="edit_veh_number" class="form-control" required>
                         </div>
+                    </div>
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold small text-muted">Chassis Number</label>
                             <input type="text" name="chassis_number" id="edit_veh_chassis" class="form-control">
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Current Condition *</label>
+                            <select name="current_condition" id="edit_veh_condition" class="form-select" required onchange="calcDistrictEditVeh()">
+                                <option value="Good">Good</option>
+                                <option value="Operational">Operational</option>
+                                <option value="Needs Repair">Needs Repair</option>
+                                <option value="Unserviceable">Unserviceable</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_veh_initial_count" class="form-control fw-bold" min="0" required oninput="calcDistrictEditVeh()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_veh_received_quantity" class="form-control fw-bold" min="0" required oninput="calcDistrictEditVeh()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_veh_quantity" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_veh_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Received From</label>
+                            <input type="text" name="received_from" id="edit_veh_received_from" class="form-control">
+                        </div>
+                    </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_veh_receipt_no" class="form-control">
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Current Condition *</label>
-                        <select name="current_condition" id="edit_veh_condition" class="form-select" required>
-                            <option value="Good">Good</option>
-                            <option value="Operational">Operational</option>
-                            <option value="Needs Repair">Needs Repair</option>
-                            <option value="Unserviceable">Unserviceable</option>
-                        </select>
+                        <label class="form-label fw-bold small text-muted">Specification / Remarks (to capture specific brand and model information)</label>
+                        <input type="text" name="specification" id="edit_veh_specification" class="form-control" placeholder="Brand, model, engine specs">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Remarks</label>
+                        <textarea name="remarks" id="edit_veh_remarks" class="form-control" rows="2"></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Other Details</label>
@@ -1407,23 +1552,52 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                         <input type="text" name="furniture_type" id="edit_fur_type" class="form-control" required>
                     </div>
                     <div class="row g-2 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-muted">Available Quantity *</label>
-                            <input type="number" name="available_quantity" id="edit_fur_quantity" class="form-control" min="1" required>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label fw-bold small text-muted">Condition *</label>
                             <select name="current_condition" id="edit_fur_condition" class="form-select" required>
                                 <option value="Good">Good</option>
-                                <option value="Operational">Operational</option>
-                                <option value="Needs Repair">Needs Repair</option>
+                                <option value="Fair">Fair</option>
                                 <option value="Damaged">Damaged</option>
                             </select>
                         </div>
                     </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_fur_initial_count" class="form-control fw-bold" min="0" required oninput="calcDistrictEditFur()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_fur_received_quantity" class="form-control fw-bold" min="0" required oninput="calcDistrictEditFur()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_fur_quantity" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_fur_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_fur_receipt_no" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Received From</label>
+                            <input type="text" name="received_from" id="edit_fur_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Date Received</label>
+                            <input type="date" name="date_received" id="edit_fur_date" class="form-control">
+                        </div>
+                    </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Date Received</label>
-                        <input type="date" name="date_received" id="edit_fur_date" class="form-control">
+                        <label class="form-label fw-bold small text-muted">Specification / Remarks (to capture specific brand and model information)</label>
+                        <input type="text" name="specification" id="edit_fur_specification" class="form-control" placeholder="Brand, model, material, dimensions">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Remarks</label>
@@ -1473,23 +1647,52 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                         <input type="text" name="instrument_type" id="edit_ins_type" class="form-control" required>
                     </div>
                     <div class="row g-2 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label fw-bold small text-muted">Condition *</label>
-                            <select name="current_condition" id="edit_ins_condition" class="form-select" required>
+                            <select name="current_condition" id="edit_ins_condition" class="form-select" required onchange="calcDistrictEditIns()">
                                 <option value="Good">Good</option>
-                                <option value="Operational">Operational</option>
-                                <option value="Needs Repair">Needs Repair</option>
-                                <option value="Unserviceable">Unserviceable</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Damaged">Damaged</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_ins_initial_count" class="form-control fw-bold" min="0" required oninput="calcDistrictEditIns()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_ins_received_quantity" class="form-control fw-bold" min="0" required oninput="calcDistrictEditIns()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_ins_quantity" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small text-muted">Available Quantity *</label>
-                            <input type="number" name="available_quantity" id="edit_ins_quantity" class="form-control" min="1" required>
+                            <label class="form-label fw-bold small text-muted">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_ins_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_ins_receipt_no" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Received From</label>
+                            <input type="text" name="received_from" id="edit_ins_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Purchase / Received Date</label>
+                            <input type="date" name="purchase_date" id="edit_ins_date" class="form-control">
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Purchase / Received Date</label>
-                        <input type="date" name="purchase_date" id="edit_ins_date" class="form-control">
+                        <label class="form-label fw-bold small text-muted">Specification / Remarks (to capture specific brand and model information)</label>
+                        <input type="text" name="specification" id="edit_ins_specification" class="form-control" placeholder="Brand, model, serial no.">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Remarks</label>
@@ -1539,24 +1742,52 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                         <input type="text" name="counterfoil_type" id="edit_cou_type" class="form-control" required>
                     </div>
                     <div class="row g-2 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label fw-bold small text-muted">Condition / Status *</label>
                             <select name="current_condition" id="edit_cou_condition" class="form-select" required>
                                 <option value="Good">Good</option>
-                                <option value="Operational">Operational</option>
-                                <option value="Active">Active</option>
-                                <option value="Exhausted">Exhausted</option>
+                                <option value="Fair">Fair</option>
                                 <option value="Damaged">Damaged</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_cou_initial_count" class="form-control fw-bold" min="0" required oninput="calcDistrictEditCou()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_cou_received_quantity" class="form-control fw-bold" min="0" required oninput="calcDistrictEditCou()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_cou_quantity" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small text-muted">Available Quantity *</label>
-                            <input type="number" name="available_quantity" id="edit_cou_quantity" class="form-control" min="1" required>
+                            <label class="form-label fw-bold small text-muted">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_cou_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_cou_receipt_no" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Received From</label>
+                            <input type="text" name="received_from" id="edit_cou_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Purchase / Received Date</label>
+                            <input type="date" name="purchase_date" id="edit_cou_date" class="form-control">
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Purchase / Received Date</label>
-                        <input type="date" name="purchase_date" id="edit_cou_date" class="form-control">
+                        <label class="form-label fw-bold small text-muted">Specification / Remarks (to capture specific brand and model information)</label>
+                        <input type="text" name="specification" id="edit_cou_specification" class="form-control" placeholder="Book numbers, series range, remarks">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted">Remarks</label>
@@ -1905,13 +2136,56 @@ function showUniversalModal(title, detailsObj) {
     new bootstrap.Modal(document.getElementById('universalViewModal')).show();
 }
 
+// Availability calculation helpers
+function calcDistrictEditMac() {
+    const base = parseInt(document.getElementById('edit_mac_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_mac_received_quantity').value) || 0;
+    const cond = document.getElementById('edit_mac_condition').value;
+    let qty = base + recv;
+    if (cond === 'Damaged') qty = Math.max(0, qty - 1);
+    document.getElementById('edit_mac_quantity').value = Math.max(0, qty);
+}
+function calcDistrictEditVeh() {
+    const base = parseInt(document.getElementById('edit_veh_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_veh_received_quantity').value) || 0;
+    const cond = document.getElementById('edit_veh_condition').value;
+    let qty = base + recv;
+    if (cond === 'Needs Repair' || cond === 'Unserviceable') qty = Math.max(0, qty - 1);
+    document.getElementById('edit_veh_quantity').value = Math.max(0, qty);
+}
+function calcDistrictEditFur() {
+    const base = parseInt(document.getElementById('edit_fur_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_fur_received_quantity').value) || 0;
+    document.getElementById('edit_fur_quantity').value = Math.max(0, base + recv);
+}
+function calcDistrictEditIns() {
+    const base = parseInt(document.getElementById('edit_ins_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_ins_received_quantity').value) || 0;
+    const cond = document.getElementById('edit_ins_condition').value;
+    let qty = base + recv;
+    if (cond === 'Damaged') qty = Math.max(0, qty - 1);
+    document.getElementById('edit_ins_quantity').value = Math.max(0, qty);
+}
+function calcDistrictEditCou() {
+    const base = parseInt(document.getElementById('edit_cou_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_cou_received_quantity').value) || 0;
+    document.getElementById('edit_cou_quantity').value = Math.max(0, base + recv);
+}
+
 // Machinery Modal Handlers
 function viewMachinery(data) {
+    const base = data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1);
+    const recv = data.received_quantity !== undefined ? data.received_quantity : 0;
+    const avail = data.available_quantity !== undefined ? data.available_quantity : (parseInt(base) + parseInt(recv));
     showUniversalModal('Machinery Asset Details', {
         'Range Office': data.range_name || 'District Central',
         'Machinery Type': data.machinery_type,
+        'Issue Order No.': data.issue_order_no,
+        'Received From': data.received_from,
+        'Receipt No.': data.receipt_no,
+        'Quantity': `${avail} (Base: ${base}, Recv: ${recv})`,
         'Current Condition': data.current_condition,
-        'Available Quantity': data.available_quantity,
+        'Specification / Remarks': data.specification,
         'Purchase Date': data.purchase_date,
         'Remarks': data.remarks
     });
@@ -1921,20 +2195,36 @@ function editMachinery(data) {
     $('#edit_mac_unit').val(data.unit || '');
     $('#edit_mac_type').val(data.machinery_type || '');
     $('#edit_mac_condition').val(data.current_condition || 'Good');
+    $('#edit_mac_initial_count').val(data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1));
+    $('#edit_mac_received_quantity').val(data.received_quantity !== undefined ? data.received_quantity : 0);
     $('#edit_mac_quantity').val(data.available_quantity || 1);
+    $('#edit_mac_issue_order_no').val(data.issue_order_no || '');
+    $('#edit_mac_received_from').val(data.received_from || '');
+    $('#edit_mac_receipt_no').val(data.receipt_no || '');
+    $('#edit_mac_specification').val(data.specification || '');
     $('#edit_mac_purchase_date').val(data.purchase_date || '');
     $('#edit_mac_remarks').val(data.remarks || '');
+    calcDistrictEditMac();
     new bootstrap.Modal(document.getElementById('editMachineryModal')).show();
 }
 
 // Vehicle Modal Handlers
 function viewVehicle(data) {
+    const base = data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1);
+    const recv = data.received_quantity !== undefined ? data.received_quantity : 0;
+    const avail = data.available_quantity !== undefined ? data.available_quantity : (parseInt(base) + parseInt(recv));
     showUniversalModal('Vehicle Record Details', {
         'Range Office': data.range_name || 'District Fleet',
         'Vehicle Type': data.vehicle_type,
         'Vehicle Registration': data.vehicle_number,
         'Chassis Number': data.chassis_number,
+        'Issue Order No.': data.issue_order_no,
+        'Received From': data.received_from,
+        'Receipt No.': data.receipt_no,
+        'Quantity': `${avail} (Base: ${base}, Recv: ${recv})`,
         'Condition': data.current_condition,
+        'Specification / Remarks': data.specification,
+        'Remarks': data.remarks,
         'Other Details': data.other_details
     });
 }
@@ -1945,17 +2235,33 @@ function editVehicle(data) {
     $('#edit_veh_number').val(data.vehicle_number || '');
     $('#edit_veh_chassis').val(data.chassis_number || '');
     $('#edit_veh_condition').val(data.current_condition || 'Good');
+    $('#edit_veh_initial_count').val(data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1));
+    $('#edit_veh_received_quantity').val(data.received_quantity !== undefined ? data.received_quantity : 0);
+    $('#edit_veh_quantity').val(data.available_quantity || 1);
+    $('#edit_veh_issue_order_no').val(data.issue_order_no || '');
+    $('#edit_veh_received_from').val(data.received_from || '');
+    $('#edit_veh_receipt_no').val(data.receipt_no || '');
+    $('#edit_veh_specification').val(data.specification || '');
+    $('#edit_veh_remarks').val(data.remarks || '');
     $('#edit_veh_details').val(data.other_details || '');
+    calcDistrictEditVeh();
     new bootstrap.Modal(document.getElementById('editVehicleModal')).show();
 }
 
 // Furniture Modal Handlers
 function viewFurniture(data) {
+    const base = data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1);
+    const recv = data.received_quantity !== undefined ? data.received_quantity : 0;
+    const avail = data.available_quantity !== undefined ? data.available_quantity : (parseInt(base) + parseInt(recv));
     showUniversalModal('Furniture Item Details', {
         'Range Office': data.range_name || 'District Store',
         'Item Type': data.furniture_type || data.item_name,
-        'Quantity': data.available_quantity,
+        'Issue Order No.': data.issue_order_no,
+        'Received From': data.received_from,
+        'Receipt No.': data.receipt_no,
+        'Quantity': `${avail} (Base: ${base}, Recv: ${recv})`,
         'Condition': data.current_condition,
+        'Specification / Remarks': data.specification,
         'Date Received': data.date_received || data.purchase_date,
         'Remarks': data.remarks
     });
@@ -1964,20 +2270,34 @@ function editFurniture(data) {
     $('#edit_fur_id').val(data.id || '');
     $('#edit_fur_unit').val(data.unit || '');
     $('#edit_fur_type').val(data.furniture_type || data.item_name || '');
-    $('#edit_fur_quantity').val(data.available_quantity || 1);
     $('#edit_fur_condition').val(data.current_condition || 'Good');
+    $('#edit_fur_initial_count').val(data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1));
+    $('#edit_fur_received_quantity').val(data.received_quantity !== undefined ? data.received_quantity : 0);
+    $('#edit_fur_quantity').val(data.available_quantity || 1);
+    $('#edit_fur_issue_order_no').val(data.issue_order_no || '');
+    $('#edit_fur_received_from').val(data.received_from || '');
+    $('#edit_fur_receipt_no').val(data.receipt_no || '');
+    $('#edit_fur_specification').val(data.specification || '');
     $('#edit_fur_date').val(data.date_received || data.purchase_date || '');
     $('#edit_fur_remarks').val(data.remarks || '');
+    calcDistrictEditFur();
     new bootstrap.Modal(document.getElementById('editFurnitureModal')).show();
 }
 
 // Instrument Modal Handlers
 function viewInstrument(data) {
+    const base = data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1);
+    const recv = data.received_quantity !== undefined ? data.received_quantity : 0;
+    const avail = data.available_quantity !== undefined ? data.available_quantity : (parseInt(base) + parseInt(recv));
     showUniversalModal('Instrument Asset Details', {
         'Range Office': data.range_name || 'District Central',
         'Instrument Type': data.instrument_type || data.instrument_name,
-        'Quantity': data.available_quantity,
+        'Issue Order No.': data.issue_order_no,
+        'Received From': data.received_from,
+        'Receipt No.': data.receipt_no,
+        'Quantity': `${avail} (Base: ${base}, Recv: ${recv})`,
         'Condition': data.current_condition,
+        'Specification / Remarks': data.specification,
         'Purchase Date': data.purchase_date,
         'Remarks': data.remarks
     });
@@ -1987,19 +2307,33 @@ function editInstrument(data) {
     $('#edit_ins_unit').val(data.unit || '');
     $('#edit_ins_type').val(data.instrument_type || data.instrument_name || '');
     $('#edit_ins_condition').val(data.current_condition || 'Good');
+    $('#edit_ins_initial_count').val(data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1));
+    $('#edit_ins_received_quantity').val(data.received_quantity !== undefined ? data.received_quantity : 0);
     $('#edit_ins_quantity').val(data.available_quantity || 1);
+    $('#edit_ins_issue_order_no').val(data.issue_order_no || '');
+    $('#edit_ins_received_from').val(data.received_from || '');
+    $('#edit_ins_receipt_no').val(data.receipt_no || '');
+    $('#edit_ins_specification').val(data.specification || '');
     $('#edit_ins_date').val(data.purchase_date || '');
     $('#edit_ins_remarks').val(data.remarks || '');
+    calcDistrictEditIns();
     new bootstrap.Modal(document.getElementById('editInstrumentModal')).show();
 }
 
 // Counterfoil Modal Handlers
 function viewCounterfoil(data) {
+    const base = data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1);
+    const recv = data.received_quantity !== undefined ? data.received_quantity : 0;
+    const avail = data.available_quantity !== undefined ? data.available_quantity : (parseInt(base) + parseInt(recv));
     showUniversalModal('Counter Foil Details', {
         'Range Office': data.range_name || 'District Office',
         'Book / Register Type': data.counterfoil_type || data.book_type,
+        'Issue Order No.': data.issue_order_no,
+        'Received From': data.received_from,
+        'Receipt No.': data.receipt_no,
+        'Quantity': `${avail} (Base: ${base}, Recv: ${recv})`,
         'Status / Condition': data.current_condition || data.current_status,
-        'Available Quantity': data.available_quantity,
+        'Specification / Remarks': data.specification,
         'Date Received': data.purchase_date || data.received_date,
         'Remarks': data.remarks
     });
@@ -2009,9 +2343,16 @@ function editCounterfoil(data) {
     $('#edit_cou_unit').val(data.unit || '');
     $('#edit_cou_type').val(data.counterfoil_type || data.book_type || '');
     $('#edit_cou_condition').val(data.current_condition || data.current_status || 'Good');
+    $('#edit_cou_initial_count').val(data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1));
+    $('#edit_cou_received_quantity').val(data.received_quantity !== undefined ? data.received_quantity : 0);
     $('#edit_cou_quantity').val(data.available_quantity || 1);
+    $('#edit_cou_issue_order_no').val(data.issue_order_no || '');
+    $('#edit_cou_received_from').val(data.received_from || '');
+    $('#edit_cou_receipt_no').val(data.receipt_no || '');
+    $('#edit_cou_specification').val(data.specification || '');
     $('#edit_cou_date').val(data.purchase_date || data.received_date || '');
     $('#edit_cou_remarks').val(data.remarks || '');
+    calcDistrictEditCou();
     new bootstrap.Modal(document.getElementById('editCounterfoilModal')).show();
 }
 

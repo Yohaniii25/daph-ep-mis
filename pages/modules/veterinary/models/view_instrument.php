@@ -11,21 +11,41 @@
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Instrument Type</small>
                         <span class="fw-bold fs-6 text-dark" id="view_instrument_type">-</span>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Condition</small>
                         <span class="fw-semibold text-dark" id="view_instrument_condition">-</span>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Initial Baseline</small>
                         <span class="fw-bold text-dark" id="view_instrument_initial_count">-</span>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Received Quantity</small>
+                        <span class="fw-bold text-success" id="view_instrument_received_quantity">-</span>
+                    </div>
+                    <div class="col-md-3">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Available Quantity</small>
-                        <span class="fw-bold text-dark" id="view_instrument_quantity">-</span>
+                        <span class="fw-bold text-primary fs-6" id="view_instrument_quantity">-</span>
                     </div>
                     <div class="col-md-12">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Date of Purchase / Received</small>
                         <span class="fw-semibold text-secondary" id="view_instrument_purchase_date">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Issue Order No.</small>
+                        <span class="fw-semibold text-dark" id="view_instrument_issue_order_no">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Received From</small>
+                        <span class="fw-semibold text-dark" id="view_instrument_received_from">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Receipt No.</small>
+                        <span class="fw-semibold text-dark" id="view_instrument_receipt_no">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Specification (Brand / Model)</small>
+                        <span class="fw-semibold text-dark" id="view_instrument_specification">-</span>
                     </div>
                     <div class="col-md-12">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Remarks</small>

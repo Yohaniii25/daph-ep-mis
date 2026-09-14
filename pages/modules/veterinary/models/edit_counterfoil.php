@@ -55,43 +55,61 @@
                     <div class="card border-0 shadow-sm rounded-3 mb-3">
                         <div class="card-body p-3">
                             <h6 class="text-uppercase fw-bold text-muted small mb-3" style="letter-spacing: 0.5px;">
-                                <i class="bi bi-calculator me-1 text-success"></i> Inventory Audit Counts
+                                <i class="bi bi-calculator me-1 text-success"></i> Inventory Stock &amp; Availability
                             </h6>
                             <div class="row g-3">
                                 <!-- Baseline Card -->
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="p-3 rounded-3 border bg-white h-100 position-relative">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <label class="form-label small fw-bold text-secondary mb-0">
-                                                <i class="bi bi-lock-fill me-1 text-warning"></i>Fiscal Baseline Count <span class="text-danger">*</span>
+                                                <i class="bi bi-lock-fill me-1 text-warning"></i>Baseline Stock <span class="text-danger">*</span>
                                             </label>
-                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 small">Annual Audit</span>
+                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 small">Audit</span>
                                         </div>
-                                        <div class="input-group input-group-lg">
+                                        <div class="input-group">
                                             <span class="input-group-text bg-light text-secondary border-end-0 fw-bold">#</span>
-                                            <input type="number" name="initial_count" id="edit_counterfoil_initial_count" class="form-control border-start-0 fw-bold fs-5 text-dark" min="0" required>
+                                            <input type="number" name="initial_count" id="edit_counterfoil_initial_count" class="form-control border-start-0 fw-bold fs-5 text-dark" min="0" required oninput="calcEditCounterfoilAvailability()">
                                         </div>
                                         <small class="text-muted d-block mt-2" style="font-size: 11px;">
-                                            <i class="bi bi-info-circle me-1"></i>Static baseline count recorded at start of fiscal year.
+                                            Initial baseline count.
                                         </small>
                                     </div>
                                 </div>
 
-                                <!-- Available Card -->
-                                <div class="col-md-6">
+                                <!-- Received Quantity Card -->
+                                <div class="col-md-4">
+                                    <div class="p-3 rounded-3 border bg-white h-100 position-relative">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="form-label small fw-bold text-success mb-0">
+                                                <i class="bi bi-plus-circle-fill me-1 text-success"></i>Received Qty <span class="text-danger">*</span>
+                                            </label>
+                                        </div>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light text-success border-end-0 fw-bold">#</span>
+                                            <input type="number" name="received_quantity" id="edit_counterfoil_received_quantity" class="form-control border-start-0 fw-bold fs-5 text-success" min="0" value="0" required oninput="calcEditCounterfoilAvailability()">
+                                        </div>
+                                        <small class="text-muted d-block mt-2" style="font-size: 11px;">
+                                            Newly logged received amount.
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Active Available Card -->
+                                <div class="col-md-4">
                                     <div class="p-3 rounded-3 border bg-white h-100 position-relative">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <label class="form-label small fw-bold text-dark mb-0">
-                                                <i class="bi bi-boxes me-1 text-primary"></i>Available Active Qty <span class="text-danger">*</span>
+                                                <i class="bi bi-boxes me-1 text-primary"></i>Current Availability
                                             </label>
-                                            <span class="badge bg-primary-subtle text-primary border px-2 py-1 small">Circulating</span>
+                                            <span class="badge bg-primary-subtle text-primary border px-2 py-1 small">Auto</span>
                                         </div>
-                                        <div class="input-group input-group-lg">
+                                        <div class="input-group">
                                             <span class="input-group-text bg-light text-primary border-end-0 fw-bold">#</span>
-                                            <input type="number" name="available_quantity" id="edit_counterfoil_quantity" class="form-control border-start-0 fw-bold fs-5 text-primary" min="0" required>
+                                            <input type="number" name="available_quantity" id="edit_counterfoil_quantity" class="form-control border-start-0 fw-bold fs-5 text-primary bg-light" readonly min="0" required>
                                         </div>
-                                        <small class="text-muted d-block mt-2" style="font-size: 11px;">
-                                            <i class="bi bi-check2-circle me-1 text-success"></i>Currently usable books in this unit facility.
+                                        <small class="text-primary d-block mt-2 fw-semibold" style="font-size: 11px;">
+                                            <i class="bi bi-check2-circle me-1 text-success"></i>Baseline + Received Qty
                                         </small>
                                     </div>
                                 </div>
@@ -135,7 +153,34 @@
                         </div>
                     </div>
 
-                    <!-- SECTION 4: Remarks / Serial Numbers -->
+                    <!-- SECTION 4: Procurement & Tracking Details -->
+                    <div class="card border-0 shadow-sm rounded-3 mb-3">
+                        <div class="card-body p-3">
+                            <h6 class="text-uppercase fw-bold text-muted small mb-3" style="letter-spacing: 0.5px;">
+                                <i class="bi bi-file-earmark-text me-1 text-info"></i> Procurement &amp; Tracking Details
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Issue Order No.</label>
+                                    <input type="text" name="issue_order_no" id="edit_counterfoil_issue_order_no" class="form-control" placeholder="e.g. IO-2024-001">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Received From</label>
+                                    <input type="text" name="received_from" id="edit_counterfoil_received_from" class="form-control" placeholder="e.g. Govt Press / District Office">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Receipt No.</label>
+                                    <input type="text" name="receipt_no" id="edit_counterfoil_receipt_no" class="form-control" placeholder="e.g. REC-99201">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Specification (Brand / Model / Form Ref)</label>
+                                    <input type="text" name="specification" id="edit_counterfoil_specification" class="form-control" placeholder="e.g. Form 172, 100 Pages Duplicate">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 5: Remarks / Serial Numbers -->
                     <div class="card border-0 shadow-sm rounded-3">
                         <div class="card-body p-3">
                             <label class="form-label small fw-bold text-dark mb-1">
@@ -162,3 +207,16 @@
         </div>
     </div>
 </div>
+
+<script>
+function calcEditCounterfoilAvailability() {
+    var base = parseInt(document.getElementById('edit_counterfoil_initial_count').value) || 0;
+    var recv = parseInt(document.getElementById('edit_counterfoil_received_quantity').value) || 0;
+    var avail = base + recv;
+    var cond = document.getElementById('edit_counterfoil_condition').value;
+    if (cond === 'Damaged') {
+        avail = Math.max(0, avail - 1);
+    }
+    document.getElementById('edit_counterfoil_quantity').value = avail;
+}
+</script>

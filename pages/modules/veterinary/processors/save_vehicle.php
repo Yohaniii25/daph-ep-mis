@@ -21,14 +21,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $other_details     = trim(filter_input(INPUT_POST, 'other_details', FILTER_SANITIZE_SPECIAL_CHARS));
     $unit              = trim(filter_input(INPUT_POST, 'unit', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
 
+    $issue_order_no     = trim(htmlspecialchars($_POST['issue_order_no'] ?? ''));
+    $received_from      = trim(htmlspecialchars($_POST['received_from'] ?? ''));
+    $receipt_no         = trim(htmlspecialchars($_POST['receipt_no'] ?? ''));
+    $specification      = trim(htmlspecialchars($_POST['specification'] ?? ''));
+    $initial_count      = isset($_POST['initial_count']) ? max(0, intval($_POST['initial_count'])) : 1;
+    $received_quantity  = isset($_POST['received_quantity']) ? max(0, intval($_POST['received_quantity'])) : 0;
+    $available_quantity = $initial_count + $received_quantity;
+    $remarks            = trim(htmlspecialchars($_POST['remarks'] ?? ''));
+
     if (!$user_id || empty($vehicle_number) || empty($chassis_number)) {
         echo json_encode(['success' => false, 'message' => 'Critical data variables extraction exception validation failed.']);
         exit();
     }
 
-    $ins = $mysqli->prepare("INSERT INTO registered_vehicles (user_id, district_id, range_id, vehicle_type, vehicle_number, chassis_number, current_condition, other_details, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $ins = $mysqli->prepare("INSERT INTO registered_vehicles (user_id, district_id, range_id, vehicle_type, vehicle_number, chassis_number, current_condition, other_details, unit, issue_order_no, received_from, receipt_no, available_quantity, initial_count, received_quantity, specification, remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     if ($ins) {
-        $ins->bind_param("iiissssss", $user_id, $district_id, $range_id, $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $unit);
+        $ins->bind_param("iiisssssssssiiiss", $user_id, $district_id, $range_id, $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $unit, $issue_order_no, $received_from, $receipt_no, $available_quantity, $initial_count, $received_quantity, $specification, $remarks);
         if ($ins->execute()) {
             echo json_encode(['success' => true, 'message' => 'Vehicle registered successfully.']);
         } else {

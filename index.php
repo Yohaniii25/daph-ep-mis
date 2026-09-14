@@ -493,12 +493,13 @@ unset($_SESSION['login_error']); // Clear errors on reload
                             <option value="additional_provincial_director">2. Additional Provincial Director</option>
                             <option value="subject_matter_specialist">3. Subject Matter Specialist</option>
                             <option value="deputy_director_hq_1">4. Deputy Director - H/Q-1</option>
-                            <option value="deputy_director_hq_2">5. Deputy Director - H/Q-2</option>
-                            <option value="deputy_director_district">6. Deputy Director - District</option>
-                            <option value="range_veterinary_officer">7. Range Veterinary Officer</option>
-                            <option value="training_centers">8. Training Centers</option>
-                            <option value="regional_farms">9. Regional Farms</option>
-                            <option value="administrator">10. Administrator (Provincial HR / Admin Branch)</option>
+                            <option value="administrator">5. Administrator</option>
+                            <option value="accounts_branch">6. Accounts Branch</option>
+                            <option value="deputy_director_hq_2">7. Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">8. Deputy Director - District</option>
+                            <option value="range_veterinary_officer">9. Range Veterinary Officer</option>
+                            <option value="training_centers">10. Training Centers</option>
+                            <option value="regional_farms">11. Regional Farms</option>
                         </select>
                     </div>
                 </div>

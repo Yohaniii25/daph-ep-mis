@@ -20,6 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $other_details     = isset($_POST['other_details']) ? trim(htmlspecialchars($_POST['other_details'])) : '';
     $unit              = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
 
+    $issue_order_no     = isset($_POST['issue_order_no']) ? trim(htmlspecialchars($_POST['issue_order_no'])) : '';
+    $received_from      = isset($_POST['received_from']) ? trim(htmlspecialchars($_POST['received_from'])) : '';
+    $receipt_no         = isset($_POST['receipt_no']) ? trim(htmlspecialchars($_POST['receipt_no'])) : '';
+    $specification      = isset($_POST['specification']) ? trim(htmlspecialchars($_POST['specification'])) : '';
+    $initial_count      = isset($_POST['initial_count']) ? filter_var($_POST['initial_count'], FILTER_VALIDATE_INT) : null;
+    $received_quantity  = isset($_POST['received_quantity']) ? filter_var($_POST['received_quantity'], FILTER_VALIDATE_INT) : null;
+    $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
+
     if (!$id || empty($vehicle_type) || empty($vehicle_number)) {
         echo json_encode(['success' => false, 'message' => 'Validation error']);
         exit();
@@ -36,6 +44,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Record not found']);
         exit();
     }
+
+    if ($initial_count === null || $initial_count === false) {
+        $initial_count = isset($old_data['initial_count']) ? intval($old_data['initial_count']) : intval($old_data['available_quantity'] ?? 1);
+    }
+    if ($received_quantity === null || $received_quantity === false) {
+        $received_quantity = isset($old_data['received_quantity']) ? intval($old_data['received_quantity']) : 0;
+    }
+
+    // Availability Auto-Calculation: initial baseline stock + received amounts
+    $available_quantity = $initial_count + $received_quantity;
 
     // Resolve unit fallback if not passed
     if ($unit === '' && isset($old_data['unit'])) {
@@ -67,12 +85,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $new_data = [
-        'vehicle_type'      => $vehicle_type,
-        'vehicle_number'    => $vehicle_number,
-        'chassis_number'    => $chassis_number,
-        'current_condition' => $current_condition,
-        'other_details'     => $other_details,
-        'unit'              => $unit
+        'vehicle_type'       => $vehicle_type,
+        'vehicle_number'     => $vehicle_number,
+        'chassis_number'     => $chassis_number,
+        'current_condition'  => $current_condition,
+        'other_details'      => $other_details,
+        'unit'               => $unit,
+        'issue_order_no'     => $issue_order_no,
+        'received_from'      => $received_from,
+        'receipt_no'         => $receipt_no,
+        'specification'      => $specification,
+        'available_quantity' => $available_quantity,
+        'initial_count'      => $initial_count,
+        'received_quantity'  => $received_quantity,
+        'remarks'            => $remarks
     ];
 
     // Staging evaluation
@@ -98,9 +124,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Direct update if pre-authorized
-    $stmt = $mysqli->prepare("UPDATE registered_vehicles SET vehicle_type = ?, vehicle_number = ?, chassis_number = ?, current_condition = ?, other_details = ?, unit = ? WHERE id = ?");
+    $stmt = $mysqli->prepare("UPDATE registered_vehicles SET vehicle_type = ?, vehicle_number = ?, chassis_number = ?, current_condition = ?, other_details = ?, unit = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, remarks = ? WHERE id = ?");
     if ($stmt) {
-        $stmt->bind_param("ssssssi", $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $unit, $id);
+        $stmt->bind_param("ssssssssssiiisi", $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $unit, $issue_order_no, $received_from, $receipt_no, $specification, $available_quantity, $initial_count, $received_quantity, $remarks, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Vehicle updated successfully.']);
         } else {

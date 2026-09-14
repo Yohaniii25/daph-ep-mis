@@ -221,6 +221,9 @@ require_once '../../../includes/header.php';
             <button class="btn btn-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#addRepairModal">
                 <i class="bi bi-wrench-adjustable me-1"></i>Log Repair Work
             </button>
+            <a href="office_details.php" class="btn btn-secondary shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
         </div>
     </div>
 
@@ -320,8 +323,12 @@ require_once '../../../includes/header.php';
                                     <th>Vehicle Type</th>
                                     <th>Vehicle Number</th>
                                     <th>Chassis Number</th>
+                                    <th>Issue Order No.</th>
+                                    <th>Received From</th>
+                                    <th>Receipt No.</th>
+                                    <th class="text-center">Quantity</th>
                                     <th>Current Condition</th>
-                                    <th>Other Relevant Details</th>
+                                    <th>Specification / Remarks</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -333,13 +340,32 @@ require_once '../../../includes/header.php';
                                     </td>
                                     <td><span class="badge bg-dark text-light px-2 py-1 font-monospace"><?= htmlspecialchars($row['vehicle_number']) ?></span></td>
                                     <td><span class="text-secondary small font-monospace fw-semibold"><?= htmlspecialchars($row['chassis_number']) ?></span></td>
+                                    <td><span class="badge bg-light text-dark border font-monospace"><?= !empty($row['issue_order_no']) ? htmlspecialchars($row['issue_order_no']) : '-' ?></span></td>
+                                    <td><small class="text-secondary"><?= !empty($row['received_from']) ? htmlspecialchars($row['received_from']) : '-' ?></small></td>
+                                    <td><span class="badge bg-light text-dark border font-monospace"><?= !empty($row['receipt_no']) ? htmlspecialchars($row['receipt_no']) : '-' ?></span></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $row['available_quantity'] ?? 1) ?></span>
+                                        <br>
+                                        <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($row['initial_count'] ?? 1) ?> | Recv: <?= intval($row['received_quantity'] ?? 0) ?></small>
+                                    </td>
                                     <td>
                                         <?php 
                                         $cond_class = ($row['current_condition'] === 'Running') ? 'bg-success' : (($row['current_condition'] === 'Needs Repair') ? 'bg-warning text-dark' : 'bg-secondary');
                                         ?>
                                         <span class="badge <?= $cond_class ?> rounded-pill px-2"><?= htmlspecialchars($row['current_condition']) ?></span>
                                     </td>
-                                    <td><small class="text-muted"><?= htmlspecialchars($row['other_details']) ?></small></td>
+                                    <td>
+                                        <?php if (!empty($row['specification'])): ?>
+                                            <div class="fw-semibold text-dark small"><?= htmlspecialchars($row['specification']) ?></div>
+                                        <?php endif; ?>
+                                        <?php 
+                                        $disp_rem = !empty($row['remarks']) ? $row['remarks'] : (!empty($row['other_details']) ? $row['other_details'] : '');
+                                        if (!empty($disp_rem)): ?>
+                                            <small class="text-muted"><?= htmlspecialchars($disp_rem) ?></small>
+                                        <?php elseif (empty($row['specification'])): ?>
+                                            <small class="text-muted">-</small>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="text-center">
                                         <div class="btn-group">
                                             <button class="btn btn-sm btn-outline-info me-1" title="View Details" onclick='viewVehicle(<?= json_encode($row) ?>)'>
@@ -982,7 +1008,28 @@ require_once '../../../includes/header.php';
         document.getElementById('view_vehicle_number').textContent = data.vehicle_number || '-';
         document.getElementById('view_chassis_number').textContent = data.chassis_number || '-';
         document.getElementById('view_current_condition').textContent = data.current_condition || '-';
-        document.getElementById('view_other_details').textContent = data.other_details || '-';
+        if (document.getElementById('view_vehicle_initial_count')) {
+            document.getElementById('view_vehicle_initial_count').textContent = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || '1');
+        }
+        if (document.getElementById('view_vehicle_received_quantity')) {
+            document.getElementById('view_vehicle_received_quantity').textContent = (data.received_quantity !== undefined && data.received_quantity !== null) ? data.received_quantity : '0';
+        }
+        if (document.getElementById('view_vehicle_quantity')) {
+            document.getElementById('view_vehicle_quantity').textContent = data.available_quantity || '1';
+        }
+        if (document.getElementById('view_vehicle_specification')) {
+            document.getElementById('view_vehicle_specification').textContent = data.specification || '-';
+        }
+        if (document.getElementById('view_vehicle_issue_order_no')) {
+            document.getElementById('view_vehicle_issue_order_no').textContent = data.issue_order_no || '-';
+        }
+        if (document.getElementById('view_vehicle_received_from')) {
+            document.getElementById('view_vehicle_received_from').textContent = data.received_from || '-';
+        }
+        if (document.getElementById('view_vehicle_receipt_no')) {
+            document.getElementById('view_vehicle_receipt_no').textContent = data.receipt_no || '-';
+        }
+        document.getElementById('view_other_details').textContent = data.remarks || data.other_details || '-';
         var modal = new bootstrap.Modal(document.getElementById('viewVehicleModal'));
         modal.show();
     }
@@ -993,10 +1040,42 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_vehicle_number').value = data.vehicle_number || '';
         document.getElementById('edit_chassis_number').value = data.chassis_number || '';
         document.getElementById('edit_current_condition').value = data.current_condition || 'Running';
-        document.getElementById('edit_other_details').value = data.other_details || '';
+        if (document.getElementById('edit_vehicle_initial_count')) {
+            document.getElementById('edit_vehicle_initial_count').value = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 1);
+        }
+        if (document.getElementById('edit_vehicle_received_quantity')) {
+            document.getElementById('edit_vehicle_received_quantity').value = (data.received_quantity !== undefined && data.received_quantity !== null) ? data.received_quantity : 0;
+        }
+        if (document.getElementById('edit_vehicle_available_quantity')) {
+            document.getElementById('edit_vehicle_available_quantity').value = data.available_quantity || 1;
+        }
+        if (document.getElementById('edit_vehicle_specification')) {
+            document.getElementById('edit_vehicle_specification').value = data.specification || '';
+        }
+        if (document.getElementById('edit_vehicle_issue_order_no')) {
+            document.getElementById('edit_vehicle_issue_order_no').value = data.issue_order_no || '';
+        }
+        if (document.getElementById('edit_vehicle_received_from')) {
+            document.getElementById('edit_vehicle_received_from').value = data.received_from || '';
+        }
+        if (document.getElementById('edit_vehicle_receipt_no')) {
+            document.getElementById('edit_vehicle_receipt_no').value = data.receipt_no || '';
+        }
+        if (document.getElementById('edit_vehicle_remarks')) {
+            document.getElementById('edit_vehicle_remarks').value = data.remarks || data.other_details || '';
+        }
         document.getElementById('edit_vehicle_unit').value = data.unit || 'range_veterinary_officer';
+        
+        calcEditVehicleAvailability();
+
         var modal = new bootstrap.Modal(document.getElementById('editVehicleModal'));
         modal.show();
+    }
+
+    function calcAddVehicleAvailability() {
+        var base = parseInt(document.getElementById('add_vehicle_initial_count').value) || 0;
+        var recv = parseInt(document.getElementById('add_vehicle_received_quantity').value) || 0;
+        document.getElementById('add_vehicle_available_quantity').value = base + recv;
     }
 
     function handleVehicleDelete(id) {

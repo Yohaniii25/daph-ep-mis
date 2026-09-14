@@ -60,10 +60,13 @@ $stmt->close();
                 <thead class="table-dark" style="background-color: #370709;">
                     <tr>
                         <th>Furniture Asset Category</th>
-                        <th>Available Quantity</th>
+                        <th>Issue Order No.</th>
+                        <th>Received From</th>
+                        <th>Receipt No.</th>
+                        <th>Quantity</th>
                         <th>Date Received</th>
                         <th>Current Condition</th>
-                        <th>Remarks / Notes</th>
+                        <th>Specification / Remarks</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -71,7 +74,14 @@ $stmt->close();
                     <?php foreach ($furniture_list as $furn): ?>
                         <tr>
                             <td class="fw-bold text-dark"><?= htmlspecialchars($furn['furniture_type']) ?></td>
-                            <td class="fw-bold fs-6"><span class="badge bg-light text-dark border px-3 py-2 fs-6"><?= intval($furn['available_quantity']) ?></span></td>
+                            <td><?= htmlspecialchars($furn['issue_order_no'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($furn['received_from'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($furn['receipt_no'] ?: '-') ?></td>
+                            <td class="text-center">
+                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $furn['available_quantity'] ?? 1) ?></span>
+                                <br>
+                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($furn['initial_count'] ?? 1) ?> | Recv: <?= intval($furn['received_quantity'] ?? 0) ?></small>
+                            </td>
                             <td><?= !empty($furn['date_received']) ? date('Y-m-d', strtotime($furn['date_received'])) : '-' ?></td>
                             <td>
                                 <?php
@@ -80,14 +90,25 @@ $stmt->close();
                                 ?>
                                 <span class="badge <?= $badge_class ?>"><?= htmlspecialchars($cond) ?></span>
                             </td>
-                            <td class="small text-muted"><?= htmlspecialchars($furn['remarks'] ?: '-') ?></td>
+                            <td>
+                                <?php if (!empty($furn['specification'])): ?>
+                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($furn['specification']) ?></div>
+                                <?php endif; ?>
+                                <div class="small text-muted"><?= htmlspecialchars($furn['remarks'] ?: '-') ?></div>
+                            </td>
                             <td class="text-center text-nowrap">
                                 <button class="btn btn-sm btn-outline-primary me-1 btn-edit-furniture"
                                     data-id="<?= $furn['id'] ?>"
                                     data-furniture_type="<?= htmlspecialchars($furn['furniture_type']) ?>"
+                                    data-issue_order_no="<?= htmlspecialchars($furn['issue_order_no'] ?? '') ?>"
+                                    data-received_from="<?= htmlspecialchars($furn['received_from'] ?? '') ?>"
+                                    data-receipt_no="<?= htmlspecialchars($furn['receipt_no'] ?? '') ?>"
+                                    data-initial_count="<?= intval($furn['initial_count'] ?? 1) ?>"
+                                    data-received_quantity="<?= intval($furn['received_quantity'] ?? 0) ?>"
                                     data-available_quantity="<?= $furn['available_quantity'] ?>"
                                     data-date_received="<?= htmlspecialchars($furn['date_received'] ?? '') ?>"
                                     data-current_condition="<?= htmlspecialchars($furn['current_condition']) ?>"
+                                    data-specification="<?= htmlspecialchars($furn['specification'] ?? '') ?>"
                                     data-remarks="<?= htmlspecialchars($furn['remarks'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#editFurnitureModal"
                                     title="Edit Furniture">
@@ -131,12 +152,36 @@ $stmt->close();
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" class="form-control fw-bold" value="1" min="1" required>
+                            <label class="form-label fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" class="form-control" placeholder="e.g. IO-2024-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Received From</label>
+                            <input type="text" name="received_from" class="form-control" placeholder="e.g. Head Office / Supplier">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" class="form-control" placeholder="e.g. REC-1234">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Date Received</label>
                             <input type="date" name="date_received" class="form-control" value="<?= date('Y-m-d') ?>">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="add_furniture_initial_count" class="form-control fw-bold" value="1" min="0" required oninput="calcAddFurniture()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="add_furniture_received_quantity" class="form-control fw-bold" value="0" min="0" required oninput="calcAddFurniture()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="add_furniture_available_quantity" class="form-control fw-bold bg-light" value="1" readonly>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -147,6 +192,10 @@ $stmt->close();
                             <option value="Requires Repair">Requires Repair</option>
                             <option value="Unserviceable">Unserviceable</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Specification (Brand / Model / Specs)</label>
+                        <textarea name="specification" class="form-control" rows="2" placeholder="e.g. Brand, Material, Dimensions, Model..."></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Remarks / Notes</label>
@@ -191,12 +240,36 @@ $stmt->close();
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" id="edit_furniture_qty" class="form-control fw-bold" min="1" required>
+                            <label class="form-label fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_furniture_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Received From</label>
+                            <input type="text" name="received_from" id="edit_furniture_received_from" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_furniture_receipt_no" class="form-control">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Date Received</label>
                             <input type="date" name="date_received" id="edit_furniture_date" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_furniture_initial_count" class="form-control fw-bold" min="0" required oninput="calcEditFurniture()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_furniture_received_quantity" class="form-control fw-bold" min="0" required oninput="calcEditFurniture()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_furniture_qty" class="form-control fw-bold bg-light" readonly>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -207,6 +280,10 @@ $stmt->close();
                             <option value="Requires Repair">Requires Repair</option>
                             <option value="Unserviceable">Unserviceable</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Specification (Brand / Model / Specs)</label>
+                        <textarea name="specification" id="edit_furniture_specification" class="form-control" rows="2"></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Remarks / Notes</label>
@@ -225,15 +302,32 @@ $stmt->close();
 </div>
 
 <script>
+function calcAddFurniture() {
+    const base = parseInt(document.getElementById('add_furniture_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('add_furniture_received_quantity').value) || 0;
+    document.getElementById('add_furniture_available_quantity').value = Math.max(0, base + recv);
+}
+function calcEditFurniture() {
+    const base = parseInt(document.getElementById('edit_furniture_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_furniture_received_quantity').value) || 0;
+    document.getElementById('edit_furniture_qty').value = Math.max(0, base + recv);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '.btn-edit-furniture', function() {
         const btn = $(this);
         $('#edit_furniture_id').val(btn.data('id'));
         $('#edit_furniture_type').val(btn.data('furniture_type'));
-        $('#edit_furniture_qty').val(btn.data('available_quantity'));
+        $('#edit_furniture_issue_order_no').val(btn.data('issue_order_no'));
+        $('#edit_furniture_received_from').val(btn.data('received_from'));
+        $('#edit_furniture_receipt_no').val(btn.data('receipt_no'));
+        $('#edit_furniture_initial_count').val(btn.data('initial_count') !== undefined ? btn.data('initial_count') : btn.data('available_quantity'));
+        $('#edit_furniture_received_quantity').val(btn.data('received_quantity') !== undefined ? btn.data('received_quantity') : 0);
         $('#edit_furniture_date').val(btn.data('date_received'));
         $('#edit_furniture_condition').val(btn.data('current_condition'));
+        $('#edit_furniture_specification').val(btn.data('specification'));
         $('#edit_furniture_remarks').val(btn.data('remarks'));
+        calcEditFurniture();
     });
 });
 </script>

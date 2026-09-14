@@ -60,10 +60,13 @@ $stmt->close();
                 <thead class="table-dark" style="background-color: #370709;">
                     <tr>
                         <th>Book / Certificate Register Type</th>
-                        <th>Book Quantity</th>
+                        <th>Issue Order No.</th>
+                        <th>Received From</th>
+                        <th>Receipt No.</th>
+                        <th>Quantity</th>
                         <th>Issue / Receipt Date</th>
                         <th>Current Status</th>
-                        <th>Serial Numbers / Series Range</th>
+                        <th>Specification / Remarks</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -71,7 +74,14 @@ $stmt->close();
                     <?php foreach ($counterfoil_list as $cf): ?>
                         <tr>
                             <td class="fw-bold text-dark"><?= htmlspecialchars($cf['counterfoil_type']) ?></td>
-                            <td class="fw-bold fs-6"><span class="badge bg-light text-dark border px-3 py-2 fs-6"><?= intval($cf['available_quantity']) ?> Books</span></td>
+                            <td><?= htmlspecialchars($cf['issue_order_no'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($cf['received_from'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($cf['receipt_no'] ?: '-') ?></td>
+                            <td class="text-center">
+                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $cf['available_quantity'] ?? 1) ?></span>
+                                <br>
+                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($cf['initial_count'] ?? 1) ?> | Recv: <?= intval($cf['received_quantity'] ?? 0) ?></small>
+                            </td>
                             <td><?= !empty($cf['purchase_date']) ? date('Y-m-d', strtotime($cf['purchase_date'])) : '-' ?></td>
                             <td>
                                 <?php
@@ -80,14 +90,25 @@ $stmt->close();
                                 ?>
                                 <span class="badge <?= $badge_class ?>"><?= htmlspecialchars($cond) ?></span>
                             </td>
-                            <td class="small text-muted font-monospace"><?= htmlspecialchars($cf['remarks'] ?: '-') ?></td>
+                            <td>
+                                <?php if (!empty($cf['specification'])): ?>
+                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($cf['specification']) ?></div>
+                                <?php endif; ?>
+                                <div class="small text-muted font-monospace"><?= htmlspecialchars($cf['remarks'] ?: '-') ?></div>
+                            </td>
                             <td class="text-center text-nowrap">
                                 <button class="btn btn-sm btn-outline-primary me-1 btn-edit-counterfoil"
                                     data-id="<?= $cf['id'] ?>"
                                     data-counterfoil_type="<?= htmlspecialchars($cf['counterfoil_type']) ?>"
+                                    data-issue_order_no="<?= htmlspecialchars($cf['issue_order_no'] ?? '') ?>"
+                                    data-received_from="<?= htmlspecialchars($cf['received_from'] ?? '') ?>"
+                                    data-receipt_no="<?= htmlspecialchars($cf['receipt_no'] ?? '') ?>"
+                                    data-initial_count="<?= intval($cf['initial_count'] ?? 1) ?>"
+                                    data-received_quantity="<?= intval($cf['received_quantity'] ?? 0) ?>"
                                     data-available_quantity="<?= $cf['available_quantity'] ?>"
                                     data-purchase_date="<?= htmlspecialchars($cf['purchase_date'] ?? '') ?>"
                                     data-current_condition="<?= htmlspecialchars($cf['current_condition']) ?>"
+                                    data-specification="<?= htmlspecialchars($cf['specification'] ?? '') ?>"
                                     data-remarks="<?= htmlspecialchars($cf['remarks'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#editCounterfoilModal"
                                     title="Edit Book Record">
@@ -117,19 +138,39 @@ $stmt->close();
                 <input type="hidden" name="action" value="save_counterfoil">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Book / Register Category <span class="text-danger">*</span></label>
                             <input type="text" name="counterfoil_type" class="form-control" placeholder="e.g. Official Outbreak Notification &amp; Investigation Logbook" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Quantity (Number of Books) <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" class="form-control" value="1" min="1" required>
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" class="form-control" placeholder="e.g. IO-2024-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" class="form-control" placeholder="e.g. Kachcheri / Head Office">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" class="form-control" placeholder="e.g. REC-1234">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Issue / Receipt Date</label>
                             <input type="date" name="purchase_date" class="form-control" value="<?= date('Y-m-d') ?>">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="add_cf_initial_count" class="form-control fw-bold" value="1" min="0" required oninput="calcAddCounterfoil()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="add_cf_received_quantity" class="form-control fw-bold" value="0" min="0" required oninput="calcAddCounterfoil()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="add_cf_available_quantity" class="form-control fw-bold bg-light" value="1" readonly>
+                        </div>
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Book Status / Condition</label>
                             <select name="current_condition" class="form-select">
                                 <option value="In Active Use (Good Condition)" selected>In Active Use (Good Condition)</option>
@@ -137,6 +178,10 @@ $stmt->close();
                                 <option value="Fully Completed &amp; Archived">Fully Completed &amp; Archived</option>
                                 <option value="Stock / Unopened">Stock / Unopened</option>
                             </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification (Brand / Model / Specs)</label>
+                            <textarea name="specification" class="form-control" rows="2" placeholder="e.g. Official Gov Print, 100 Duplicate Leaves..."></textarea>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Serial Number Series &amp; Leaf Range</label>
@@ -168,19 +213,39 @@ $stmt->close();
                 <input type="hidden" name="id" id="edit_counterfoil_id">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Book / Register Category <span class="text-danger">*</span></label>
                             <input type="text" name="counterfoil_type" id="edit_counterfoil_type" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Quantity (Number of Books) <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" id="edit_counterfoil_qty" class="form-control" min="1" required>
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_counterfoil_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" id="edit_counterfoil_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_counterfoil_receipt_no" class="form-control">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Issue / Receipt Date</label>
                             <input type="date" name="purchase_date" id="edit_counterfoil_date" class="form-control">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_counterfoil_initial_count" class="form-control fw-bold" min="0" required oninput="calcEditCounterfoil()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_counterfoil_received_quantity" class="form-control fw-bold" min="0" required oninput="calcEditCounterfoil()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_counterfoil_qty" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Book Status / Condition</label>
                             <select name="current_condition" id="edit_counterfoil_cond" class="form-select">
                                 <option value="In Active Use (Good Condition)">In Active Use (Good Condition)</option>
@@ -188,6 +253,10 @@ $stmt->close();
                                 <option value="Fully Completed &amp; Archived">Fully Completed &amp; Archived</option>
                                 <option value="Stock / Unopened">Stock / Unopened</option>
                             </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification (Brand / Model / Specs)</label>
+                            <textarea name="specification" id="edit_counterfoil_specification" class="form-control" rows="2"></textarea>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Serial Number Series &amp; Range</label>
@@ -207,15 +276,32 @@ $stmt->close();
 </div>
 
 <script>
+function calcAddCounterfoil() {
+    const base = parseInt(document.getElementById('add_cf_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('add_cf_received_quantity').value) || 0;
+    document.getElementById('add_cf_available_quantity').value = Math.max(0, base + recv);
+}
+function calcEditCounterfoil() {
+    const base = parseInt(document.getElementById('edit_counterfoil_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_counterfoil_received_quantity').value) || 0;
+    document.getElementById('edit_counterfoil_qty').value = Math.max(0, base + recv);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '.btn-edit-counterfoil', function() {
         const btn = $(this);
         $('#edit_counterfoil_id').val(btn.data('id'));
         $('#edit_counterfoil_type').val(btn.data('counterfoil_type'));
-        $('#edit_counterfoil_qty').val(btn.data('available_quantity'));
+        $('#edit_counterfoil_issue_order_no').val(btn.data('issue_order_no'));
+        $('#edit_counterfoil_received_from').val(btn.data('received_from'));
+        $('#edit_counterfoil_receipt_no').val(btn.data('receipt_no'));
+        $('#edit_counterfoil_initial_count').val(btn.data('initial_count') !== undefined ? btn.data('initial_count') : btn.data('available_quantity'));
+        $('#edit_counterfoil_received_quantity').val(btn.data('received_quantity') !== undefined ? btn.data('received_quantity') : 0);
         $('#edit_counterfoil_date').val(btn.data('purchase_date'));
         $('#edit_counterfoil_cond').val(btn.data('current_condition'));
+        $('#edit_counterfoil_specification').val(btn.data('specification'));
         $('#edit_counterfoil_rem').val(btn.data('remarks'));
+        calcEditCounterfoil();
     });
 
     if ($.fn.DataTable) {

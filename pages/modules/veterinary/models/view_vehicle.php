@@ -23,8 +23,36 @@
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Current Condition</small>
                         <span class="fw-semibold text-dark" id="view_current_condition">-</span>
                     </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Initial Baseline</small>
+                        <span class="fw-bold text-dark" id="view_vehicle_initial_count">1</span>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Received Quantity</small>
+                        <span class="fw-bold text-success" id="view_vehicle_received_quantity">0</span>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Available Quantity</small>
+                        <span class="fw-bold text-primary" id="view_vehicle_quantity">1</span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Specification (Make / Model)</small>
+                        <span class="fw-semibold text-dark" id="view_vehicle_specification">-</span>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Issue Order No.</small>
+                        <span class="fw-semibold text-dark" id="view_vehicle_issue_order_no">-</span>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Received From</small>
+                        <span class="fw-semibold text-dark" id="view_vehicle_received_from">-</span>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Receipt No.</small>
+                        <span class="fw-semibold text-dark" id="view_vehicle_receipt_no">-</span>
+                    </div>
                     <div class="col-md-12">
-                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Other Relevant Details</small>
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Specification / Remarks / Other Details</small>
                         <span class="text-secondary" id="view_other_details">-</span>
                     </div>
                 </div>

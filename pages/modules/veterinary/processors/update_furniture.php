@@ -14,15 +14,18 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $allowed_role
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id                 = isset($_POST['id']) ? filter_var($_POST['id'], FILTER_VALIDATE_INT) : 0;
     $furniture_type     = isset($_POST['furniture_type']) ? trim(htmlspecialchars($_POST['furniture_type'])) : '';
-    $available_quantity = isset($_POST['available_quantity']) ? filter_var($_POST['available_quantity'], FILTER_VALIDATE_INT) : 0;
+    $initial_count      = isset($_POST['initial_count']) ? filter_var($_POST['initial_count'], FILTER_VALIDATE_INT) : null;
+    $received_quantity  = isset($_POST['received_quantity']) ? filter_var($_POST['received_quantity'], FILTER_VALIDATE_INT) : null;
     $date_received      = isset($_POST['date_received']) ? trim(htmlspecialchars($_POST['date_received'])) : '';
     $current_condition  = isset($_POST['current_condition']) ? trim(htmlspecialchars($_POST['current_condition'])) : '';
     $remarks            = isset($_POST['remarks']) ? trim(htmlspecialchars($_POST['remarks'])) : '';
-    $unit               = isset($_POST['unit']) ? trim(htmlspecialchars($_POST['unit'])) : '';
+    $unit               = trim(htmlspecialchars($_POST['unit'] ?? ''));
+    $issue_order_no     = trim(htmlspecialchars($_POST['issue_order_no'] ?? ''));
+    $received_from      = trim(htmlspecialchars($_POST['received_from'] ?? ''));
+    $receipt_no         = trim(htmlspecialchars($_POST['receipt_no'] ?? ''));
+    $specification      = trim(htmlspecialchars($_POST['specification'] ?? ''));
 
-    $initial_count      = isset($_POST['initial_count']) ? filter_var($_POST['initial_count'], FILTER_VALIDATE_INT) : null;
-
-    if (!$id || empty($furniture_type) || $available_quantity === false || $available_quantity < 0) {
+    if (!$id || empty($furniture_type)) {
         echo json_encode(['success' => false, 'message' => 'Validation error: required fields missing or invalid.']);
         exit();
     }
@@ -46,17 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($initial_count === null || $initial_count === false) {
-        $initial_count = isset($old_data['initial_count']) ? intval($old_data['initial_count']) : $available_quantity;
+        $initial_count = isset($old_data['initial_count']) ? intval($old_data['initial_count']) : intval($old_data['available_quantity'] ?? 0);
     }
+    if ($received_quantity === null || $received_quantity === false) {
+        $received_quantity = isset($old_data['received_quantity']) ? intval($old_data['received_quantity']) : 0;
+    }
+
+    // Availability Auto-Calculation: initial baseline stock + received amounts
+    $available_quantity = $initial_count + $received_quantity;
 
     // Automated Quantity Deduction: If condition updated to "Damaged", automatically deduct 1 from active circulating quantity
     if ($current_condition === 'Damaged' && ($old_data['current_condition'] ?? '') !== 'Damaged') {
-        $old_available = intval($old_data['available_quantity'] ?? 0);
-        if ($available_quantity >= $old_available) {
-            $available_quantity = max(0, $old_available - 1);
-        } else {
-            $available_quantity = max(0, $available_quantity);
-        }
+        $available_quantity = max(0, $available_quantity - 1);
     }
 
     // Resolve unit fallback if not passed
@@ -90,10 +94,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'furniture_type'     => $furniture_type,
         'available_quantity' => $available_quantity,
         'initial_count'      => $initial_count,
+        'received_quantity'  => $received_quantity,
         'date_received'      => $date_received,
         'current_condition'  => $current_condition,
         'remarks'            => $remarks,
-        'unit'               => $unit
+        'unit'               => $unit,
+        'issue_order_no'     => $issue_order_no,
+        'received_from'      => $received_from,
+        'receipt_no'         => $receipt_no,
+        'specification'      => $specification
     ];
 
     // Staging evaluation
@@ -119,9 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Direct update if pre-authorized
-    $stmt = $mysqli->prepare("UPDATE furniture_assets SET furniture_type = ?, available_quantity = ?, initial_count = ?, date_received = ?, current_condition = ?, remarks = ?, unit = ? WHERE id = ?");
+    $stmt = $mysqli->prepare("UPDATE furniture_assets SET furniture_type = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, date_received = ?, current_condition = ?, remarks = ?, unit = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ? WHERE id = ?");
     if ($stmt) {
-        $stmt->bind_param("siissssi", $furniture_type, $available_quantity, $initial_count, $date_received, $current_condition, $remarks, $unit, $id);
+        $stmt->bind_param("siiissssssssi", $furniture_type, $available_quantity, $initial_count, $received_quantity, $date_received, $current_condition, $remarks, $unit, $issue_order_no, $received_from, $receipt_no, $specification, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Furniture asset updated successfully.']);
         } else {

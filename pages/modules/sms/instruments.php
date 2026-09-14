@@ -60,10 +60,13 @@ $stmt->close();
                 <thead class="table-dark" style="background-color: #370709;">
                     <tr>
                         <th>Instrument Type / Tool Kit</th>
-                        <th>Available Qty</th>
+                        <th>Issue Order No.</th>
+                        <th>Received From</th>
+                        <th>Receipt No.</th>
+                        <th>Quantity</th>
                         <th>Acquisition Date</th>
                         <th>Current Condition</th>
-                        <th>Technical Specifications / Model</th>
+                        <th>Specification / Remarks</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -71,7 +74,14 @@ $stmt->close();
                     <?php foreach ($instrument_list as $inst): ?>
                         <tr>
                             <td class="fw-bold text-dark"><?= htmlspecialchars($inst['instrument_type']) ?></td>
-                            <td class="fw-bold fs-6"><span class="badge bg-light text-dark border px-3 py-2 fs-6"><?= intval($inst['available_quantity']) ?></span></td>
+                            <td><?= htmlspecialchars($inst['issue_order_no'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($inst['received_from'] ?: '-') ?></td>
+                            <td><?= htmlspecialchars($inst['receipt_no'] ?: '-') ?></td>
+                            <td class="text-center">
+                                <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $inst['available_quantity'] ?? 1) ?></span>
+                                <br>
+                                <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($inst['initial_count'] ?? 1) ?> | Recv: <?= intval($inst['received_quantity'] ?? 0) ?></small>
+                            </td>
                             <td><?= !empty($inst['purchase_date']) ? date('Y-m-d', strtotime($inst['purchase_date'])) : '-' ?></td>
                             <td>
                                 <?php
@@ -80,14 +90,25 @@ $stmt->close();
                                 ?>
                                 <span class="badge <?= $badge_class ?>"><?= htmlspecialchars($cond) ?></span>
                             </td>
-                            <td class="small text-muted"><?= htmlspecialchars($inst['remarks'] ?: '-') ?></td>
+                            <td>
+                                <?php if (!empty($inst['specification'])): ?>
+                                    <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($inst['specification']) ?></div>
+                                <?php endif; ?>
+                                <div class="small text-muted"><?= htmlspecialchars($inst['remarks'] ?: '-') ?></div>
+                            </td>
                             <td class="text-center text-nowrap">
                                 <button class="btn btn-sm btn-outline-primary me-1 btn-edit-instrument"
                                     data-id="<?= $inst['id'] ?>"
                                     data-instrument_type="<?= htmlspecialchars($inst['instrument_type']) ?>"
+                                    data-issue_order_no="<?= htmlspecialchars($inst['issue_order_no'] ?? '') ?>"
+                                    data-received_from="<?= htmlspecialchars($inst['received_from'] ?? '') ?>"
+                                    data-receipt_no="<?= htmlspecialchars($inst['receipt_no'] ?? '') ?>"
+                                    data-initial_count="<?= intval($inst['initial_count'] ?? 1) ?>"
+                                    data-received_quantity="<?= intval($inst['received_quantity'] ?? 0) ?>"
                                     data-available_quantity="<?= $inst['available_quantity'] ?>"
                                     data-purchase_date="<?= htmlspecialchars($inst['purchase_date'] ?? '') ?>"
                                     data-current_condition="<?= htmlspecialchars($inst['current_condition']) ?>"
+                                    data-specification="<?= htmlspecialchars($inst['specification'] ?? '') ?>"
                                     data-remarks="<?= htmlspecialchars($inst['remarks'] ?? '') ?>"
                                     data-bs-toggle="modal" data-bs-target="#editInstrumentModal"
                                     title="Edit Instrument">
@@ -117,26 +138,50 @@ $stmt->close();
                 <input type="hidden" name="action" value="save_instrument">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Instrument Name / Kit Category <span class="text-danger">*</span></label>
                             <input type="text" name="instrument_type" class="form-control" placeholder="e.g. Field Disease Post-Mortem Diagnostic Kit" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Quantity Available <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" class="form-control" value="1" min="1" required>
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" class="form-control" placeholder="e.g. IO-2024-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" class="form-control" placeholder="e.g. Central Store / Supplier">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" class="form-control" placeholder="e.g. REC-1234">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Acquisition / Calibration Date</label>
                             <input type="date" name="purchase_date" class="form-control" value="<?= date('Y-m-d') ?>">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="add_ins_initial_count" class="form-control fw-bold" value="1" min="0" required oninput="calcAddInstrument()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="add_ins_received_quantity" class="form-control fw-bold" value="0" min="0" required oninput="calcAddInstrument()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="add_ins_available_quantity" class="form-control fw-bold bg-light" value="1" readonly>
+                        </div>
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Operational Condition</label>
-                            <select name="current_condition" class="form-select">
+                            <select name="current_condition" id="add_ins_condition" class="form-select" onchange="calcAddInstrument()">
                                 <option value="Operational (Sterilized / Calibrated)" selected>Operational (Sterilized / Calibrated)</option>
                                 <option value="Good Condition">Good Condition</option>
                                 <option value="Requires Recalibration">Requires Recalibration</option>
                                 <option value="Damaged / Needs Replacement">Damaged / Needs Replacement</option>
                             </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification (Brand / Model / Specs)</label>
+                            <textarea name="specification" class="form-control" rows="2" placeholder="e.g. Surgical grade stainless steel, CE certified..."></textarea>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Technical Specifications &amp; Allocation</label>
@@ -168,26 +213,50 @@ $stmt->close();
                 <input type="hidden" name="id" id="edit_instrument_id">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Instrument Name / Kit Category <span class="text-danger">*</span></label>
                             <input type="text" name="instrument_type" id="edit_instrument_type" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Quantity Available <span class="text-danger">*</span></label>
-                            <input type="number" name="available_quantity" id="edit_instrument_qty" class="form-control" min="1" required>
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_instrument_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" id="edit_instrument_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_instrument_receipt_no" class="form-control">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Acquisition / Calibration Date</label>
                             <input type="date" name="purchase_date" id="edit_instrument_date" class="form-control">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_ins_initial_count" class="form-control fw-bold" min="0" required oninput="calcEditInstrument()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_ins_received_quantity" class="form-control fw-bold" min="0" required oninput="calcEditInstrument()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_instrument_qty" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Operational Condition</label>
-                            <select name="current_condition" id="edit_instrument_cond" class="form-select">
+                            <select name="current_condition" id="edit_instrument_cond" class="form-select" onchange="calcEditInstrument()">
                                 <option value="Operational (Sterilized / Calibrated)">Operational (Sterilized / Calibrated)</option>
                                 <option value="Good Condition">Good Condition</option>
                                 <option value="Requires Recalibration">Requires Recalibration</option>
                                 <option value="Damaged / Needs Replacement">Damaged / Needs Replacement</option>
                             </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification (Brand / Model / Specs)</label>
+                            <textarea name="specification" id="edit_instrument_specification" class="form-control" rows="2"></textarea>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Technical Specifications &amp; Notes</label>
@@ -207,15 +276,42 @@ $stmt->close();
 </div>
 
 <script>
+function calcAddInstrument() {
+    const base = parseInt(document.getElementById('add_ins_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('add_ins_received_quantity').value) || 0;
+    const cond = document.getElementById('add_ins_condition').value;
+    let qty = base + recv;
+    if (cond.includes('Damaged') || cond.includes('Condemned') || cond.includes('Needs Replacement') || cond.includes('Requires Recalibration')) {
+        qty = Math.max(0, qty - 1);
+    }
+    document.getElementById('add_ins_available_quantity').value = Math.max(0, qty);
+}
+function calcEditInstrument() {
+    const base = parseInt(document.getElementById('edit_ins_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_ins_received_quantity').value) || 0;
+    const cond = document.getElementById('edit_instrument_cond').value;
+    let qty = base + recv;
+    if (cond.includes('Damaged') || cond.includes('Condemned') || cond.includes('Needs Replacement') || cond.includes('Requires Recalibration')) {
+        qty = Math.max(0, qty - 1);
+    }
+    document.getElementById('edit_instrument_qty').value = Math.max(0, qty);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '.btn-edit-instrument', function() {
         const btn = $(this);
         $('#edit_instrument_id').val(btn.data('id'));
         $('#edit_instrument_type').val(btn.data('instrument_type'));
-        $('#edit_instrument_qty').val(btn.data('available_quantity'));
+        $('#edit_instrument_issue_order_no').val(btn.data('issue_order_no'));
+        $('#edit_instrument_received_from').val(btn.data('received_from'));
+        $('#edit_instrument_receipt_no').val(btn.data('receipt_no'));
+        $('#edit_ins_initial_count').val(btn.data('initial_count') !== undefined ? btn.data('initial_count') : btn.data('available_quantity'));
+        $('#edit_ins_received_quantity').val(btn.data('received_quantity') !== undefined ? btn.data('received_quantity') : 0);
         $('#edit_instrument_date').val(btn.data('purchase_date'));
         $('#edit_instrument_cond').val(btn.data('current_condition'));
+        $('#edit_instrument_specification').val(btn.data('specification'));
         $('#edit_instrument_rem').val(btn.data('remarks'));
+        calcEditInstrument();
     });
 
     if ($.fn.DataTable) {

@@ -221,18 +221,29 @@ if ($action === 'delete_inventory') {
 // 2. VEHICLES & FLEET REPAIRS CRUD
 // -------------------------------------------------------------
 if ($action === 'save_vehicle') {
-    $vehicle_type      = trim($_POST['vehicle_type'] ?? '');
-    $vehicle_number    = trim($_POST['vehicle_number'] ?? '');
-    $chassis_number    = trim($_POST['chassis_number'] ?? '');
-    $current_condition = trim($_POST['current_condition'] ?? 'Operational');
-    $other_details     = trim($_POST['other_details'] ?? '');
+    $vehicle_type       = trim($_POST['vehicle_type'] ?? '');
+    $vehicle_number     = trim($_POST['vehicle_number'] ?? '');
+    $chassis_number     = trim($_POST['chassis_number'] ?? '');
+    $current_condition  = trim($_POST['current_condition'] ?? 'Operational');
+    $other_details      = trim($_POST['other_details'] ?? '');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
+    $specification      = trim($_POST['specification'] ?? '');
+    $remarks            = trim($_POST['remarks'] ?? '');
+    if (empty($remarks) && !empty($other_details)) {
+        $remarks = $other_details;
+    }
 
     if (empty($vehicle_type) || empty($vehicle_number)) {
         respondJsonOrRedirect($is_ajax, false, 'Vehicle Type and Vehicle Number are required.', '../vehicles.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO registered_vehicles (user_id, user_category, district_id, range_id, vehicle_type, vehicle_number, chassis_number, current_condition, other_details) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isisssss", $user_id, $user_category, $district_id, $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details);
+    $stmt = $mysqli->prepare("INSERT INTO registered_vehicles (user_id, user_category, district_id, range_id, vehicle_type, vehicle_number, chassis_number, current_condition, other_details, issue_order_no, received_from, receipt_no, available_quantity, initial_count, received_quantity, specification, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isisssssssssiiiss", $user_id, $user_category, $district_id, $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $issue_order_no, $received_from, $receipt_no, $available_quantity, $initial_count, $received_quantity, $specification, $remarks);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'SMS Vehicle registered successfully.', '../vehicles.php');
@@ -242,19 +253,30 @@ if ($action === 'save_vehicle') {
 }
 
 if ($action === 'update_vehicle') {
-    $id                = intval($_POST['id'] ?? 0);
-    $vehicle_type      = trim($_POST['vehicle_type'] ?? '');
-    $vehicle_number    = trim($_POST['vehicle_number'] ?? '');
-    $chassis_number    = trim($_POST['chassis_number'] ?? '');
-    $current_condition = trim($_POST['current_condition'] ?? 'Operational');
-    $other_details     = trim($_POST['other_details'] ?? '');
+    $id                 = intval($_POST['id'] ?? 0);
+    $vehicle_type       = trim($_POST['vehicle_type'] ?? '');
+    $vehicle_number     = trim($_POST['vehicle_number'] ?? '');
+    $chassis_number     = trim($_POST['chassis_number'] ?? '');
+    $current_condition  = trim($_POST['current_condition'] ?? 'Operational');
+    $other_details      = trim($_POST['other_details'] ?? '');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
+    $specification      = trim($_POST['specification'] ?? '');
+    $remarks            = trim($_POST['remarks'] ?? '');
+    if (empty($remarks) && !empty($other_details)) {
+        $remarks = $other_details;
+    }
 
     if ($id <= 0 || empty($vehicle_type) || empty($vehicle_number)) {
         respondJsonOrRedirect($is_ajax, false, 'Invalid vehicle ID or missing details.', '../vehicles.php');
     }
 
-    $stmt = $mysqli->prepare("UPDATE registered_vehicles SET vehicle_type = ?, vehicle_number = ?, chassis_number = ?, current_condition = ?, other_details = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
-    $stmt->bind_param("sssssii", $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE registered_vehicles SET vehicle_type = ?, vehicle_number = ?, chassis_number = ?, current_condition = ?, other_details = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, specification = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
+    $stmt->bind_param("ssssssssiiissii", $vehicle_type, $vehicle_number, $chassis_number, $current_condition, $other_details, $issue_order_no, $received_from, $receipt_no, $available_quantity, $initial_count, $received_quantity, $specification, $remarks, $id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Vehicle record updated successfully.', '../vehicles.php');
@@ -341,17 +363,27 @@ if ($action === 'delete_repair') {
 // -------------------------------------------------------------
 if ($action === 'save_furniture') {
     $furniture_type     = trim($_POST['furniture_type'] ?? '');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
     $date_received      = !empty($_POST['date_received']) ? $_POST['date_received'] : null;
     $current_condition  = trim($_POST['current_condition'] ?? 'Good Condition');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $specification      = trim($_POST['specification'] ?? '');
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
 
     if (empty($furniture_type)) {
         respondJsonOrRedirect($is_ajax, false, 'Furniture Type/Category is required.', '../furniture.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO furniture_assets (user_id, user_category, district_id, range_id, furniture_type, available_quantity, date_received, current_condition, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isisisss", $user_id, $user_category, $district_id, $furniture_type, $available_quantity, $date_received, $current_condition, $remarks);
+    $stmt = $mysqli->prepare("INSERT INTO furniture_assets (user_id, user_category, district_id, range_id, furniture_type, available_quantity, initial_count, received_quantity, date_received, current_condition, issue_order_no, received_from, receipt_no, specification, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isisiiisssssss", $user_id, $user_category, $district_id, $furniture_type, $available_quantity, $initial_count, $received_quantity, $date_received, $current_condition, $issue_order_no, $received_from, $receipt_no, $specification, $remarks);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Furniture asset registered successfully.', '../furniture.php');
@@ -363,17 +395,27 @@ if ($action === 'save_furniture') {
 if ($action === 'update_furniture') {
     $id                 = intval($_POST['id'] ?? 0);
     $furniture_type     = trim($_POST['furniture_type'] ?? '');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
     $date_received      = !empty($_POST['date_received']) ? $_POST['date_received'] : null;
     $current_condition  = trim($_POST['current_condition'] ?? 'Good Condition');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $specification      = trim($_POST['specification'] ?? '');
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
 
     if ($id <= 0 || empty($furniture_type)) {
         respondJsonOrRedirect($is_ajax, false, 'Invalid item ID or missing details.', '../furniture.php');
     }
 
-    $stmt = $mysqli->prepare("UPDATE furniture_assets SET furniture_type = ?, available_quantity = ?, date_received = ?, current_condition = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
-    $stmt->bind_param("sisssii", $furniture_type, $available_quantity, $date_received, $current_condition, $remarks, $id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE furniture_assets SET furniture_type = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, date_received = ?, current_condition = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
+    $stmt->bind_param("siiisssssssii", $furniture_type, $available_quantity, $initial_count, $received_quantity, $date_received, $current_condition, $issue_order_no, $received_from, $receipt_no, $specification, $remarks, $id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Furniture record updated successfully.', '../furniture.php');
@@ -400,17 +442,27 @@ if ($action === 'delete_furniture') {
 // -------------------------------------------------------------
 if ($action === 'save_machinery') {
     $machinery_type     = trim($_POST['machinery_type'] ?? '');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
     $purchase_date      = !empty($_POST['purchase_date']) ? $_POST['purchase_date'] : null;
     $current_condition  = trim($_POST['current_condition'] ?? 'Operational');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $specification      = trim($_POST['specification'] ?? '');
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
 
     if (empty($machinery_type)) {
         respondJsonOrRedirect($is_ajax, false, 'Machinery Type/Specification is required.', '../machineries.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO machinery_assets (user_id, user_category, district_id, range_id, machinery_type, available_quantity, purchase_date, current_condition, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isisisss", $user_id, $user_category, $district_id, $machinery_type, $available_quantity, $purchase_date, $current_condition, $remarks);
+    $stmt = $mysqli->prepare("INSERT INTO machinery_assets (user_id, user_category, district_id, range_id, machinery_type, available_quantity, initial_count, received_quantity, purchase_date, current_condition, issue_order_no, received_from, receipt_no, specification, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isisiiisssssss", $user_id, $user_category, $district_id, $machinery_type, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $issue_order_no, $received_from, $receipt_no, $specification, $remarks);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Machinery asset registered successfully.', '../machineries.php');
@@ -422,17 +474,27 @@ if ($action === 'save_machinery') {
 if ($action === 'update_machinery') {
     $id                 = intval($_POST['id'] ?? 0);
     $machinery_type     = trim($_POST['machinery_type'] ?? '');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
     $purchase_date      = !empty($_POST['purchase_date']) ? $_POST['purchase_date'] : null;
     $current_condition  = trim($_POST['current_condition'] ?? 'Operational');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $specification      = trim($_POST['specification'] ?? '');
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
 
     if ($id <= 0 || empty($machinery_type)) {
         respondJsonOrRedirect($is_ajax, false, 'Invalid item ID or missing details.', '../machineries.php');
     }
 
-    $stmt = $mysqli->prepare("UPDATE machinery_assets SET machinery_type = ?, available_quantity = ?, purchase_date = ?, current_condition = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
-    $stmt->bind_param("sisssii", $machinery_type, $available_quantity, $purchase_date, $current_condition, $remarks, $id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE machinery_assets SET machinery_type = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, purchase_date = ?, current_condition = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
+    $stmt->bind_param("siiisssssssii", $machinery_type, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $issue_order_no, $received_from, $receipt_no, $specification, $remarks, $id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Machinery record updated successfully.', '../machineries.php');
@@ -459,17 +521,27 @@ if ($action === 'delete_machinery') {
 // -------------------------------------------------------------
 if ($action === 'save_instrument') {
     $instrument_type    = trim($_POST['instrument_type'] ?? '');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
     $purchase_date      = !empty($_POST['purchase_date']) ? $_POST['purchase_date'] : null;
     $current_condition  = trim($_POST['current_condition'] ?? 'Operational');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $specification      = trim($_POST['specification'] ?? '');
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
 
     if (empty($instrument_type)) {
         respondJsonOrRedirect($is_ajax, false, 'Instrument Type/Category is required.', '../instruments.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO instrument_assets (user_id, user_category, district_id, range_id, instrument_type, available_quantity, purchase_date, current_condition, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isisisss", $user_id, $user_category, $district_id, $instrument_type, $available_quantity, $purchase_date, $current_condition, $remarks);
+    $stmt = $mysqli->prepare("INSERT INTO instrument_assets (user_id, user_category, district_id, range_id, instrument_type, available_quantity, initial_count, received_quantity, purchase_date, current_condition, issue_order_no, received_from, receipt_no, specification, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isisiiisssssss", $user_id, $user_category, $district_id, $instrument_type, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $issue_order_no, $received_from, $receipt_no, $specification, $remarks);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Instrument asset registered successfully.', '../instruments.php');
@@ -481,17 +553,27 @@ if ($action === 'save_instrument') {
 if ($action === 'update_instrument') {
     $id                 = intval($_POST['id'] ?? 0);
     $instrument_type    = trim($_POST['instrument_type'] ?? '');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
     $purchase_date      = !empty($_POST['purchase_date']) ? $_POST['purchase_date'] : null;
     $current_condition  = trim($_POST['current_condition'] ?? 'Operational');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $specification      = trim($_POST['specification'] ?? '');
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
 
     if ($id <= 0 || empty($instrument_type)) {
         respondJsonOrRedirect($is_ajax, false, 'Invalid item ID or missing details.', '../instruments.php');
     }
 
-    $stmt = $mysqli->prepare("UPDATE instrument_assets SET instrument_type = ?, available_quantity = ?, purchase_date = ?, current_condition = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
-    $stmt->bind_param("sisssii", $instrument_type, $available_quantity, $purchase_date, $current_condition, $remarks, $id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE instrument_assets SET instrument_type = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, purchase_date = ?, current_condition = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
+    $stmt->bind_param("siiisssssssii", $instrument_type, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $issue_order_no, $received_from, $receipt_no, $specification, $remarks, $id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Instrument record updated successfully.', '../instruments.php');
@@ -518,17 +600,27 @@ if ($action === 'delete_instrument') {
 // -------------------------------------------------------------
 if ($action === 'save_counterfoil') {
     $counterfoil_type   = trim($_POST['counterfoil_type'] ?? '');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
     $purchase_date      = !empty($_POST['purchase_date']) ? $_POST['purchase_date'] : null;
     $current_condition  = trim($_POST['current_condition'] ?? 'Good Condition');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $specification      = trim($_POST['specification'] ?? '');
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
 
     if (empty($counterfoil_type)) {
         respondJsonOrRedirect($is_ajax, false, 'Counter Foil Book Type is required.', '../counter_foilage.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO counterfoil_assets (user_id, user_category, district_id, range_id, counterfoil_type, available_quantity, purchase_date, current_condition, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isisisss", $user_id, $user_category, $district_id, $counterfoil_type, $available_quantity, $purchase_date, $current_condition, $remarks);
+    $stmt = $mysqli->prepare("INSERT INTO counterfoil_assets (user_id, user_category, district_id, range_id, counterfoil_type, available_quantity, initial_count, received_quantity, purchase_date, current_condition, issue_order_no, received_from, receipt_no, specification, remarks) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isisiiisssssss", $user_id, $user_category, $district_id, $counterfoil_type, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $issue_order_no, $received_from, $receipt_no, $specification, $remarks);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Counter foil record registered successfully.', '../counter_foilage.php');
@@ -540,17 +632,27 @@ if ($action === 'save_counterfoil') {
 if ($action === 'update_counterfoil') {
     $id                 = intval($_POST['id'] ?? 0);
     $counterfoil_type   = trim($_POST['counterfoil_type'] ?? '');
-    $available_quantity = intval($_POST['available_quantity'] ?? 1);
+    $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
+    $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
+    $available_quantity = $initial_count + $received_quantity;
     $purchase_date      = !empty($_POST['purchase_date']) ? $_POST['purchase_date'] : null;
     $current_condition  = trim($_POST['current_condition'] ?? 'Good Condition');
+    $issue_order_no     = trim($_POST['issue_order_no'] ?? '');
+    $received_from      = trim($_POST['received_from'] ?? '');
+    $receipt_no         = trim($_POST['receipt_no'] ?? '');
+    $specification      = trim($_POST['specification'] ?? '');
     $remarks            = trim($_POST['remarks'] ?? '');
+
+    if ($current_condition === 'Damaged') {
+        $available_quantity = max(0, $available_quantity - 1);
+    }
 
     if ($id <= 0 || empty($counterfoil_type)) {
         respondJsonOrRedirect($is_ajax, false, 'Invalid item ID or missing details.', '../counter_foilage.php');
     }
 
-    $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET counterfoil_type = ?, available_quantity = ?, purchase_date = ?, current_condition = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
-    $stmt->bind_param("sisssii", $counterfoil_type, $available_quantity, $purchase_date, $current_condition, $remarks, $id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET counterfoil_type = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, purchase_date = ?, current_condition = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ?, remarks = ? WHERE id = ? AND (user_category = 'subject_matter_specialist' OR user_id = ?)");
+    $stmt->bind_param("siiisssssssii", $counterfoil_type, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $issue_order_no, $received_from, $receipt_no, $specification, $remarks, $id, $user_id);
 
     if ($stmt->execute()) {
         respondJsonOrRedirect($is_ajax, true, 'Counter foil record updated successfully.', '../counter_foilage.php');

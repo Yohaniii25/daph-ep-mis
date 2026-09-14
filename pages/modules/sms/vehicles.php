@@ -98,8 +98,12 @@ $active_tab = $_GET['tab'] ?? 'vehicles';
                                 <th>Vehicle Number</th>
                                 <th>Category / Type</th>
                                 <th>Chassis / Engine #</th>
+                                <th>Issue Order No.</th>
+                                <th>Received From</th>
+                                <th>Receipt No.</th>
+                                <th>Quantity</th>
                                 <th>Current Condition</th>
-                                <th>Equipment / Role Details</th>
+                                <th>Specification / Remarks</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -109,6 +113,14 @@ $active_tab = $_GET['tab'] ?? 'vehicles';
                                     <td><span class="fw-bold fs-6 text-primary"><?= htmlspecialchars($v['vehicle_number']) ?></span></td>
                                     <td class="fw-semibold text-dark"><?= htmlspecialchars($v['vehicle_type']) ?></td>
                                     <td class="small text-muted font-monospace"><?= htmlspecialchars($v['chassis_number'] ?: '-') ?></td>
+                                    <td><?= htmlspecialchars($v['issue_order_no'] ?: '-') ?></td>
+                                    <td><?= htmlspecialchars($v['received_from'] ?: '-') ?></td>
+                                    <td><?= htmlspecialchars($v['receipt_no'] ?: '-') ?></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $v['available_quantity'] ?? 1) ?></span>
+                                        <br>
+                                        <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($v['initial_count'] ?? 1) ?> | Recv: <?= intval($v['received_quantity'] ?? 0) ?></small>
+                                    </td>
                                     <td>
                                         <?php
                                             $cond = $v['current_condition'];
@@ -116,7 +128,12 @@ $active_tab = $_GET['tab'] ?? 'vehicles';
                                         ?>
                                         <span class="badge <?= $badge_class ?>"><?= htmlspecialchars($cond) ?></span>
                                     </td>
-                                    <td class="small text-muted"><?= htmlspecialchars($v['other_details'] ?: '-') ?></td>
+                                    <td>
+                                        <?php if (!empty($v['specification'])): ?>
+                                            <div class="fw-semibold text-dark small mb-1"><?= htmlspecialchars($v['specification']) ?></div>
+                                        <?php endif; ?>
+                                        <div class="small text-muted"><?= htmlspecialchars($v['remarks'] ?: ($v['other_details'] ?: '-')) ?></div>
+                                    </td>
                                     <td class="text-center text-nowrap">
                                         <button class="btn btn-sm btn-outline-primary me-1 btn-edit-vehicle"
                                             data-id="<?= $v['id'] ?>"
@@ -125,6 +142,14 @@ $active_tab = $_GET['tab'] ?? 'vehicles';
                                             data-chassis="<?= htmlspecialchars($v['chassis_number'] ?? '') ?>"
                                             data-condition="<?= htmlspecialchars($v['current_condition']) ?>"
                                             data-other="<?= htmlspecialchars($v['other_details'] ?? '') ?>"
+                                            data-issue_order_no="<?= htmlspecialchars($v['issue_order_no'] ?? '') ?>"
+                                            data-received_from="<?= htmlspecialchars($v['received_from'] ?? '') ?>"
+                                            data-receipt_no="<?= htmlspecialchars($v['receipt_no'] ?? '') ?>"
+                                            data-initial_count="<?= intval($v['initial_count'] ?? 1) ?>"
+                                            data-received_quantity="<?= intval($v['received_quantity'] ?? 0) ?>"
+                                            data-quantity="<?= intval($v['available_quantity'] ?? 1) ?>"
+                                            data-specification="<?= htmlspecialchars($v['specification'] ?? '') ?>"
+                                            data-remarks="<?= htmlspecialchars($v['remarks'] ?? '') ?>"
                                             data-bs-toggle="modal" data-bs-target="#editVehicleModal"
                                             title="Edit Vehicle">
                                             <i class="bi bi-pencil-square"></i> Edit
@@ -162,30 +187,30 @@ $active_tab = $_GET['tab'] ?? 'vehicles';
                         <tbody>
                             <?php foreach ($repairs_list as $rep): ?>
                                 <tr>
-                                    <td class="small text-nowrap"><?= date('Y-m-d', strtotime($rep['repair_date'])) ?></td>
+                                    <td class="fw-bold text-nowrap"><?= date('Y-m-d', strtotime($rep['repair_date'])) ?></td>
                                     <td>
-                                        <span class="fw-bold text-dark"><?= htmlspecialchars($rep['vehicle_number'] ?: 'N/A') ?></span>
-                                        <small class="d-block text-muted"><?= htmlspecialchars($rep['vehicle_type'] ?: '') ?></small>
+                                        <span class="badge bg-primary fs-6"><?= htmlspecialchars($rep['vehicle_number'] ?? 'N/A') ?></span>
+                                        <div class="small text-muted"><?= htmlspecialchars($rep['vehicle_type'] ?? '') ?></div>
                                     </td>
                                     <td>
-                                        <strong class="text-dark"><?= htmlspecialchars($rep['repair_done']) ?></strong>
-                                        <?php if (!empty($rep['repair_description'])): ?>
-                                            <small class="d-block text-muted"><?= htmlspecialchars($rep['repair_description']) ?></small>
+                                        <span class="fw-bold text-dark"><?= htmlspecialchars($rep['work_done']) ?></span>
+                                        <?php if (!empty($rep['description'])): ?>
+                                            <div class="small text-muted"><?= htmlspecialchars($rep['description']) ?></div>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="small"><?= htmlspecialchars($rep['place_of_repair'] ?: '-') ?></td>
-                                    <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($rep['invoice_ref'] ?: '-') ?></span></td>
-                                    <td class="fw-bold text-success text-nowrap">Rs. <?= number_format(floatval($rep['amount']), 2) ?></td>
+                                    <td><?= htmlspecialchars($rep['service_station'] ?: '-') ?></td>
+                                    <td class="font-monospace small"><?= htmlspecialchars($rep['invoice_ref'] ?: '-') ?></td>
+                                    <td class="fw-bold text-success text-nowrap">Rs. <?= number_format($rep['total_cost'], 2) ?></td>
                                     <td class="text-center text-nowrap">
                                         <button class="btn btn-sm btn-outline-primary me-1 btn-edit-repair"
                                             data-id="<?= $rep['id'] ?>"
                                             data-vehicle_id="<?= $rep['vehicle_id'] ?>"
                                             data-date="<?= $rep['repair_date'] ?>"
-                                            data-done="<?= htmlspecialchars($rep['repair_done']) ?>"
-                                            data-desc="<?= htmlspecialchars($rep['repair_description'] ?? '') ?>"
-                                            data-place="<?= htmlspecialchars($rep['place_of_repair'] ?? '') ?>"
+                                            data-done="<?= htmlspecialchars($rep['work_done']) ?>"
+                                            data-desc="<?= htmlspecialchars($rep['description'] ?? '') ?>"
+                                            data-place="<?= htmlspecialchars($rep['service_station'] ?? '') ?>"
                                             data-invoice="<?= htmlspecialchars($rep['invoice_ref'] ?? '') ?>"
-                                            data-amount="<?= $rep['amount'] ?>"
+                                            data-amount="<?= $rep['total_cost'] ?>"
                                             data-bs-toggle="modal" data-bs-target="#editRepairModal"
                                             title="Edit Repair">
                                             <i class="bi bi-pencil-square"></i> Edit
@@ -238,16 +263,48 @@ $active_tab = $_GET['tab'] ?? 'vehicles';
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Current Operational Condition</label>
-                            <select name="current_condition" class="form-select">
+                            <select name="current_condition" id="add_veh_condition" class="form-select" onchange="calcAddVehicle()">
                                 <option value="Operational (Good Condition)" selected>Operational (Good Condition)</option>
                                 <option value="Operational (Needs Service)">Operational (Needs Service)</option>
                                 <option value="Under Repair in Garage">Under Repair in Garage</option>
                                 <option value="Condemned / Non-Operational">Condemned / Non-Operational</option>
                             </select>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" class="form-control" placeholder="e.g. IO-2024-001">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" class="form-control" placeholder="e.g. Kachcheri / Head Office">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" class="form-control" placeholder="e.g. REC-1234">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="add_veh_initial_count" class="form-control fw-bold" value="1" min="0" required oninput="calcAddVehicle()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="add_veh_received_quantity" class="form-control fw-bold" value="0" min="0" required oninput="calcAddVehicle()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="add_veh_available_quantity" class="form-control fw-bold bg-light" value="1" readonly>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification (Brand / Model / Specs)</label>
+                            <textarea name="specification" class="form-control" rows="2" placeholder="e.g. Toyota Hilux Double Cab 4x4, 2.4L Diesel..."></textarea>
+                        </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Installed Technical Equipment &amp; Features</label>
                             <textarea name="other_details" class="form-control" rows="2" placeholder="e.g. Mounted 12V vaccine mini-fridge, post-mortem table, examination kit storage"></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="2" placeholder="e.g. Allocated to Field SMS Officer..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -289,16 +346,48 @@ $active_tab = $_GET['tab'] ?? 'vehicles';
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Operational Condition</label>
-                            <select name="current_condition" id="edit_current_condition" class="form-select">
+                            <select name="current_condition" id="edit_current_condition" class="form-select" onchange="calcEditVehicle()">
                                 <option value="Operational (Good Condition)">Operational (Good Condition)</option>
                                 <option value="Operational (Needs Service)">Operational (Needs Service)</option>
                                 <option value="Under Repair in Garage">Under Repair in Garage</option>
                                 <option value="Condemned / Non-Operational">Condemned / Non-Operational</option>
                             </select>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Issue Order No.</label>
+                            <input type="text" name="issue_order_no" id="edit_vehicle_issue_order_no" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Received From</label>
+                            <input type="text" name="received_from" id="edit_vehicle_received_from" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Receipt No.</label>
+                            <input type="text" name="receipt_no" id="edit_vehicle_receipt_no" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Initial Baseline Stock</label>
+                            <input type="number" name="initial_count" id="edit_veh_initial_count" class="form-control fw-bold" min="0" required oninput="calcEditVehicle()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <input type="number" name="received_quantity" id="edit_veh_received_quantity" class="form-control fw-bold" min="0" required oninput="calcEditVehicle()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <input type="number" name="available_quantity" id="edit_vehicle_quantity" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Specification (Brand / Model / Specs)</label>
+                            <textarea name="specification" id="edit_vehicle_specification" class="form-control" rows="2"></textarea>
+                        </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Installed Technical Equipment</label>
                             <textarea name="other_details" id="edit_other_details" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold">Remarks</label>
+                            <textarea name="remarks" id="edit_vehicle_remarks" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                 </div>
@@ -430,6 +519,27 @@ $active_tab = $_GET['tab'] ?? 'vehicles';
 </div>
 
 <script>
+function calcAddVehicle() {
+    const base = parseInt(document.getElementById('add_veh_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('add_veh_received_quantity').value) || 0;
+    const cond = document.getElementById('add_veh_condition').value;
+    let qty = base + recv;
+    if (cond.includes('Garage') || cond.includes('Condemned') || cond.includes('Non-Operational') || cond.includes('Repair')) {
+        qty = Math.max(0, qty - 1);
+    }
+    document.getElementById('add_veh_available_quantity').value = Math.max(0, qty);
+}
+function calcEditVehicle() {
+    const base = parseInt(document.getElementById('edit_veh_initial_count').value) || 0;
+    const recv = parseInt(document.getElementById('edit_veh_received_quantity').value) || 0;
+    const cond = document.getElementById('edit_current_condition').value;
+    let qty = base + recv;
+    if (cond.includes('Garage') || cond.includes('Condemned') || cond.includes('Non-Operational') || cond.includes('Repair')) {
+        qty = Math.max(0, qty - 1);
+    }
+    document.getElementById('edit_vehicle_quantity').value = Math.max(0, qty);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '.btn-edit-vehicle', function() {
         const btn = $(this);
@@ -439,6 +549,14 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#edit_chassis_number').val(btn.data('chassis'));
         $('#edit_current_condition').val(btn.data('condition'));
         $('#edit_other_details').val(btn.data('other'));
+        $('#edit_vehicle_issue_order_no').val(btn.data('issue_order_no'));
+        $('#edit_vehicle_received_from').val(btn.data('received_from'));
+        $('#edit_vehicle_receipt_no').val(btn.data('receipt_no'));
+        $('#edit_veh_initial_count').val(btn.data('initial_count') !== undefined ? btn.data('initial_count') : btn.data('quantity'));
+        $('#edit_veh_received_quantity').val(btn.data('received_quantity') !== undefined ? btn.data('received_quantity') : 0);
+        $('#edit_vehicle_specification').val(btn.data('specification'));
+        $('#edit_vehicle_remarks').val(btn.data('remarks'));
+        calcEditVehicle();
     });
 
     $(document).on('click', '.btn-edit-repair', function() {
