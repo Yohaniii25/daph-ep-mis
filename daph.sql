@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 15, 2026 at 02:59 PM
+-- Generation Time: Sep 14, 2026 at 09:49 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -483,16 +483,17 @@ CREATE TABLE `assets_immovable` (
   `asset_name` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,
-  `extent` varchar(100) DEFAULT NULL
+  `extent` varchar(100) DEFAULT NULL,
+  `unit` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `assets_immovable`
 --
 
-INSERT INTO `assets_immovable` (`id`, `range_id`, `asset_name`, `description`, `location`, `extent`) VALUES
-(1, 1, 'computer', 'e', 'uppuveli', '2'),
-(2, 1, 'computer', 'e', 'uppuveli', '2');
+INSERT INTO `assets_immovable` (`id`, `range_id`, `asset_name`, `description`, `location`, `extent`, `unit`) VALUES
+(1, 1, 'computer', 'e', 'uppuveli', '2', NULL),
+(2, 1, 'computer', 'e', 'uppuveli', '2', NULL);
 
 -- --------------------------------------------------------
 
@@ -506,15 +507,16 @@ CREATE TABLE `assets_movable` (
   `asset_category` enum('Vehicle','Equipment','Furniture','Other') DEFAULT 'Equipment',
   `item_name` varchar(255) NOT NULL,
   `serial_no` varchar(100) DEFAULT NULL,
-  `condition` enum('Good','Fair','Needs Repair','Discarded') DEFAULT 'Good'
+  `condition` enum('Good','Fair','Needs Repair','Discarded') DEFAULT 'Good',
+  `unit` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `assets_movable`
 --
 
-INSERT INTO `assets_movable` (`id`, `range_id`, `asset_category`, `item_name`, `serial_no`, `condition`) VALUES
-(1, 1, 'Vehicle', 'Car', '202', 'Fair');
+INSERT INTO `assets_movable` (`id`, `range_id`, `asset_category`, `item_name`, `serial_no`, `condition`, `unit`) VALUES
+(1, 1, 'Vehicle', 'Car', '202', 'Fair', NULL);
 
 -- --------------------------------------------------------
 
@@ -544,203 +546,77 @@ CREATE TABLE `audit_logs` (
 --
 
 INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, `action_type`, `module_name`, `table_name`, `record_id`, `old_values`, `new_values`, `ip_address`, `device_info`, `remarks`) VALUES
-(1, '2026-03-27 11:24:17', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(2, '2026-03-28 06:03:04', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(3, '2026-03-28 08:32:41', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(4, '2026-03-28 08:32:54', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(5, '2026-03-28 08:33:18', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(6, '2026-03-28 08:35:48', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(7, '2026-03-28 08:35:57', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(8, '2026-03-28 12:26:21', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(9, '2026-03-28 14:50:57', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(10, '2026-03-28 15:19:33', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(11, '2026-03-30 07:17:11', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(12, '2026-03-30 13:35:19', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(13, '2026-03-31 05:21:17', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(14, '2026-03-31 12:56:40', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(15, '2026-04-02 06:04:39', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(16, '2026-04-03 09:22:12', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(17, '2026-04-04 07:02:40', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(18, '2026-04-07 12:31:50', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(19, '2026-04-07 13:00:07', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(20, '2026-04-08 04:16:22', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(21, '2026-04-10 07:06:44', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(22, '2026-04-10 07:29:59', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(23, '2026-04-11 18:21:10', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'User logged in via Web'),
-(24, '2026-04-12 18:10:08', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(25, '2026-04-12 19:32:13', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(26, '2026-04-13 06:05:33', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(27, '2026-04-15 07:40:56', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(28, '2026-04-16 06:16:56', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(29, '2026-04-16 18:29:35', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(30, '2026-04-17 17:41:14', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(31, '2026-04-21 04:57:00', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(32, '2026-04-21 13:46:49', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(33, '2026-04-22 06:10:50', 20, 'employee', '', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(34, '2026-04-22 06:39:35', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(35, '2026-04-22 06:59:04', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(36, '2026-04-22 10:17:49', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(37, '2026-04-22 12:17:33', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(38, '2026-04-22 12:54:39', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(39, '2026-04-27 07:18:17', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(40, '2026-04-27 07:18:55', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(41, '2026-04-28 05:50:56', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(42, '2026-04-28 06:57:23', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(43, '2026-04-28 06:57:42', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(44, '2026-04-29 05:50:22', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(45, '2026-04-29 06:03:51', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(46, '2026-04-29 06:36:21', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36', 'User logged in via Web'),
-(47, '2026-04-29 10:00:49', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(48, '2026-05-06 05:36:40', 16, 'District Deputy Director', 'district_dd', 'LOGIN', NULL, '0', 16, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(49, '2026-05-06 08:53:04', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(50, '2026-05-06 13:13:32', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(51, '2026-05-07 03:55:44', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'User logged in via Web'),
-(52, '2026-05-12 12:14:18', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(53, '2026-05-13 06:00:43', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(54, '2026-05-13 06:25:58', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(55, '2026-05-13 06:26:28', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(56, '2026-05-13 06:44:19', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(57, '2026-05-13 06:46:35', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(58, '2026-05-13 06:53:40', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(59, '2026-05-14 04:59:38', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(60, '2026-05-14 11:40:22', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(61, '2026-05-15 03:33:45', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(62, '2026-05-18 10:26:58', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(63, '2026-05-18 11:52:29', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(64, '2026-05-18 12:25:49', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(65, '2026-05-18 12:25:54', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(66, '2026-05-18 12:26:16', 20, 'employee', 'employee', 'LOGIN', NULL, '0', 20, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(67, '2026-05-18 12:27:07', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(68, '2026-05-19 03:22:57', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(69, '2026-05-19 10:28:44', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(70, '2026-05-19 10:28:55', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(71, '2026-05-19 11:54:07', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(72, '2026-05-20 04:39:45', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(73, '2026-05-20 04:58:06', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(74, '2026-05-20 06:13:39', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(75, '2026-05-21 11:06:18', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(76, '2026-05-21 11:06:50', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(77, '2026-05-25 14:52:03', 13, 'Farms Officer', 'farms_dd', 'LOGIN', NULL, '0', 13, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(78, '2026-05-25 14:52:45', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(79, '2026-05-26 06:45:07', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(80, '2026-05-26 13:44:40', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(81, '2026-05-27 04:42:36', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(82, '2026-05-27 08:38:13', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(83, '2026-05-27 13:05:48', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(84, '2026-05-28 05:04:52', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(85, '2026-05-31 09:26:27', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(86, '2026-06-01 04:46:39', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(87, '2026-06-02 05:50:09', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(88, '2026-06-02 08:38:10', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(89, '2026-06-02 12:46:37', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(90, '2026-06-03 04:21:15', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(91, '2026-06-03 08:59:52', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(92, '2026-06-03 09:12:38', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'User logged in via Web'),
-(93, '2026-06-08 06:48:24', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(94, '2026-06-08 09:46:52', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(95, '2026-06-09 11:54:00', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(96, '2026-06-09 12:47:22', 10, 'finance_admin', 'finance_admin', 'LOGIN', NULL, '0', 10, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(97, '2026-06-09 12:47:56', 16, 'District Deputy Director', 'district_dd', 'LOGIN', NULL, '0', 16, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(98, '2026-06-10 10:34:04', 10, 'finance_admin', 'finance_admin', 'LOGIN', NULL, '0', 10, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(99, '2026-06-10 10:35:02', 11, 'Planning officer', 'planning_officer', 'LOGIN', NULL, '0', 11, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(100, '2026-06-10 11:48:35', 15, 'Training Officer', 'training_officer', 'LOGIN', NULL, '0', 15, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(101, '2026-06-10 13:07:48', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(102, '2026-06-16 10:02:19', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(103, '2026-06-16 12:44:46', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(104, '2026-06-17 06:42:14', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(105, '2026-06-17 06:47:54', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(106, '2026-06-17 07:04:03', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(107, '2026-06-22 06:25:11', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in via Web'),
-(108, '2026-06-22 10:17:31', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(109, '2026-06-22 11:03:07', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(110, '2026-06-22 12:15:58', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(111, '2026-06-22 12:17:18', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(112, '2026-06-24 10:46:25', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(113, '2026-06-24 13:55:05', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(114, '2026-06-24 14:06:16', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(115, '2026-06-25 02:31:54', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(116, '2026-06-30 10:12:07', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(117, '2026-06-30 14:48:36', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(118, '2026-06-30 15:02:47', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(119, '2026-07-01 04:25:29', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 Edg/149.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(120, '2026-07-04 08:41:17', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(121, '2026-07-04 12:30:24', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(122, '2026-07-06 06:16:14', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(123, '2026-07-06 09:02:24', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
-(124, '2026-07-06 10:44:37', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
-(125, '2026-07-06 10:47:16', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
-(126, '2026-07-06 13:23:49', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(127, '2026-07-06 13:30:41', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
-(128, '2026-07-07 06:33:42', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
-(129, '2026-07-07 07:29:04', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
-(130, '2026-07-07 07:47:58', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
-(131, '2026-07-07 07:49:25', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
-(132, '2026-07-07 08:20:56', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
-(133, '2026-07-09 06:28:31', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '124.43.8.234', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in via Web'),
-(134, '2026-07-10 09:43:13', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(135, '2026-07-13 04:32:40', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(136, '2026-07-13 04:44:12', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(137, '2026-07-13 05:18:53', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(138, '2026-07-13 06:03:52', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: subject_matter_specialist'),
-(139, '2026-07-13 06:35:34', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(140, '2026-07-13 10:08:55', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
-(141, '2026-07-13 11:30:58', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
-(142, '2026-07-13 13:45:24', 17, 'veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: range_veterinary_officer'),
-(143, '2026-07-13 14:41:49', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(144, '2026-07-20 06:38:31', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(145, '2026-07-20 07:32:51', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(146, '2026-07-20 08:50:12', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(147, '2026-07-20 10:03:15', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(148, '2026-07-20 10:06:05', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(149, '2026-07-20 14:45:23', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(150, '2026-07-20 15:20:23', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(151, '2026-07-21 10:33:21', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(152, '2026-07-21 11:38:36', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(153, '2026-07-21 12:03:06', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(154, '2026-07-22 07:08:01', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(155, '2026-07-22 08:37:03', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(156, '2026-07-22 08:59:14', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(157, '2026-07-23 06:17:40', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(158, '2026-07-27 04:47:42', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(159, '2026-07-27 08:45:03', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(160, '2026-07-28 04:38:12', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(161, '2026-07-28 05:58:08', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(162, '2026-07-28 05:58:50', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(163, '2026-07-28 11:11:22', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'User logged in with context: regional_farms'),
-(164, '2026-08-03 12:43:28', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(165, '2026-08-06 04:44:35', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(166, '2026-08-06 10:47:58', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(167, '2026-08-06 11:19:09', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(168, '2026-08-06 11:20:42', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(169, '2026-08-06 11:22:28', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(170, '2026-08-08 08:13:42', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(171, '2026-08-08 11:20:03', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(172, '2026-08-08 11:34:15', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(173, '2026-08-08 11:36:39', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: regional_farms'),
-(174, '2026-08-08 11:45:02', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: regional_farms'),
-(175, '2026-08-08 12:02:36', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: regional_farms'),
-(176, '2026-08-08 12:06:25', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: regional_farms'),
-(177, '2026-08-08 12:09:16', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: regional_farms'),
-(178, '2026-08-08 12:45:35', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: regional_farms'),
-(179, '2026-08-10 10:13:01', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms');
-INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, `action_type`, `module_name`, `table_name`, `record_id`, `old_values`, `new_values`, `ip_address`, `device_info`, `remarks`) VALUES
-(180, '2026-08-10 11:51:05', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(181, '2026-08-11 09:03:39', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(182, '2026-08-11 11:37:10', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(183, '2026-08-12 10:23:31', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(184, '2026-08-12 10:23:44', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(185, '2026-08-12 10:37:02', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(186, '2026-08-12 10:37:18', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(187, '2026-08-12 10:59:17', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: regional_farms'),
-(188, '2026-08-12 12:06:32', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(189, '2026-08-12 12:06:50', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: regional_farms'),
-(190, '2026-08-13 07:06:11', 50, 'Animal Husbandry Training Centre', 'training_officer', 'LOGIN', NULL, '0', 50, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: training_centers'),
-(191, '2026-08-13 10:52:07', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(192, '2026-08-13 11:01:42', 50, 'Animal Husbandry Training Centre', 'training_officer', 'LOGIN', NULL, '0', 50, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: training_centers'),
-(193, '2026-08-14 05:03:21', 50, 'Animal Husbandry Training Centre', 'training_officer', 'LOGIN', NULL, '0', 50, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: training_centers'),
-(194, '2026-08-15 12:51:53', 50, 'Animal Husbandry Training Centre', 'training_officer', 'LOGIN', NULL, '0', 50, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: training_centers'),
-(195, '2026-08-15 12:55:45', 51, 'Animal Husbandry Training Centre - Kallady', 'training_officer', 'LOGIN', NULL, '0', 51, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: training_centers'),
-(196, '2026-08-15 12:57:48', 52, 'Animal Husbandry Farmer Training Centre - Kanchira', 'training_officer', 'LOGIN', NULL, '0', 52, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'User logged in with context: training_centers');
+(228, '2026-09-04 07:04:17', 65, 'District Deputy Director (H/Q1)', 'deputy_director_hq_1', 'LOGIN', NULL, '0', 65, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_hq_1'),
+(229, '2026-09-04 07:04:36', 66, 'Planning Deputy Director (H/Q2)', 'deputy_director_hq_2', 'LOGIN', NULL, '0', 66, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_hq_2'),
+(230, '2026-09-04 07:17:33', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, NULL, NULL, 'User logged in with context: deputy_director_district'),
+(231, '2026-09-04 07:18:12', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '127.0.0.1', 'TestAgent', 'User logged in with context: deputy_director_district'),
+(232, '2026-09-04 07:27:49', 67, 'District Deputy Director (Batticaloa)', 'district_dd', 'LOGIN', NULL, '0', 67, NULL, NULL, '127.0.0.1', 'TestAgent', 'User logged in with context: deputy_director_district'),
+(233, '2026-09-04 07:28:32', 68, 'District Deputy Director (Trincomalee)', 'district_dd', 'LOGIN', NULL, '0', 68, NULL, NULL, '127.0.0.1', 'TestAgent', 'User logged in with context: deputy_director_district'),
+(234, '2026-09-04 07:30:41', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_district'),
+(235, '2026-09-04 07:31:10', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(236, '2026-09-04 07:42:13', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_district'),
+(237, '2026-09-04 09:20:25', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(238, '2026-09-04 10:04:04', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'User logged in with context: provincial_director'),
+(239, '2026-09-05 06:04:14', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(240, '2026-09-05 06:33:42', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_district'),
+(241, '2026-09-05 06:59:51', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(242, '2026-09-05 08:10:49', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_district'),
+(243, '2026-09-05 09:02:16', 12, 'Subject Matter Specialist', 'sms', 'LOGIN', NULL, '0', 12, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: subject_matter_specialist'),
+(244, '2026-09-05 09:05:25', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_district'),
+(245, '2026-09-05 10:44:15', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_district'),
+(246, '2026-09-05 10:55:34', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(247, '2026-09-05 11:07:37', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_district'),
+(248, '2026-09-05 11:08:03', 64, 'District Deputy Director (Ampara)', 'district_dd', 'UPDATE_QUICK_ACTION_', NULL, '0', 17, NULL, '[\"range_statistics\",\"annual_targets\",\"regulatory_functions\",\"animal_health\",\"clinical_services\",\"animal_breeding\",\"livestock_production\",\"dairy_hub\",\"projects\",\"monitoring\",\"accounts\",\"clean_sri_lanka\",\"trainings\"]', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'District DD updated task assignments for Officer ID 17 (13 actions assigned)'),
+(249, '2026-09-05 11:09:00', 64, 'District Deputy Director (Ampara)', 'district_dd', 'REVOKE_QUICK_ACTION_', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'District DD revoked all task assignments for Officer ID 17'),
+(250, '2026-09-05 11:23:17', 64, 'District Deputy Director (Ampara)', 'district_dd', 'REVOKE_QUICK_ACTION_', NULL, '0', 17, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'District DD revoked all district-wide task assignments for Officer ID 17'),
+(251, '2026-09-05 11:24:30', 64, 'District Deputy Director (Ampara)', 'district_dd', 'UPDATE_QUICK_ACTION_', NULL, '0', 17, NULL, '[\"range_statistics\",\"annual_targets\"]', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'District DD updated task assignments for Officer ID 17 (2 actions assigned district-wide)'),
+(252, '2026-09-05 11:24:58', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(253, '2026-09-05 11:25:29', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(254, '2026-09-05 11:25:45', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: deputy_director_district'),
+(255, '2026-09-05 11:50:15', 64, 'District Deputy Director (Ampara)', 'district_dd', 'REVOKE_QUICK_ACTION_', NULL, '0', 0, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'District DD revoked all district-wide task assignments for Government Veterinary Surgeons in Ampara District'),
+(256, '2026-09-05 11:54:39', 64, 'District Deputy Director (Ampara)', 'district_dd', 'UPDATE_QUICK_ACTION_', NULL, '0', 0, NULL, '[\"range_statistics\",\"annual_targets\",\"animal_health\",\"clinical_services\"]', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'District DD updated task assignments for All Government Veterinary Surgeons across Ampara District (4 actions assigned district-wide)'),
+(257, '2026-09-05 12:09:42', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(258, '2026-09-05 12:10:04', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(259, '2026-09-05 12:15:54', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(260, '2026-09-08 07:56:21', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(261, '2026-09-08 08:33:58', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(262, '2026-09-08 13:18:01', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(263, '2026-09-09 04:56:42', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(264, '2026-09-09 08:11:07', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(265, '2026-09-09 08:49:38', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: regional_farms'),
+(266, '2026-09-09 08:50:45', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(267, '2026-09-09 09:24:20', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(268, '2026-09-09 11:45:23', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(269, '2026-09-09 11:46:34', 45, 'regionalfarms', 'farms_dd', 'LOGIN', NULL, '0', 45, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: regional_farms'),
+(270, '2026-09-09 12:33:43', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(271, '2026-09-09 13:05:12', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(272, '2026-09-09 13:16:16', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(273, '2026-09-10 03:26:33', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: administrator'),
+(274, '2026-09-10 05:43:04', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(275, '2026-09-10 05:45:35', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: administrator'),
+(276, '2026-09-10 05:49:04', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(277, '2026-09-10 05:52:05', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: administrator'),
+(278, '2026-09-10 06:28:15', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(279, '2026-09-10 09:51:06', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(280, '2026-09-11 07:04:02', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(281, '2026-09-11 09:05:04', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: provincial_director'),
+(282, '2026-09-11 09:05:53', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(283, '2026-09-11 09:53:35', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(284, '2026-09-11 09:58:09', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(285, '2026-09-11 09:59:17', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(286, '2026-09-11 10:04:41', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: administrator'),
+(287, '2026-09-11 10:05:35', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(288, '2026-09-12 08:49:43', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(289, '2026-09-12 08:59:10', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(290, '2026-09-12 09:11:05', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: administrator'),
+(291, '2026-09-12 09:13:19', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(292, '2026-09-14 04:04:20', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(293, '2026-09-14 04:22:10', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: administrator'),
+(294, '2026-09-14 04:22:45', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '127.0.0.1', 'curl/7.79.1', 'User logged in with context: administrator'),
+(295, '2026-09-14 04:23:04', 10, 'finance_admin', 'finance_admin', 'LOGIN', NULL, '0', 10, NULL, NULL, '127.0.0.1', 'curl/7.79.1', 'User logged in with context: accounts_branch'),
+(296, '2026-09-14 04:23:41', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(297, '2026-09-14 06:41:28', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: provincial_director'),
+(298, '2026-09-14 06:42:01', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer');
 
 -- --------------------------------------------------------
 
@@ -844,23 +720,33 @@ CREATE TABLE `building_inventories` (
   `farm_id` int(11) DEFAULT NULL,
   `user_category` varchar(100) DEFAULT NULL,
   `inventory_item` varchar(255) NOT NULL,
+  `inventory_number` varchar(100) DEFAULT NULL,
+  `inventory_type` varchar(100) DEFAULT NULL,
+  `issue_order_no` varchar(100) DEFAULT NULL,
+  `received_from` varchar(255) DEFAULT NULL,
+  `receipt_no` varchar(100) DEFAULT NULL,
+  `received_quantity` int(11) NOT NULL DEFAULT 0,
   `specification` text DEFAULT NULL,
   `current_condition` varchar(255) NOT NULL DEFAULT 'Good',
   `available_quantity` int(11) NOT NULL DEFAULT 0,
+  `initial_count` int(11) NOT NULL DEFAULT 0,
   `remarks` text DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `removal_status` enum('Active','Destroyed','Repaired','Sold') NOT NULL DEFAULT 'Active',
+  `board_of_survey_ref` varchar(255) DEFAULT NULL,
+  `removal_date` date DEFAULT NULL,
+  `removal_remarks` text DEFAULT NULL,
+  `removal_authorized_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `unit` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `building_inventories`
 --
 
-INSERT INTO `building_inventories` (`id`, `land_asset_id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `inventory_item`, `specification`, `current_condition`, `available_quantity`, `remarks`, `is_active`, `created_at`) VALUES
-(1, 2, 19, NULL, NULL, 'regional_farms', 'AC', '2', 'Excellent', 1, '2', 1, '2026-06-30 13:36:51'),
-(2, 4, 19, NULL, NULL, 'regional_farms', 'AC', '2', 'Excellent', 6, 'test', 1, '2026-07-07 07:53:25'),
-(3, 7, 45, NULL, 1, 'regional_farms', 'AC', '2', 'Needs Repair', 1, '', 1, '2026-08-06 11:24:50'),
-(4, 8, 19, NULL, NULL, NULL, 'AC', '2', 'Good', 1, '', 0, '2026-08-12 11:39:58');
+INSERT INTO `building_inventories` (`id`, `land_asset_id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `inventory_item`, `inventory_number`, `inventory_type`, `issue_order_no`, `received_from`, `receipt_no`, `received_quantity`, `specification`, `current_condition`, `available_quantity`, `initial_count`, `remarks`, `is_active`, `removal_status`, `board_of_survey_ref`, `removal_date`, `removal_remarks`, `removal_authorized_by`, `created_at`, `unit`) VALUES
+(31, 13, 19, NULL, NULL, NULL, 'AC - LG', 'test 01', 'AC', '1', '1', 'test 01', 2, 'test', 'Good', 3, 1, '', 1, 'Active', NULL, NULL, NULL, NULL, '2026-09-14 05:19:51', 'range_veterinary_officer');
 
 -- --------------------------------------------------------
 
@@ -1081,22 +967,39 @@ CREATE TABLE `counterfoil_assets` (
   `district_id` int(11) DEFAULT 0,
   `range_id` int(11) DEFAULT 0,
   `counterfoil_type` varchar(150) NOT NULL,
+  `book_serial_no` varchar(150) DEFAULT NULL,
+  `page_count` varchar(100) DEFAULT NULL,
   `current_condition` varchar(255) NOT NULL DEFAULT 'Good',
   `available_quantity` int(11) NOT NULL DEFAULT 1,
+  `initial_count` int(11) NOT NULL DEFAULT 0,
+  `received_quantity` int(11) NOT NULL DEFAULT 0,
   `purchase_date` date NOT NULL,
   `remarks` text DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `removal_status` enum('Active','Destroyed','Repaired','Sold') NOT NULL DEFAULT 'Active',
+  `board_of_survey_ref` varchar(255) DEFAULT NULL,
+  `removal_date` date DEFAULT NULL,
+  `removal_remarks` text DEFAULT NULL,
+  `removal_authorized_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `unit` varchar(100) DEFAULT NULL,
+  `issue_order_no` varchar(100) DEFAULT NULL,
+  `received_from` varchar(255) DEFAULT NULL,
+  `receipt_no` varchar(100) DEFAULT NULL,
+  `specification` text DEFAULT NULL,
+  `issued_to` varchar(255) DEFAULT NULL,
+  `date_of_issue` date DEFAULT NULL,
+  `date_of_return` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `counterfoil_assets`
 --
 
-INSERT INTO `counterfoil_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `counterfoil_type`, `current_condition`, `available_quantity`, `purchase_date`, `remarks`, `is_active`, `created_at`) VALUES
-(1, 19, NULL, NULL, 'veterinary', 1, 1, 'TEST', 'Half-Used', 1, '0000-00-00', 'TEST', 0, '2026-06-30 14:43:19'),
-(2, 19, NULL, NULL, 'veterinary', 1, 1, 'Test', 'Half-Used', 100, '2026-08-12', 'Note', 1, '2026-07-07 07:58:52'),
-(3, 45, NULL, 1, 'regional_farms', 0, 0, 'Credit Sale Book', 'Damaged / Cancelled', 1, '2026-08-06', '', 1, '2026-08-06 11:55:29');
+INSERT INTO `counterfoil_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `counterfoil_type`, `book_serial_no`, `page_count`, `current_condition`, `available_quantity`, `initial_count`, `received_quantity`, `purchase_date`, `remarks`, `is_active`, `removal_status`, `board_of_survey_ref`, `removal_date`, `removal_remarks`, `removal_authorized_by`, `created_at`, `unit`, `issue_order_no`, `received_from`, `receipt_no`, `specification`, `issued_to`, `date_of_issue`, `date_of_return`) VALUES
+(1, 19, NULL, NULL, 'veterinary', 1, 1, 'TEST', NULL, NULL, 'Half-Used', 1, 1, 0, '0000-00-00', 'TEST', 0, 'Active', NULL, NULL, NULL, NULL, '2026-06-30 14:43:19', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(2, 19, NULL, NULL, 'veterinary', 1, 1, 'Test', NULL, NULL, 'Good', 100, 100, 0, '2026-08-12', 'Note', 1, 'Active', NULL, NULL, NULL, NULL, '2026-07-07 07:58:52', 'range_veterinary_officer', '', '', '', '', NULL, NULL, NULL),
+(3, 45, NULL, 1, 'regional_farms', 0, 0, 'Credit Sale Book', NULL, NULL, 'Damaged / Cancelled', 1, 1, 0, '2026-08-06', '', 1, 'Active', NULL, NULL, NULL, NULL, '2026-08-06 11:55:29', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1654,23 +1557,35 @@ CREATE TABLE `furniture_assets` (
   `furniture_type` varchar(150) NOT NULL,
   `current_condition` varchar(255) NOT NULL DEFAULT 'Good',
   `available_quantity` int(11) NOT NULL DEFAULT 1,
+  `initial_count` int(11) NOT NULL DEFAULT 0,
+  `received_quantity` int(11) NOT NULL DEFAULT 0,
   `date_received` date NOT NULL,
   `remarks` text DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `removal_status` enum('Active','Destroyed','Repaired','Sold') NOT NULL DEFAULT 'Active',
+  `board_of_survey_ref` varchar(255) DEFAULT NULL,
+  `removal_date` date DEFAULT NULL,
+  `removal_remarks` text DEFAULT NULL,
+  `removal_authorized_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `unit` varchar(100) DEFAULT NULL,
+  `issue_order_no` varchar(100) DEFAULT NULL,
+  `received_from` varchar(255) DEFAULT NULL,
+  `receipt_no` varchar(100) DEFAULT NULL,
+  `specification` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `furniture_assets`
 --
 
-INSERT INTO `furniture_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `furniture_type`, `current_condition`, `available_quantity`, `date_received`, `remarks`, `is_active`, `created_at`) VALUES
-(1, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Excellent', 1, '2026-06-30', 'test', 0, '2026-06-30 14:09:07'),
-(2, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Excellent', 1, '2026-06-30', 'test', 0, '2026-06-30 14:09:53'),
-(3, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Excellent', 1, '2026-06-30', 'test', 1, '2026-06-30 14:10:07'),
-(4, 19, NULL, NULL, 'veterinary', 1, 1, 'test2', 'Excellent', 1, '2026-06-30', 'test2', 0, '2026-06-30 14:10:33'),
-(5, 19, NULL, NULL, 'veterinary', 1, 1, 'Wooden Desk', 'Fair', 100, '2026-07-06', 'Special Note', 1, '2026-07-07 07:56:36'),
-(6, 45, NULL, 1, 'regional_farms', 0, 0, 'Office Chairs', 'Excellent / New', 1, '2026-08-06', '', 1, '2026-08-06 11:52:27');
+INSERT INTO `furniture_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `furniture_type`, `current_condition`, `available_quantity`, `initial_count`, `received_quantity`, `date_received`, `remarks`, `is_active`, `removal_status`, `board_of_survey_ref`, `removal_date`, `removal_remarks`, `removal_authorized_by`, `created_at`, `unit`, `issue_order_no`, `received_from`, `receipt_no`, `specification`) VALUES
+(1, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Good', 1, 1, 0, '2026-06-30', 'test', 0, 'Active', NULL, NULL, NULL, NULL, '2026-06-30 14:09:07', NULL, NULL, NULL, NULL, NULL),
+(2, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Good', 1, 1, 0, '2026-06-30', 'test', 0, 'Active', NULL, NULL, NULL, NULL, '2026-06-30 14:09:53', NULL, NULL, NULL, NULL, NULL),
+(3, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Good', 1, 1, 0, '2026-06-30', 'test', 1, 'Active', NULL, NULL, NULL, NULL, '2026-06-30 14:10:07', NULL, NULL, NULL, NULL, NULL),
+(4, 19, NULL, NULL, 'veterinary', 1, 1, 'test2', 'Good', 1, 1, 0, '2026-06-30', 'test2', 0, 'Active', NULL, NULL, NULL, NULL, '2026-06-30 14:10:33', NULL, NULL, NULL, NULL, NULL),
+(5, 19, NULL, NULL, 'veterinary', 1, 1, 'Wooden Desk', 'Fair', 90, 100, 0, '2026-07-06', 'Special Note', 1, 'Active', NULL, NULL, NULL, NULL, '2026-07-07 07:56:36', NULL, NULL, NULL, NULL, NULL),
+(6, 45, NULL, 1, 'regional_farms', 0, 0, 'Office Chairs', 'Excellent / New', 1, 1, 0, '2026-08-06', '', 1, 'Active', NULL, NULL, NULL, NULL, '2026-08-06 11:52:27', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1811,9 +1726,9 @@ CREATE TABLE `human_populations` (
 --
 
 INSERT INTO `human_populations` (`id`, `range_id`, `year`, `ethnicity`, `population_type`, `population_count`, `created_at`) VALUES
-(1, 1, 2025, 'Sinhala', 'Male', 1800, '2026-07-01 11:42:10'),
-(2, 1, 2025, 'Sinhala', 'Female', 1700, '2026-07-01 11:42:10'),
-(3, 1, 2025, 'Sinhala', 'Households', 850, '2026-07-01 11:42:10'),
+(1, 1, 2025, 'Sinhala', 'Male', 1950, '2026-07-01 11:42:10'),
+(2, 1, 2025, 'Sinhala', 'Female', 1850, '2026-07-01 11:42:10'),
+(3, 1, 2025, 'Sinhala', 'Households', 920, '2026-07-01 11:42:10'),
 (4, 1, 2025, 'Tamil', 'Male', 1000, '2026-07-01 11:42:10'),
 (5, 1, 2025, 'Tamil', 'Female', 900, '2026-07-01 11:42:10'),
 (6, 1, 2025, 'Tamil', 'Households', 450, '2026-07-01 11:42:10'),
@@ -1822,7 +1737,10 @@ INSERT INTO `human_populations` (`id`, `range_id`, `year`, `ethnicity`, `populat
 (9, 1, 2025, 'Muslim', 'Households', 255, '2026-07-01 11:42:10'),
 (10, 1, 2024, 'Sinhala', 'Male', 1750, '2026-07-01 11:42:10'),
 (11, 1, 2024, 'Sinhala', 'Female', 1680, '2026-07-01 11:42:10'),
-(12, 1, 2024, 'Sinhala', 'Households', 830, '2026-07-01 11:42:10');
+(12, 1, 2024, 'Sinhala', 'Households', 830, '2026-07-01 11:42:10'),
+(16, 1, 2026, 'Sinhala', 'Male', 200, '2026-09-04 05:53:30'),
+(17, 1, 2026, 'Sinhala', 'Female', 100, '2026-09-04 05:53:30'),
+(18, 1, 2026, 'Sinhala', 'Households', 70, '2026-09-04 05:53:30');
 
 -- --------------------------------------------------------
 
@@ -1881,19 +1799,148 @@ CREATE TABLE `instrument_assets` (
   `instrument_type` varchar(150) NOT NULL,
   `current_condition` varchar(255) NOT NULL DEFAULT 'Good',
   `available_quantity` int(11) NOT NULL DEFAULT 1,
+  `initial_count` int(11) NOT NULL DEFAULT 0,
+  `received_quantity` int(11) NOT NULL DEFAULT 0,
   `purchase_date` date NOT NULL,
   `remarks` text DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `removal_status` enum('Active','Destroyed','Repaired','Sold') NOT NULL DEFAULT 'Active',
+  `board_of_survey_ref` varchar(255) DEFAULT NULL,
+  `removal_date` date DEFAULT NULL,
+  `removal_remarks` text DEFAULT NULL,
+  `removal_authorized_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `unit` varchar(100) DEFAULT NULL,
+  `issue_order_no` varchar(100) DEFAULT NULL,
+  `received_from` varchar(255) DEFAULT NULL,
+  `receipt_no` varchar(100) DEFAULT NULL,
+  `specification` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `instrument_assets`
 --
 
-INSERT INTO `instrument_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `instrument_type`, `current_condition`, `available_quantity`, `purchase_date`, `remarks`, `is_active`, `created_at`) VALUES
-(1, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Good', 1, '0000-00-00', 'test', 0, '2026-06-30 14:35:22'),
-(2, 19, NULL, NULL, 'veterinary', 1, 1, 'Surgical Kit', 'Good', 50, '0000-00-00', 'Special Note', 1, '2026-07-07 07:58:09');
+INSERT INTO `instrument_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `instrument_type`, `current_condition`, `available_quantity`, `initial_count`, `received_quantity`, `purchase_date`, `remarks`, `is_active`, `removal_status`, `board_of_survey_ref`, `removal_date`, `removal_remarks`, `removal_authorized_by`, `created_at`, `unit`, `issue_order_no`, `received_from`, `receipt_no`, `specification`) VALUES
+(1, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Good', 1, 1, 0, '0000-00-00', 'test', 0, 'Active', NULL, NULL, NULL, NULL, '2026-06-30 14:35:22', NULL, NULL, NULL, NULL, NULL),
+(2, 19, NULL, NULL, 'veterinary', 1, 1, 'Surgical Kit', 'Good', 50, 50, 0, '0000-00-00', 'Special Note', 1, 'Active', NULL, NULL, NULL, NULL, '2026-07-07 07:58:09', NULL, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inventory_issue_orders`
+--
+
+CREATE TABLE `inventory_issue_orders` (
+  `id` int(11) NOT NULL,
+  `issue_order_no` varchar(100) NOT NULL,
+  `station_department` varchar(255) NOT NULL,
+  `from_district_id` int(11) DEFAULT NULL,
+  `from_range_id` int(11) DEFAULT NULL,
+  `from_farm_id` int(11) DEFAULT NULL,
+  `from_training_center_id` int(11) DEFAULT NULL,
+  `issued_to` varchar(255) NOT NULL,
+  `to_district_id` int(11) DEFAULT NULL,
+  `to_range_id` int(11) DEFAULT NULL,
+  `to_farm_id` int(11) DEFAULT NULL,
+  `to_training_center_id` int(11) DEFAULT NULL,
+  `description_of_stores` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `inventory_book_page` varchar(100) NOT NULL,
+  `date_issued` date NOT NULL,
+  `issuing_officer` varchar(255) NOT NULL,
+  `issuing_officer_id` int(11) DEFAULT NULL,
+  `asset_type` varchar(50) DEFAULT NULL,
+  `asset_id` int(11) DEFAULT NULL,
+  `status` enum('Issued','In-Transit','Received','Partially Received','Cancelled') DEFAULT 'In-Transit',
+  `remarks` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `inventory_issue_orders`
+--
+
+INSERT INTO `inventory_issue_orders` (`id`, `issue_order_no`, `station_department`, `from_district_id`, `from_range_id`, `from_farm_id`, `from_training_center_id`, `issued_to`, `to_district_id`, `to_range_id`, `to_farm_id`, `to_training_center_id`, `description_of_stores`, `quantity`, `inventory_book_page`, `date_issued`, `issuing_officer`, `issuing_officer_id`, `asset_type`, `asset_id`, `status`, `remarks`, `created_at`, `updated_at`) VALUES
+(1, 'IO-2026-0001', 'Veterinary Range Office - Batticaloa', NULL, NULL, NULL, NULL, 'Range Office - Kalmunai', NULL, NULL, NULL, NULL, 'Microscope Olympus CX23 Binocular', 2, 'Vol 2, Pg 44', '2026-09-11', 'Dr. K. Perera (Veterinary Surgeon)', NULL, NULL, NULL, 'Received', 'Test dispatch for interlinked transfer system', '2026-09-11 15:26:52', '2026-09-11 15:26:52');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inventory_receipt_orders`
+--
+
+CREATE TABLE `inventory_receipt_orders` (
+  `id` int(11) NOT NULL,
+  `receipt_no` varchar(100) NOT NULL,
+  `receiving_station` varchar(255) NOT NULL,
+  `to_district_id` int(11) DEFAULT NULL,
+  `to_range_id` int(11) DEFAULT NULL,
+  `to_farm_id` int(11) DEFAULT NULL,
+  `to_training_center_id` int(11) DEFAULT NULL,
+  `issue_order_id` int(11) DEFAULT NULL,
+  `issue_order_no` varchar(100) NOT NULL,
+  `issue_order_date` date NOT NULL,
+  `issuing_officer_station` varchar(255) NOT NULL,
+  `description_of_stores` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `stock_book_page` varchar(100) NOT NULL,
+  `date_received` date NOT NULL,
+  `receiving_officer` varchar(255) NOT NULL,
+  `receiving_officer_id` int(11) DEFAULT NULL,
+  `condition_on_receipt` varchar(100) DEFAULT 'Good',
+  `status` enum('Verified','Discrepancy','Draft') DEFAULT 'Verified',
+  `discrepancy_notes` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `inventory_receipt_orders`
+--
+
+INSERT INTO `inventory_receipt_orders` (`id`, `receipt_no`, `receiving_station`, `to_district_id`, `to_range_id`, `to_farm_id`, `to_training_center_id`, `issue_order_id`, `issue_order_no`, `issue_order_date`, `issuing_officer_station`, `description_of_stores`, `quantity`, `stock_book_page`, `date_received`, `receiving_officer`, `receiving_officer_id`, `condition_on_receipt`, `status`, `discrepancy_notes`, `created_at`, `updated_at`) VALUES
+(1, 'RO-2026-0001', 'Range Office - Kalmunai', NULL, NULL, NULL, NULL, 1, 'IO-2026-0001', '2026-09-11', 'Dr. K. Perera (Range Office - Batticaloa)', 'Microscope Olympus CX23 Binocular', 2, 'Stock Book 2026, Pg 19', '2026-09-11', 'Dr. S. Sivakumaran (Veterinary Surgeon)', NULL, 'Good', 'Verified', '', '2026-09-11 15:26:52', '2026-09-11 15:26:52');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inventory_transfers`
+--
+
+CREATE TABLE `inventory_transfers` (
+  `id` int(11) NOT NULL,
+  `asset_type` varchar(50) NOT NULL COMMENT 'building_inventory, furniture, machinery, instrument, counterfoil',
+  `asset_id` int(11) NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `transfer_qty` int(11) NOT NULL DEFAULT 1,
+  `from_unit` varchar(255) NOT NULL,
+  `from_district_id` int(11) DEFAULT NULL,
+  `from_range_id` int(11) DEFAULT NULL,
+  `from_farm_id` int(11) DEFAULT NULL,
+  `from_training_center_id` int(11) DEFAULT NULL,
+  `to_unit` varchar(255) NOT NULL,
+  `to_district_id` int(11) DEFAULT NULL,
+  `to_range_id` int(11) DEFAULT NULL,
+  `to_farm_id` int(11) DEFAULT NULL,
+  `to_training_center_id` int(11) DEFAULT NULL,
+  `status` enum('Pending','In-Transit','Approved','Completed','Rejected','Cancelled') NOT NULL DEFAULT 'Pending',
+  `transfer_reason` text DEFAULT NULL,
+  `dispatch_reference` varchar(255) DEFAULT NULL,
+  `initiated_by` int(11) NOT NULL,
+  `initiated_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `approved_by` int(11) DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `remarks` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `inventory_transfers`
+--
+
+INSERT INTO `inventory_transfers` (`id`, `asset_type`, `asset_id`, `item_name`, `transfer_qty`, `from_unit`, `from_district_id`, `from_range_id`, `from_farm_id`, `from_training_center_id`, `to_unit`, `to_district_id`, `to_range_id`, `to_farm_id`, `to_training_center_id`, `status`, `transfer_reason`, `dispatch_reference`, `initiated_by`, `initiated_at`, `approved_by`, `approved_at`, `remarks`) VALUES
+(5, 'building_inventory', 22, 'Test Invalid Item', 9, 'range_veterinary_officer', 1, 1, 0, 0, 'Finance', NULL, NULL, NULL, NULL, 'Approved', '8', '9', 19, '2026-09-10 15:32:14', 18, '2026-09-11 14:35:18', NULL);
 
 -- --------------------------------------------------------
 
@@ -1916,20 +1963,23 @@ CREATE TABLE `land_assets` (
   `deed_reference` varchar(255) NOT NULL,
   `deed_description` text DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `unit` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `land_assets`
 --
 
-INSERT INTO `land_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `property_name`, `land_extent`, `building_area`, `land_status`, `deed_reference`, `deed_description`, `is_active`, `created_at`) VALUES
-(5, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'test', '500', 'Leased', 'test', '', 0, '2026-08-06 11:20:58'),
-(6, 45, NULL, 1, 'regional_farms', 0, 0, 'test', 'test', '500', 'Leased', 'test', '', 0, '2026-08-06 11:24:07'),
-(7, 45, NULL, 1, 'regional_farms', 0, 0, 'test', 'test', '500', 'Leased', 'test', 'test', 1, '2026-08-06 11:24:35'),
-(8, 19, NULL, NULL, NULL, 1, 1, 'test', 'test', '500', 'State Owned', 'test', 'y', 0, '2026-08-12 10:56:47'),
-(9, 19, NULL, NULL, NULL, 1, 1, 'test', 'test', '500', 'State Owned', 'test', '', 1, '2026-08-12 11:42:15'),
-(10, 50, 1, NULL, 'training_centers', 0, 0, 'test', '', '500', 'Vested', 'test', '', 1, '2026-08-14 06:47:26');
+INSERT INTO `land_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `property_name`, `land_extent`, `building_area`, `land_status`, `deed_reference`, `deed_description`, `is_active`, `created_at`, `unit`) VALUES
+(5, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'test', '500', 'Leased', 'test', '', 0, '2026-08-06 11:20:58', NULL),
+(6, 45, NULL, 1, 'regional_farms', 0, 0, 'test', 'test', '500', 'Leased', 'test', '', 0, '2026-08-06 11:24:07', NULL),
+(7, 45, NULL, 1, 'regional_farms', 0, 0, 'test', 'test', '500', 'Leased', 'test', 'test', 1, '2026-08-06 11:24:35', NULL),
+(8, 19, NULL, NULL, NULL, 1, 1, 'test', 'test', '500', 'State Owned', 'test', 'y', 0, '2026-08-12 10:56:47', NULL),
+(9, 19, NULL, NULL, NULL, 1, 1, 'test', 'test', '500', 'State Owned', 'test', '', 0, '2026-08-12 11:42:15', NULL),
+(10, 50, 1, NULL, 'training_centers', 0, 0, 'test', '', '500', 'Vested', 'test', '', 1, '2026-08-14 06:47:26', NULL),
+(12, 19, NULL, NULL, NULL, 1, 1, 'Quarters', 'Standard Facility', '', 'State Owned', 'Standard Registry', 'Designated facility', 1, '2026-09-10 08:26:00', 'range_veterinary_officer'),
+(13, 19, NULL, NULL, NULL, 1, 1, 'Office', '1 Acre', '', 'Leased', 'test 01', '', 1, '2026-09-10 08:27:15', 'range_veterinary_officer');
 
 -- --------------------------------------------------------
 
@@ -2037,20 +2087,77 @@ CREATE TABLE `machinery_assets` (
   `machinery_type` varchar(150) NOT NULL,
   `current_condition` varchar(255) NOT NULL DEFAULT 'Good',
   `available_quantity` int(11) NOT NULL DEFAULT 1,
+  `initial_count` int(11) NOT NULL DEFAULT 0,
+  `received_quantity` int(11) NOT NULL DEFAULT 0,
   `purchase_date` date NOT NULL,
   `remarks` text DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `removal_status` enum('Active','Destroyed','Repaired','Sold') NOT NULL DEFAULT 'Active',
+  `board_of_survey_ref` varchar(255) DEFAULT NULL,
+  `removal_date` date DEFAULT NULL,
+  `removal_remarks` text DEFAULT NULL,
+  `removal_authorized_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `unit` varchar(100) DEFAULT NULL,
+  `issue_order_no` varchar(100) DEFAULT NULL,
+  `received_from` varchar(255) DEFAULT NULL,
+  `receipt_no` varchar(100) DEFAULT NULL,
+  `specification` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `machinery_assets`
 --
 
-INSERT INTO `machinery_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `machinery_type`, `current_condition`, `available_quantity`, `purchase_date`, `remarks`, `is_active`, `created_at`) VALUES
-(1, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Good', 1, '0000-00-00', 'test', 0, '2026-06-30 14:26:53'),
-(2, 19, NULL, NULL, 'veterinary', 1, 1, 'Test', 'Needs Repair', 6, '0000-00-00', 'Special Record', 1, '2026-07-07 07:57:15'),
-(3, 45, NULL, 1, 'regional_farms', 0, 0, 'Water Pump', 'Out of Service', 1, '2026-08-06', '', 1, '2026-08-06 11:55:16');
+INSERT INTO `machinery_assets` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `machinery_type`, `current_condition`, `available_quantity`, `initial_count`, `received_quantity`, `purchase_date`, `remarks`, `is_active`, `removal_status`, `board_of_survey_ref`, `removal_date`, `removal_remarks`, `removal_authorized_by`, `created_at`, `unit`, `issue_order_no`, `received_from`, `receipt_no`, `specification`) VALUES
+(1, 19, NULL, NULL, 'veterinary', 1, 1, 'test', 'Good', 1, 1, 0, '0000-00-00', 'test', 0, 'Active', NULL, NULL, NULL, NULL, '2026-06-30 14:26:53', NULL, NULL, NULL, NULL, NULL),
+(2, 19, NULL, NULL, 'veterinary', 1, 1, 'Test', 'Fair', 6, 6, 0, '0000-00-00', 'Special Record', 1, 'Active', NULL, NULL, NULL, NULL, '2026-07-07 07:57:15', NULL, NULL, NULL, NULL, NULL),
+(3, 45, NULL, 1, 'regional_farms', 0, 0, 'Water Pump', 'Out of Service', 1, 1, 0, '2026-08-06', '', 1, 'Active', NULL, NULL, NULL, NULL, '2026-08-06 11:55:16', NULL, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `master_counterfoil_types`
+--
+
+CREATE TABLE `master_counterfoil_types` (
+  `id` int(11) NOT NULL,
+  `type_name` varchar(255) NOT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `master_counterfoil_types`
+--
+
+INSERT INTO `master_counterfoil_types` (`id`, `type_name`, `is_active`, `created_at`) VALUES
+(1, 'AI Register', 1, '2026-09-14 06:17:45'),
+(2, 'Animal Transport', 1, '2026-09-14 06:17:45'),
+(3, 'AI Certificate Book', 1, '2026-09-14 06:17:45'),
+(4, 'Cash Receipt Book', 1, '2026-09-14 06:17:45'),
+(5, 'Certificate for Slaughter of Buffalo', 1, '2026-09-14 06:17:45'),
+(6, 'Fuel Order', 1, '2026-09-14 06:17:45'),
+(7, 'Holiday Warrant', 1, '2026-09-14 06:17:45'),
+(8, 'Health Certificate', 1, '2026-09-14 06:17:45'),
+(9, 'Issue Order', 1, '2026-09-14 06:17:45'),
+(10, 'Ownership Voucher', 1, '2026-09-14 06:17:45'),
+(11, 'Receive Order (Receipt Order)', 1, '2026-09-14 06:17:45'),
+(12, 'Railway Warrant Goods', 1, '2026-09-14 06:17:45'),
+(13, 'Register of Cattle Branded', 1, '2026-09-14 06:17:45'),
+(14, 'GVS 01', 1, '2026-09-14 06:17:45'),
+(15, 'AI Performance', 1, '2026-09-14 06:17:45'),
+(16, 'Calf Register', 1, '2026-09-14 06:17:45'),
+(17, 'PD Register', 1, '2026-09-14 06:17:45'),
+(18, 'Cattle Voucher', 1, '2026-09-14 06:17:45'),
+(19, 'Disease Outbreak Register', 1, '2026-09-14 06:17:45'),
+(20, 'OPD Register', 1, '2026-09-14 06:17:45'),
+(21, 'PIV (Schedule 08)', 1, '2026-09-14 06:17:45'),
+(22, 'Register for Animal Identification', 1, '2026-09-14 06:17:45'),
+(23, 'ARV Register', 1, '2026-09-14 06:17:45'),
+(24, 'Animal Birth Control Register', 1, '2026-09-14 06:17:45'),
+(25, 'Produce Register', 1, '2026-09-14 06:17:45'),
+(27, 'Test', 1, '2026-09-14 06:41:14');
 
 -- --------------------------------------------------------
 
@@ -2274,7 +2381,13 @@ INSERT INTO `monthly_mash_details` (`id`, `record_month`, `feed_type`, `opening_
 (20, '2026-08-16', 'Grower', '-4000.00', '0.00', '0.00', '0.00', '-4000.00', NULL, '2026-08-06 06:15:04'),
 (21, '2026-08-11', 'Layer', '-11700.00', '0.00', '0.00', '0.00', '-11700.00', NULL, '2026-08-11 11:37:47'),
 (22, '2026-08-11', 'Starter', '-120.00', '0.00', '0.00', '0.00', '-120.00', NULL, '2026-08-11 11:37:47'),
-(23, '2026-08-11', 'Grower', '-4000.00', '0.00', '0.00', '0.00', '-4000.00', NULL, '2026-08-11 11:37:47');
+(23, '2026-08-11', 'Grower', '-4000.00', '0.00', '0.00', '0.00', '-4000.00', NULL, '2026-08-11 11:37:47'),
+(24, '2026-09-01', 'Layer', '-11700.00', '0.00', '0.00', '0.00', '-11700.00', NULL, '2026-09-01 11:48:07'),
+(25, '2026-09-01', 'Starter', '-120.00', '0.00', '0.00', '0.00', '-120.00', NULL, '2026-09-01 11:48:07'),
+(26, '2026-09-01', 'Grower', '-4000.00', '0.00', '0.00', '0.00', '-4000.00', NULL, '2026-09-01 11:48:07'),
+(27, '2026-09-09', 'Layer', '-11700.00', '0.00', '0.00', '0.00', '-11700.00', NULL, '2026-09-09 08:49:49'),
+(28, '2026-09-09', 'Starter', '-120.00', '0.00', '0.00', '0.00', '-120.00', NULL, '2026-09-09 08:49:49'),
+(29, '2026-09-09', 'Grower', '-4000.00', '0.00', '0.00', '0.00', '-4000.00', NULL, '2026-09-09 08:49:49');
 
 -- --------------------------------------------------------
 
@@ -2340,6 +2453,139 @@ INSERT INTO `month_old_chicks_distribution` (`id`, `record_date`, `cage_id`, `no
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL COMMENT 'Recipient user id from users table',
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `type` varchar(50) NOT NULL DEFAULT 'officer_change' COMMENT 'e.g., officer_change, system, etc.',
+  `link` varchar(255) DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `link`, `is_read`, `created_at`) VALUES
+(44, 18, 'New Officer Added', 'Officer Test Driver Employee (Service/Emp No: 001) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 1, '2026-09-09 08:10:46'),
+(45, 65, 'New Officer Added', 'Officer Test Driver Employee (Service/Emp No: 001) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-09 08:10:46'),
+(46, 66, 'New Officer Added', 'Officer Test Driver Employee (Service/Emp No: 001) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-09 08:10:46'),
+(47, 64, 'New Officer Added', 'Officer Test Driver Employee (Service/Emp No: 001) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-09 08:10:46'),
+(58, 20, 'Workstation Transfer Approved', 'Your official transfer to [Range Office - Kalmunai TD (Ampara)] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-10 03:23:04'),
+(60, 20, 'Workstation Transfer Approved', 'Your official transfer to [Range Office - Kalmunai TD (Ampara)] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-10 03:23:30'),
+(62, 20, 'Workstation Transfer Approved', 'Your official transfer to [Range Office - Kalmunai TD (Ampara)] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-10 03:23:44'),
+(64, 18, 'Employee Transfer Request: Test Driver Employee', 'Transfer requested by Ampara Veterinary Surgeon for Test Driver Employee (001) from Ampara Range to [Range Office - Addalaichenai (Ampara)]. Reason: \"test\"', 'transfer_alert', 'pages/modules/hr/employee_managment.php?tab=transfers', 0, '2026-09-10 05:44:40'),
+(65, 7, 'Employee Transfer Request: Test Driver Employee', 'Transfer requested by Ampara Veterinary Surgeon for Test Driver Employee (001) from Ampara Range to [Range Office - Addalaichenai (Ampara)]. Reason: \"test\"', 'transfer_alert', 'pages/modules/hr/employee_managment.php?tab=transfers', 1, '2026-09-10 05:44:42'),
+(66, 65, 'Employee Transfer Request: Test Driver Employee', 'Transfer requested by Ampara Veterinary Surgeon for Test Driver Employee (001) from Ampara Range to [Range Office - Addalaichenai (Ampara)]. Reason: \"test\"', 'transfer_alert', 'pages/modules/hr/employee_managment.php?tab=transfers', 0, '2026-09-10 05:44:44'),
+(67, 66, 'Employee Transfer Request: Test Driver Employee', 'Transfer requested by Ampara Veterinary Surgeon for Test Driver Employee (001) from Ampara Range to [Range Office - Addalaichenai (Ampara)]. Reason: \"test\"', 'transfer_alert', 'pages/modules/hr/employee_managment.php?tab=transfers', 0, '2026-09-10 05:44:46'),
+(68, 19, 'Employee Transfer Approved', 'Transfer request for Test Driver Employee to [Range Office - Addalaichenai (Ampara)] was officially approved and updated in live records.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 1, '2026-09-10 05:48:37'),
+(69, 71, 'Workstation Transfer Approved', 'Your official transfer to [Range Office - Addalaichenai (Ampara)] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-10 05:48:37'),
+(70, 72, 'Role Assignment', 'You are assigned as the Driver', 'role_assignment', 'dashboard.php', 0, '2026-09-10 05:51:05'),
+(71, 18, 'New Officer Added', 'Officer Test Driver Employee 2 (Service/Emp No: 002) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-10 05:51:07'),
+(72, 65, 'New Officer Added', 'Officer Test Driver Employee 2 (Service/Emp No: 002) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-10 05:51:07'),
+(73, 66, 'New Officer Added', 'Officer Test Driver Employee 2 (Service/Emp No: 002) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-10 05:51:07'),
+(74, 64, 'New Officer Added', 'Officer Test Driver Employee 2 (Service/Emp No: 002) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-10 05:51:07'),
+(75, 18, 'Employee Transfer Request: Test Driver Employee 2', 'Transfer requested by Ampara Veterinary Surgeon for Test Driver Employee 2 (002) from Ampara Range to [Unit - Farm Operations]. Reason: \"test\"', 'transfer_alert', 'pages/modules/hr/employee_managment.php?tab=transfers', 0, '2026-09-10 05:51:34'),
+(76, 7, 'Employee Transfer Request: Test Driver Employee 2', 'Transfer requested by Ampara Veterinary Surgeon for Test Driver Employee 2 (002) from Ampara Range to [Unit - Farm Operations]. Reason: \"test\"', 'transfer_alert', 'pages/modules/hr/employee_managment.php?tab=transfers', 1, '2026-09-10 05:51:36'),
+(77, 65, 'Employee Transfer Request: Test Driver Employee 2', 'Transfer requested by Ampara Veterinary Surgeon for Test Driver Employee 2 (002) from Ampara Range to [Unit - Farm Operations]. Reason: \"test\"', 'transfer_alert', 'pages/modules/hr/employee_managment.php?tab=transfers', 0, '2026-09-10 05:51:38'),
+(78, 66, 'Employee Transfer Request: Test Driver Employee 2', 'Transfer requested by Ampara Veterinary Surgeon for Test Driver Employee 2 (002) from Ampara Range to [Unit - Farm Operations]. Reason: \"test\"', 'transfer_alert', 'pages/modules/hr/employee_managment.php?tab=transfers', 0, '2026-09-10 05:51:40'),
+(79, 19, 'Employee Transfer Approved', 'Transfer request for Test Driver Employee 2 to [Unit - Farm Operations] was officially approved and updated in live records.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 1, '2026-09-10 05:53:58'),
+(80, 72, 'Workstation Transfer Approved', 'Your official transfer to [Unit - Farm Operations] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-10 05:53:58'),
+(83, 18, 'Transfer Alert', 'Transfer Alert: Automated Test Surgical Microscope was transferred from Unassigned to Range Veterinary Officer', 'transfer_alert', 'pages/modules/pd/pending_approvals.php', 0, '2026-09-10 09:58:15'),
+(84, 18, 'Pending Authorization Required', 'User User #19 (Veterinary Surgeon) submitted edits for Inventory record \'Automated Test Surgical Microscope\'. Approval required.', 'approval_required', 'pages/modules/pd/pending_approvals.php', 0, '2026-09-10 09:58:15'),
+(85, 18, 'Transfer Alert', 'Transfer Alert: Automated Test Surgical Microscope was transferred from Unassigned to Range Veterinary Officer', 'transfer_alert', 'pages/modules/pd/pending_approvals.php', 0, '2026-09-10 09:59:47'),
+(86, 18, 'Inventory Transfer Request: Automated Test Surgical Microscope', 'Officer Officer #19 (veterinary_surgeon) initiated transfer of 2 unit(s) of \'Automated Test Surgical Microscope\' from [range_veterinary_officer] to [District Office - Colombo]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 09:59:47'),
+(87, 7, 'Inventory Transfer Request: Automated Test Surgical Microscope', 'Officer Officer #19 (veterinary_surgeon) initiated transfer of 2 unit(s) of \'Automated Test Surgical Microscope\' from [range_veterinary_officer] to [District Office - Colombo]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 09:59:47'),
+(88, 18, 'Inventory Transfer Request: Automated Test Surgical Microscope', 'Officer Officer #19 (veterinary_surgeon) initiated transfer of 1 unit(s) of \'Automated Test Surgical Microscope\' from [range_veterinary_officer] to [Range Office - Batticaloa (Batticaloa)]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 09:59:47'),
+(89, 7, 'Inventory Transfer Request: Automated Test Surgical Microscope', 'Officer Officer #19 (veterinary_surgeon) initiated transfer of 1 unit(s) of \'Automated Test Surgical Microscope\' from [range_veterinary_officer] to [Range Office - Batticaloa (Batticaloa)]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 09:59:47'),
+(90, 18, 'Transfer Alert', 'Transfer Alert: Automated Test Surgical Microscope was transferred from Unassigned to Range Veterinary Officer', 'transfer_alert', 'pages/modules/pd/pending_approvals.php', 0, '2026-09-10 10:00:21'),
+(91, 18, 'Inventory Transfer Request: Automated Test Surgical Microscope', 'Officer Officer #19 (veterinary_surgeon) initiated transfer of 2 unit(s) of \'Automated Test Surgical Microscope\' from [range_veterinary_officer] to [District Office - Colombo]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 10:00:21'),
+(92, 7, 'Inventory Transfer Request: Automated Test Surgical Microscope', 'Officer Officer #19 (veterinary_surgeon) initiated transfer of 2 unit(s) of \'Automated Test Surgical Microscope\' from [range_veterinary_officer] to [District Office - Colombo]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 10:00:21'),
+(93, 19, 'Inventory Transfer Approved', 'Transfer request for 2 unit(s) of \'Automated Test Surgical Microscope\' to [District Office - Colombo] was officially approved.', 'transfer_alert', 'pages/modules/veterinary/lands_buildings.php', 1, '2026-09-10 10:00:21'),
+(94, 18, 'Inventory Transfer Request: Automated Test Surgical Microscope', 'Officer Officer #19 (veterinary_surgeon) initiated transfer of 1 unit(s) of \'Automated Test Surgical Microscope\' from [range_veterinary_officer] to [Range Office - Batticaloa (Batticaloa)]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 10:00:21'),
+(95, 7, 'Inventory Transfer Request: Automated Test Surgical Microscope', 'Officer Officer #19 (veterinary_surgeon) initiated transfer of 1 unit(s) of \'Automated Test Surgical Microscope\' from [range_veterinary_officer] to [Range Office - Batticaloa (Batticaloa)]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 10:00:21'),
+(96, 19, 'Inventory Transfer Rejected', 'Transfer request for \'Automated Test Surgical Microscope\' to [Range Office - Batticaloa (Batticaloa)] was rejected. Reason: Insufficient justification for transfer', 'transfer_alert', 'pages/modules/veterinary/lands_buildings.php', 1, '2026-09-10 10:00:21'),
+(97, 18, 'Inventory Transfer Request: Test Invalid Item', 'Officer Ampara Veterinary Surgeon (veterinary_surgeon) initiated transfer of 9 unit(s) of \'Test Invalid Item\' from [range_veterinary_officer] to [Finance]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 10:02:14'),
+(98, 7, 'Inventory Transfer Request: Test Invalid Item', 'Officer Ampara Veterinary Surgeon (veterinary_surgeon) initiated transfer of 9 unit(s) of \'Test Invalid Item\' from [range_veterinary_officer] to [Finance]. Active quantity intact pending authorization.', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=inventory', 0, '2026-09-10 10:02:14'),
+(99, 18, 'Pending Authorization Required', 'User Ampara Veterinary Surgeon (Veterinary Surgeon) submitted edits for Inventory record \'Audited Test Microscope 1789030617\'. Approval required.', 'approval_required', 'pages/modules/pd/pending_approvals.php', 0, '2026-09-11 09:04:46'),
+(100, 19, 'Modifications Authorized', 'Your proposed modifications for \'Audited Test Microscope 1789030617\' have been approved by the Provincial Director and updated in live records.', 'approval_result', NULL, 1, '2026-09-11 09:05:15'),
+(101, 19, 'Inventory Transfer Approved', 'Transfer request for 9 unit(s) of \'Test Invalid Item\' to [Finance] was officially approved.', 'transfer_alert', 'pages/modules/veterinary/lands_buildings.php', 1, '2026-09-11 09:05:18'),
+(102, 19, 'Inventory Transfer Approved', 'Transfer request for 2 unit(s) of \'Automated Test Surgical Microscope\' to [District Office - Colombo] was officially approved.', 'transfer_alert', 'pages/modules/veterinary/lands_buildings.php', 1, '2026-09-11 09:05:27'),
+(103, 19, 'Inventory Transfer Approved', 'Transfer request for 1 unit(s) of \'Automated Test Surgical Microscope\' to [Range Office - Batticaloa (Batticaloa)] was officially approved.', 'transfer_alert', 'pages/modules/veterinary/lands_buildings.php', 1, '2026-09-11 09:05:30'),
+(104, 19, 'Modifications Authorized', 'Your proposed modifications for \'Automated Test Surgical Microscope\' have been approved by the Provincial Director and updated in live records.', 'approval_result', NULL, 1, '2026-09-11 09:05:37'),
+(105, 73, 'Role Assignment', 'You are assigned as the Development Officer (DO)', 'role_assignment', 'dashboard.php', 0, '2026-09-11 10:02:17'),
+(106, 18, 'New Officer Added', 'Officer Test Development Officer (Service/Emp No: 003) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-11 10:02:19'),
+(107, 65, 'New Officer Added', 'Officer Test Development Officer (Service/Emp No: 003) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-11 10:02:19'),
+(108, 66, 'New Officer Added', 'Officer Test Development Officer (Service/Emp No: 003) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-11 10:02:19'),
+(109, 64, 'New Officer Added', 'Officer Test Development Officer (Service/Emp No: 003) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-11 10:02:19'),
+(110, 18, 'Employee Transfer Request: Test Development Officer', 'Transfer requested by Ampara Veterinary Surgeon for Test Development Officer (003) from Ampara Range to [Range Office - Addalaichenai (Ampara)]. Reason: \"test tranfer\"', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=transfers', 0, '2026-09-11 10:03:26'),
+(111, 7, 'Employee Transfer Request: Test Development Officer', 'Transfer requested by Ampara Veterinary Surgeon for Test Development Officer (003) from Ampara Range to [Range Office - Addalaichenai (Ampara)]. Reason: \"test tranfer\"', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=transfers', 1, '2026-09-11 10:03:28'),
+(112, 65, 'Employee Transfer Request: Test Development Officer', 'Transfer requested by Ampara Veterinary Surgeon for Test Development Officer (003) from Ampara Range to [Range Office - Addalaichenai (Ampara)]. Reason: \"test tranfer\"', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=transfers', 0, '2026-09-11 10:03:30'),
+(113, 66, 'Employee Transfer Request: Test Development Officer', 'Transfer requested by Ampara Veterinary Surgeon for Test Development Officer (003) from Ampara Range to [Range Office - Addalaichenai (Ampara)]. Reason: \"test tranfer\"', 'transfer_alert', 'pages/modules/pd/pending_approvals.php?filter=transfers', 0, '2026-09-11 10:03:32'),
+(114, 19, 'Employee Transfer Approved', 'Transfer request for Test Development Officer to [Range Office - Addalaichenai (Ampara)] was officially approved and updated in live records.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 1, '2026-09-11 10:05:18'),
+(115, 73, 'Workstation Transfer Approved', 'Your official transfer to [Range Office - Addalaichenai (Ampara)] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-11 10:05:18'),
+(116, 18, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:50:04'),
+(117, 7, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:50:06'),
+(118, 65, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:50:08'),
+(119, 66, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:50:10'),
+(120, 19, 'Employee Transfer Approved', 'Transfer request for Dr. Test Officer Automated to [Range Office - Sammanthurai (Ampara)] was officially approved and updated in live records.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 1, '2026-09-12 08:50:12'),
+(121, 74, 'Workstation Transfer Approved', 'Your official transfer to [Range Office - Sammanthurai (Ampara)] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-12 08:50:12'),
+(122, 19, 'Transfer Request Rejected', 'Your transfer request for \'Dr. Test Officer Automated\' to [Range Office - Addalaichenai (Ampara)] was rejected by the Provincial Administration. Reason: Administrative rejection: Inadequate clinical staff at active station.', 'transfer_alert', 'pages/modules/veterinary/employee_managment.php', 1, '2026-09-12 08:50:12'),
+(123, 18, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:50:45'),
+(124, 7, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:50:47'),
+(125, 65, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:50:50'),
+(126, 66, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:50:52'),
+(127, 19, 'Employee Transfer Approved', 'Transfer request for Dr. Test Officer Automated to [Range Office - Sammanthurai (Ampara)] was officially approved and updated in live records.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 1, '2026-09-12 08:50:54'),
+(128, 75, 'Workstation Transfer Approved', 'Your official transfer to [Range Office - Sammanthurai (Ampara)] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-12 08:50:54'),
+(129, 19, 'Transfer Request Rejected', 'Your transfer request for \'Dr. Test Officer Automated\' to [Range Office - Addalaichenai (Ampara)] was rejected by the Provincial Administration. Reason: Administrative rejection: Inadequate clinical staff at active station.', 'transfer_alert', 'pages/modules/veterinary/employee_managment.php', 1, '2026-09-12 08:50:54'),
+(130, 18, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:55:53'),
+(131, 7, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:55:55'),
+(132, 65, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:55:57'),
+(133, 66, 'Employee Transfer Request: Dr. Test Officer Automated', 'Transfer requested by Dr. VS Requester for Dr. Test Officer Automated (EP-TEST-999) from Kalmunai Range to [Range Office - Sammanthurai (Ampara)]. Reason: \"Operational Cadre Rebalancing - Automated Test\"', 'transfer_alert', 'pages/modules/hr/transfer_management.php', 0, '2026-09-12 08:55:59'),
+(134, 19, 'Employee Transfer Approved', 'Transfer request for Dr. Test Officer Automated to [Range Office - Sammanthurai (Ampara)] was officially approved and updated in live records.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 1, '2026-09-12 08:56:01'),
+(135, 76, 'Workstation Transfer Approved', 'Your official transfer to [Range Office - Sammanthurai (Ampara)] has been approved by the Provincial Administration. Your station records have been updated.', 'transfer_alert', 'pages/modules/hr/employee_managment.php', 0, '2026-09-12 08:56:01'),
+(136, 19, 'Transfer Request Rejected', 'Your transfer request for \'Dr. Test Officer Automated\' to [Range Office - Addalaichenai (Ampara)] was rejected by the Provincial Administration. Reason: Administrative rejection: Inadequate clinical staff at active station.', 'transfer_alert', 'pages/modules/veterinary/employee_managment.php', 1, '2026-09-12 08:56:02'),
+(137, 79, 'Role Assignment', 'You are assigned as the Government Veterinary Surgeon (GVS)', 'role_assignment', 'dashboard.php', 0, '2026-09-12 09:18:25'),
+(138, 18, 'New Officer Added', 'Officer Yohani Abeykoon (Service/Emp No: 004) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-12 09:18:27'),
+(139, 65, 'New Officer Added', 'Officer Yohani Abeykoon (Service/Emp No: 004) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-12 09:18:27'),
+(140, 66, 'New Officer Added', 'Officer Yohani Abeykoon (Service/Emp No: 004) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-12 09:18:27'),
+(141, 64, 'New Officer Added', 'Officer Yohani Abeykoon (Service/Emp No: 004) has been added and assigned to Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-12 09:18:27'),
+(142, 18, 'Officer Removed', 'Officer Yohani Abeykoon (Service/Emp No: 004) has been removed/deactivated from Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-12 09:35:29'),
+(143, 65, 'Officer Removed', 'Officer Yohani Abeykoon (Service/Emp No: 004) has been removed/deactivated from Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-12 09:35:29'),
+(144, 66, 'Officer Removed', 'Officer Yohani Abeykoon (Service/Emp No: 004) has been removed/deactivated from Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-12 09:35:29'),
+(145, 64, 'Officer Removed', 'Officer Yohani Abeykoon (Service/Emp No: 004) has been removed/deactivated from Ampara Range (Ampara District).', 'officer_change', 'pages/modules/veterinary/employee_managment.php', 0, '2026-09-12 09:35:29'),
+(146, 18, 'Transfer Alert', 'Transfer Alert: Test was transferred from Unassigned to Range Veterinary Officer', 'transfer_alert', 'pages/modules/pd/pending_approvals.php', 0, '2026-09-14 06:41:14'),
+(147, 18, 'Pending Authorization Required', 'User Ampara Veterinary Surgeon (Veterinary Surgeon) submitted edits for Inventory record \'Test\'. Approval required.', 'approval_required', 'pages/modules/pd/pending_approvals.php', 0, '2026-09-14 06:41:14'),
+(148, 19, 'Modifications Authorized', 'Your proposed modifications for \'Test\' have been approved by the Provincial Director and updated in live records.', 'approval_result', NULL, 1, '2026-09-14 06:41:36');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `office_details`
+--
+
+CREATE TABLE `office_details` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `unit_id` int(11) DEFAULT NULL,
+  `officer_name` varchar(255) NOT NULL,
+  `designation` varchar(100) NOT NULL,
+  `emp_id` varchar(50) DEFAULT NULL,
+  `contact_number` varchar(20) DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `registered_date` date DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `status` enum('Active','Inactive') DEFAULT 'Active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `parent_stock_flocks`
 --
 
@@ -2394,6 +2640,51 @@ CREATE TABLE `pasture_fodder_lands` (
 INSERT INTO `pasture_fodder_lands` (`id`, `vs_range`, `report_year`, `pasture_families_quarter_ac`, `pasture_families_half_ac`, `pasture_families_one_ac`, `pasture_families_gt_one_ac`, `pasture_total_acre`, `pasture_total_families`, `fodder_families_quarter_ac`, `fodder_families_half_ac`, `fodder_families_one_ac`, `fodder_families_gt_one_ac`, `fodder_total_acre`, `fodder_total_families`, `created_at`) VALUES
 (3, 'Ampara', 2026, 1, 1, 1, 0, '6.00', 8, 8, 5, 7, 0, '8.00', 9, '2026-07-22 08:44:42'),
 (4, 'Ampara', 2025, 9, 9, 9, 7, '9.00', 34, 6, 18, 6, 7, '5.00', 37, '2026-07-22 09:04:34');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pending_approvals`
+--
+
+CREATE TABLE `pending_approvals` (
+  `id` int(11) NOT NULL,
+  `module` enum('hr','inventory') NOT NULL,
+  `record_type` varchar(50) NOT NULL COMMENT 'e.g., users, office_details, building_inventories, furniture_assets, machinery_assets, instrument_assets, registered_vehicles, land_assets, counterfoil_assets',
+  `record_id` int(11) NOT NULL COMMENT 'Live record primary key ID',
+  `target_name` varchar(255) NOT NULL COMMENT 'Display label: officer name, item name, etc.',
+  `requested_by` int(11) NOT NULL COMMENT 'users.id of the person making the edit',
+  `requester_name` varchar(100) NOT NULL,
+  `requester_role` varchar(50) NOT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `old_data` longtext NOT NULL COMMENT 'JSON snapshot of existing record',
+  `new_data` longtext NOT NULL COMMENT 'JSON snapshot of proposed changes',
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `rejection_reason` varchar(255) DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `pending_approvals`
+--
+
+INSERT INTO `pending_approvals` (`id`, `module`, `record_type`, `record_id`, `target_name`, `requested_by`, `requester_name`, `requester_role`, `district_id`, `range_id`, `old_data`, `new_data`, `status`, `rejection_reason`, `reviewed_by`, `reviewed_at`, `created_at`) VALUES
+(1, 'hr', 'users', 63, 'test', 19, 'Ampara Veterinary Surgeon', '0', 1, 1, '{\"id\":63,\"username\":\"womoni3285\",\"email\":\"womoni3285@bizmud.com\",\"phone\":\"0712345678\",\"password\":\"$2y$10$hYxnB7pCuUnf7NwF7WQJXeEksZd\\/H376B5hzJ77bvGB7jterWo7mS\",\"full_name\":\"test\",\"emp_id\":\"210\",\"service_number\":\"210\",\"designation\":\"Night Watcher\",\"role\":\"night_watcher\",\"service_category\":\"test\",\"district_id\":1,\"range_id\":1,\"unit_id\":null,\"registered_date\":\"2026-09-03\",\"appointment_date\":\"2026-09-03\",\"appointment_date_current_position\":\"2026-09-03\",\"date_of_birth\":\"2005-05-03\",\"office_id\":null,\"farm_id\":null,\"district\":\"Amparai\",\"is_active\":1,\"last_login\":null,\"created_at\":\"2026-09-03 15:22:33\",\"profile_image\":null,\"training_center_id\":null,\"training_center_location\":null}', '{\"service_number\":\"210\",\"emp_id\":\"210\",\"full_name\":\"test\",\"designation\":\"Driver\",\"role\":\"driver\",\"service_category\":\"test\",\"email\":\"womoni3285@bizmud.com\",\"phone\":\"0712345678\",\"date_of_birth\":\"2005-05-03\",\"appointment_date\":\"2026-09-03\",\"appointment_date_current_position\":\"2026-09-03\"}', 'approved', NULL, 18, '2026-09-03 15:27:33', '2026-09-03 09:52:50'),
+(4, 'inventory', 'machinery_assets', 1, 'test', 4, 'Dr. Ampara DD', '0', 1, 1, '{\"id\":1,\"user_id\":19,\"training_center_id\":null,\"farm_id\":null,\"user_category\":\"veterinary\",\"district_id\":1,\"range_id\":1,\"machinery_type\":\"test\",\"current_condition\":\"Good\",\"available_quantity\":1,\"purchase_date\":\"0000-00-00\",\"remarks\":\"test\",\"is_active\":0,\"created_at\":\"2026-06-30 19:56:53\"}', '{\"machinery_type\":\"test\",\"current_condition\":\"Good\",\"available_quantity\":1,\"purchase_date\":\"0000-00-00\",\"remarks\":\"Test remarks edit staged at 2026-09-05 11:48:52\"}', 'approved', NULL, 1, '2026-09-05 15:20:05', '2026-09-05 09:48:52'),
+(5, 'hr', 'transfer_request', 19, 'Ampara Veterinary Surgeon', 4, 'Dr. Test VS', '0', 1, 1, '{\"unit\":\"Original Range\",\"range_id\":\"1\",\"district_id\":\"1\",\"full_name\":\"Ampara Veterinary Surgeon\",\"current_location\":\"Original Range\"}', '{\"target_unit\":\"Range Office - Kalmunai TD (Ampara)\",\"reason\":\"E2E Automated Test Transfer Justification\",\"target_range_id\":2,\"target_district_id\":1,\"target_farm_id\":null,\"target_training_center_id\":null,\"target_district\":\"Ampara\"}', 'approved', NULL, 7, '2026-09-10 08:50:57', '2026-09-10 03:20:57'),
+(8, 'hr', 'transfer_request', 20, 'Test Employee', 4, 'Dr. Test VS', '0', 0, 1, '{\"unit\":\"Original Range\",\"range_id\":\"1\",\"district_id\":null,\"full_name\":\"Test Employee\",\"current_location\":\"Original Range\"}', '{\"target_unit\":\"Range Office - Kalmunai TD (Ampara)\",\"reason\":\"E2E Automated Test Transfer Justification\",\"target_range_id\":2,\"target_district_id\":1,\"target_farm_id\":null,\"target_training_center_id\":null,\"target_district\":\"Amparai\"}', 'approved', NULL, 7, '2026-09-10 08:53:44', '2026-09-10 03:23:44'),
+(10, 'hr', 'transfer_request', 71, 'Test Driver Employee', 19, 'Ampara Veterinary Surgeon', '0', 1, 1, '{\"unit\":\"range_veterinary_officer\",\"range_id\":1,\"district_id\":1,\"full_name\":\"Test Driver Employee\",\"emp_id\":\"001\",\"service_number\":\"001\",\"designation\":\"Driver\",\"current_location\":\"Ampara Range\"}', '{\"target_unit\":\"Range Office - Addalaichenai (Ampara)\",\"reason\":\"test\",\"target_range_id\":7,\"target_district_id\":1,\"target_farm_id\":null,\"target_training_center_id\":null,\"target_district\":\"Ampara\"}', 'approved', NULL, 7, '2026-09-10 11:18:37', '2026-09-10 05:44:40'),
+(11, 'hr', 'transfer_request', 72, 'Test Driver Employee 2', 19, 'Ampara Veterinary Surgeon', '0', 1, 1, '{\"unit\":\"range_veterinary_officer\",\"range_id\":1,\"district_id\":1,\"full_name\":\"Test Driver Employee 2\",\"emp_id\":\"002\",\"service_number\":\"002\",\"designation\":\"Driver\",\"current_location\":\"Ampara Range\"}', '{\"target_unit\":\"Unit - Farm Operations\",\"reason\":\"test\",\"target_range_id\":null,\"target_district_id\":null,\"target_farm_id\":null,\"target_training_center_id\":null,\"target_district\":\"Provincial\"}', 'approved', NULL, 7, '2026-09-10 11:23:58', '2026-09-10 05:51:34'),
+(13, 'inventory', 'building_inventories', 19, 'Automated Test Surgical Microscope', 19, 'User #19', '0', 1, 1, '{\"id\":19,\"land_asset_id\":5,\"user_id\":0,\"training_center_id\":null,\"farm_id\":null,\"user_category\":null,\"inventory_item\":\"Automated Test Surgical Microscope\",\"specification\":\"High precision 40x\",\"current_condition\":\"Good\",\"available_quantity\":10,\"initial_count\":10,\"remarks\":\"Verification Item\",\"is_active\":1,\"removal_status\":\"Active\",\"board_of_survey_ref\":null,\"removal_date\":null,\"removal_remarks\":null,\"removal_authorized_by\":null,\"created_at\":\"2026-09-10 15:28:15\",\"unit\":null}', '{\"land_asset_id\":5,\"inventory_item\":\"Automated Test Surgical Microscope\",\"specification\":\"High precision 40x\",\"current_condition\":\"Damaged\",\"available_quantity\":9,\"initial_count\":10,\"remarks\":\"Lens broken during field inspection\",\"unit\":\"range_veterinary_officer\"}', 'approved', NULL, 18, '2026-09-11 14:35:37', '2026-09-10 09:58:15'),
+(14, 'inventory', 'inventory_transfer', 20, 'Automated Test Surgical Microscope', 19, 'Officer #19', '0', 1, 1, '{\"asset_type\":\"building_inventory\",\"asset_id\":20,\"item_name\":\"Automated Test Surgical Microscope\",\"from_unit\":\"range_veterinary_officer\",\"available_quantity\":9,\"current_condition\":\"Damaged\",\"initial_count\":10}', '{\"asset_type\":\"building_inventory\",\"asset_id\":20,\"transfer_id\":1,\"target_unit\":\"District Office - Colombo\",\"transfer_qty\":2,\"dispatch_reference\":\"DSP-TEST-2026-001\",\"reason\":\"Regional laboratory requirement\",\"target_range_id\":null,\"target_district_id\":null,\"target_farm_id\":null,\"target_training_center_id\":null}', 'approved', NULL, 18, '2026-09-11 14:35:27', '2026-09-10 09:59:47'),
+(15, 'inventory', 'inventory_transfer', 20, 'Automated Test Surgical Microscope', 19, 'Officer #19', '0', 1, 1, '{\"asset_type\":\"building_inventory\",\"asset_id\":20,\"item_name\":\"Automated Test Surgical Microscope\",\"from_unit\":\"range_veterinary_officer\",\"available_quantity\":9,\"current_condition\":\"Damaged\",\"initial_count\":10}', '{\"asset_type\":\"building_inventory\",\"asset_id\":20,\"transfer_id\":2,\"target_unit\":\"Range Office - Batticaloa (Batticaloa)\",\"transfer_qty\":1,\"dispatch_reference\":\"DSP-TEST-REJECT-001\",\"reason\":\"Temporary loan\",\"target_range_id\":21,\"target_district_id\":2,\"target_farm_id\":null,\"target_training_center_id\":null}', 'approved', NULL, 18, '2026-09-11 14:35:30', '2026-09-10 09:59:47'),
+(18, 'inventory', 'inventory_transfer', 5, 'Test Invalid Item', 19, 'Ampara Veterinary Surgeon', '0', 1, 1, '{\"asset_type\":\"building_inventory\",\"asset_id\":22,\"item_name\":\"Test Invalid Item\",\"from_unit\":\"range_veterinary_officer\",\"available_quantity\":50,\"current_condition\":\"Good\",\"initial_count\":100}', '{\"asset_type\":\"building_inventory\",\"asset_id\":22,\"transfer_id\":5,\"target_unit\":\"Finance\",\"transfer_qty\":9,\"dispatch_reference\":\"9\",\"reason\":\"8\",\"target_range_id\":null,\"target_district_id\":null,\"target_farm_id\":null,\"target_training_center_id\":null}', 'approved', NULL, 18, '2026-09-11 14:35:18', '2026-09-10 10:02:14'),
+(19, 'inventory', 'building_inventories', 9, 'Audited Test Microscope 1789030617', 19, 'Ampara Veterinary Surgeon', '0', 1, 1, '{\"id\":9,\"land_asset_id\":13,\"user_id\":19,\"training_center_id\":null,\"farm_id\":null,\"user_category\":null,\"inventory_item\":\"Audited Test Microscope 1789030617\",\"specification\":\"High-resolution binocular\",\"current_condition\":\"Good\",\"available_quantity\":10,\"initial_count\":10,\"remarks\":\"Initial fiscal batch\",\"is_active\":1,\"removal_status\":\"Active\",\"board_of_survey_ref\":null,\"removal_date\":null,\"removal_remarks\":null,\"removal_authorized_by\":null,\"created_at\":\"2026-09-10 14:26:57\",\"unit\":\"range_veterinary_officer\"}', '{\"land_asset_id\":13,\"inventory_item\":\"Audited Test Microscope 1789030617\",\"specification\":\"High-resolution binocular\",\"current_condition\":\"Good\",\"available_quantity\":7,\"initial_count\":10,\"remarks\":\"Initial fiscal batch\",\"unit\":\"range_veterinary_officer\"}', 'approved', NULL, 18, '2026-09-11 14:35:15', '2026-09-11 09:04:46'),
+(20, 'hr', 'transfer_request', 73, 'Test Development Officer', 19, 'Ampara Veterinary Surgeon', '0', 1, 1, '{\"unit\":\"range_veterinary_officer\",\"range_id\":1,\"district_id\":1,\"full_name\":\"Test Development Officer\",\"emp_id\":\"003\",\"service_number\":\"003\",\"designation\":\"Development Officer (DO)\",\"current_location\":\"Ampara Range\"}', '{\"target_unit\":\"Range Office - Addalaichenai (Ampara)\",\"reason\":\"test tranfer\",\"target_range_id\":7,\"target_district_id\":1,\"target_farm_id\":null,\"target_training_center_id\":null,\"target_district\":\"Ampara\"}', 'approved', NULL, 7, '2026-09-11 15:35:18', '2026-09-11 10:03:26'),
+(27, 'inventory', 'counterfoil_assets', 2, 'Test', 19, 'Ampara Veterinary Surgeon', '0', 1, 1, '{\"id\":2,\"user_id\":19,\"training_center_id\":null,\"farm_id\":null,\"user_category\":\"veterinary\",\"district_id\":1,\"range_id\":1,\"counterfoil_type\":\"Test\",\"current_condition\":\"Half-Used\",\"available_quantity\":100,\"initial_count\":100,\"received_quantity\":0,\"purchase_date\":\"2026-08-12\",\"remarks\":\"Note\",\"is_active\":1,\"removal_status\":\"Active\",\"board_of_survey_ref\":null,\"removal_date\":null,\"removal_remarks\":null,\"removal_authorized_by\":null,\"created_at\":\"2026-07-07 13:28:52\",\"unit\":null,\"issue_order_no\":null,\"received_from\":null,\"receipt_no\":null,\"specification\":null}', '{\"counterfoil_type\":\"Test\",\"current_condition\":\"Good\",\"available_quantity\":100,\"initial_count\":100,\"received_quantity\":0,\"purchase_date\":\"2026-08-12\",\"remarks\":\"Note\",\"unit\":\"range_veterinary_officer\",\"issue_order_no\":\"\",\"received_from\":\"\",\"receipt_no\":\"\",\"specification\":\"\"}', 'approved', NULL, 18, '2026-09-14 12:11:36', '2026-09-14 06:41:14');
 
 -- --------------------------------------------------------
 
@@ -2558,6 +2849,32 @@ INSERT INTO `project_assignments` (`id`, `project_id`, `officer_id`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `range_subject_assignments`
+--
+
+CREATE TABLE `range_subject_assignments` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `subject_key` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `assignment_role` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Lead Officer',
+  `assigned_by` int(11) NOT NULL,
+  `assigned_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `range_subject_assignments`
+--
+
+INSERT INTO `range_subject_assignments` (`id`, `range_id`, `subject_key`, `user_id`, `assignment_role`, `assigned_by`, `assigned_at`, `updated_at`, `status`) VALUES
+(3, 1, 'animal_health', 19, 'Lead Officer', 18, '2026-09-03 16:37:11', '2026-09-03 16:37:11', 'active'),
+(4, 1, 'clinical_services', 19, 'Assisting Officer', 18, '2026-09-03 16:37:11', '2026-09-03 16:37:11', 'active');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `regional_farms`
 --
 
@@ -2603,16 +2920,25 @@ CREATE TABLE `registered_vehicles` (
   `current_condition` varchar(255) NOT NULL DEFAULT 'Good',
   `other_details` text DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `unit` varchar(100) DEFAULT NULL,
+  `issue_order_no` varchar(100) DEFAULT NULL,
+  `received_from` varchar(255) DEFAULT NULL,
+  `receipt_no` varchar(100) DEFAULT NULL,
+  `available_quantity` int(11) DEFAULT 1,
+  `initial_count` int(11) DEFAULT 1,
+  `received_quantity` int(11) NOT NULL DEFAULT 0,
+  `specification` text DEFAULT NULL,
+  `remarks` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `registered_vehicles`
 --
 
-INSERT INTO `registered_vehicles` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `vehicle_type`, `vehicle_number`, `chassis_number`, `current_condition`, `other_details`, `is_active`, `created_at`) VALUES
-(1, 19, NULL, NULL, 'veterinary', 1, 1, 'Motorbike', 'TEST', 'TEST', 'Running', 'test', 1, '2026-06-30 14:01:06'),
-(2, 19, NULL, NULL, 'veterinary', 1, 1, 'Double Cab', 'TEST 1', 'TEST RECORD', 'Needs Repair', 'test record', 0, '2026-07-07 07:54:33');
+INSERT INTO `registered_vehicles` (`id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `district_id`, `range_id`, `vehicle_type`, `vehicle_number`, `chassis_number`, `current_condition`, `other_details`, `is_active`, `created_at`, `unit`, `issue_order_no`, `received_from`, `receipt_no`, `available_quantity`, `initial_count`, `received_quantity`, `specification`, `remarks`) VALUES
+(1, 19, NULL, NULL, 'veterinary', 1, 1, 'Motorbike', 'TEST', 'TEST', 'Running', 'test', 1, '2026-06-30 14:01:06', NULL, NULL, NULL, NULL, 1, 1, 0, NULL, NULL),
+(2, 19, NULL, NULL, 'veterinary', 1, 1, 'Double Cab', 'TEST 1', 'TEST RECORD', 'Needs Repair', 'test record', 0, '2026-07-07 07:54:33', NULL, NULL, NULL, NULL, 1, 1, 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2933,79 +3259,6 @@ INSERT INTO `training_produce_register` (`id`, `training_center_id`, `commodity`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pending_approvals`
---
-
-CREATE TABLE `pending_approvals` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `module` enum('hr','inventory') NOT NULL,
-  `record_type` varchar(50) NOT NULL COMMENT 'e.g., users, office_details, building_inventories, furniture_assets, machinery_assets, instrument_assets, registered_vehicles, land_assets, counterfoil_assets',
-  `record_id` int(11) NOT NULL COMMENT 'Live record primary key ID',
-  `target_name` varchar(255) NOT NULL COMMENT 'Display label: officer name, item name, etc.',
-  `requested_by` int(11) NOT NULL COMMENT 'users.id of the person making the edit',
-  `requester_name` varchar(100) NOT NULL,
-  `requester_role` varchar(50) NOT NULL,
-  `district_id` int(11) DEFAULT NULL,
-  `range_id` int(11) DEFAULT NULL,
-  `old_data` longtext NOT NULL COMMENT 'JSON snapshot of existing record',
-  `new_data` longtext NOT NULL COMMENT 'JSON snapshot of proposed changes',
-  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-  `rejection_reason` varchar(255) DEFAULT NULL,
-  `reviewed_by` int(11) DEFAULT NULL,
-  `reviewed_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_status` (`status`),
-  KEY `idx_module` (`module`),
-  KEY `idx_requested_by` (`requested_by`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `notifications`
---
-
-CREATE TABLE `notifications` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL COMMENT 'Recipient user id from users table',
-  `title` varchar(255) NOT NULL,
-  `message` text NOT NULL,
-  `type` varchar(50) NOT NULL DEFAULT 'officer_change' COMMENT 'e.g., officer_change, system, etc.',
-  `link` varchar(255) DEFAULT NULL,
-  `is_read` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_user_read` (`user_id`, `is_read`),
-  KEY `idx_created_at` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `office_details`
---
-
-CREATE TABLE `office_details` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `range_id` int(11) DEFAULT NULL,
-  `unit_id` int(11) DEFAULT NULL,
-  `officer_name` varchar(255) NOT NULL,
-  `designation` varchar(100) NOT NULL,
-  `emp_id` varchar(50) DEFAULT NULL,
-  `contact_number` varchar(20) DEFAULT NULL,
-  `date_of_birth` date DEFAULT NULL,
-  `registered_date` date DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `status` enum('Active','Inactive') DEFAULT 'Active',
-  PRIMARY KEY (`id`),
-  KEY `range_id` (`range_id`),
-  KEY `unit_id` (`unit_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `users`
 --
 
@@ -3022,12 +3275,15 @@ CREATE TABLE `users` (
   `role` enum('provincial_director','district_dd','veterinary_surgeon','training_officer','sms','farms_dd','finance_admin','planning_officer','administrator','data_entry','employee','deputy_director_hq_1','deputy_director_hq_2','government_veterinary_surgeon','additional_veterinary_surgeon','livestock_development_officer','development_officer','driver','dispensary_assistant','department_laborer','night_watcher') NOT NULL,
   `service_category` varchar(150) DEFAULT NULL,
   `employment_type` enum('permanent','temporary') NOT NULL DEFAULT 'permanent',
+  `employment_status` varchar(50) DEFAULT NULL,
+  `attachment_reason` text DEFAULT NULL,
   `district_id` int(11) DEFAULT NULL,
   `range_id` int(11) DEFAULT NULL,
   `unit_id` int(11) DEFAULT NULL,
   `registered_date` date DEFAULT NULL,
   `appointment_date` date DEFAULT NULL,
   `appointment_date_current_position` date DEFAULT NULL,
+  `position_to_current_location` date DEFAULT NULL,
   `date_of_birth` date DEFAULT NULL,
   `office_id` int(11) DEFAULT NULL COMMENT 'Links to veterinary_ranges.id (for Veterinary Surgeon only)',
   `farm_id` int(11) DEFAULT NULL,
@@ -3037,44 +3293,77 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `profile_image` varchar(255) DEFAULT NULL,
   `training_center_id` int(11) DEFAULT NULL,
-  `training_center_location` varchar(255) DEFAULT NULL
+  `training_center_location` varchar(255) DEFAULT NULL,
+  `unit` varchar(100) DEFAULT NULL,
+  `current_station` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`, `emp_id`, `service_number`, `designation`, `role`, `service_category`, `district_id`, `range_id`, `unit_id`, `registered_date`, `appointment_date`, `appointment_date_current_position`, `office_id`, `farm_id`, `district`, `is_active`, `last_login`, `created_at`, `profile_image`, `training_center_id`, `training_center_location`) VALUES
-(5, 'yo', 'provinciald2@gmail.com', NULL, 'b62c1853f21bb51f6ce7faca1becc040', 'Provincial Director', NULL, NULL, NULL, 'provincial_director', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-01-03 16:15:19', '2025-12-12 11:30:50', NULL, NULL, NULL),
-(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, NULL, 'administrator', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-21 16:36:50', '2025-12-15 11:32:14', NULL, NULL, NULL),
-(10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', NULL, NULL, NULL, 'finance_admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 16:04:04', '2025-12-16 07:42:06', NULL, NULL, NULL),
-(11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', NULL, NULL, NULL, 'planning_officer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 16:05:02', '2025-12-16 09:34:59', NULL, NULL, NULL),
-(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, NULL, 'sms', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-07-13 11:33:52', '2025-12-16 11:30:03', NULL, NULL, NULL),
-(13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', NULL, NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-05-25 20:22:03', '2025-12-17 08:46:28', NULL, NULL, NULL),
-(15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 17:18:35', '2025-12-17 10:22:46', NULL, NULL, NULL),
-(16, 'District Deputy Director', 'district_dd@gmail.com', NULL, '$2y$10$ktztqj1XUpA6UsNmP2wreuSepNmMZ.cdIAnSuQhhXBcuyjZcmrAQq', 'District Deputy Director', NULL, NULL, NULL, 'district_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-09 18:17:56', '2025-12-17 13:23:28', NULL, NULL, NULL),
-(17, 'veterinary surgeon', 'veterinary@gmail.com', '0712345678', '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'veterinary surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 13, NULL, NULL, NULL, NULL, NULL, NULL, 'Amparai', 1, '2026-07-13 19:15:24', '2025-12-18 10:10:22', NULL, NULL, NULL),
-(18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, NULL, 'provincial_director', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-06-17 12:17:54', '2026-01-05 13:18:11', NULL, NULL, NULL),
-(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$C23XrN3nUI/IaA4vmnQOR.lASC11IaUhMlh6lfrwTFo6lUorD8hmG', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 1, 1, NULL, NULL, NULL, NULL, 1, NULL, 'Amparai', 1, '2026-08-13 16:22:07', '2026-03-25 10:58:36', NULL, NULL, NULL),
-(20, 'employee', 'emp@gmail.com', NULL, '$2y$10$ITeSMQXxM8Ciwu4KK/Sy2O7ai30xUjP8yrL1WNRzXlNnsrG8ylfZK', 'Test Employee', NULL, NULL, NULL, 'employee', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, 'Amparai', 1, '2026-05-18 17:56:16', '2026-04-22 06:10:30', 'profile_20_1777526035.png', NULL, NULL),
-(21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'Dr. (Mrs). L. Dujiththera', NULL, NULL, 'GVS', 'veterinary_surgeon', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(22, 'sinharasa', 'sinharasa.a@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. A. Sinharasa', NULL, NULL, 'LDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(23, 'amirthalingam', 'amirthalingam.p@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. P. Amirthalingam', NULL, NULL, 'LDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(24, 'vimalathasan', 'vimalathasan.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Vimalathasan', NULL, NULL, 'PDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(25, 'muruhathasan', 'muruhathasan.k@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. K. Muruhathasan', NULL, NULL, 'PDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(26, 'yoganathan', 'yoganathan.k@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. K. Yoganathan', NULL, NULL, 'PDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(27, 'thiruganasuntharam', 'thiru.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Thiruganasuntharam', NULL, NULL, 'CDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(28, 'koneswaran', 'koneswaran.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Koneswaran', NULL, NULL, 'PDO', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(29, 'saththiyawan', 'saththiyawan.t@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. T. Saththiyawan', NULL, NULL, 'Driver', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(30, 'gaminiraj', 'gaminiraj.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Gaminiraj', NULL, NULL, 'Watcher', 'employee', NULL, 2, 21, NULL, NULL, NULL, NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL),
-(42, 'test', 'test@gmail.com', '0778439871', '$2y$10$dynlOJHtL.8fdGd0fcwNz.dZYr4FHzBsUxSUqBOxk9zgjySfr4n7y', 'test', '210', '210', 'Veterinary Surgeon', 'employee', 'test', 1, 1, NULL, '2026-07-09', '2026-07-09', '2026-07-09', NULL, NULL, 'Amparai', 0, NULL, '2026-07-09 06:32:57', NULL, NULL, NULL),
-(45, 'regionalfarms', 'regionalfarms@gmail.com', NULL, '$2y$10$k5hbQiiYpVp70ObCvcWTTecgRxgETgKmvSCs/.b/ENUMuwfceWMVS', 'Regional Farms User', NULL, NULL, NULL, 'farms_dd', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 'Provincial', 1, '2026-08-12 17:36:50', '2026-07-20 07:29:39', NULL, NULL, NULL),
-(47, 'yohanii725', 'yohanii725@gmail.com', '0778439871', '$2y$10$Ea5ih38GapF7Z2ve2NxAk.jYVNXz6/p3fwPx2CpPOlFMUcqUQkEjy', 'Yohani Abeykoon', '210', '210', 'regional officer', 'employee', 'test', 0, 0, NULL, '2026-08-06', '2026-08-06', '2026-08-06', NULL, 1, 'Amparai', 0, NULL, '2026-08-06 12:32:15', NULL, NULL, NULL),
-(49, 'test123', 'test123@gmail.com', '0778439871', '$2y$10$NBgngsn6wcnNweIvnm1pJ.z.LTI1Juui6mUqAt4AcMXnaIUfowOzO', 'test', '111', '111', 'Veterinary Surgeon', 'finance_admin', 'test', 1, 1, NULL, '2026-08-12', '2026-08-12', '2026-08-12', NULL, NULL, 'Amparai', 0, NULL, '2026-08-12 11:00:28', NULL, NULL, NULL),
-(50, 'Animal Husbandry Training Centre', 'ahtc.uppuweli@gmail.com', NULL, '$2y$10$UrhpvvbvW5QR8et1C1zY0OpNEFxV/XmZHUmbdp/4RGvRN.TQau5uC', 'Animal Husbandry Training Centre', NULL, NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:21:53', '2026-08-13 07:04:27', 'profile_50_1786605206.jpg', 1, '0'),
-(51, 'Animal Husbandry Training Centre - Kallady', 'ahtc.kallady@gmail.com', NULL, '$2y$10$lOXsKCuN4cjfACEGzI9YTOoO76GRikx.RiY.u8JUfSGHMQH.Tnj4a', 'Animal Husbandry Training Centre - Kallady', NULL, NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:25:45', '2026-08-13 07:04:58', NULL, 2, '0'),
-(52, 'Animal Husbandry Farmer Training Centre - Kanchira', 'ahftc.kanchirankuda@gmail.com', NULL, '$2y$10$3A4p6VhvasatjFvQBzgyveSCdl.tBpAF6BiaCT.DSu0MMRsHscv1G', 'Animal Husbandry Farmer Training Centre - Kanchirankuda', NULL, NULL, NULL, 'training_officer', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:27:48', '2026-08-13 07:05:32', NULL, 3, '0'),
-(54, 'testing123', 'testing123@gmail.com', '0778439871', '$2y$10$G1S9EDwMXOFtV.jeiRnJ1.oPGJG4ZwqJGyq3Ea9TEspRvBVh5yebq', 'Yohani Abeykoon', '210', '210', 'Veterinary Surgeon', 'training_officer', 'test', 0, NULL, NULL, NULL, '2026-08-14', '2026-08-14', NULL, NULL, 'Amparai', 0, NULL, '2026-08-14 06:48:10', NULL, 1, NULL);
+INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`, `emp_id`, `service_number`, `designation`, `role`, `service_category`, `employment_type`, `employment_status`, `attachment_reason`, `district_id`, `range_id`, `unit_id`, `registered_date`, `appointment_date`, `appointment_date_current_position`, `position_to_current_location`, `date_of_birth`, `office_id`, `farm_id`, `district`, `is_active`, `last_login`, `created_at`, `profile_image`, `training_center_id`, `training_center_location`, `unit`, `current_station`) VALUES
+(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, NULL, 'administrator', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 09:52:45', '2025-12-15 11:32:14', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', NULL, NULL, NULL, 'finance_admin', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 09:53:04', '2025-12-16 07:42:06', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', NULL, NULL, NULL, 'planning_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 16:05:02', '2025-12-16 09:34:59', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, NULL, 'sms', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-05 14:32:16', '2025-12-16 11:30:03', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', NULL, NULL, NULL, 'farms_dd', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-05-25 20:22:03', '2025-12-17 08:46:28', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 17:18:35', '2025-12-17 10:22:46', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(17, 'veterinary surgeon', 'veterinary@gmail.com', '0712345678', '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'veterinary surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 1, 13, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Amparai', 1, '2026-07-13 19:15:24', '2025-12-18 10:10:22', NULL, NULL, NULL, NULL, 'Damana Range'),
+(18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, NULL, 'provincial_director', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 12:11:28', '2026-01-05 13:18:11', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$6/wNKYRGo449W6rMZxLPnumbFV6afE1PfGKavQ1XfwkX64Iy6Mstm', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 1, 1, NULL, NULL, NULL, NULL, '2026-09-12', NULL, 1, NULL, 'Amparai', 1, '2026-09-14 12:12:01', '2026-03-25 10:58:36', NULL, NULL, NULL, 'Range Office - Ampara', 'Range Office - Ampara'),
+(20, 'employee', 'emp@gmail.com', NULL, '$2y$10$ITeSMQXxM8Ciwu4KK/Sy2O7ai30xUjP8yrL1WNRzXlNnsrG8ylfZK', 'Test Employee', NULL, NULL, NULL, 'employee', NULL, 'permanent', 'Permanent', NULL, NULL, 1, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Amparai', 1, '2026-05-18 17:56:16', '2026-04-22 06:10:30', 'profile_20_1777526035.png', NULL, NULL, NULL, 'Ampara Range'),
+(21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'Dr. (Mrs). L. Dujiththera', NULL, NULL, 'GVS', 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(22, 'sinharasa', 'sinharasa.a@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. A. Sinharasa', NULL, NULL, 'LDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(23, 'amirthalingam', 'amirthalingam.p@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. P. Amirthalingam', NULL, NULL, 'LDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(24, 'vimalathasan', 'vimalathasan.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Vimalathasan', NULL, NULL, 'PDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(25, 'muruhathasan', 'muruhathasan.k@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. K. Muruhathasan', NULL, NULL, 'PDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(26, 'yoganathan', 'yoganathan.k@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. K. Yoganathan', NULL, NULL, 'PDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(27, 'thiruganasuntharam', 'thiru.s@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mrs. S. Thiruganasuntharam', NULL, NULL, 'CDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(28, 'koneswaran', 'koneswaran.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Koneswaran', NULL, NULL, 'PDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(29, 'saththiyawan', 'saththiyawan.t@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. T. Saththiyawan', NULL, NULL, 'Driver', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(30, 'gaminiraj', 'gaminiraj.n@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. N. Gaminiraj', NULL, NULL, 'Watcher', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
+(45, 'regionalfarms', 'regionalfarms@gmail.com', NULL, '$2y$10$k5hbQiiYpVp70ObCvcWTTecgRxgETgKmvSCs/.b/ENUMuwfceWMVS', 'Regional Farms User', NULL, NULL, NULL, 'farms_dd', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, 1, 'Provincial', 1, '2026-09-09 17:16:34', '2026-07-20 07:29:39', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(50, 'Animal Husbandry Training Centre', 'ahtc.uppuweli@gmail.com', NULL, '$2y$10$UrhpvvbvW5QR8et1C1zY0OpNEFxV/XmZHUmbdp/4RGvRN.TQau5uC', 'Animal Husbandry Training Centre', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:45:21', '2026-08-13 07:04:27', 'profile_50_1786605206.jpg', 1, '0', NULL, 'Central Provincial Office'),
+(51, 'Animal Husbandry Training Centre - Kallady', 'ahtc.kallady@gmail.com', NULL, '$2y$10$lOXsKCuN4cjfACEGzI9YTOoO76GRikx.RiY.u8JUfSGHMQH.Tnj4a', 'Animal Husbandry Training Centre - Kallady', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:25:45', '2026-08-13 07:04:58', NULL, 2, '0', NULL, 'Central Provincial Office'),
+(52, 'Animal Husbandry Farmer Training Centre - Kanchira', 'ahftc.kanchirankuda@gmail.com', NULL, '$2y$10$3A4p6VhvasatjFvQBzgyveSCdl.tBpAF6BiaCT.DSu0MMRsHscv1G', 'Animal Husbandry Farmer Training Centre - Kanchirankuda', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:27:48', '2026-08-13 07:05:32', NULL, 3, '0', NULL, 'Central Provincial Office'),
+(54, 'testing123', 'testing123@gmail.com', '0778439871', '$2y$10$G1S9EDwMXOFtV.jeiRnJ1.oPGJG4ZwqJGyq3Ea9TEspRvBVh5yebq', 'Yohani Abeykoon', '210', '210', 'Veterinary Surgeon', 'training_officer', 'test', 'permanent', 'Permanent', NULL, 0, NULL, NULL, NULL, '2026-08-14', '2026-08-14', '2026-08-14', NULL, NULL, NULL, 'Amparai', 0, NULL, '2026-08-14 06:48:10', NULL, 1, NULL, NULL, 'Central Provincial Office'),
+(64, 'District Deputy Director (Ampara)', 'dd.ampara@gmail.com', NULL, '$2y$10$w7Vkk3b0YMGQcAbD84yS7.Mr6vM1LC7.thhtXIzBLP.T9L1MDiCOC', 'District Deputy Director (Ampara)', NULL, NULL, '', 'district_dd', NULL, 'permanent', 'Permanent', NULL, 1, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1972-02-01', NULL, NULL, 'Amparai', 1, '2026-09-05 16:55:45', '2026-09-04 06:57:35', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(65, 'District Deputy Director (H/Q1)', 'dd.hq1@gmail.com', NULL, '$2y$10$F.yRyP8Ft.WeYnStQrmbTug2giHf4mAlt1aJvFiyCzN4tSCCYB.iO', 'District Deputy Director (H/Q1)', NULL, NULL, '', 'deputy_director_hq_1', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1980-09-08', NULL, NULL, 'Provincial', 1, '2026-09-04 12:34:17', '2026-09-04 06:58:16', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(66, 'Planning Deputy Director (H/Q2)', 'dd.hq2@gmail.com', NULL, '$2y$10$LvQ.ODAFOGVtUcS/bqeKQOfy9rlNcHlD6oqNKnTm/6DSHkqmoPldy', 'Planning Deputy Director (H/Q2)', NULL, NULL, '', 'deputy_director_hq_2', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1980-06-09', NULL, NULL, 'Provincial', 1, '2026-09-04 12:34:36', '2026-09-04 06:59:32', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(67, 'District Deputy Director (Batticaloa)', 'dd.batticaloa@gmail.com', NULL, '$2y$10$RjKsHfESAMfg6l2R54qLx.hY6SCDFsJcVTcNFpZogziOuC7bu0QPi', 'District Deputy Director (Batticaloa)', NULL, NULL, NULL, 'district_dd', NULL, 'permanent', 'Permanent', NULL, 2, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, '2026-09-04 12:57:49', '2026-09-04 07:23:20', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(68, 'District Deputy Director (Trincomalee)', 'dd.trincomalee@gmail.com', NULL, '$2y$10$M00UMVzmD4UpUoMzeH84NuNA6nJTjWldil9GSI6vMwB7KLCVWguhK', 'District Deputy Director (Trincomalee)', NULL, NULL, NULL, 'district_dd', NULL, 'permanent', 'Permanent', NULL, 3, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Trincomalee', 1, '2026-09-04 12:58:32', '2026-09-04 07:23:20', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(71, 'test_driver', 'test_driver@gmail.com', '0776567890', '$2y$10$efirPFWjDbYagQ.s9Y.HcOSzeoFPcHjSkUIDSIQvMEYg9idX7GAoa', 'Test Driver Employee', '001', '001', 'Driver', 'driver', 'Driver', 'temporary', NULL, NULL, 1, 7, NULL, '2026-09-09', '2026-09-09', '2026-09-09', '2026-09-09', '1987-09-09', NULL, NULL, 'Amparai', 1, NULL, '2026-09-09 08:10:46', NULL, NULL, NULL, 'Range Office - Addalaichenai (Ampara)', 'Range Office - Addalaichenai (Ampara)'),
+(72, 'test_driver2', 'test_driver2@gmail.com', '0776567891', '$2y$10$NoB84K6JBLPoZai3UEgyx.pl7v/5r9IC3lurvY8Bf9..QWACm3g8C', 'Test Driver Employee 2', '002', '002', 'Driver', 'driver', 'Driver', 'temporary', NULL, NULL, NULL, NULL, NULL, '2026-09-10', '2026-09-10', '2026-09-10', '2026-09-10', '1988-09-09', NULL, NULL, 'Provincial', 1, NULL, '2026-09-10 05:51:05', NULL, NULL, NULL, 'Unit - Farm Operations', 'Unit - Farm Operations'),
+(73, 'test_dev', 'test_dev@gmail.com', '0776567890', '$2y$10$D30UPdFLj/yCaFhYYhReI.zIY7gw8waGUPPiGwUSXJnwvjVUhpf.K', 'Test Development Officer', '003', '003', 'Development Officer (DO)', 'development_officer', 'Development', 'temporary', NULL, NULL, 1, 7, NULL, '2026-09-11', '2020-09-11', '2026-09-11', '2026-09-11', '1989-08-07', NULL, NULL, 'Amparai', 1, NULL, '2026-09-11 10:02:17', NULL, NULL, NULL, 'Range Office - Addalaichenai (Ampara)', 'Range Office - Addalaichenai (Ampara)'),
+(79, 'yohanii725', 'yohanii725@gmail.com', '0712205100', '$2y$10$qKPxChdPKZUN345sOaYEsOdOrmjsBV7ivTqKGA05UxKyMNMtwaC3C', 'Yohani Abeykoon', '004', '004', 'Government Veterinary Surgeon (GVS)', 'government_veterinary_surgeon', 'Development', 'permanent', 'Attachment', 'She got pregnant and need 3 months', 1, 1, NULL, '2026-09-12', '2026-09-12', '2026-09-12', '2026-09-12', '1999-09-12', NULL, NULL, 'Amparai', 0, NULL, '2026-09-12 09:18:25', NULL, NULL, NULL, 'range_veterinary_officer', 'Range Office - Ampara');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_quick_action_assignments`
+--
+
+CREATE TABLE `user_quick_action_assignments` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `target_role` varchar(100) DEFAULT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `action_id` varchar(50) NOT NULL,
+  `assigned_by` int(11) NOT NULL,
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `user_quick_action_assignments`
+--
+
+INSERT INTO `user_quick_action_assignments` (`id`, `user_id`, `target_role`, `district_id`, `range_id`, `action_id`, `assigned_by`, `assigned_at`) VALUES
+(49, NULL, 'veterinary_surgeon', 1, NULL, 'range_statistics', 64, '2026-09-05 11:54:39'),
+(50, NULL, 'veterinary_surgeon', 1, NULL, 'annual_targets', 64, '2026-09-05 11:54:39'),
+(51, NULL, 'veterinary_surgeon', 1, NULL, 'animal_health', 64, '2026-09-05 11:54:39'),
+(52, NULL, 'veterinary_surgeon', 1, NULL, 'clinical_services', 64, '2026-09-05 11:54:39');
 
 -- --------------------------------------------------------
 
@@ -3157,6 +3446,46 @@ CREATE TABLE `vehicle_repairs` (
 INSERT INTO `vehicle_repairs` (`id`, `vehicle_id`, `user_id`, `training_center_id`, `farm_id`, `user_category`, `repair_date`, `repair_done`, `repair_description`, `place_of_repair`, `invoice_ref`, `amount`, `is_active`, `created_at`) VALUES
 (1, 1, 19, NULL, NULL, NULL, '2026-06-30', 'test', '', 'test', NULL, '5000.00', 1, '2026-06-30 14:02:26'),
 (2, 2, 19, NULL, NULL, NULL, '2026-07-07', 'Full repair', 'test', 'Trincomalee', NULL, '5000.00', 1, '2026-07-07 07:55:33');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `vehicle_running_charts`
+--
+
+CREATE TABLE `vehicle_running_charts` (
+  `id` int(11) NOT NULL,
+  `vehicle_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `district_id` int(11) DEFAULT 0,
+  `range_id` int(11) DEFAULT 0,
+  `trip_date` date NOT NULL,
+  `driver_name` varchar(150) NOT NULL,
+  `driver_initials` varchar(30) NOT NULL,
+  `time_out` time NOT NULL,
+  `time_in` time NOT NULL,
+  `route_places_visited` text NOT NULL,
+  `purpose_of_trip` text NOT NULL,
+  `milometer_out` decimal(10,2) NOT NULL,
+  `milometer_in` decimal(10,2) NOT NULL,
+  `total_mileage` decimal(10,2) NOT NULL,
+  `fuel_position_in_tank` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `fuel_drawn` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `fuel_consumed` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `fuel_balance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `miles_per_gallon` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `engine_oil_drawn` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `remarks` text DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `vehicle_running_charts`
+--
+
+INSERT INTO `vehicle_running_charts` (`id`, `vehicle_id`, `user_id`, `district_id`, `range_id`, `trip_date`, `driver_name`, `driver_initials`, `time_out`, `time_in`, `route_places_visited`, `purpose_of_trip`, `milometer_out`, `milometer_in`, `total_mileage`, `fuel_position_in_tank`, `fuel_drawn`, `fuel_consumed`, `fuel_balance`, `miles_per_gallon`, `engine_oil_drawn`, `remarks`, `is_active`, `created_at`) VALUES
+(3, 1, 19, 1, 1, '2026-09-11', 'test driver', 'A.B.C', '03:00:00', '10:00:00', 'Range-office -&gt; Uppuveli -&gt; Range Office', 'Emergency', '170400.00', '170463.00', '63.00', '25.00', '0.00', '5.00', '20.00', '12.60', '0.00', '', 1, '2026-09-11 09:21:26');
 
 -- --------------------------------------------------------
 
@@ -3670,6 +3999,35 @@ ALTER TABLE `instrument_assets`
   ADD KEY `range_id` (`range_id`);
 
 --
+-- Indexes for table `inventory_issue_orders`
+--
+ALTER TABLE `inventory_issue_orders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `issue_order_no` (`issue_order_no`),
+  ADD KEY `idx_issue_order_no` (`issue_order_no`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_date_issued` (`date_issued`);
+
+--
+-- Indexes for table `inventory_receipt_orders`
+--
+ALTER TABLE `inventory_receipt_orders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `receipt_no` (`receipt_no`),
+  ADD KEY `idx_receipt_no` (`receipt_no`),
+  ADD KEY `idx_issue_order_no` (`issue_order_no`),
+  ADD KEY `idx_date_received` (`date_received`),
+  ADD KEY `idx_issue_order_id` (`issue_order_id`);
+
+--
+-- Indexes for table `inventory_transfers`
+--
+ALTER TABLE `inventory_transfers`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `asset_type` (`asset_type`,`asset_id`),
+  ADD KEY `status` (`status`);
+
+--
 -- Indexes for table `land_assets`
 --
 ALTER TABLE `land_assets`
@@ -3708,6 +4066,13 @@ ALTER TABLE `machinery_assets`
   ADD KEY `user_id` (`user_id`),
   ADD KEY `district_id` (`district_id`),
   ADD KEY `range_id` (`range_id`);
+
+--
+-- Indexes for table `master_counterfoil_types`
+--
+ALTER TABLE `master_counterfoil_types`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `type_name` (`type_name`);
 
 --
 -- Indexes for table `master_programme_types`
@@ -3771,6 +4136,22 @@ ALTER TABLE `month_old_chicks_distribution`
   ADD KEY `record_date` (`record_date`);
 
 --
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user_read` (`user_id`,`is_read`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `office_details`
+--
+ALTER TABLE `office_details`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `range_id` (`range_id`),
+  ADD KEY `unit_id` (`unit_id`);
+
+--
 -- Indexes for table `parent_stock_flocks`
 --
 ALTER TABLE `parent_stock_flocks`
@@ -3781,6 +4162,15 @@ ALTER TABLE `parent_stock_flocks`
 --
 ALTER TABLE `pasture_fodder_lands`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `pending_approvals`
+--
+ALTER TABLE `pending_approvals`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_module` (`module`),
+  ADD KEY `idx_requested_by` (`requested_by`);
 
 --
 -- Indexes for table `production_activity_targets`
@@ -3813,6 +4203,14 @@ ALTER TABLE `projects_progress`
 ALTER TABLE `project_assignments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `project_id` (`project_id`);
+
+--
+-- Indexes for table `range_subject_assignments`
+--
+ALTER TABLE `range_subject_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range_subject` (`range_id`,`subject_key`),
+  ADD KEY `idx_user` (`user_id`);
 
 --
 -- Indexes for table `regional_farms`
@@ -3928,6 +4326,19 @@ ALTER TABLE `users`
   ADD KEY `idx_user_farm` (`farm_id`);
 
 --
+-- Indexes for table `user_quick_action_assignments`
+--
+ALTER TABLE `user_quick_action_assignments`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_user_dist_action` (`user_id`,`district_id`,`action_id`),
+  ADD UNIQUE KEY `uniq_role_dist_action` (`target_role`,`district_id`,`action_id`),
+  ADD KEY `idx_user_id` (`user_id`),
+  ADD KEY `idx_assigned_by` (`assigned_by`),
+  ADD KEY `idx_district_id` (`district_id`),
+  ADD KEY `idx_range_id` (`range_id`),
+  ADD KEY `idx_target_role` (`target_role`);
+
+--
 -- Indexes for table `vaccine_batches`
 --
 ALTER TABLE `vaccine_batches`
@@ -3949,6 +4360,17 @@ ALTER TABLE `vehicle_repairs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `vehicle_id` (`vehicle_id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `vehicle_running_charts`
+--
+ALTER TABLE `vehicle_running_charts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `vehicle_id` (`vehicle_id`),
+  ADD KEY `district_id` (`district_id`),
+  ADD KEY `range_id` (`range_id`),
+  ADD KEY `trip_date` (`trip_date`),
+  ADD KEY `is_active` (`is_active`);
 
 --
 -- Indexes for table `veterinary_ranges`
@@ -4074,7 +4496,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=197;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=299;
 
 --
 -- AUTO_INCREMENT for table `breeding_ai_performance`
@@ -4098,7 +4520,7 @@ ALTER TABLE `breeding_pd_performance`
 -- AUTO_INCREMENT for table `building_inventories`
 --
 ALTER TABLE `building_inventories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `cages`
@@ -4266,7 +4688,7 @@ ALTER TABLE `farm_produce_register_annex6`
 -- AUTO_INCREMENT for table `furniture_assets`
 --
 ALTER TABLE `furniture_assets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `hatchery_batches`
@@ -4296,7 +4718,7 @@ ALTER TABLE `health_certificate_issues`
 -- AUTO_INCREMENT for table `human_populations`
 --
 ALTER TABLE `human_populations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `inquiries`
@@ -4317,10 +4739,28 @@ ALTER TABLE `instrument_assets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `inventory_issue_orders`
+--
+ALTER TABLE `inventory_issue_orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `inventory_receipt_orders`
+--
+ALTER TABLE `inventory_receipt_orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `inventory_transfers`
+--
+ALTER TABLE `inventory_transfers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `land_assets`
 --
 ALTER TABLE `land_assets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `leave_requests`
@@ -4345,6 +4785,12 @@ ALTER TABLE `livestock_societies`
 --
 ALTER TABLE `machinery_assets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `master_counterfoil_types`
+--
+ALTER TABLE `master_counterfoil_types`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `master_programme_types`
@@ -4386,7 +4832,7 @@ ALTER TABLE `monthly_fuel_summary`
 -- AUTO_INCREMENT for table `monthly_mash_details`
 --
 ALTER TABLE `monthly_mash_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `monthly_vaccine_balances`
@@ -4401,6 +4847,18 @@ ALTER TABLE `month_old_chicks_distribution`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=149;
+
+--
+-- AUTO_INCREMENT for table `office_details`
+--
+ALTER TABLE `office_details`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `parent_stock_flocks`
 --
 ALTER TABLE `parent_stock_flocks`
@@ -4411,6 +4869,12 @@ ALTER TABLE `parent_stock_flocks`
 --
 ALTER TABLE `pasture_fodder_lands`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `pending_approvals`
+--
+ALTER TABLE `pending_approvals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `production_activity_targets`
@@ -4441,6 +4905,12 @@ ALTER TABLE `projects_progress`
 --
 ALTER TABLE `project_assignments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `range_subject_assignments`
+--
+ALTER TABLE `range_subject_assignments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `regional_farms`
@@ -4524,7 +4994,13 @@ ALTER TABLE `training_produce_register`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+
+--
+-- AUTO_INCREMENT for table `user_quick_action_assignments`
+--
+ALTER TABLE `user_quick_action_assignments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `vaccine_batches`
@@ -4542,6 +5018,12 @@ ALTER TABLE `vaccine_types`
 -- AUTO_INCREMENT for table `vehicle_repairs`
 --
 ALTER TABLE `vehicle_repairs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `vehicle_running_charts`
+--
+ALTER TABLE `vehicle_running_charts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
@@ -4772,6 +5254,13 @@ ALTER TABLE `section_e`
 --
 ALTER TABLE `users`
   ADD CONSTRAINT `fk_user_farm` FOREIGN KEY (`farm_id`) REFERENCES `regional_farms` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user_quick_action_assignments`
+--
+ALTER TABLE `user_quick_action_assignments`
+  ADD CONSTRAINT `fk_uqaa_assigner` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_uqaa_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `vaccine_batches`
