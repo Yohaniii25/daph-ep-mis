@@ -985,10 +985,13 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                     <tr>
                                         <th>Range Office</th>
                                         <th>Counterfoil / Book Type</th>
+                                        <th>Book / Serial Range</th>
                                         <th>Issue Order No.</th>
                                         <th>Received From</th>
                                         <th>Receipt No.</th>
                                         <th class="text-center">Quantity</th>
+                                        <th>To Whom Issued</th>
+                                        <th>Issue / Return Date</th>
                                         <th>Status / Condition</th>
                                         <th>Received Date</th>
                                         <th>Specification / Remarks</th>
@@ -1002,6 +1005,12 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                                 <i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($item['range_name'] ?? 'District Office') ?>
                                             </td>
                                             <td class="fw-bold text-dark"><?= htmlspecialchars($item['counterfoil_type'] ?? $item['book_type']) ?></td>
+                                            <td>
+                                                <span class="font-monospace fw-bold text-dark"><?= !empty($item['book_serial_no']) ? htmlspecialchars($item['book_serial_no']) : '-' ?></span>
+                                                <?php if(!empty($item['page_count'])): ?>
+                                                    <br><small class="text-muted"><i class="bi bi-file-earmark-break me-1"></i><?= htmlspecialchars($item['page_count']) ?></small>
+                                                <?php endif; ?>
+                                            </td>
                                             <td><?= htmlspecialchars($item['issue_order_no'] ?: '-') ?></td>
                                             <td><?= htmlspecialchars($item['received_from'] ?: '-') ?></td>
                                             <td><?= htmlspecialchars($item['receipt_no'] ?: '-') ?></td>
@@ -1009,6 +1018,13 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                                                 <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $item['available_quantity'] ?? 1) ?></span>
                                                 <br>
                                                 <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($item['initial_count'] ?? 1) ?> | Recv: <?= intval($item['received_quantity'] ?? 0) ?></small>
+                                            </td>
+                                            <td><small class="fw-semibold text-dark"><?= !empty($item['issued_to']) ? htmlspecialchars($item['issued_to']) : '-' ?></small></td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    Issued: <span class="text-dark fw-medium"><?= !empty($item['date_of_issue']) ? htmlspecialchars($item['date_of_issue']) : '-' ?></span><br>
+                                                    Return: <span class="text-dark fw-medium"><?= !empty($item['date_of_return']) ? htmlspecialchars($item['date_of_return']) : '-' ?></span>
+                                                </small>
                                             </td>
                                             <td>
                                                 <span class="badge bg-<?= ($item['current_condition'] === 'Good' || $item['current_condition'] === 'Operational' || $item['current_condition'] === 'Active') ? 'success' : 'secondary' ?>">
@@ -1737,9 +1753,32 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                             <option value="regional_farms">Regional Farms</option>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 position-relative">
                         <label class="form-label fw-bold small text-muted">Counterfoil / Book Type *</label>
-                        <input type="text" name="counterfoil_type" id="edit_cou_type" class="form-control" required>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-journal-bookmark text-muted"></i></span>
+                            <input type="text" 
+                                   name="counterfoil_type" 
+                                   id="edit_cou_type" 
+                                   class="form-control" 
+                                   placeholder="Type or select type (e.g. AI Register, Cash Receipt Book)..." 
+                                   autocomplete="off" 
+                                   required>
+                        </div>
+                        <div id="edit_cou_type_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
+                        <small class="text-muted" style="font-size: 11px;">
+                            <i class="bi bi-magic me-1 text-primary"></i>Auto-suggests from saved &amp; baseline book categories. Custom types allowed.
+                        </small>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Number of Book - Serial Numbers (e.g. 1-5)</label>
+                            <input type="text" name="book_serial_no" id="edit_cou_book_serial_no" class="form-control font-monospace" placeholder="e.g. 1-5">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Page Counts (per book)</label>
+                            <input type="text" name="page_count" id="edit_cou_page_count" class="form-control" placeholder="e.g. 50 Pages or 100 Folios">
+                        </div>
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-md-12">
@@ -1757,12 +1796,29 @@ if ($stmt = $mysqli->prepare("SELECT COUNT(*) FROM pending_approvals WHERE distr
                             <input type="number" name="initial_count" id="edit_cou_initial_count" class="form-control fw-bold" min="0" required oninput="calcDistrictEditCou()">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted">Received Quantity</label>
+                            <label class="form-label fw-bold small text-muted">Received Quantity</label>
                             <input type="number" name="received_quantity" id="edit_cou_received_quantity" class="form-control fw-bold" min="0" required oninput="calcDistrictEditCou()">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted">Current Availability</label>
+                            <label class="form-label fw-bold small text-muted">Current Availability</label>
                             <input type="number" name="available_quantity" id="edit_cou_quantity" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                    </div>
+                    <div class="p-3 mb-3 rounded border bg-light">
+                        <div class="fw-bold text-dark mb-2 small text-uppercase"><i class="bi bi-person-badge me-1 text-primary"></i>Issuance &amp; Custody Details</div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold small">To Whom Issued</label>
+                            <input type="text" name="issued_to" id="edit_cou_issued_to" class="form-control form-control-sm" placeholder="e.g. Name / Designation of Officer">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Date of Issue</label>
+                                <input type="date" name="date_of_issue" id="edit_cou_date_of_issue" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Date of Return</label>
+                                <input type="date" name="date_of_return" id="edit_cou_date_of_return" class="form-control form-control-sm">
+                            </div>
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
@@ -2328,6 +2384,11 @@ function viewCounterfoil(data) {
     showUniversalModal('Counter Foil Details', {
         'Range Office': data.range_name || 'District Office',
         'Book / Register Type': data.counterfoil_type || data.book_type,
+        'Book / Serial Range': data.book_serial_no || '-',
+        'Page Count': data.page_count || '-',
+        'To Whom Issued': data.issued_to || '-',
+        'Date of Issue': data.date_of_issue || '-',
+        'Date of Return': data.date_of_return || '-',
         'Issue Order No.': data.issue_order_no,
         'Received From': data.received_from,
         'Receipt No.': data.receipt_no,
@@ -2342,6 +2403,11 @@ function editCounterfoil(data) {
     $('#edit_cou_id').val(data.id || '');
     $('#edit_cou_unit').val(data.unit || '');
     $('#edit_cou_type').val(data.counterfoil_type || data.book_type || '');
+    $('#edit_cou_book_serial_no').val(data.book_serial_no || '');
+    $('#edit_cou_page_count').val(data.page_count || '');
+    $('#edit_cou_issued_to').val(data.issued_to || '');
+    $('#edit_cou_date_of_issue').val(data.date_of_issue || '');
+    $('#edit_cou_date_of_return').val(data.date_of_return || '');
     $('#edit_cou_condition').val(data.current_condition || data.current_status || 'Good');
     $('#edit_cou_initial_count').val(data.initial_count !== undefined ? data.initial_count : (data.available_quantity || 1));
     $('#edit_cou_received_quantity').val(data.received_quantity !== undefined ? data.received_quantity : 0);
@@ -2429,4 +2495,71 @@ function editStaff(data) {
     $('#edit_staff_email').val(data.email || '');
     new bootstrap.Modal(document.getElementById('editStaffModal')).show();
 }
+
+// Auto-suggest implementation for Counterfoil Book Type
+function setupDistrictCounterfoilAutocomplete(inputSelector, dropdownSelector, apiUrl) {
+    var timer = null;
+    apiUrl = apiUrl || 'processors/get_counterfoil_types.php';
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    $(inputSelector).on('input focus', function() {
+        var term = $(this).val().trim();
+        var $dropdown = $(dropdownSelector);
+
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                data: { q: term },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success && res.suggestions && res.suggestions.length > 0) {
+                        var html = '';
+                        res.suggestions.forEach(function(item) {
+                            var highlighted = escapeHtml(item);
+                            if (term.length > 0) {
+                                var re = new RegExp('(' + escapeRegex(term) + ')', 'gi');
+                                highlighted = highlighted.replace(re, '<strong class="text-primary">$1</strong>');
+                            }
+                            html += '<a class="dropdown-item py-2 px-3 d-flex align-items-center suggestion-item" href="javascript:void(0)" data-value="' + escapeHtml(item) + '">' +
+                                    '<i class="bi bi-journal-text me-2 text-muted" style="font-size: 13px;"></i>' +
+                                    '<span>' + highlighted + '</span>' +
+                                    '</a>';
+                        });
+                        $dropdown.html(html).show();
+                    } else if (term.length > 0) {
+                        $dropdown.html('<div class="dropdown-header text-muted py-2 px-3 small"><i class="bi bi-pencil me-1"></i>New book type: "' + escapeHtml(term) + '" (will be auto-saved)</div>').show();
+                    } else {
+                        $dropdown.hide();
+                    }
+                }
+            });
+        }, 180);
+    });
+
+    $(dropdownSelector).on('click', '.suggestion-item', function(e) {
+        e.preventDefault();
+        var val = $(this).data('value');
+        $(inputSelector).val(val);
+        $(dropdownSelector).hide();
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest(inputSelector + ', ' + dropdownSelector).length) {
+            $(dropdownSelector).hide();
+        }
+    });
+}
+
+$(document).ready(function() {
+    setupDistrictCounterfoilAutocomplete('#edit_cou_type', '#edit_cou_type_suggestions', 'processors/get_counterfoil_types.php');
+});
 </script>

@@ -597,6 +597,11 @@ if ($action === 'delete_instrument') {
 // -------------------------------------------------------------
 if ($action === 'save_counterfoil') {
     $counterfoil_type   = trim($_POST['counterfoil_type'] ?? 'General Receipt Book');
+    $book_serial_no     = trim($_POST['book_serial_no'] ?? '');
+    $page_count         = trim($_POST['page_count'] ?? '');
+    $issued_to          = trim($_POST['issued_to'] ?? '');
+    $date_of_issue      = !empty($_POST['date_of_issue']) ? $_POST['date_of_issue'] : null;
+    $date_of_return     = !empty($_POST['date_of_return']) ? $_POST['date_of_return'] : null;
     $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
     $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
     $available_quantity = $initial_count + $received_quantity;
@@ -616,10 +621,18 @@ if ($action === 'save_counterfoil') {
         respondJsonOrRedirect($is_ajax, false, 'Counterfoil Type is required.', '../counter_foilage.php');
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO counterfoil_assets (user_id, farm_id, user_category, district_id, range_id, counterfoil_type, available_quantity, initial_count, received_quantity, purchase_date, current_condition, remarks, issue_order_no, received_from, receipt_no, specification) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("iisisiiisssssss", $user_id, $farm_id, $user_category, $district_id, $counterfoil_type, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $remarks, $issue_order_no, $received_from, $receipt_no, $specification);
+    $stmt = $mysqli->prepare("INSERT INTO counterfoil_assets (user_id, farm_id, user_category, district_id, range_id, counterfoil_type, book_serial_no, page_count, available_quantity, initial_count, received_quantity, purchase_date, current_condition, remarks, issue_order_no, received_from, receipt_no, specification, issued_to, date_of_issue, date_of_return) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("iisisssiiissssssssss", $user_id, $farm_id, $user_category, $district_id, $counterfoil_type, $book_serial_no, $page_count, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $remarks, $issue_order_no, $received_from, $receipt_no, $specification, $issued_to, $date_of_issue, $date_of_return);
 
     if ($stmt->execute()) {
+        if (!empty($counterfoil_type)) {
+            $m_stmt = $mysqli->prepare("INSERT IGNORE INTO master_counterfoil_types (type_name, is_active) VALUES (?, 1)");
+            if ($m_stmt) {
+                $m_stmt->bind_param("s", $counterfoil_type);
+                $m_stmt->execute();
+                $m_stmt->close();
+            }
+        }
         respondJsonOrRedirect($is_ajax, true, 'Counterfoil registered successfully.', '../counter_foilage.php');
     } else {
         respondJsonOrRedirect($is_ajax, false, 'Failed to register counterfoil: ' . $stmt->error, '../counter_foilage.php');
@@ -629,6 +642,11 @@ if ($action === 'save_counterfoil') {
 if ($action === 'update_counterfoil') {
     $id                 = intval($_POST['id'] ?? 0);
     $counterfoil_type   = trim($_POST['counterfoil_type'] ?? 'General Receipt Book');
+    $book_serial_no     = trim($_POST['book_serial_no'] ?? '');
+    $page_count         = trim($_POST['page_count'] ?? '');
+    $issued_to          = trim($_POST['issued_to'] ?? '');
+    $date_of_issue      = !empty($_POST['date_of_issue']) ? $_POST['date_of_issue'] : null;
+    $date_of_return     = !empty($_POST['date_of_return']) ? $_POST['date_of_return'] : null;
     $initial_count      = max(0, intval($_POST['initial_count'] ?? 1));
     $received_quantity  = max(0, intval($_POST['received_quantity'] ?? 0));
     $available_quantity = $initial_count + $received_quantity;
@@ -648,10 +666,18 @@ if ($action === 'update_counterfoil') {
         respondJsonOrRedirect($is_ajax, false, 'Invalid counterfoil ID or missing type.', '../counter_foilage.php');
     }
 
-    $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET counterfoil_type = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, purchase_date = ?, current_condition = ?, remarks = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ? WHERE id = ? AND (farm_id = ? OR user_id = ?)");
-    $stmt->bind_param("siiisssssssiii", $counterfoil_type, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $remarks, $issue_order_no, $received_from, $receipt_no, $specification, $id, $farm_id, $user_id);
+    $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET counterfoil_type = ?, book_serial_no = ?, page_count = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, purchase_date = ?, current_condition = ?, remarks = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ?, issued_to = ?, date_of_issue = ?, date_of_return = ? WHERE id = ? AND (farm_id = ? OR user_id = ?)");
+    $stmt->bind_param("sssiiissssssssssiii", $counterfoil_type, $book_serial_no, $page_count, $available_quantity, $initial_count, $received_quantity, $purchase_date, $current_condition, $remarks, $issue_order_no, $received_from, $receipt_no, $specification, $issued_to, $date_of_issue, $date_of_return, $id, $farm_id, $user_id);
 
     if ($stmt->execute()) {
+        if (!empty($counterfoil_type)) {
+            $m_stmt = $mysqli->prepare("INSERT IGNORE INTO master_counterfoil_types (type_name, is_active) VALUES (?, 1)");
+            if ($m_stmt) {
+                $m_stmt->bind_param("s", $counterfoil_type);
+                $m_stmt->execute();
+                $m_stmt->close();
+            }
+        }
         respondJsonOrRedirect($is_ajax, true, 'Counterfoil details updated successfully.', '../counter_foilage.php');
     } else {
         respondJsonOrRedirect($is_ajax, false, 'Failed to update counterfoil: ' . $stmt->error, '../counter_foilage.php');

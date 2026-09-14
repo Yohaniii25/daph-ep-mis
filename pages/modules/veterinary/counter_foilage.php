@@ -64,10 +64,13 @@ require_once '../../../includes/header.php';
                         <thead class="table-light text-uppercase small">
                             <tr>
                                 <th>Type</th>
+                                <th>Book / Serial Range</th>
                                 <th>Issue Order No.</th>
                                 <th>Received From</th>
                                 <th>Receipt No.</th>
                                 <th class="text-center">Quantity</th>
+                                <th>To Whom Issued</th>
+                                <th>Issue / Return Date</th>
                                 <th>Date of Purchase / Received</th>
                                 <th>Condition</th>
                                 <th>Specification / Remarks</th>
@@ -90,6 +93,12 @@ require_once '../../../includes/header.php';
                             ?>
                             <tr id="counterfoil-row-<?= $row['id'] ?>">
                                 <td><span class="fw-bold text-dark"><?= htmlspecialchars($row['counterfoil_type']) ?></span></td>
+                                <td>
+                                    <span class="font-monospace fw-bold text-dark"><?= !empty($row['book_serial_no']) ? htmlspecialchars($row['book_serial_no']) : '-' ?></span>
+                                    <?php if(!empty($row['page_count'])): ?>
+                                        <br><small class="text-muted"><i class="bi bi-file-earmark-break me-1"></i><?= htmlspecialchars($row['page_count']) ?></small>
+                                    <?php endif; ?>
+                                </td>
                                 <td><span class="badge bg-light text-dark border font-monospace"><?= !empty($row['issue_order_no']) ? htmlspecialchars($row['issue_order_no']) : '-' ?></span></td>
                                 <td><small class="text-secondary"><?= !empty($row['received_from']) ? htmlspecialchars($row['received_from']) : '-' ?></small></td>
                                 <td><span class="badge bg-light text-dark border font-monospace"><?= !empty($row['receipt_no']) ? htmlspecialchars($row['receipt_no']) : '-' ?></span></td>
@@ -97,6 +106,13 @@ require_once '../../../includes/header.php';
                                     <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $row['available_quantity']) ?></span>
                                     <br>
                                     <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($row['initial_count']) ?> | Recv: <?= intval($row['received_quantity'] ?? 0) ?></small>
+                                </td>
+                                <td><small class="fw-semibold text-dark"><?= !empty($row['issued_to']) ? htmlspecialchars($row['issued_to']) : '-' ?></small></td>
+                                <td>
+                                    <small class="text-muted">
+                                        Issued: <span class="text-dark fw-medium"><?= !empty($row['date_of_issue']) ? htmlspecialchars($row['date_of_issue']) : '-' ?></span><br>
+                                        Return: <span class="text-dark fw-medium"><?= !empty($row['date_of_return']) ? htmlspecialchars($row['date_of_return']) : '-' ?></span>
+                                    </small>
                                 </td>
                                 <td class="text-secondary small fw-medium"><?= htmlspecialchars($row['purchase_date']) ?></td>
                                 <td><span class="badge <?= $badge_style ?> rounded-pill px-2.5 py-1.5"><?= htmlspecialchars($row['current_condition']) ?></span></td>
@@ -208,6 +224,12 @@ require_once '../../../includes/header.php';
             document.getElementById('view_counterfoil_received_quantity').textContent = (data.received_quantity !== undefined && data.received_quantity !== null) ? data.received_quantity : 0;
         }
         document.getElementById('view_counterfoil_quantity').textContent = data.available_quantity || '-';
+        if (document.getElementById('view_counterfoil_book_serial_no')) {
+            document.getElementById('view_counterfoil_book_serial_no').textContent = data.book_serial_no || '-';
+        }
+        if (document.getElementById('view_counterfoil_page_count')) {
+            document.getElementById('view_counterfoil_page_count').textContent = data.page_count || '-';
+        }
         document.getElementById('view_counterfoil_purchase_date').textContent = data.purchase_date || '-';
         if (document.getElementById('view_counterfoil_issue_order_no')) {
             document.getElementById('view_counterfoil_issue_order_no').textContent = data.issue_order_no || '-';
@@ -221,6 +243,15 @@ require_once '../../../includes/header.php';
         if (document.getElementById('view_counterfoil_specification')) {
             document.getElementById('view_counterfoil_specification').textContent = data.specification || '-';
         }
+        if (document.getElementById('view_counterfoil_issued_to')) {
+            document.getElementById('view_counterfoil_issued_to').textContent = data.issued_to || '-';
+        }
+        if (document.getElementById('view_counterfoil_date_of_issue')) {
+            document.getElementById('view_counterfoil_date_of_issue').textContent = data.date_of_issue || '-';
+        }
+        if (document.getElementById('view_counterfoil_date_of_return')) {
+            document.getElementById('view_counterfoil_date_of_return').textContent = data.date_of_return || '-';
+        }
         document.getElementById('view_counterfoil_remarks').textContent = data.remarks || '-';
         var modal = new bootstrap.Modal(document.getElementById('viewCounterfoilModal'));
         modal.show();
@@ -231,6 +262,12 @@ require_once '../../../includes/header.php';
     function editCounterfoil(data) {
         document.getElementById('edit_counterfoil_id').value = data.id || '';
         document.getElementById('edit_counterfoil_type').value = data.counterfoil_type || '';
+        if (document.getElementById('edit_counterfoil_book_serial_no')) {
+            document.getElementById('edit_counterfoil_book_serial_no').value = data.book_serial_no || '';
+        }
+        if (document.getElementById('edit_counterfoil_page_count')) {
+            document.getElementById('edit_counterfoil_page_count').value = data.page_count || '';
+        }
         if (document.getElementById('edit_counterfoil_initial_count')) {
             document.getElementById('edit_counterfoil_initial_count').value = (data.initial_count !== undefined && data.initial_count !== null) ? data.initial_count : (data.available_quantity || 1);
         }
@@ -252,6 +289,15 @@ require_once '../../../includes/header.php';
         }
         if (document.getElementById('edit_counterfoil_specification')) {
             document.getElementById('edit_counterfoil_specification').value = data.specification || '';
+        }
+        if (document.getElementById('edit_counterfoil_issued_to')) {
+            document.getElementById('edit_counterfoil_issued_to').value = data.issued_to || '';
+        }
+        if (document.getElementById('edit_counterfoil_date_of_issue')) {
+            document.getElementById('edit_counterfoil_date_of_issue').value = data.date_of_issue || '';
+        }
+        if (document.getElementById('edit_counterfoil_date_of_return')) {
+            document.getElementById('edit_counterfoil_date_of_return').value = data.date_of_return || '';
         }
         document.getElementById('edit_counterfoil_remarks').value = data.remarks || '';
         document.getElementById('edit_counterfoil_unit').value = data.unit || 'range_veterinary_officer';
@@ -472,6 +518,74 @@ require_once '../../../includes/header.php';
             confirmButtonText: 'Understood'
         });
     }
+
+    // Auto-suggest implementation for Counterfoil Book Type
+    function setupCounterfoilTypeAutocomplete(inputSelector, dropdownSelector, apiUrl) {
+        var timer = null;
+        apiUrl = apiUrl || 'processors/get_counterfoil_types.php';
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        $(inputSelector).on('input focus', function() {
+            var term = $(this).val().trim();
+            var $dropdown = $(dropdownSelector);
+
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    data: { q: term },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.success && res.suggestions && res.suggestions.length > 0) {
+                            var html = '';
+                            res.suggestions.forEach(function(item) {
+                                var highlighted = escapeHtml(item);
+                                if (term.length > 0) {
+                                    var re = new RegExp('(' + escapeRegex(term) + ')', 'gi');
+                                    highlighted = highlighted.replace(re, '<strong class="text-primary">$1</strong>');
+                                }
+                                html += '<a class="dropdown-item py-2 px-3 d-flex align-items-center suggestion-item" href="javascript:void(0)" data-value="' + escapeHtml(item) + '">' +
+                                        '<i class="bi bi-journal-text me-2 text-muted" style="font-size: 13px;"></i>' +
+                                        '<span>' + highlighted + '</span>' +
+                                        '</a>';
+                            });
+                            $dropdown.html(html).show();
+                        } else if (term.length > 0) {
+                            $dropdown.html('<div class="dropdown-header text-muted py-2 px-3 small"><i class="bi bi-pencil me-1"></i>New book type: "' + escapeHtml(term) + '" (will be auto-saved)</div>').show();
+                        } else {
+                            $dropdown.hide();
+                        }
+                    }
+                });
+            }, 180);
+        });
+
+        $(dropdownSelector).on('click', '.suggestion-item', function(e) {
+            e.preventDefault();
+            var val = $(this).data('value');
+            $(inputSelector).val(val);
+            $(dropdownSelector).hide();
+        });
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest(inputSelector + ', ' + dropdownSelector).length) {
+                $(dropdownSelector).hide();
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        setupCounterfoilTypeAutocomplete('#add_counterfoil_type', '#add_counterfoil_type_suggestions', 'processors/get_counterfoil_types.php');
+        setupCounterfoilTypeAutocomplete('#edit_counterfoil_type', '#edit_counterfoil_type_suggestions', 'processors/get_counterfoil_types.php');
+    });
 </script>
 
 <?php require_once '../../../includes/footer.php'; ?>

@@ -60,10 +60,13 @@ $stmt->close();
                 <thead class="table-dark" style="background-color: #370709;">
                     <tr>
                         <th>Book / Certificate Register Type</th>
+                        <th>Book / Serial Range</th>
                         <th>Issue Order No.</th>
                         <th>Received From</th>
                         <th>Receipt No.</th>
                         <th>Quantity</th>
+                        <th>To Whom Issued</th>
+                        <th>Issue / Return Date</th>
                         <th>Issue / Receipt Date</th>
                         <th>Current Status</th>
                         <th>Specification / Remarks</th>
@@ -74,6 +77,12 @@ $stmt->close();
                     <?php foreach ($counterfoil_list as $cf): ?>
                         <tr>
                             <td class="fw-bold text-dark"><?= htmlspecialchars($cf['counterfoil_type']) ?></td>
+                            <td>
+                                <span class="font-monospace fw-bold text-dark"><?= !empty($cf['book_serial_no']) ? htmlspecialchars($cf['book_serial_no']) : '-' ?></span>
+                                <?php if(!empty($cf['page_count'])): ?>
+                                    <br><small class="text-muted"><i class="bi bi-file-earmark-break me-1"></i><?= htmlspecialchars($cf['page_count']) ?></small>
+                                <?php endif; ?>
+                            </td>
                             <td><?= htmlspecialchars($cf['issue_order_no'] ?: '-') ?></td>
                             <td><?= htmlspecialchars($cf['received_from'] ?: '-') ?></td>
                             <td><?= htmlspecialchars($cf['receipt_no'] ?: '-') ?></td>
@@ -81,6 +90,13 @@ $stmt->close();
                                 <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $cf['available_quantity'] ?? 1) ?></span>
                                 <br>
                                 <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($cf['initial_count'] ?? 1) ?> | Recv: <?= intval($cf['received_quantity'] ?? 0) ?></small>
+                            </td>
+                            <td><small class="fw-semibold text-dark"><?= !empty($cf['issued_to']) ? htmlspecialchars($cf['issued_to']) : '-' ?></small></td>
+                            <td>
+                                <small class="text-muted">
+                                    Issued: <span class="text-dark fw-medium"><?= !empty($cf['date_of_issue']) ? htmlspecialchars($cf['date_of_issue']) : '-' ?></span><br>
+                                    Return: <span class="text-dark fw-medium"><?= !empty($cf['date_of_return']) ? htmlspecialchars($cf['date_of_return']) : '-' ?></span>
+                                </small>
                             </td>
                             <td><?= !empty($cf['purchase_date']) ? date('Y-m-d', strtotime($cf['purchase_date'])) : '-' ?></td>
                             <td>
@@ -100,6 +116,11 @@ $stmt->close();
                                 <button class="btn btn-sm btn-outline-primary me-1 btn-edit-counterfoil"
                                     data-id="<?= $cf['id'] ?>"
                                     data-counterfoil_type="<?= htmlspecialchars($cf['counterfoil_type']) ?>"
+                                    data-book_serial_no="<?= htmlspecialchars($cf['book_serial_no'] ?? '') ?>"
+                                    data-page_count="<?= htmlspecialchars($cf['page_count'] ?? '') ?>"
+                                    data-issued_to="<?= htmlspecialchars($cf['issued_to'] ?? '') ?>"
+                                    data-date_of_issue="<?= htmlspecialchars($cf['date_of_issue'] ?? '') ?>"
+                                    data-date_of_return="<?= htmlspecialchars($cf['date_of_return'] ?? '') ?>"
                                     data-issue_order_no="<?= htmlspecialchars($cf['issue_order_no'] ?? '') ?>"
                                     data-received_from="<?= htmlspecialchars($cf['received_from'] ?? '') ?>"
                                     data-receipt_no="<?= htmlspecialchars($cf['receipt_no'] ?? '') ?>"
@@ -138,9 +159,30 @@ $stmt->close();
                 <input type="hidden" name="action" value="save_counterfoil">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-12 position-relative">
                             <label class="form-label small fw-bold">Book / Register Category <span class="text-danger">*</span></label>
-                            <input type="text" name="counterfoil_type" class="form-control" placeholder="e.g. Official Outbreak Notification &amp; Investigation Logbook" required>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-journal-bookmark text-muted"></i></span>
+                                <input type="text" 
+                                       name="counterfoil_type" 
+                                       id="add_sms_counterfoil_type" 
+                                       class="form-control" 
+                                       placeholder="Type or select type (e.g. AI Register, Cash Receipt Book)..." 
+                                       autocomplete="off" 
+                                       required>
+                            </div>
+                            <div id="add_sms_counterfoil_type_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
+                            <small class="text-muted" style="font-size: 11px;">
+                                <i class="bi bi-magic me-1 text-primary"></i>Auto-suggests from saved &amp; baseline book categories. Custom types allowed.
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Number of Book - Serial Numbers <small class="text-muted fw-normal">(e.g. 1-5)</small></label>
+                            <input type="text" name="book_serial_no" id="add_sms_book_serial_no" class="form-control font-monospace" placeholder="e.g. 1-5">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Page Counts <small class="text-muted fw-normal">(per book)</small></label>
+                            <input type="text" name="page_count" id="add_sms_page_count" class="form-control" placeholder="e.g. 50 Pages or 100 Folios">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Issue Order No.</label>
@@ -169,6 +211,25 @@ $stmt->close();
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Current Availability</label>
                             <input type="number" name="available_quantity" id="add_cf_available_quantity" class="form-control fw-bold bg-light" value="1" readonly>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="p-3 rounded border bg-light">
+                                <div class="fw-bold text-dark mb-2 small text-uppercase"><i class="bi bi-person-badge me-1 text-primary"></i>Issuance &amp; Custody Details</div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small">To Whom Issued</label>
+                                    <input type="text" name="issued_to" id="add_sms_issued_to" class="form-control form-control-sm" placeholder="e.g. Name / Designation of Officer">
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">Date of Issue</label>
+                                        <input type="date" name="date_of_issue" id="add_sms_date_of_issue" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">Date of Return</label>
+                                        <input type="date" name="date_of_return" id="add_sms_date_of_return" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Book Status / Condition</label>
@@ -213,9 +274,30 @@ $stmt->close();
                 <input type="hidden" name="id" id="edit_counterfoil_id">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-12 position-relative">
                             <label class="form-label small fw-bold">Book / Register Category <span class="text-danger">*</span></label>
-                            <input type="text" name="counterfoil_type" id="edit_counterfoil_type" class="form-control" required>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-journal-bookmark text-muted"></i></span>
+                                <input type="text" 
+                                       name="counterfoil_type" 
+                                       id="edit_counterfoil_type" 
+                                       class="form-control" 
+                                       placeholder="Type or select type (e.g. AI Register, Cash Receipt Book)..." 
+                                       autocomplete="off" 
+                                       required>
+                            </div>
+                            <div id="edit_counterfoil_type_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
+                            <small class="text-muted" style="font-size: 11px;">
+                                <i class="bi bi-magic me-1 text-primary"></i>Auto-suggests from saved &amp; baseline book categories. Custom types allowed.
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Number of Book - Serial Numbers <small class="text-muted fw-normal">(e.g. 1-5)</small></label>
+                            <input type="text" name="book_serial_no" id="edit_counterfoil_book_serial_no" class="form-control font-monospace" placeholder="e.g. 1-5">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Page Counts <small class="text-muted fw-normal">(per book)</small></label>
+                            <input type="text" name="page_count" id="edit_counterfoil_page_count" class="form-control" placeholder="e.g. 50 Pages or 100 Folios">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Issue Order No.</label>
@@ -244,6 +326,25 @@ $stmt->close();
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Current Availability</label>
                             <input type="number" name="available_quantity" id="edit_counterfoil_qty" class="form-control fw-bold bg-light" readonly>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="p-3 rounded border bg-light">
+                                <div class="fw-bold text-dark mb-2 small text-uppercase"><i class="bi bi-person-badge me-1 text-primary"></i>Issuance &amp; Custody Details</div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold small">To Whom Issued</label>
+                                    <input type="text" name="issued_to" id="edit_counterfoil_issued_to" class="form-control form-control-sm" placeholder="e.g. Name / Designation of Officer">
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">Date of Issue</label>
+                                        <input type="date" name="date_of_issue" id="edit_counterfoil_date_of_issue" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small">Date of Return</label>
+                                        <input type="date" name="date_of_return" id="edit_counterfoil_date_of_return" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label small fw-bold">Book Status / Condition</label>
@@ -292,6 +393,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const btn = $(this);
         $('#edit_counterfoil_id').val(btn.data('id'));
         $('#edit_counterfoil_type').val(btn.data('counterfoil_type'));
+        $('#edit_counterfoil_book_serial_no').val(btn.data('book_serial_no') || '');
+        $('#edit_counterfoil_page_count').val(btn.data('page_count') || '');
+        $('#edit_counterfoil_issued_to').val(btn.data('issued_to') || '');
+        $('#edit_counterfoil_date_of_issue').val(btn.data('date_of_issue') || '');
+        $('#edit_counterfoil_date_of_return').val(btn.data('date_of_return') || '');
         $('#edit_counterfoil_issue_order_no').val(btn.data('issue_order_no'));
         $('#edit_counterfoil_received_from').val(btn.data('received_from'));
         $('#edit_counterfoil_receipt_no').val(btn.data('receipt_no'));
@@ -307,6 +413,72 @@ document.addEventListener('DOMContentLoaded', function() {
     if ($.fn.DataTable) {
         $('#counterfoilTable').DataTable({ responsive: true, pageLength: 10 });
     }
+
+    // Auto-suggest implementation for Counterfoil Book Type
+    function setupCounterfoilTypeAutocomplete(inputSelector, dropdownSelector, apiUrl) {
+        var timer = null;
+        apiUrl = apiUrl || 'processors/get_counterfoil_types.php';
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function escapeRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        $(inputSelector).on('input focus', function() {
+            var term = $(this).val().trim();
+            var $dropdown = $(dropdownSelector);
+
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    data: { q: term },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.success && res.suggestions && res.suggestions.length > 0) {
+                            var html = '';
+                            res.suggestions.forEach(function(item) {
+                                var highlighted = escapeHtml(item);
+                                if (term.length > 0) {
+                                    var re = new RegExp('(' + escapeRegex(term) + ')', 'gi');
+                                    highlighted = highlighted.replace(re, '<strong class="text-primary">$1</strong>');
+                                }
+                                html += '<a class="dropdown-item py-2 px-3 d-flex align-items-center suggestion-item" href="javascript:void(0)" data-value="' + escapeHtml(item) + '">' +
+                                        '<i class="bi bi-journal-text me-2 text-muted" style="font-size: 13px;"></i>' +
+                                        '<span>' + highlighted + '</span>' +
+                                        '</a>';
+                            });
+                            $dropdown.html(html).show();
+                        } else if (term.length > 0) {
+                            $dropdown.html('<div class="dropdown-header text-muted py-2 px-3 small"><i class="bi bi-pencil me-1"></i>New book type: "' + escapeHtml(term) + '" (will be auto-saved)</div>').show();
+                        } else {
+                            $dropdown.hide();
+                        }
+                    }
+                });
+            }, 180);
+        });
+
+        $(dropdownSelector).on('click', '.suggestion-item', function(e) {
+            e.preventDefault();
+            var val = $(this).data('value');
+            $(inputSelector).val(val);
+            $(dropdownSelector).hide();
+        });
+
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest(inputSelector + ', ' + dropdownSelector).length) {
+                $(dropdownSelector).hide();
+            }
+        });
+    }
+
+    setupCounterfoilTypeAutocomplete('#add_sms_counterfoil_type', '#add_sms_counterfoil_type_suggestions', 'processors/get_counterfoil_types.php');
+    setupCounterfoilTypeAutocomplete('#edit_counterfoil_type', '#edit_counterfoil_type_suggestions', 'processors/get_counterfoil_types.php');
 });
 </script>
 

@@ -25,6 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $receipt_no         = trim(htmlspecialchars($_POST['receipt_no'] ?? ''));
     $specification      = trim(htmlspecialchars($_POST['specification'] ?? ''));
 
+    $book_serial_no     = trim(htmlspecialchars($_POST['book_serial_no'] ?? ''));
+    $page_count         = trim(htmlspecialchars($_POST['page_count'] ?? ''));
+    $issued_to          = trim(htmlspecialchars($_POST['issued_to'] ?? ''));
+    $date_of_issue      = !empty($_POST['date_of_issue']) ? $_POST['date_of_issue'] : null;
+    $date_of_return     = !empty($_POST['date_of_return']) ? $_POST['date_of_return'] : null;
+
     if (!$id || empty($counterfoil_type)) {
         echo json_encode(['success' => false, 'message' => 'Validation error: required fields missing or invalid.']);
         exit();
@@ -90,8 +96,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Persist new counterfoil type into master types catalog for future auto-suggestions
+    if (!empty($counterfoil_type)) {
+        $m_stmt = $mysqli->prepare("INSERT IGNORE INTO master_counterfoil_types (type_name, is_active) VALUES (?, 1)");
+        if ($m_stmt) {
+            $m_stmt->bind_param("s", $counterfoil_type);
+            $m_stmt->execute();
+            $m_stmt->close();
+        }
+    }
+
     $new_data = [
         'counterfoil_type'   => $counterfoil_type,
+        'book_serial_no'     => $book_serial_no,
+        'page_count'         => $page_count,
         'current_condition'  => $current_condition,
         'available_quantity' => $available_quantity,
         'initial_count'      => $initial_count,
@@ -102,7 +120,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'issue_order_no'     => $issue_order_no,
         'received_from'      => $received_from,
         'receipt_no'         => $receipt_no,
-        'specification'      => $specification
+        'specification'      => $specification,
+        'issued_to'          => $issued_to,
+        'date_of_issue'      => $date_of_issue,
+        'date_of_return'     => $date_of_return
     ];
 
     // Staging evaluation
@@ -128,9 +149,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Direct update if pre-authorized
-    $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET counterfoil_type = ?, current_condition = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, purchase_date = ?, remarks = ?, unit = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ? WHERE id = ?");
+    $stmt = $mysqli->prepare("UPDATE counterfoil_assets SET counterfoil_type = ?, book_serial_no = ?, page_count = ?, current_condition = ?, available_quantity = ?, initial_count = ?, received_quantity = ?, purchase_date = ?, remarks = ?, unit = ?, issue_order_no = ?, received_from = ?, receipt_no = ?, specification = ?, issued_to = ?, date_of_issue = ?, date_of_return = ? WHERE id = ?");
     if ($stmt) {
-        $stmt->bind_param("ssiiisssssssi", $counterfoil_type, $current_condition, $available_quantity, $initial_count, $received_quantity, $purchase_date, $remarks, $unit, $issue_order_no, $received_from, $receipt_no, $specification, $id);
+        $stmt->bind_param("ssssiiissssssssssi", $counterfoil_type, $book_serial_no, $page_count, $current_condition, $available_quantity, $initial_count, $received_quantity, $purchase_date, $remarks, $unit, $issue_order_no, $received_from, $receipt_no, $specification, $issued_to, $date_of_issue, $date_of_return, $id);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Counterfoil asset record updated successfully.']);
         } else {

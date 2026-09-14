@@ -28,6 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $receipt_no         = trim(htmlspecialchars($_POST['receipt_no'] ?? ''));
     $specification      = trim(htmlspecialchars($_POST['specification'] ?? ''));
 
+    $book_serial_no     = trim(htmlspecialchars($_POST['book_serial_no'] ?? ''));
+    $page_count         = trim(htmlspecialchars($_POST['page_count'] ?? ''));
+    $issued_to          = trim(htmlspecialchars($_POST['issued_to'] ?? ''));
+    $date_of_issue      = !empty($_POST['date_of_issue']) ? $_POST['date_of_issue'] : null;
+    $date_of_return     = !empty($_POST['date_of_return']) ? $_POST['date_of_return'] : null;
+
     if (!$user_id || empty($counterfoil_type) || $available_quantity < 0) {
         echo json_encode(['success' => false, 'message' => 'Validation error: All key indicators must be specified.']);
         exit();
@@ -43,10 +49,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $available_quantity = max(0, $available_quantity - 1);
     }
 
-    $stmt = $mysqli->prepare("INSERT INTO counterfoil_assets (user_id, district_id, range_id, counterfoil_type, current_condition, available_quantity, initial_count, received_quantity, purchase_date, remarks, unit, issue_order_no, received_from, receipt_no, specification, removal_status, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
+    $stmt = $mysqli->prepare("INSERT INTO counterfoil_assets (user_id, district_id, range_id, counterfoil_type, book_serial_no, page_count, current_condition, available_quantity, initial_count, received_quantity, purchase_date, remarks, unit, issue_order_no, received_from, receipt_no, specification, issued_to, date_of_issue, date_of_return, removal_status, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', 1)");
     if ($stmt) {
-        $stmt->bind_param("iiisssiisssssss", $user_id, $district_id, $range_id, $counterfoil_type, $current_condition, $available_quantity, $initial_count, $received_quantity, $purchase_date, $remarks, $unit, $issue_order_no, $received_from, $receipt_no, $specification);
+        $stmt->bind_param("iiissssiiissssssssss", $user_id, $district_id, $range_id, $counterfoil_type, $book_serial_no, $page_count, $current_condition, $available_quantity, $initial_count, $received_quantity, $purchase_date, $remarks, $unit, $issue_order_no, $received_from, $receipt_no, $specification, $issued_to, $date_of_issue, $date_of_return);
         if ($stmt->execute()) {
+            // Persist new counterfoil type into master types catalog for future auto-suggestions
+            $m_stmt = $mysqli->prepare("INSERT IGNORE INTO master_counterfoil_types (type_name, is_active) VALUES (?, 1)");
+            if ($m_stmt) {
+                $m_stmt->bind_param("s", $counterfoil_type);
+                $m_stmt->execute();
+                $m_stmt->close();
+            }
             echo json_encode(['success' => true, 'message' => 'Counterfoil registration successful.']);
         } else {
             echo json_encode(['success' => false, 'message' => 'SQL Error: ' . $stmt->error]);

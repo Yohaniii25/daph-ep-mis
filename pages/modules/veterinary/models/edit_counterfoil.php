@@ -29,14 +29,24 @@
                                 <i class="bi bi-tag-fill me-1 text-primary"></i> Counterfoil Book Specification
                             </h6>
                             <div class="row g-3">
-                                <div class="col-md-7">
+                                <div class="col-md-7 position-relative">
                                     <label class="form-label small fw-bold text-dark">
                                         Counterfoil Book Type <span class="text-danger">*</span>
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-journal-bookmark"></i></span>
-                                        <input type="text" name="counterfoil_type" id="edit_counterfoil_type" class="form-control border-start-0" placeholder="e.g. General Receipt Book, Permit Counterfoil" required>
+                                        <input type="text" 
+                                               name="counterfoil_type" 
+                                               id="edit_counterfoil_type" 
+                                               class="form-control border-start-0" 
+                                               placeholder="Type or select type (e.g. AI Register, Cash Receipt Book)..." 
+                                               autocomplete="off" 
+                                               required>
                                     </div>
+                                    <div id="edit_counterfoil_type_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
+                                    <small class="text-muted" style="font-size: 11px;">
+                                        <i class="bi bi-magic me-1 text-primary"></i>Auto-suggests from saved &amp; baseline book categories. Custom types allowed.
+                                    </small>
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label small fw-bold text-dark">
@@ -46,6 +56,19 @@
                                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-calendar-event"></i></span>
                                         <input type="date" name="purchase_date" id="edit_counterfoil_purchase_date" class="form-control border-start-0" required>
                                     </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">
+                                        Book / Serial No. Range (e.g. 1-5)
+                                    </label>
+                                    <input type="text" name="book_serial_no" id="edit_counterfoil_book_serial_no" class="form-control font-monospace" placeholder="e.g. 1-5">
+                                    <small class="text-muted" style="font-size: 10px;">Number of book - serial numbers (e.g. 1-5)</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">
+                                        Page Counts (Leaves / Pages per Book)
+                                    </label>
+                                    <input type="text" name="page_count" id="edit_counterfoil_page_count" class="form-control" placeholder="e.g. 50 Pages / 100 Folios">
                                 </div>
                             </div>
                         </div>
@@ -180,7 +203,30 @@
                         </div>
                     </div>
 
-                    <!-- SECTION 5: Remarks / Serial Numbers -->
+                    <!-- SECTION 5: Custody & Issue Tracking -->
+                    <div class="card border-0 shadow-sm rounded-3 mb-3">
+                        <div class="card-body p-3">
+                            <h6 class="text-uppercase fw-bold text-muted small mb-3" style="letter-spacing: 0.5px;">
+                                <i class="bi bi-person-check-fill me-1 text-primary"></i> Custody / Issue &amp; Return Tracking
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">To Whom Issued</label>
+                                    <input type="text" name="issued_to" id="edit_counterfoil_issued_to" class="form-control" placeholder="e.g. Dr. K. Perera / Range Veterinary Officer">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-dark">Date of Issue</label>
+                                    <input type="date" name="date_of_issue" id="edit_counterfoil_date_of_issue" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-dark">Date of Return</label>
+                                    <input type="date" name="date_of_return" id="edit_counterfoil_date_of_return" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 6: Remarks / Serial Numbers -->
                     <div class="card border-0 shadow-sm rounded-3">
                         <div class="card-body p-3">
                             <label class="form-label small fw-bold text-dark mb-1">

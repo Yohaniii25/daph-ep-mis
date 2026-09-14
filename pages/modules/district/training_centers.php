@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // pages/modules/district/training_centers.php -> Master Training Centers Summary Dashboard for District Deputy Directors & Leadership
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -866,10 +866,13 @@ $active_record_count = count($report_records);
                                 <tr>
                                     <th>Counter Foil / Book Category</th>
                                     <th>Training Center</th>
+                                    <th>Book / Serial Range</th>
                                     <th class="text-center">Available Books</th>
+                                    <th>To Whom Issued</th>
+                                    <th>Issue / Return Date</th>
                                     <th>Date Received / Opened</th>
                                     <th class="text-center">Current Status</th>
-                                    <th>Serial Range / Remarks</th>
+                                    <th>Remarks</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -879,10 +882,23 @@ $active_record_count = count($report_records);
                                             <i class="bi bi-book-half me-1"></i><?= htmlspecialchars($cf['counterfoil_type']) ?>
                                         </td>
                                         <td><?= htmlspecialchars($cf['center_name'] ?? 'Training Center') ?></td>
+                                        <td>
+                                            <span class="font-monospace fw-bold text-dark"><?= !empty($cf['book_serial_no']) ? htmlspecialchars($cf['book_serial_no']) : '-' ?></span>
+                                            <?php if(!empty($cf['page_count'])): ?>
+                                                <br><small class="text-muted"><i class="bi bi-file-earmark-break me-1"></i><?= htmlspecialchars($cf['page_count']) ?></small>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="text-center font-monospace fw-bold">
                                             <span class="badge bg-light text-dark border">
                                                 <?= intval($cf['available_quantity']) ?> Books
                                             </span>
+                                        </td>
+                                        <td><small class="fw-semibold text-dark"><?= !empty($cf['issued_to']) ? htmlspecialchars($cf['issued_to']) : '-' ?></small></td>
+                                        <td>
+                                            <small class="text-muted">
+                                                Issued: <span class="text-dark fw-medium"><?= !empty($cf['date_of_issue']) ? htmlspecialchars($cf['date_of_issue']) : '-' ?></span><br>
+                                                Return: <span class="text-dark fw-medium"><?= !empty($cf['date_of_return']) ? htmlspecialchars($cf['date_of_return']) : '-' ?></span>
+                                            </small>
                                         </td>
                                         <td><?= !empty($cf['purchase_date']) ? date('d M Y', strtotime($cf['purchase_date'])) : '-' ?></td>
                                         <td class="text-center">
