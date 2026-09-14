@@ -465,16 +465,21 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
                             <i class="bi bi-building me-2"></i> Office Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_details.php') ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['range_summary.php', 'range_details.php']) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
                             <i class="bi bi-geo-alt me-2"></i> Range Details
+                        </a>
+                        <!-- Range range_summary.php, range_details.php -->
+                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'training/ahfbc') !== false || in_array($current_file, ['training_register.php', 'training_utilization.php'])) ? 'active' : '' ?>"
+                              href="<?= $base_path ?>pages/modules/veterinary/range_summary.php">
+                            <i class="bi bi-geo-alt me-2"></i> Range Summary
                         </a>
 
                     <?php endif; ?>
                     <!-- employee sidebar -->
                     <?php if ($is_employee): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'range_details.php') ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['range_summary.php', 'range_details.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/range_summary.php">
                             <i class="bi bi-grid-3x3-gap me-2"></i> Range Details
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3"
