@@ -70,6 +70,9 @@ document.addEventListener("DOMContentLoaded", function () {
             ethnicities: JSON.stringify(targetEthnicities),
             _t: Date.now()
         });
+        if (typeof CURRENT_RANGE_ID !== 'undefined' && CURRENT_RANGE_ID) {
+            urlParams.set('range_id', CURRENT_RANGE_ID);
+        }
 
         fetch(`get_population_data.php?${urlParams.toString()}`)
             .then(response => response.json())
@@ -277,8 +280,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const urlParams = new URLSearchParams({
             year: targetYear,
-            animals: JSON.stringify(targetAnimals)
+            animals: JSON.stringify(targetAnimals),
+            _t: Date.now()
         });
+        if (typeof CURRENT_RANGE_ID !== 'undefined' && CURRENT_RANGE_ID) {
+            urlParams.set('range_id', CURRENT_RANGE_ID);
+        }
 
         fetch(`get_animal_population_data.php?${urlParams.toString()}`)
             .then(response => response.json())
@@ -387,6 +394,7 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(error => console.error('Error fetching animal dashboard profiles:', error));
     }
+    window.fetchFilteredAnimalPopulationData = fetchFilteredAnimalPopulationData;
 
     const filterYearAnimalEl = document.getElementById('filterYearAnimal');
     if (filterYearAnimalEl) {

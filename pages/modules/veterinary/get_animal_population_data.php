@@ -1,13 +1,28 @@
 <?php
-session_start();
-require_once '../../../config/db_connect.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../config/db_connect.php';
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+$allowed_roles = [
+    'veterinary_surgeon',
+    'district_dd',
+    'deputy_director_district',
+    'administrator',
+    'provincial_director',
+    'deputy_director_hq_1',
+    'deputy_director_hq_2',
+    'admin'
+];
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     echo json_encode(['error' => 'Unauthorized']);
     exit();
 }
 
-$range_id = $_SESSION['range_id'] ?? null;
+$range_id = isset($_GET['range_id']) && intval($_GET['range_id']) > 0 
+    ? intval($_GET['range_id']) 
+    : intval($_SESSION['range_id'] ?? 0);
 $year = isset($_GET['year']) ? intval($_GET['year']) : 2025;
 $pop_type = isset($_GET['pop_type']) ? $_GET['pop_type'] : 'Total Population';
 
@@ -16,7 +31,7 @@ if (!is_array($animals) || empty($animals)) {
     $animals = ['Cow', 'Buffalo', 'Goat', 'Chicken', 'Pig', 'Others'];
 }
 
-if (empty($range_id)) {
+if ($range_id <= 0) {
     echo json_encode([]);
     exit();
 }

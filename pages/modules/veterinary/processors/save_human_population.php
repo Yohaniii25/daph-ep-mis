@@ -6,13 +6,27 @@ require_once __DIR__ . '/../../../../config/db_connect.php';
 
 header('Content-Type: application/json');
 
+$allowed_roles = [
+    'veterinary_surgeon',
+    'district_dd',
+    'deputy_director_district',
+    'administrator',
+    'provincial_director',
+    'deputy_director_hq_1',
+    'deputy_director_hq_2',
+    'admin'
+];
+
 // Check authentication and role
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
     exit();
 }
 
-$range_id = intval($_SESSION['range_id'] ?? 0);
+$range_id = isset($_REQUEST['range_id']) && intval($_REQUEST['range_id']) > 0 
+    ? intval($_REQUEST['range_id']) 
+    : intval($_SESSION['range_id'] ?? 0);
+
 if ($range_id <= 0) {
     echo json_encode(['success' => false, 'message' => 'Your account is not assigned to any Veterinary Range.']);
     exit();

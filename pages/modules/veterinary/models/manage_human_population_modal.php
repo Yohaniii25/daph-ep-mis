@@ -32,6 +32,7 @@
 
                         <form id="manageHumanPopForm" novalidate>
                             <input type="hidden" name="action" value="save">
+                            <input type="hidden" name="range_id" id="managePopRangeId" value="<?= htmlspecialchars($range_id ?? '') ?>">
 
                             <div class="p-3 mb-3 rounded" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
                                 <div class="row g-3">
