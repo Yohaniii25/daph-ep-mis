@@ -1,8 +1,11 @@
 <?php
 session_start();
 require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/processors/db_migration.php';
+ensure_vehicle_repairs_schema($mysqli);
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'district_dd', 'provincial_director', 'administrator'];
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $allowed_roles)) {
     header("Location: ../../../../index.php");
     exit();
 }
@@ -39,9 +42,16 @@ if (!preg_match('/^\d{4}-\d{2}$/', $selected_month)) {
 $selected_vehicle_id = filter_input(INPUT_GET, 'vehicle_id', FILTER_VALIDATE_INT) ?: 0;
 $active_tab = filter_input(INPUT_GET, 'tab', FILTER_DEFAULT) ?: 'fleet';
 
-// 1. Fetch Registered Vehicles for this Range
-$fleet_stmt = $mysqli->prepare("SELECT * FROM registered_vehicles WHERE district_id = ? AND range_id = ? AND is_active = 1 ORDER BY id DESC");
-$fleet_stmt->bind_param("ii", $district_id, $range_id);
+// 1. Fetch Registered Vehicles for this Range / District
+if (!empty($range_id)) {
+    $fleet_stmt = $mysqli->prepare("SELECT * FROM registered_vehicles WHERE district_id = ? AND range_id = ? AND is_active = 1 ORDER BY id DESC");
+    $fleet_stmt->bind_param("ii", $district_id, $range_id);
+} elseif (!empty($district_id)) {
+    $fleet_stmt = $mysqli->prepare("SELECT * FROM registered_vehicles WHERE district_id = ? AND is_active = 1 ORDER BY id DESC");
+    $fleet_stmt->bind_param("i", $district_id);
+} else {
+    $fleet_stmt = $mysqli->prepare("SELECT * FROM registered_vehicles WHERE is_active = 1 ORDER BY id DESC");
+}
 $fleet_stmt->execute();
 $fleet_res = $fleet_stmt->get_result();
 $vehicles_cache = [];
@@ -58,19 +68,35 @@ while ($row = $fleet_res->fetch_assoc()) {
 $fleet_stmt->close();
 
 // 2. Fetch Running Chart Trips for selected month
+$rc_where = "rc.is_active = 1 AND DATE_FORMAT(rc.trip_date, '%Y-%m') = ?";
+$rc_types = "s";
+$rc_params = [$selected_month];
+
+if (!empty($range_id)) {
+    $rc_where .= " AND rv.range_id = ?";
+    $rc_types .= "i";
+    $rc_params[] = $range_id;
+} elseif (!empty($district_id)) {
+    $rc_where .= " AND rv.district_id = ?";
+    $rc_types .= "i";
+    $rc_params[] = $district_id;
+}
+
+if ($selected_vehicle_id > 0) {
+    $rc_where .= " AND rc.vehicle_id = ?";
+    $rc_types .= "i";
+    $rc_params[] = $selected_vehicle_id;
+}
+
 $rc_sql = "
     SELECT rc.*, rv.vehicle_number, rv.vehicle_type 
     FROM vehicle_running_charts rc
     JOIN registered_vehicles rv ON rc.vehicle_id = rv.id
-    WHERE rv.district_id = ? AND rv.range_id = ? AND rc.is_active = 1
-      AND DATE_FORMAT(rc.trip_date, '%Y-%m') = ?
+    WHERE {$rc_where}
+    ORDER BY rc.trip_date DESC, rc.id DESC
 ";
-if ($selected_vehicle_id > 0) {
-    $rc_sql .= " AND rc.vehicle_id = " . intval($selected_vehicle_id);
-}
-$rc_sql .= " ORDER BY rc.trip_date DESC, rc.id DESC";
 $rc_stmt = $mysqli->prepare($rc_sql);
-$rc_stmt->bind_param("iis", $district_id, $range_id, $selected_month);
+$rc_stmt->bind_param($rc_types, ...$rc_params);
 $rc_stmt->execute();
 $rc_res = $rc_stmt->get_result();
 $running_charts_cache = [];
@@ -91,19 +117,36 @@ $rc_stmt->close();
 $avg_mpg_month = ($total_fuel_consumed_month > 0) ? ($total_mileage_month / $total_fuel_consumed_month) : 0.0;
 
 // 3. Fetch Vehicle Repairs for selected month
+$rep_where = "vr.is_active = 1 AND DATE_FORMAT(vr.repair_date, '%Y-%m') = ?";
+$rep_types = "s";
+$rep_params = [$selected_month];
+
+if (!empty($range_id)) {
+    $rep_where .= " AND rv.range_id = ?";
+    $rep_types .= "i";
+    $rep_params[] = $range_id;
+} elseif (!empty($district_id)) {
+    $rep_where .= " AND rv.district_id = ?";
+    $rep_types .= "i";
+    $rep_params[] = $district_id;
+}
+
+if ($selected_vehicle_id > 0) {
+    $rep_where .= " AND vr.vehicle_id = ?";
+    $rep_types .= "i";
+    $rep_params[] = $selected_vehicle_id;
+}
+
 $rep_sql = "
-    SELECT vr.*, rv.vehicle_number, rv.vehicle_type 
+    SELECT vr.*, rv.vehicle_number, rv.vehicle_type, u_app.full_name AS approver_name
     FROM vehicle_repairs vr
     JOIN registered_vehicles rv ON vr.vehicle_id = rv.id
-    WHERE rv.district_id = ? AND rv.range_id = ? AND vr.is_active = 1
-      AND DATE_FORMAT(vr.repair_date, '%Y-%m') = ?
+    LEFT JOIN users u_app ON vr.approved_by = u_app.id
+    WHERE {$rep_where}
+    ORDER BY vr.repair_date DESC, vr.id DESC
 ";
-if ($selected_vehicle_id > 0) {
-    $rep_sql .= " AND vr.vehicle_id = " . intval($selected_vehicle_id);
-}
-$rep_sql .= " ORDER BY vr.repair_date DESC, vr.id DESC";
 $rep_stmt = $mysqli->prepare($rep_sql);
-$rep_stmt->bind_param("iis", $district_id, $range_id, $selected_month);
+$rep_stmt->bind_param($rep_types, ...$rep_params);
 $rep_stmt->execute();
 $rep_res = $rep_stmt->get_result();
 $repairs_cache = [];
@@ -112,7 +155,8 @@ $total_repairs_cost = 0.0;
 while ($rep = $rep_res->fetch_assoc()) {
     $repairs_cache[] = $rep;
     $total_repairs_count++;
-    $total_repairs_cost += floatval($rep['amount']);
+    $cost_val = floatval($rep['transaction_amount'] > 0 ? $rep['transaction_amount'] : $rep['amount']);
+    $total_repairs_cost += $cost_val;
 }
 $rep_stmt->close();
 
@@ -509,11 +553,16 @@ require_once '../../../includes/header.php';
                                     <th>Description of Repair</th>
                                     <th>Place of Repair</th>
                                     <th class="text-end">Amount (LKR)</th>
+                                    <th class="text-center">Approval Status</th>
+                                    <th class="text-center">Receipt</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($repairs_cache as $row): ?>
+                                <?php foreach ($repairs_cache as $row): 
+                                    $cost_display = floatval($row['transaction_amount'] > 0 ? $row['transaction_amount'] : $row['amount']);
+                                    $status = $row['approval_status'] ?? 'Approved';
+                                ?>
                                 <tr id="repair-row-<?= $row['id'] ?>">
                                     <td class="fw-semibold text-secondary font-monospace"><?= htmlspecialchars($row['repair_date']) ?></td>
                                     <td>
@@ -522,7 +571,29 @@ require_once '../../../includes/header.php';
                                     <td class="fw-bold text-dark"><?= htmlspecialchars($row['repair_done']) ?></td>
                                     <td><small class="text-muted"><?= htmlspecialchars($row['repair_description']) ?></small></td>
                                     <td><span class="small"><?= htmlspecialchars($row['place_of_repair']) ?></span></td>
-                                    <td class="text-end fw-bold text-dark font-monospace"><?= number_format($row['amount'], 2) ?></td>
+                                    <td class="text-end fw-bold text-dark font-monospace"><?= number_format($cost_display, 2) ?></td>
+                                    <td class="text-center">
+                                        <?php if ($status === 'Approved'): ?>
+                                            <span class="badge bg-success text-white px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Approved</span>
+                                        <?php elseif ($status === 'Pending District Approval'): ?>
+                                            <span class="badge bg-warning text-dark px-2 py-1" title="Awaiting District DD Review"><i class="bi bi-clock-history me-1"></i>District DD</span>
+                                        <?php elseif ($status === 'Pending Provincial Approval'): ?>
+                                            <span class="badge bg-info text-dark px-2 py-1" title="Awaiting Provincial Director Review"><i class="bi bi-shield-exclamation me-1"></i>Prov. Director</span>
+                                        <?php elseif ($status === 'Rejected'): ?>
+                                            <span class="badge bg-danger text-white px-2 py-1" title="<?= !empty($row['rejection_reason']) ? 'Reason: ' . htmlspecialchars($row['rejection_reason']) : 'Rejected' ?>"><i class="bi bi-x-circle-fill me-1"></i>Rejected</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-secondary"><?= htmlspecialchars($status) ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <?php if (!empty($row['receipt_file'])): ?>
+                                            <a href="/daph-ep-mis/<?= htmlspecialchars($row['receipt_file']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary px-2 py-1" title="View Digital Receipt">
+                                                <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-muted small">-</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="text-center">
                                         <div class="btn-group">
                                             <button class="btn btn-sm btn-outline-info me-1" title="View Log" onclick='viewRepair(<?= json_encode($row) ?>)'>
@@ -531,6 +602,14 @@ require_once '../../../includes/header.php';
                                             <button class="btn btn-sm btn-outline-primary me-1" title="Edit Log" onclick='editRepair(<?= json_encode($row) ?>)'>
                                                 <i class="bi bi-pencil"></i>
                                             </button>
+                                            <?php if (in_array($_SESSION['role'], ['provincial_director', 'district_dd', 'administrator']) && strpos($status, 'Pending') !== false): ?>
+                                            <button class="btn btn-sm btn-outline-success me-1" title="Quick Approve" onclick="quickApproveRepair(<?= $row['id'] ?>)">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger me-1" title="Quick Reject" onclick="quickRejectRepair(<?= $row['id'] ?>)">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                            <?php endif; ?>
                                             <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="handleRepairDelete(<?= $row['id'] ?>)">
                                                 <i class="bi bi-trash"></i>
                                             </button>
@@ -802,6 +881,99 @@ require_once '../../../includes/header.php';
             recalculateRunningChart('edit_rc_');
         });
 
+        // Dynamic Fuel & Mileage Tracking: Auto-fetch previous status on Vehicle selection (Add Modal)
+        $('#rc_vehicle_id').on('change', function() {
+            var vId = $(this).val();
+            if (!vId) return;
+            $.ajax({
+                url: 'processors/get_vehicle_latest_status.php',
+                type: 'GET',
+                data: { vehicle_id: vId },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        var prevFuel = parseFloat(res.latest_fuel_balance) || 0;
+                        var prevMilo = parseFloat(res.latest_milometer) || 0;
+
+                        $('#rc_prev_fuel_balance').val(prevFuel.toFixed(2));
+                        $('#rc_prev_fuel_val').text(prevFuel.toFixed(2));
+                        $('#rc_prev_milo_val').text(prevMilo.toFixed(1));
+
+                        // Suggest previous ending milometer as default starting milometer if empty
+                        if (!$('#rc_milometer_out').val() || parseFloat($('#rc_milometer_out').val()) === 0) {
+                            $('#rc_milometer_out').val(prevMilo.toFixed(1));
+                        }
+
+                        recalculateRunningChart('rc_');
+                    }
+                }
+            });
+        });
+
+        // Dynamic Fuel & Mileage Tracking: Auto-fetch previous status on Vehicle selection (Edit Modal)
+        $('#edit_rc_vehicle_id').on('change', function() {
+            var vId = $(this).val();
+            var currId = $('#edit_rc_id').val();
+            if (!vId) return;
+            $.ajax({
+                url: 'processors/get_vehicle_latest_status.php',
+                type: 'GET',
+                data: { vehicle_id: vId, current_id: currId },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        var prevFuel = parseFloat(res.latest_fuel_balance) || 0;
+                        var prevMilo = parseFloat(res.latest_milometer) || 0;
+
+                        $('#edit_rc_prev_fuel_balance').val(prevFuel.toFixed(2));
+                        $('#edit_rc_prev_fuel_val').text(prevFuel.toFixed(2));
+                        $('#edit_rc_prev_milo_val').text(prevMilo.toFixed(1));
+
+                        recalculateRunningChart('edit_rc_');
+                    }
+                }
+            });
+        });
+
+        // Live Conditional Approval Routing Badges
+        function updateAddRepairRouting() {
+            var amt = parseFloat($('#add_repair_amount').val()) || 0;
+            $('#add_repair_transaction_amount').val(amt.toFixed(2));
+            if (amt <= 0) {
+                $('#add_repair_routing_badge').removeClass('alert-warning alert-primary').addClass('alert-light');
+                $('#add_routing_pill').attr('class', 'badge bg-secondary rounded-pill px-3 py-2').text('Pending Cost');
+                $('#add_routing_desc').html('Costs &le; LKR 50,000 route to <strong>District Deputy Director</strong>. Costs &gt; LKR 50,000 route to <strong>Provincial Director</strong>.');
+            } else if (amt <= 50000.00) {
+                $('#add_repair_routing_badge').removeClass('alert-light alert-primary').addClass('alert-warning');
+                $('#add_routing_pill').attr('class', 'badge bg-warning text-dark rounded-pill px-3 py-2').text('Tier 1: District DD');
+                $('#add_routing_desc').html('<strong class="text-dark">Conditional Routing: District Deputy Director</strong> (&le; LKR 50,000.00). An automated approval notification will be dispatched.');
+            } else {
+                $('#add_repair_routing_badge').removeClass('alert-light alert-warning').addClass('alert-primary');
+                $('#add_routing_pill').attr('class', 'badge bg-primary text-white rounded-pill px-3 py-2').text('Tier 2: Provincial Dir');
+                $('#add_routing_desc').html('<strong class="text-primary">Conditional Routing: Provincial Director</strong> (&gt; LKR 50,000.00). High-value maintenance approval notification will be dispatched.');
+            }
+        }
+        $('#add_repair_amount').on('input change', updateAddRepairRouting);
+
+        function updateEditRepairRouting() {
+            var amt = parseFloat($('#edit_repair_amount').val()) || 0;
+            $('#edit_repair_transaction_amount').val(amt.toFixed(2));
+            if (amt <= 0) {
+                $('#edit_repair_routing_badge').removeClass('alert-warning alert-primary').addClass('alert-light');
+                $('#edit_routing_pill').attr('class', 'badge bg-secondary rounded-pill px-3 py-2').text('-');
+                $('#edit_routing_desc').html('Costs &le; LKR 50,000 route to <strong>District Deputy Director</strong>. Costs &gt; LKR 50,000 route to <strong>Provincial Director</strong>.');
+            } else if (amt <= 50000.00) {
+                $('#edit_repair_routing_badge').removeClass('alert-light alert-primary').addClass('alert-warning');
+                $('#edit_routing_pill').attr('class', 'badge bg-warning text-dark rounded-pill px-3 py-2').text('Tier 1: District DD');
+                $('#edit_routing_desc').html('<strong class="text-dark">Conditional Routing: District Deputy Director</strong> (&le; LKR 50,000.00).');
+            } else {
+                $('#edit_repair_routing_badge').removeClass('alert-light alert-warning').addClass('alert-primary');
+                $('#edit_routing_pill').attr('class', 'badge bg-primary text-white rounded-pill px-3 py-2').text('Tier 2: Provincial Dir');
+                $('#edit_routing_desc').html('<strong class="text-primary">Conditional Routing: Provincial Director</strong> (&gt; LKR 50,000.00).');
+            }
+        }
+        $('#edit_repair_amount').on('input change', updateEditRepairRouting);
+
         // Submit Add Vehicle Form
         $('#addVehicleForm').on('submit', function(e) {
             e.preventDefault();
@@ -887,58 +1059,86 @@ require_once '../../../includes/header.php';
             });
         });
 
-        // Submit Add Repair Form
+        // Submit Add Repair Form with Receipt Upload (FormData)
         $('#addRepairForm').on('submit', function(e) {
             e.preventDefault();
+            var formData = new FormData(this);
             $.ajax({
                 url: 'processors/save_vehicle_repair.php',
                 type: 'POST',
-                data: $(this).serialize(),
+                data: formData,
+                contentType: false,
+                processData: false,
                 dataType: 'json',
                 success: function(res) {
                     if (res.success) {
-                        Swal.fire('Logged!', res.message, 'success').then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Repair Logged!',
+                            text: res.message + (res.approval_status ? ' (' + res.approval_status + ')' : ''),
+                            confirmButtonColor: '#b08723'
+                        }).then(() => {
                             window.location.href = 'vehicles.php?tab=repairs&month=' + encodeURIComponent($('#filterMonth').val());
                         });
                     } else { 
                         Swal.fire('Error', res.message, 'error'); 
                     }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Server connection failure during repair submission.', 'error');
                 }
             });
         });
 
-        // Submit Edit Repair Form
+        // Submit Edit Repair Form with Receipt Upload (FormData)
         $('#editRepairForm').on('submit', function(e) {
             e.preventDefault();
+            var formData = new FormData(this);
             $.ajax({
                 url: 'processors/update_vehicle_repair.php',
                 type: 'POST',
-                data: $(this).serialize(),
+                data: formData,
+                contentType: false,
+                processData: false,
                 dataType: 'json',
                 success: function(res) {
                     if (res.success) {
-                        Swal.fire('Updated!', res.message, 'success').then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Updated!',
+                            text: res.message,
+                            confirmButtonColor: '#b08723'
+                        }).then(() => {
                             window.location.href = 'vehicles.php?tab=repairs&month=' + encodeURIComponent($('#filterMonth').val());
                         });
                     } else { 
                         Swal.fire('Error', res.message, 'error'); 
                     }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Server connection failure during repair update.', 'error');
                 }
             });
         });
     });
 
-    // Real-time calculation helper
+    // Real-time calculation helper with automated mileage and fuel tracking
     function recalculateRunningChart(prefix) {
         var mOut = parseFloat($('#' + prefix + 'milometer_out').val()) || 0;
         var mIn = parseFloat($('#' + prefix + 'milometer_in').val()) || 0;
         var totalMileage = Math.max(0, mIn - mOut);
         $('#' + prefix + 'total_mileage').val(totalMileage.toFixed(1));
 
-        var tank = parseFloat($('#' + prefix + 'fuel_position_in_tank').val()) || 0;
+        var prevFuel = parseFloat($('#' + prefix + 'prev_fuel_balance').val()) || 0;
         var drawn = parseFloat($('#' + prefix + 'fuel_drawn').val()) || 0;
         var consumed = parseFloat($('#' + prefix + 'fuel_consumed').val()) || 0;
-        var balance = Math.max(0, (tank + drawn) - consumed);
+
+        // Current "Fuel Position in Tank" = Previous Ending Balance + newly drawn fuel
+        var tankPosition = Math.max(0, prevFuel + drawn);
+        $('#' + prefix + 'fuel_position_in_tank').val(tankPosition.toFixed(2));
+
+        // Tank Ending Balance = Position in Tank - Consumed
+        var balance = Math.max(0, tankPosition - consumed);
         $('#' + prefix + 'fuel_balance').val(balance.toFixed(2));
 
         var mpg = consumed > 0 ? (totalMileage / consumed) : 0;
@@ -1152,6 +1352,28 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_rc_fuel_balance').value = data.fuel_balance || '';
         document.getElementById('edit_rc_engine_oil_drawn').value = data.engine_oil_drawn || '';
         document.getElementById('edit_rc_remarks').value = data.remarks || '';
+        
+        // Fetch previous status for accurate editing
+        var vId = data.vehicle_id;
+        var currId = data.id;
+        if (vId) {
+            $.ajax({
+                url: 'processors/get_vehicle_latest_status.php',
+                type: 'GET',
+                data: { vehicle_id: vId, current_id: currId },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        var prevFuel = parseFloat(res.latest_fuel_balance) || 0;
+                        var prevMilo = parseFloat(res.latest_milometer) || 0;
+                        $('#edit_rc_prev_fuel_balance').val(prevFuel.toFixed(2));
+                        $('#edit_rc_prev_fuel_val').text(prevFuel.toFixed(2));
+                        $('#edit_rc_prev_milo_val').text(prevMilo.toFixed(1));
+                    }
+                }
+            });
+        }
+
         var modal = new bootstrap.Modal(document.getElementById('editRunningChartModal'));
         modal.show();
     }
@@ -1187,12 +1409,70 @@ require_once '../../../includes/header.php';
 
     // Repair Modal Handlers
     function viewRepair(data) {
+        document.getElementById('view_repair_id').value = data.id || '';
         document.getElementById('view_repair_vehicle_number').textContent = data.vehicle_number || '-';
         document.getElementById('view_repair_date').textContent = data.repair_date || '-';
         document.getElementById('view_repair_done').textContent = data.repair_done || '-';
         document.getElementById('view_place_of_repair').textContent = data.place_of_repair || '-';
-        document.getElementById('view_repair_amount').textContent = data.amount ? parseFloat(data.amount).toLocaleString('en-US', {minimumFractionDigits: 2}) : '0.00';
+        document.getElementById('view_repair_invoice_ref').textContent = data.invoice_ref || 'None';
+
+        var cost = parseFloat(data.transaction_amount > 0 ? data.transaction_amount : data.amount) || 0;
+        document.getElementById('view_repair_amount').textContent = cost.toLocaleString('en-US', {minimumFractionDigits: 2});
         document.getElementById('view_repair_description').textContent = data.repair_description || '-';
+
+        // Approval Status Badge
+        var status = data.approval_status || 'Approved';
+        var badgeHtml = '';
+        if (status === 'Approved') {
+            badgeHtml = '<span class="badge bg-success text-white px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Approved</span>';
+        } else if (status === 'Pending District Approval') {
+            badgeHtml = '<span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-clock-history me-1"></i>Pending District DD</span>';
+        } else if (status === 'Pending Provincial Approval') {
+            badgeHtml = '<span class="badge bg-info text-dark px-2 py-1"><i class="bi bi-shield-exclamation me-1"></i>Pending Provincial Director</span>';
+        } else if (status === 'Rejected') {
+            badgeHtml = '<span class="badge bg-danger text-white px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i>Rejected</span>';
+        } else {
+            badgeHtml = '<span class="badge bg-secondary">' + escapeHtml(status) + '</span>';
+        }
+        document.getElementById('view_repair_status_badge').innerHTML = badgeHtml;
+
+        // Authority & Decision info
+        document.getElementById('view_repair_authority').textContent = data.approval_authority || (cost > 50000 ? 'Provincial Director' : 'District Deputy Director');
+        
+        if (status === 'Approved' && data.approved_at) {
+            document.getElementById('view_repair_decision_info').textContent = 'Approved by ' + (data.approver_name || 'Authority') + ' on ' + data.approved_at;
+        } else if (status === 'Rejected' && data.approved_at) {
+            document.getElementById('view_repair_decision_info').textContent = 'Rejected on ' + data.approved_at;
+        } else {
+            document.getElementById('view_repair_decision_info').textContent = 'Awaiting Review';
+        }
+
+        // Rejection reason
+        if (status === 'Rejected' && data.rejection_reason) {
+            $('#view_repair_rejection_container').removeClass('d-none');
+            document.getElementById('view_repair_rejection_reason').textContent = data.rejection_reason;
+        } else {
+            $('#view_repair_rejection_container').addClass('d-none');
+        }
+
+        // Receipt preview/download
+        if (data.receipt_file) {
+            $('#view_repair_receipt_container').html(
+                '<a href="/daph-ep-mis/' + escapeHtml(data.receipt_file) + '" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm">' +
+                '<i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>Open Attached Receipt Document</a>'
+            );
+        } else {
+            $('#view_repair_receipt_container').html('<span class="text-muted fst-italic small"><i class="bi bi-info-circle me-1"></i>No digital receipt file attached to this record.</span>');
+        }
+
+        // Approval action buttons in view modal
+        var canApprove = <?php echo json_encode(in_array($_SESSION['role'], ['provincial_director', 'district_dd', 'administrator'])); ?>;
+        if (canApprove && status.indexOf('Pending') !== -1) {
+            $('#view_repair_approval_actions').removeClass('d-none');
+        } else {
+            $('#view_repair_approval_actions').addClass('d-none');
+        }
+
         var modal = new bootstrap.Modal(document.getElementById('viewRepairModal'));
         modal.show();
     }
@@ -1203,10 +1483,142 @@ require_once '../../../includes/header.php';
         document.getElementById('edit_repair_date').value = data.repair_date || '';
         document.getElementById('edit_repair_done').value = data.repair_done || '';
         document.getElementById('edit_place_of_repair').value = data.place_of_repair || '';
-        document.getElementById('edit_repair_amount').value = data.amount || '';
+        if (document.getElementById('edit_invoice_ref')) {
+            document.getElementById('edit_invoice_ref').value = data.invoice_ref || '';
+        }
+        var cost = data.transaction_amount > 0 ? data.transaction_amount : data.amount;
+        document.getElementById('edit_repair_amount').value = cost || '';
+        if (document.getElementById('edit_repair_transaction_amount')) {
+            document.getElementById('edit_repair_transaction_amount').value = cost || '';
+        }
         document.getElementById('edit_repair_description').value = data.repair_description || '';
+
+        // Current receipt preview indicator
+        if (data.receipt_file) {
+            $('#edit_receipt_preview_container').html(
+                '<span class="badge bg-light text-dark border me-2"><i class="bi bi-paperclip me-1"></i>Attached:</span> ' +
+                '<a href="/daph-ep-mis/' + escapeHtml(data.receipt_file) + '" target="_blank" class="text-decoration-none small text-primary fw-semibold">' +
+                '<i class="bi bi-file-earmark-pdf text-danger me-1"></i>View Current Document</a>'
+            );
+        } else {
+            $('#edit_receipt_preview_container').html('<span class="text-muted small">No receipt currently attached.</span>');
+        }
+
+        updateEditRepairRouting();
         var modal = new bootstrap.Modal(document.getElementById('editRepairModal'));
         modal.show();
+    }
+
+    // Approval Workflow Handlers
+    function handleRepairAction(action) {
+        var repairId = $('#view_repair_id').val();
+        if (!repairId) return;
+
+        if (action === 'approve') {
+            Swal.fire({
+                title: 'Approve Repair Request?',
+                text: 'Are you sure you want to approve this vehicle maintenance expenditure?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Approve'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitApprovalDecision(repairId, 'approve', '');
+                }
+            });
+        } else if (action === 'reject') {
+            Swal.fire({
+                title: 'Reject Repair Request',
+                text: 'Please specify the rejection justification reason:',
+                input: 'textarea',
+                inputPlaceholder: 'Type reason for rejection...',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Confirm Rejection',
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'You must enter a reason for rejection!';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    submitApprovalDecision(repairId, 'reject', result.value.trim());
+                }
+            });
+        }
+    }
+
+    function quickApproveRepair(id) {
+        Swal.fire({
+            title: 'Approve Repair Request?',
+            text: 'Confirm approval of this maintenance expenditure record.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Approve'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                submitApprovalDecision(id, 'approve', '');
+            }
+        });
+    }
+
+    function quickRejectRepair(id) {
+        Swal.fire({
+            title: 'Reject Repair Request',
+            text: 'Please specify reason for rejection:',
+            input: 'textarea',
+            inputPlaceholder: 'Enter rejection notes...',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Confirm Rejection',
+            inputValidator: (value) => {
+                if (!value || !value.trim()) {
+                    return 'Rejection reason is mandatory!';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                submitApprovalDecision(id, 'reject', result.value.trim());
+            }
+        });
+    }
+
+    function submitApprovalDecision(repairId, action, reason) {
+        $.ajax({
+            url: 'processors/approve_vehicle_repair.php',
+            type: 'POST',
+            data: {
+                repair_id: repairId,
+                action: action,
+                rejection_reason: reason
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Decision Recorded!',
+                        text: res.message,
+                        confirmButtonColor: '#b08723'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Action Failed', res.message, 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'Failed to communicate with server.', 'error');
+            }
+        });
     }
 
     function handleRepairDelete(id) {

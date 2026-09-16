@@ -101,14 +101,14 @@
                             <div class="card border-0 shadow-sm rounded-3 h-100">
                                 <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
                                     <span class="fw-bold text-dark small text-uppercase"><i class="bi bi-speedometer text-success me-2"></i>3. Mileage Tracking</span>
-                                    <span class="badge bg-light text-secondary border font-monospace">Milometer (Miles / Km)</span>
+                                    <span class="badge bg-light text-secondary border font-monospace" id="rc_prev_milo_badge"><i class="bi bi-clock-history me-1"></i>Last In: <span id="rc_prev_milo_val">0.0</span></span>
                                 </div>
                                 <div class="card-body p-3">
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Milometer Reading - Out <span class="text-danger">*</span></label>
                                             <input type="number" step="0.1" name="milometer_out" id="rc_milometer_out" class="form-control font-monospace rc-calc-trigger" placeholder="0.0" min="0" required>
-                                            <small class="text-muted" style="font-size: 11px;">Odometer reading at trip departure.</small>
+                                            <small class="text-muted" style="font-size: 11px;">Odometer reading at departure.</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Milometer Reading - In <span class="text-danger">*</span></label>
@@ -116,12 +116,12 @@
                                             <small class="text-muted" style="font-size: 11px;">Odometer reading at return.</small>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold">Total Mileage Travelled</label>
+                                            <label class="form-label small fw-bold">Total Trip Mileage (Auto-Calculated)</label>
                                             <div class="input-group">
                                                 <input type="number" step="0.1" name="total_mileage" id="rc_total_mileage" class="form-control font-monospace bg-light fw-bold text-primary" placeholder="0.0" readonly>
                                                 <span class="input-group-text bg-light text-muted small">Miles</span>
                                             </div>
-                                            <small class="text-muted" style="font-size: 11px;">Calculated: (Reading In - Reading Out)</small>
+                                            <small class="text-success fw-semibold" style="font-size: 11px;"><i class="bi bi-check-circle me-1"></i>Auto: Reading In - Reading Out</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Miles per Gallon (MPG)</label>
@@ -129,7 +129,7 @@
                                                 <input type="number" step="0.01" name="miles_per_gallon" id="rc_miles_per_gallon" class="form-control font-monospace bg-light fw-bold text-success" placeholder="0.00" readonly>
                                                 <span class="input-group-text bg-light text-muted small">MPG</span>
                                             </div>
-                                            <small class="text-muted" style="font-size: 11px;">Efficiency: (Total Mileage / Fuel Consumed)</small>
+                                            <small class="text-muted" style="font-size: 11px;">Efficiency: Mileage / Fuel Consumed</small>
                                         </div>
                                     </div>
                                 </div>
@@ -141,24 +141,25 @@
                             <div class="card border-0 shadow-sm rounded-3 h-100">
                                 <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
                                     <span class="fw-bold text-dark small text-uppercase"><i class="bi bi-fuel-pump text-danger me-2"></i>4. Fuel &amp; Oil Metrics</span>
-                                    <span class="badge bg-light text-secondary border font-monospace">Gallons / Litres</span>
+                                    <span class="badge bg-light text-danger border font-monospace" id="rc_prev_fuel_badge"><i class="bi bi-droplet-half me-1"></i>Prev Balance: <span id="rc_prev_fuel_val">0.00</span> L</span>
                                 </div>
                                 <div class="card-body p-3">
+                                    <input type="hidden" name="prev_fuel_balance" id="rc_prev_fuel_balance" value="0.00">
                                     <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label small fw-bold">Fuel Position in Tank</label>
-                                            <input type="number" step="0.01" name="fuel_position_in_tank" id="rc_fuel_position_in_tank" class="form-control font-monospace rc-calc-trigger" value="0.00" min="0" required>
-                                            <small class="text-muted" style="font-size: 11px;">Starting tank volume.</small>
-                                        </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold">Fuel Drawn (Purchased)</label>
                                             <input type="number" step="0.01" name="fuel_drawn" id="rc_fuel_drawn" class="form-control font-monospace rc-calc-trigger" value="0.00" min="0" required>
-                                            <small class="text-muted" style="font-size: 11px;">Fuel issued/pumped.</small>
+                                            <small class="text-muted" style="font-size: 11px;">Newly added fuel.</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">Fuel Position in Tank</label>
+                                            <input type="number" step="0.01" name="fuel_position_in_tank" id="rc_fuel_position_in_tank" class="form-control font-monospace bg-light fw-bold text-dark rc-calc-trigger" value="0.00" min="0" required readonly>
+                                            <small class="text-success fw-semibold" style="font-size: 11px;"><i class="bi bi-magic me-1"></i>Auto: Prev + Drawn</small>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold">Fuel Consumed</label>
                                             <input type="number" step="0.01" name="fuel_consumed" id="rc_fuel_consumed" class="form-control font-monospace rc-calc-trigger" value="0.00" min="0" required>
-                                            <small class="text-muted" style="font-size: 11px;">Fuel burnt for trip.</small>
+                                            <small class="text-muted" style="font-size: 11px;">Burnt during trip.</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Tank Ending Balance</label>
@@ -166,7 +167,7 @@
                                                 <input type="number" step="0.01" name="fuel_balance" id="rc_fuel_balance" class="form-control font-monospace bg-light fw-bold text-dark" placeholder="0.00" readonly>
                                                 <span class="input-group-text bg-light text-muted small">Vol</span>
                                             </div>
-                                            <small class="text-muted" style="font-size: 11px;">(Starting Position + Drawn) - Consumed</small>
+                                            <small class="text-muted" style="font-size: 11px;">Calculated: Fuel Position - Consumed</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Engine Oil Drawn</label>

@@ -109,17 +109,20 @@
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Milometer Reading - Out <span class="text-danger">*</span></label>
                                             <input type="number" step="0.1" name="milometer_out" id="edit_rc_milometer_out" class="form-control font-monospace edit-rc-calc-trigger" min="0" required>
+                                            <small class="text-muted" style="font-size: 11px;">Odometer reading at departure.</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Milometer Reading - In <span class="text-danger">*</span></label>
                                             <input type="number" step="0.1" name="milometer_in" id="edit_rc_milometer_in" class="form-control font-monospace edit-rc-calc-trigger" min="0" required>
+                                            <small class="text-muted" style="font-size: 11px;">Odometer reading at return.</small>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold">Total Mileage Travelled</label>
+                                            <label class="form-label small fw-bold">Total Trip Mileage (Auto-Calculated)</label>
                                             <div class="input-group">
                                                 <input type="number" step="0.1" name="total_mileage" id="edit_rc_total_mileage" class="form-control font-monospace bg-light fw-bold text-primary" readonly>
                                                 <span class="input-group-text bg-light text-muted small">Miles</span>
                                             </div>
+                                            <small class="text-success fw-semibold" style="font-size: 11px;"><i class="bi bi-check-circle me-1"></i>Auto: Reading In - Reading Out</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Miles per Gallon (MPG)</label>
@@ -127,6 +130,7 @@
                                                 <input type="number" step="0.01" name="miles_per_gallon" id="edit_rc_miles_per_gallon" class="form-control font-monospace bg-light fw-bold text-success" readonly>
                                                 <span class="input-group-text bg-light text-muted small">MPG</span>
                                             </div>
+                                            <small class="text-muted" style="font-size: 11px;">Efficiency: Mileage / Fuel Consumed</small>
                                         </div>
                                     </div>
                                 </div>
@@ -145,14 +149,17 @@
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold">Fuel Position in Tank</label>
                                             <input type="number" step="0.01" name="fuel_position_in_tank" id="edit_rc_fuel_position_in_tank" class="form-control font-monospace edit-rc-calc-trigger" min="0" required>
+                                            <small class="text-muted" style="font-size: 11px;">Total fuel available.</small>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold">Fuel Drawn (Purchased)</label>
                                             <input type="number" step="0.01" name="fuel_drawn" id="edit_rc_fuel_drawn" class="form-control font-monospace edit-rc-calc-trigger" min="0" required>
+                                            <small class="text-muted" style="font-size: 11px;">Newly added fuel.</small>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold">Fuel Consumed</label>
                                             <input type="number" step="0.01" name="fuel_consumed" id="edit_rc_fuel_consumed" class="form-control font-monospace edit-rc-calc-trigger" min="0" required>
+                                            <small class="text-muted" style="font-size: 11px;">Burnt during trip.</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Tank Ending Balance</label>
@@ -160,6 +167,7 @@
                                                 <input type="number" step="0.01" name="fuel_balance" id="edit_rc_fuel_balance" class="form-control font-monospace bg-light fw-bold text-dark" readonly>
                                                 <span class="input-group-text bg-light text-muted small">Vol</span>
                                             </div>
+                                            <small class="text-muted" style="font-size: 11px;">Calculated: Fuel Position - Consumed</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold">Engine Oil Drawn</label>
@@ -167,6 +175,7 @@
                                                 <input type="number" step="0.01" name="engine_oil_drawn" id="edit_rc_engine_oil_drawn" class="form-control font-monospace" min="0" required>
                                                 <span class="input-group-text bg-white text-muted small">Pts/L</span>
                                             </div>
+                                            <small class="text-muted" style="font-size: 11px;">Lubricant / top-up drawn.</small>
                                         </div>
                                     </div>
                                 </div>

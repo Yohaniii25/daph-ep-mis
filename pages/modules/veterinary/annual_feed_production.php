@@ -35,14 +35,38 @@ if (!empty($range_id)) {
     }
 }
 
-// Handle GET year filter
-$selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
+// Months map
+$months_map = [
+    1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+    5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+    9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+];
+
+// Handle GET year and month filters
+$selected_year = 'all';
+if (isset($_GET['year'])) {
+    if ($_GET['year'] === 'all' || $_GET['year'] === '') {
+        $selected_year = 'all';
+    } else {
+        $selected_year = intval($_GET['year']);
+    }
+}
+
+$selected_month = 'all';
+if (isset($_GET['month'])) {
+    if ($_GET['month'] === 'all' || $_GET['month'] === '') {
+        $selected_month = 'all';
+    } else {
+        $selected_month = intval($_GET['month']);
+    }
+}
 
 // Inline CRUD actions:
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'add') {
             $year = intval($_POST['report_year']);
+            $month = (!empty($_POST['report_month'])) ? intval($_POST['report_month']) : null;
             $mill_name = trim($_POST['feed_mill_name']);
             $prop_details = trim($_POST['proprietor_details']);
             $category = trim($_POST['category_type']);
@@ -52,22 +76,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $insert_query = "
                 INSERT INTO annual_feed_production 
-                (district_id, range_id, report_year, feed_mill_name, proprietor_details, category_type, 
+                (district_id, range_id, report_year, report_month, feed_mill_name, proprietor_details, category_type, 
                  produced_qty_mt_month, raw_materials_source, market_outlets, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $mysqli->prepare($insert_query);
             if ($stmt) {
-                // district_id, range_id, report_year format: i i i
-                // feed_mill_name, proprietor_details, category_type format: s s s
-                // produced_qty_mt_month format: d
-                // raw_materials_source, market_outlets format: s s
-                // created_by format: i
                 $stmt->bind_param(
-                    "iiisssdssi",
+                    "iiiisssdssi",
                     $district_id,
                     $range_id,
                     $year,
+                    $month,
                     $mill_name,
                     $prop_details,
                     $category,
@@ -77,18 +97,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $user_id
                 );
                 if ($stmt->execute()) {
-                    header("Location: annual_feed_production.php?year=$year&status=success&msg=" . urlencode("Feed mill added successfully."));
+                    header("Location: annual_feed_production.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Feed mill added successfully."));
                 } else {
-                    header("Location: annual_feed_production.php?year=$selected_year&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
+                    header("Location: annual_feed_production.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_feed_production.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_feed_production.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
         } elseif ($_POST['action'] === 'edit') {
             $id = intval($_POST['id']);
             $year = intval($_POST['report_year']);
+            $month = (!empty($_POST['report_month'])) ? intval($_POST['report_month']) : null;
             $mill_name = trim($_POST['feed_mill_name']);
             $prop_details = trim($_POST['proprietor_details']);
             $category = trim($_POST['category_type']);
@@ -98,15 +119,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $update_query = "
                 UPDATE annual_feed_production 
-                SET report_year = ?, feed_mill_name = ?, proprietor_details = ?, category_type = ?, 
+                SET report_year = ?, report_month = ?, feed_mill_name = ?, proprietor_details = ?, category_type = ?, 
                     produced_qty_mt_month = ?, raw_materials_source = ?, market_outlets = ?
                 WHERE id = ? AND range_id = ?
             ";
             $stmt = $mysqli->prepare($update_query);
             if ($stmt) {
                 $stmt->bind_param(
-                    "isssdssii",
+                    "iisssdssii",
                     $year,
+                    $month,
                     $mill_name,
                     $prop_details,
                     $category,
@@ -117,13 +139,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $range_id
                 );
                 if ($stmt->execute()) {
-                    header("Location: annual_feed_production.php?year=$year&status=success&msg=" . urlencode("Feed mill updated successfully."));
+                    header("Location: annual_feed_production.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Feed mill updated successfully."));
                 } else {
-                    header("Location: annual_feed_production.php?year=$selected_year&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+                    header("Location: annual_feed_production.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_feed_production.php?year=$selected_year&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_feed_production.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
         }
@@ -136,21 +158,36 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     if ($stmt) {
         $stmt->bind_param("ii", $id, $range_id);
         if ($stmt->execute()) {
-            header("Location: annual_feed_production.php?year=$selected_year&status=success&msg=" . urlencode("Record deleted successfully."));
+            header("Location: annual_feed_production.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Record deleted successfully."));
         } else {
-            header("Location: annual_feed_production.php?year=$selected_year&status=error&msg=" . urlencode("Failed to delete record."));
+            header("Location: annual_feed_production.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to delete record."));
         }
         $stmt->close();
     }
     exit();
 }
 
-// Fetch records matching year filter and range
+// Fetch records matching year and month filter and range
 $records = [];
 if (!empty($range_id)) {
-    $stmt = $mysqli->prepare("SELECT * FROM annual_feed_production WHERE range_id = ? AND report_year = ? ORDER BY id DESC");
+    $where_f = ["range_id = ?"];
+    $params_f = [$range_id];
+    $types_f = "i";
+
+    if ($selected_year !== 'all') {
+        $where_f[] = "report_year = ?";
+        $params_f[] = $selected_year;
+        $types_f .= "i";
+    }
+    if ($selected_month !== 'all') {
+        $where_f[] = "report_month = ?";
+        $params_f[] = $selected_month;
+        $types_f .= "i";
+    }
+    $where_f_sql = implode(" AND ", $where_f);
+    $stmt = $mysqli->prepare("SELECT * FROM annual_feed_production WHERE $where_f_sql ORDER BY report_year DESC, report_month DESC, id DESC");
     if ($stmt) {
-        $stmt->bind_param("ii", $range_id, $selected_year);
+        $stmt->bind_param($types_f, ...$params_f);
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) {
@@ -193,16 +230,24 @@ require_once '../../../includes/header.php';
             </div>
 
             <div class="d-flex align-items-center gap-2">
-                <form method="GET" class="d-flex align-items-center gap-2">
+                <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
                     <label class="small fw-bold text-muted mb-0">Year:</label>
-                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
+                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 105px;">
+                        <option value="all" <?= ($selected_year === 'all') ? 'selected' : '' ?>>All Years</option>
                         <?php
                         $curr_year = intval(date('Y'));
                         for ($y = $curr_year - 5; $y <= $curr_year + 5; $y++) {
-                            $sel = ($y === $selected_year) ? 'selected' : '';
+                            $sel = ($selected_year !== 'all' && $y === intval($selected_year)) ? 'selected' : '';
                             echo "<option value=\"$y\" $sel>$y</option>";
                         }
                         ?>
+                    </select>
+                    <label class="small fw-bold text-muted mb-0 ms-1">Month:</label>
+                    <select name="month" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 120px;">
+                        <option value="all" <?= ($selected_month === 'all') ? 'selected' : '' ?>>All Months</option>
+                        <?php foreach ($months_map as $m_num => $m_name): ?>
+                            <option value="<?= $m_num ?>" <?= ($selected_month !== 'all' && intval($selected_month) === $m_num) ? 'selected' : '' ?>><?= $m_name ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </form>
             </div>
@@ -213,8 +258,8 @@ require_once '../../../includes/header.php';
             <div class="col-6 col-lg-3">
                 <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
                     <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Active Year</span>
-                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= $selected_year ?></h4>
+                        <span class="text-muted small text-uppercase fw-bold">Active Filter</span>
+                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= ($selected_month !== 'all' && isset($months_map[$selected_month]) ? substr($months_map[$selected_month], 0, 3) . ' ' : '') . (($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year)) ?></h4>
                     </div>
                 </div>
             </div>
@@ -273,13 +318,14 @@ require_once '../../../includes/header.php';
         <!-- RECORDS LIST TABLE -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Feed Mills Directories - <?= $selected_year ?></h5>
+                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Feed Mills Directories - <?= ($selected_month !== 'all' && isset($months_map[$selected_month]) ? $months_map[$selected_month] . ' ' : '') . (($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year)) ?></h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" id="millTable" style="min-width: 1200px;">
                         <thead class="table-light text-secondary small uppercase">
                             <tr>
+                                <th class="text-center">Year / Month</th>
                                 <th>Mill Name</th>
                                 <th>Proprietor Details</th>
                                 <th class="text-center">Feed Category</th>
@@ -290,30 +336,48 @@ require_once '../../../includes/header.php';
                             </tr>
                         </thead>
                         <tbody class="small">
-                            <?php foreach ($records as $row): ?>
-                                <tr
-                                    data-id="<?= $row['id'] ?>"
-                                    data-year="<?= htmlspecialchars($row['report_year']) ?>"
-                                    data-mill_name="<?= htmlspecialchars($row['feed_mill_name']) ?>"
-                                    data-proprietor_details="<?= htmlspecialchars($row['proprietor_details']) ?>"
-                                    data-category_type="<?= htmlspecialchars($row['category_type']) ?>"
-                                    data-qty="<?= htmlspecialchars($row['produced_qty_mt_month']) ?>"
-                                    data-raw_source="<?= htmlspecialchars($row['raw_materials_source']) ?>"
-                                    data-outlets="<?= htmlspecialchars($row['market_outlets']) ?>">
-                                    <td class="fw-bold"><?= htmlspecialchars($row['feed_mill_name']) ?></td>
-                                    <td><?= nl2br(htmlspecialchars($row['proprietor_details'])) ?></td>
-                                    <td class="text-center">
-                                        <span class="badge bg-secondary text-capitalize"><?= htmlspecialchars($row['category_type']) ?></span>
-                                    </td>
-                                    <td class="text-end font-monospace"><?= number_format($row['produced_qty_mt_month'], 2) ?></td>
-                                    <td><?= htmlspecialchars($row['raw_materials_source']) ?></td>
-                                    <td><?= htmlspecialchars($row['market_outlets']) ?></td>
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                        <a href="annual_feed_production.php?year=<?= $selected_year ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
+                            <?php if (empty($records)): ?>
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                        No records located for this period.
                                     </td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php else: ?>
+                                <?php foreach ($records as $row): ?>
+                                    <tr
+                                        data-id="<?= $row['id'] ?>"
+                                        data-year="<?= htmlspecialchars($row['report_year']) ?>"
+                                        data-month="<?= htmlspecialchars($row['report_month'] ?? '') ?>"
+                                        data-mill_name="<?= htmlspecialchars($row['feed_mill_name']) ?>"
+                                        data-proprietor_details="<?= htmlspecialchars($row['proprietor_details']) ?>"
+                                        data-category_type="<?= htmlspecialchars($row['category_type']) ?>"
+                                        data-qty="<?= htmlspecialchars($row['produced_qty_mt_month']) ?>"
+                                        data-raw_source="<?= htmlspecialchars($row['raw_materials_source']) ?>"
+                                        data-outlets="<?= htmlspecialchars($row['market_outlets']) ?>">
+                                        <td class="text-center fw-bold">
+                                            <?= htmlspecialchars($row['report_year']) ?>
+                                            <?php if (!empty($row['report_month']) && isset($months_map[$row['report_month']])): ?>
+                                                <span class="badge bg-light text-dark border ms-1"><?= substr($months_map[$row['report_month']], 0, 3) ?></span>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-muted border ms-1">Annual</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="fw-bold"><?= htmlspecialchars($row['feed_mill_name']) ?></td>
+                                        <td><?= nl2br(htmlspecialchars($row['proprietor_details'])) ?></td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary text-capitalize"><?= htmlspecialchars($row['category_type']) ?></span>
+                                        </td>
+                                        <td class="text-end font-monospace"><?= number_format($row['produced_qty_mt_month'], 2) ?></td>
+                                        <td><?= htmlspecialchars($row['raw_materials_source']) ?></td>
+                                        <td><?= htmlspecialchars($row['market_outlets']) ?></td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                                            <a href="annual_feed_production.php?year=<?= urlencode($selected_year) ?>&month=<?= urlencode($selected_month) ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -335,9 +399,18 @@ require_once '../../../includes/header.php';
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Report Year</label>
                             <input type="number" name="report_year" class="form-control" value="<?= date('Y') ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Report Month</label>
+                            <select name="report_month" class="form-select">
+                                <option value="">-- Annual (Whole Year) --</option>
+                                <?php foreach ($months_map as $m_num => $m_name): ?>
+                                    <option value="<?= $m_num ?>" <?= ($selected_month !== 'all' && intval($selected_month) === $m_num) ? 'selected' : '' ?>><?= $m_name ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Feed Mill Name</label>
@@ -392,9 +465,18 @@ require_once '../../../includes/header.php';
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="edit_report_year" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Report Month</label>
+                            <select name="report_month" id="edit_report_month" class="form-select">
+                                <option value="">-- Annual (Whole Year) --</option>
+                                <?php foreach ($months_map as $m_num => $m_name): ?>
+                                    <option value="<?= $m_num ?>"><?= $m_name ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Feed Mill Name</label>
@@ -493,6 +575,7 @@ $(document).ready(function() {
         var $row = $(this).closest(\'tr\');
         $(\'#edit_id\').val($row.data(\'id\'));
         $(\'#edit_report_year\').val($row.data(\'year\'));
+        $(\'#edit_report_month\').val($row.data(\'month\') || \'\');
         $(\'#edit_mill_name\').val($row.data(\'mill_name\'));
         $(\'#edit_proprietor_details\').val($row.data(\'proprietor_details\'));
         $(\'#edit_category_type\').val($row.data(\'category_type\'));

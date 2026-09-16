@@ -35,7 +35,14 @@ if (!empty($range_id)) {
     }
 }
 
-// Handle GET year filter (default to 'all' so all records for the range are displayed)
+// Months map
+$months_map = [
+    1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+    5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+    9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+];
+
+// Handle GET year & month filters
 $selected_year = 'all';
 if (isset($_GET['year'])) {
     if ($_GET['year'] === 'all' || $_GET['year'] === '') {
@@ -45,11 +52,21 @@ if (isset($_GET['year'])) {
     }
 }
 
+$selected_month = 'all';
+if (isset($_GET['month'])) {
+    if ($_GET['month'] === 'all' || $_GET['month'] === '') {
+        $selected_month = 'all';
+    } else {
+        $selected_month = intval($_GET['month']);
+    }
+}
+
 // Inline CRUD actions:
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'add') {
             $year = intval($_POST['report_year']);
+            $month = (!empty($_POST['report_month'])) ? intval($_POST['report_month']) : null;
             $cow_milk = floatval($_POST['cow_milk_lit_day']);
             $buffalo_milk = floatval($_POST['buffalo_milk_lit_day']);
             $goat_milk = floatval($_POST['goat_milk_lit_day']);
@@ -62,47 +79,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ghee = floatval($_POST['ghee_lit_day']);
             $yoghurt = floatval($_POST['yoghurt_lit_day']);
 
-            // Check if year already exists for this range
-            $check_stmt = $mysqli->prepare("SELECT id FROM annual_production_levels WHERE range_id = ? AND report_year = ?");
-            $check_stmt->bind_param("ii", $range_id, $year);
+            // Check if record already exists for this period
+            if ($month !== null) {
+                $check_stmt = $mysqli->prepare("SELECT id FROM annual_production_levels WHERE range_id = ? AND report_year = ? AND report_month = ?");
+                $check_stmt->bind_param("iii", $range_id, $year, $month);
+            } else {
+                $check_stmt = $mysqli->prepare("SELECT id FROM annual_production_levels WHERE range_id = ? AND report_year = ? AND report_month IS NULL");
+                $check_stmt->bind_param("ii", $range_id, $year);
+            }
             $check_stmt->execute();
             $check_result = $check_stmt->get_result();
             if ($check_result->num_rows > 0) {
-                header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("A record for the year $year already exists."));
+                $period_name = $month ? ($months_map[$month] . " $year") : "Year $year";
+                header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("A record for $period_name already exists."));
                 exit();
             }
             $check_stmt->close();
 
             $insert_query = "
                 INSERT INTO annual_production_levels 
-                (district_id, range_id, report_year, cow_milk_lit_day, buffalo_milk_lit_day, goat_milk_lit_day, 
+                (district_id, range_id, report_year, report_month, cow_milk_lit_day, buffalo_milk_lit_day, goat_milk_lit_day, 
                  chicks_production_no_day, eggs_production_no_day, beef_kg_day, mutton_kg_day, chicken_kg_day, 
                  curd_lit_day, ghee_lit_day, yoghurt_lit_day, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $mysqli->prepare($insert_query);
             if ($stmt) {
-                // district_id, range_id, report_year are 'iii'
-                // cow_milk, buffalo_milk, goat_milk are 'ddd'
-                // chicks, eggs are 'ii'
-                // beef, mutton, chicken, curd, ghee, yoghurt are 'dddddd'
-                // created_by is 'i'
-                $stmt->bind_param("iiidddiiddddddi", $district_id, $range_id, $year, $cow_milk, $buffalo_milk, $goat_milk, 
+                $stmt->bind_param("iiiidddiiddddddi", $district_id, $range_id, $year, $month, $cow_milk, $buffalo_milk, $goat_milk, 
                                   $chicks, $eggs, $beef, $mutton, $chicken, $curd, $ghee, $yoghurt, $user_id);
                 if ($stmt->execute()) {
-                    header("Location: annual_production_levels.php?year=all&status=success&msg=" . urlencode("Production levels added successfully."));
+                    header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Production levels added successfully."));
                 } else {
-                    header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
+                    header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
 
         } elseif ($_POST['action'] === 'edit') {
             $id = intval($_POST['id']);
             $year = intval($_POST['report_year']);
+            $month = (!empty($_POST['report_month'])) ? intval($_POST['report_month']) : null;
             $cow_milk = floatval($_POST['cow_milk_lit_day']);
             $buffalo_milk = floatval($_POST['buffalo_milk_lit_day']);
             $goat_milk = floatval($_POST['goat_milk_lit_day']);
@@ -117,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $update_query = "
                 UPDATE annual_production_levels 
-                SET report_year = ?, cow_milk_lit_day = ?, buffalo_milk_lit_day = ?, goat_milk_lit_day = ?, 
+                SET report_year = ?, report_month = ?, cow_milk_lit_day = ?, buffalo_milk_lit_day = ?, goat_milk_lit_day = ?, 
                     chicks_production_no_day = ?, eggs_production_no_day = ?, beef_kg_day = ?, 
                     mutton_kg_day = ?, chicken_kg_day = ?, curd_lit_day = ?, ghee_lit_day = ?, 
                     yoghurt_lit_day = ?
@@ -125,16 +144,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ";
             $stmt = $mysqli->prepare($update_query);
             if ($stmt) {
-                $stmt->bind_param("idddiiddddddii", $year, $cow_milk, $buffalo_milk, $goat_milk, 
+                $stmt->bind_param("iidddiiddddddii", $year, $month, $cow_milk, $buffalo_milk, $goat_milk, 
                                   $chicks, $eggs, $beef, $mutton, $chicken, $curd, $ghee, $yoghurt, $id, $range_id);
                 if ($stmt->execute()) {
-                    header("Location: annual_production_levels.php?year=all&status=success&msg=" . urlencode("Production levels updated successfully."));
+                    header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Production levels updated successfully."));
                 } else {
-                    header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+                    header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
         }
@@ -147,40 +166,42 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     if ($stmt) {
         $stmt->bind_param("ii", $id, $range_id);
         if ($stmt->execute()) {
-            header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&status=success&msg=" . urlencode("Record deleted successfully."));
+            header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Record deleted successfully."));
         } else {
-            header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&status=error&msg=" . urlencode("Failed to delete record."));
+            header("Location: annual_production_levels.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to delete record."));
         }
         $stmt->close();
     }
     exit();
 }
 
-// Fetch records matching year filter and range
+// Fetch records matching year and month filter and range
 $records = [];
 if (!empty($range_id)) {
-    if ($selected_year === 'all') {
-        $stmt = $mysqli->prepare("SELECT * FROM annual_production_levels WHERE range_id = ? ORDER BY report_year DESC, id DESC");
-        if ($stmt) {
-            $stmt->bind_param("i", $range_id);
-            $stmt->execute();
-            $res = $stmt->get_result();
-            while ($row = $res->fetch_assoc()) {
-                $records[] = $row;
-            }
-            $stmt->close();
+    $where_p = ["range_id = ?"];
+    $params_p = [$range_id];
+    $types_p = "i";
+
+    if ($selected_year !== 'all') {
+        $where_p[] = "report_year = ?";
+        $params_p[] = $selected_year;
+        $types_p .= "i";
+    }
+    if ($selected_month !== 'all') {
+        $where_p[] = "report_month = ?";
+        $params_p[] = $selected_month;
+        $types_p .= "i";
+    }
+    $where_sql = implode(" AND ", $where_p);
+    $stmt = $mysqli->prepare("SELECT * FROM annual_production_levels WHERE $where_sql ORDER BY report_year DESC, report_month DESC, id DESC");
+    if ($stmt) {
+        $stmt->bind_param($types_p, ...$params_p);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        while ($row = $res->fetch_assoc()) {
+            $records[] = $row;
         }
-    } else {
-        $stmt = $mysqli->prepare("SELECT * FROM annual_production_levels WHERE range_id = ? AND report_year = ? ORDER BY report_year DESC, id DESC");
-        if ($stmt) {
-            $stmt->bind_param("ii", $range_id, $selected_year);
-            $stmt->execute();
-            $res = $stmt->get_result();
-            while ($row = $res->fetch_assoc()) {
-                $records[] = $row;
-            }
-            $stmt->close();
-        }
+        $stmt->close();
     }
 }
 
@@ -218,9 +239,9 @@ require_once '../../../includes/header.php';
             </div>
             
             <div class="d-flex align-items-center gap-2">
-                <form method="GET" class="d-flex align-items-center gap-2">
+                <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
                     <label class="small fw-bold text-muted mb-0">Year:</label>
-                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 110px;">
+                    <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 105px;">
                         <option value="all" <?= ($selected_year === 'all') ? 'selected' : '' ?>>All Years</option>
                         <?php
                         $curr_year = intval(date('Y'));
@@ -229,6 +250,13 @@ require_once '../../../includes/header.php';
                             echo "<option value=\"$y\" $sel>$y</option>";
                         }
                         ?>
+                    </select>
+                    <label class="small fw-bold text-muted mb-0 ms-1">Month:</label>
+                    <select name="month" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 120px;">
+                        <option value="all" <?= ($selected_month === 'all') ? 'selected' : '' ?>>All Months</option>
+                        <?php foreach ($months_map as $m_num => $m_name): ?>
+                            <option value="<?= $m_num ?>" <?= ($selected_month !== 'all' && intval($selected_month) === $m_num) ? 'selected' : '' ?>><?= $m_name ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </form>
             </div>
@@ -239,8 +267,8 @@ require_once '../../../includes/header.php';
             <div class="col-6 col-lg-3">
                 <div class="card shadow-sm border-0 border-start border-primary border-4 text-center">
                     <div class="card-body py-3">
-                        <span class="text-muted small text-uppercase fw-bold">Active Year</span>
-                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= ($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year) ?></h4>
+                        <span class="text-muted small text-uppercase fw-bold">Active Filter</span>
+                        <h4 class="mb-0 fw-bold text-primary mt-1"><?= ($selected_month !== 'all' && isset($months_map[$selected_month]) ? substr($months_map[$selected_month], 0, 3) . ' ' : '') . (($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year)) ?></h4>
                     </div>
                 </div>
             </div>
@@ -299,14 +327,14 @@ require_once '../../../includes/header.php';
         <!-- RECORDS LIST TABLE -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Production Levels Log - <?= ($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year) ?></h5>
+                <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-table me-2"></i>Production Levels Log - <?= ($selected_month !== 'all' && isset($months_map[$selected_month]) ? $months_map[$selected_month] . ' ' : '') . (($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year)) ?></h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" id="prodLvlTable" style="min-width: 1500px;">
                         <thead class="table-light text-secondary small uppercase">
                             <tr>
-                                <th class="text-center">Year</th>
+                                <th class="text-center">Year / Month</th>
                                 <th class="text-end">Cow Milk (L/day)</th>
                                 <th class="text-end">Buffalo Milk (L/day)</th>
                                 <th class="text-end">Goat Milk (L/day)</th>
@@ -326,7 +354,7 @@ require_once '../../../includes/header.php';
                                 <tr>
                                     <td colspan="13" class="text-center py-4 text-muted">
                                         <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                        No records located <?= ($selected_year === 'all') ? 'in the database.' : 'for the selected year ' . htmlspecialchars($selected_year) . '.' ?>
+                                        No records located for this period.
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -334,6 +362,7 @@ require_once '../../../includes/header.php';
                                     <tr 
                                         data-id="<?= $row['id'] ?>"
                                         data-year="<?= htmlspecialchars($row['report_year']) ?>"
+                                        data-month="<?= htmlspecialchars($row['report_month'] ?? '') ?>"
                                         data-cow_milk="<?= htmlspecialchars($row['cow_milk_lit_day']) ?>"
                                         data-buffalo_milk="<?= htmlspecialchars($row['buffalo_milk_lit_day']) ?>"
                                         data-goat_milk="<?= htmlspecialchars($row['goat_milk_lit_day']) ?>"
@@ -345,7 +374,14 @@ require_once '../../../includes/header.php';
                                         data-curd="<?= htmlspecialchars($row['curd_lit_day']) ?>"
                                         data-ghee="<?= htmlspecialchars($row['ghee_lit_day']) ?>"
                                         data-yoghurt="<?= htmlspecialchars($row['yoghurt_lit_day']) ?>">
-                                        <td class="text-center fw-bold"><?= htmlspecialchars($row['report_year']) ?></td>
+                                        <td class="text-center fw-bold">
+                                            <?= htmlspecialchars($row['report_year']) ?>
+                                            <?php if (!empty($row['report_month']) && isset($months_map[$row['report_month']])): ?>
+                                                <span class="badge bg-light text-dark border ms-1"><?= substr($months_map[$row['report_month']], 0, 3) ?></span>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-muted border ms-1">Annual</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="text-end font-monospace"><?= number_format($row['cow_milk_lit_day'], 2) ?></td>
                                         <td class="text-end font-monospace"><?= number_format($row['buffalo_milk_lit_day'], 2) ?></td>
                                         <td class="text-end font-monospace"><?= number_format($row['goat_milk_lit_day'], 2) ?></td>
@@ -388,6 +424,15 @@ require_once '../../../includes/header.php';
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Report Year</label>
                             <input type="number" name="report_year" class="form-control" value="<?= date('Y') ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Report Month</label>
+                            <select name="report_month" class="form-select">
+                                <option value="">-- Annual (Whole Year) --</option>
+                                <?php foreach ($months_map as $m_num => $m_name): ?>
+                                    <option value="<?= $m_num ?>" <?= ($selected_month !== 'all' && intval($selected_month) === $m_num) ? 'selected' : '' ?>><?= $m_name ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Cow Milk (Lit/Day)</label>
@@ -460,6 +505,15 @@ require_once '../../../includes/header.php';
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="edit_report_year" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Report Month</label>
+                            <select name="report_month" id="edit_report_month" class="form-select">
+                                <option value="">-- Annual (Whole Year) --</option>
+                                <?php foreach ($months_map as $m_num => $m_name): ?>
+                                    <option value="<?= $m_num ?>"><?= $m_name ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Cow Milk (Lit/Day)</label>
@@ -570,6 +624,7 @@ $(document).ready(function() {
         var $row = $(this).closest(\'tr\');
         $(\'#edit_id\').val($row.data(\'id\'));
         $(\'#edit_report_year\').val($row.data(\'year\'));
+        $(\'#edit_report_month\').val($row.data(\'month\') || \'\');
         $(\'#edit_cow_milk\').val($row.data(\'cow_milk\'));
         $(\'#edit_buffalo_milk\').val($row.data(\'buffalo_milk\'));
         $(\'#edit_goat_milk\').val($row.data(\'goat_milk\'));

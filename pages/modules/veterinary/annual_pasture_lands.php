@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -44,15 +44,15 @@ if ($chk_col && $chk_col->num_rows == 0) {
     $mysqli->query("ALTER TABLE pasture_fodder_lands ADD COLUMN report_year INT DEFAULT 2024 AFTER vs_range");
 }
 
-// Handle GET year filter (default to 'all' so all records are displayed)
-$selected_year = 'all';
-if (isset($_GET['year'])) {
-    if ($_GET['year'] === 'all' || $_GET['year'] === '') {
-        $selected_year = 'all';
-    } else {
-        $selected_year = intval($_GET['year']);
-    }
-}
+// Handle GET filters (default to 'all' so all records are displayed)
+$selected_year = isset($_GET['year']) ? ($_GET['year'] === 'all' || $_GET['year'] === '' ? 'all' : intval($_GET['year'])) : 'all';
+$selected_month = isset($_GET['month']) ? ($_GET['month'] === 'all' || $_GET['month'] === '' ? 'all' : intval($_GET['month'])) : 'all';
+
+$months_map = [
+    1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+    5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+    9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+];
 
 // Handle POST submissions (INSERT and UPDATE)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -60,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_POST['action'] === 'add') {
             $vs_range = trim($_POST['vs_range'] ?? '');
             $report_year = intval($_POST['report_year'] ?? date('Y'));
+            $report_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : null;
 
             // Pasture fields
             $pasture_families_quarter_ac = intval($_POST['pasture_families_quarter_ac'] ?? 0);
@@ -79,10 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $insert_query = "
                 INSERT INTO pasture_fodder_lands 
-                (vs_range, report_year, 
+                (vs_range, report_year, report_month,
                  pasture_families_quarter_ac, pasture_families_half_ac, pasture_families_one_ac, pasture_families_gt_one_ac, pasture_total_acre, pasture_total_families,
                  fodder_families_quarter_ac, fodder_families_half_ac, fodder_families_one_ac, fodder_families_gt_one_ac, fodder_total_acre, fodder_total_families)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $mysqli->prepare($insert_query);
             if ($stmt) {
@@ -90,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "siiiiidiiiiidi",
                     $vs_range,
                     $report_year,
+                    $report_month,
                     $pasture_families_quarter_ac,
                     $pasture_families_half_ac,
                     $pasture_families_one_ac,
@@ -118,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = intval($_POST['id'] ?? 0);
             $vs_range = trim($_POST['vs_range'] ?? '');
             $report_year = intval($_POST['report_year'] ?? date('Y'));
+            $report_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : null;
 
             // Pasture fields
             $pasture_families_quarter_ac = intval($_POST['pasture_families_quarter_ac'] ?? 0);
@@ -139,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 UPDATE pasture_fodder_lands SET 
                     vs_range = ?,
                     report_year = ?,
+                    report_month = ?,
                     pasture_families_quarter_ac = ?, pasture_families_half_ac = ?, pasture_families_one_ac = ?, pasture_families_gt_one_ac = ?, pasture_total_acre = ?, pasture_total_families = ?,
                     fodder_families_quarter_ac = ?, fodder_families_half_ac = ?, fodder_families_one_ac = ?, fodder_families_gt_one_ac = ?, fodder_total_acre = ?, fodder_total_families = ?
                 WHERE id = ?
@@ -149,6 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "siiiiidiiiiidii",
                     $vs_range,
                     $report_year,
+                    $report_month,
                     $pasture_families_quarter_ac,
                     $pasture_families_half_ac,
                     $pasture_families_one_ac,
@@ -193,18 +198,29 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     exit();
 }
 
-// Fetch records from database with year filter support
+// Fetch records from database with year and month filter support
 $records = [];
-if ($selected_year === 'all') {
-    $result = $mysqli->query("SELECT * FROM pasture_fodder_lands ORDER BY report_year DESC, id DESC");
-} else {
-    $stmt = $mysqli->prepare("SELECT * FROM pasture_fodder_lands WHERE report_year = ? ORDER BY id DESC");
-    if ($stmt) {
-        $stmt->bind_param("i", $selected_year);
-        $stmt->execute();
-        $result = $stmt->get_result();
-    }
+$where_p = ["1=1"];
+$params_p = [];
+$types_p = "";
+
+if ($selected_year !== 'all') {
+    $where_p[] = "report_year = ?";
+    $params_p[] = $selected_year;
+    $types_p .= "i";
 }
+if ($selected_month !== 'all') {
+    $where_p[] = "report_month = ?";
+    $params_p[] = $selected_month;
+    $types_p .= "i";
+}
+$where_p_sql = implode(" AND ", $where_p);
+$stmt = $mysqli->prepare("SELECT * FROM pasture_fodder_lands WHERE $where_p_sql ORDER BY report_year DESC, report_month DESC, id DESC");
+if (!empty($params_p)) {
+    $stmt->bind_param($types_p, ...$params_p);
+}
+$stmt->execute();
+$result = $stmt->get_result();
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $records[] = $row;
@@ -303,9 +319,9 @@ require_once '../../../includes/header.php';
                     <p class="mb-0 text-white-50 small">Manage and track pasture land allocations, fodder cultivation, and beneficiary farm families by VS Range.</p>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <form method="GET" class="d-flex align-items-center gap-2">
+                    <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
                         <label class="small fw-bold text-dark mb-0">Year:</label>
-                        <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 110px;">
+                        <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 105px;">
                             <option value="all" <?= ($selected_year === 'all') ? 'selected' : '' ?>>All Years</option>
                             <?php
                             $curr_year = intval(date('Y'));
@@ -314,6 +330,13 @@ require_once '../../../includes/header.php';
                                 echo "<option value=\"$y\" $sel>$y</option>";
                             }
                             ?>
+                        </select>
+                        <label class="small fw-bold text-dark mb-0 ms-1">Month:</label>
+                        <select name="month" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 120px;">
+                            <option value="all" <?= ($selected_month === 'all') ? 'selected' : '' ?>>All Months</option>
+                            <?php foreach ($months_map as $m_num => $m_name): ?>
+                                <option value="<?= $m_num ?>" <?= ($selected_month !== 'all' && intval($selected_month) === $m_num) ? 'selected' : '' ?>><?= $m_name ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </form>
                     <a href="range_statistics.php" class="btn btn-light text-dark fw-bold btn-sm shadow-sm">
@@ -373,9 +396,9 @@ require_once '../../../includes/header.php';
                 <form method="POST" action="annual_pasture_lands.php" id="dataEntryForm">
                     <input type="hidden" name="action" value="add">
 
-                    <!-- VS RANGE & REPORT YEAR INPUT -->
-                    <div class="row mb-4">
-                        <div class="col-md-6 col-lg-4">
+                    <!-- VS RANGE, REPORT YEAR & REPORT MONTH INPUT -->
+                    <div class="row mb-4 g-3">
+                        <div class="col-md-4">
                             <label for="vs_range" class="form-label fw-bold text-dark">VS Range <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="bi bi-geo-alt-fill text-danger"></i></span>
@@ -387,17 +410,42 @@ require_once '../../../includes/header.php';
                                 </datalist>
                             </div>
                         </div>
-                        <div class="col-md-6 col-lg-4">
+                        <div class="col-md-4">
                             <label for="report_year" class="form-label fw-bold text-dark">Report Year <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="bi bi-calendar-event text-primary"></i></span>
                                 <input type="number" name="report_year" id="report_year" class="form-control" value="<?= date('Y') ?>" required>
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <label for="report_month" class="form-label fw-bold text-dark">Report Month</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-calendar-month text-success"></i></span>
+                                <select name="report_month" id="report_month" class="form-select">
+                                    <option value="">Annual Aggregate (Full Year)</option>
+                                    <?php foreach ($months_map as $m_num => $m_name): ?>
+                                        <option value="<?= $m_num ?>"><?= $m_name ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- TWO VISUALLY DISTINCT SECTIONS FOR PASTURE LAND & FODDER LAND -->
-                    <div class="row g-4 mb-4">
+                    <!-- CONSOLIDATED HEADING FOR PASTURE & FODDER DATA SECTION -->
+                    <div class="card border-0 shadow-sm border-start border-success border-4 mb-4">
+                        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h6 class="mb-0 fw-bold text-success">
+                                    <i class="bi bi-flower1 me-2"></i>Consolidated Pasture & Fodder Cultivation
+                                </h6>
+                                <small class="text-muted">Combined distribution metrics and family participation for pasture lands and fodder crops</small>
+                            </div>
+                            <a href="annual_pasture_yields.php" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-water me-1"></i> Pasture Yields
+                            </a>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-4">
 
                         <!-- SECTION 1: PASTURE LAND -->
                         <div class="col-lg-6">
@@ -494,6 +542,8 @@ require_once '../../../includes/header.php';
                         </div>
 
                     </div>
+                </div>
+            </div>
 
                     <div class="d-flex justify-content-end gap-2">
                         <button type="reset" class="btn btn-light border px-4" id="btnResetForm">
@@ -510,9 +560,9 @@ require_once '../../../includes/header.php';
 
         <!-- DATA DISPLAY TABLE CARD -->
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom flex-wrap gap-2">
                 <h5 class="card-title mb-0 fw-bold text-dark">
-                    <i class="bi bi-table me-2 text-primary"></i>Pasture & Fodder Lands Records Table - <?= ($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year) ?>
+                    <i class="bi bi-table me-2 text-primary"></i>Pasture & Fodder Lands Records Table - <?= ($selected_month !== 'all' && isset($months_map[$selected_month]) ? $months_map[$selected_month] . ' ' : '') . (($selected_year === 'all') ? 'All Years' : htmlspecialchars($selected_year)) ?>
                 </h5>
                 <span class="badge bg-secondary"><?= count($records) ?> Entries</span>
             </div>
@@ -526,9 +576,9 @@ require_once '../../../includes/header.php';
                             <tr>
                                 <th rowspan="3" class="align-middle bg-white text-dark" style="width: 50px;">S.No</th>
                                 <th rowspan="3" class="align-middle bg-white text-dark" style="min-width: 150px;">VS Range</th>
-                                <th rowspan="3" class="align-middle bg-white text-dark" style="width: 80px;">Year</th>
-                                <th colspan="6" class="bg-white text-dark py-2">Pasture Land</th>
-                                <th colspan="6" class="bg-white text-dark py-2">Fodder Land</th>
+                                <th rowspan="3" class="align-middle bg-white text-dark" style="width: 90px;">Period</th>
+                                <th colspan="6" class="bg-white text-primary py-2">Pasture Land</th>
+                                <th colspan="6" class="bg-white text-success py-2">Fodder Land</th>
                                 <th rowspan="3" class="align-middle bg-white text-dark" style="width: 110px;">Actions</th>
                             </tr>
                             <!-- ROW 2 -->
@@ -559,7 +609,7 @@ require_once '../../../includes/header.php';
                                 <tr>
                                     <td colspan="16" class="text-center py-5 text-dark bg-white">
                                         <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
-                                        No pasture & fodder land records found in the database.
+                                        No pasture & fodder land records found for this period.
                                         <br><span class="small">Use the form above to add a new record.</span>
                                     </td>
                                 </tr>
@@ -569,7 +619,14 @@ require_once '../../../includes/header.php';
                                     <tr data-row='<?= json_encode($row, JSON_HEX_APOS | JSON_HEX_QUOT) ?>' class="bg-white text-dark">
                                         <td class="fw-bold text-dark bg-white"><?= $sno++ ?></td>
                                         <td class="fw-bold text-start text-dark bg-white"><?= htmlspecialchars($row['vs_range']) ?></td>
-                                        <td class="bg-white"><span class="badge bg-secondary"><?= htmlspecialchars($row['report_year'] ?? '2024') ?></span></td>
+                                        <td class="bg-white">
+                                            <span class="badge bg-secondary"><?= htmlspecialchars($row['report_year'] ?? '2024') ?></span>
+                                            <?php if (!empty($row['report_month']) && isset($months_map[$row['report_month']])): ?>
+                                                <span class="badge bg-light text-dark border ms-1"><?= substr($months_map[$row['report_month']], 0, 3) ?></span>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-muted border ms-1">Annual</span>
+                                            <?php endif; ?>
+                                        </td>
 
                                         <!-- Pasture Land Fields -->
                                         <td class="font-monospace text-dark bg-white"><?= number_format($row['pasture_families_quarter_ac']) ?></td>
@@ -716,13 +773,22 @@ require_once '../../../includes/header.php';
 
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="e_vs_range" class="form-label fw-bold">VS Range <span class="text-danger">*</span></label>
                             <input type="text" name="vs_range" id="e_vs_range" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="e_report_year" class="form-label fw-bold">Report Year <span class="text-danger">*</span></label>
                             <input type="number" name="report_year" id="e_report_year" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="e_report_month" class="form-label fw-bold">Report Month</label>
+                            <select name="report_month" id="e_report_month" class="form-select">
+                                <option value="">Annual Aggregate</option>
+                                <?php foreach ($months_map as $m_num => $m_name): ?>
+                                    <option value="<?= $m_num ?>"><?= $m_name ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                     </div>
 
@@ -946,6 +1012,7 @@ $(document).ready(function() {
             $("#e_id").val(rowData.id);
             $("#e_vs_range").val(rowData.vs_range);
             $("#e_report_year").val(rowData.report_year || 2024);
+            $("#e_report_month").val(rowData.report_month || "");
             
             $("#e_p_quarter").val(rowData.pasture_families_quarter_ac);
             $("#e_p_half").val(rowData.pasture_families_half_ac);

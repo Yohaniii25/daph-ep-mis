@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $report_month = intval($_POST['report_month'] ?? date('m'));
     
     $health_certificate_no = trim($_POST['health_certificate_no'] ?? '');
+    $farmer_nic = trim($_POST['farmer_nic'] ?? '');
     $applicant_name_address = trim($_POST['applicant_name_address'] ?? '');
     $farm_registration_no = trim($_POST['farm_registration_no'] ?? '');
     $date_of_issue = trim($_POST['date_of_issue'] ?? '');
@@ -42,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $vehicle_fitness_certificate_no = trim($_POST['vehicle_fitness_certificate_no'] ?? '');
     $purpose = trim($_POST['purpose'] ?? '');
 
-    if (empty($report_year) || empty($report_month) || empty($health_certificate_no) || empty($applicant_name_address) || empty($date_of_issue)) {
-        header("Location: ../health_certificate.php?status=error&msg=Missing+required+fields");
+    if (empty($report_year) || empty($report_month) || empty($health_certificate_no) || empty($farmer_nic) || empty($applicant_name_address) || empty($date_of_issue)) {
+        header("Location: ../health_certificate.php?status=error&msg=Missing+required+fields+(Farmer+NIC+is+mandatory)");
         exit();
     }
 
@@ -54,13 +55,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $stmt = $mysqli->prepare("INSERT INTO `health_certificate_issues` 
-            (district_id, range_id, report_year, report_month, health_certificate_no, applicant_name_address, farm_registration_no, date_of_issue, species, animal_details_male, animal_details_female, vehicle_fitness_certificate_no, purpose, created_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            (district_id, range_id, report_year, report_month, health_certificate_no, farmer_nic, applicant_name_address, farm_registration_no, date_of_issue, species, animal_details_male, animal_details_female, vehicle_fitness_certificate_no, purpose, created_by) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         if (!$stmt) {
             header("Location: ../health_certificate.php?status=error&msg=" . urlencode($mysqli->error));
             exit();
         }
-        $stmt->bind_param("iiiisssssiisss", $district_id, $range_id, $report_year, $report_month, $health_certificate_no, $applicant_name_address, $farm_registration_no, $date_of_issue, $species, $animal_details_male, $animal_details_female, $vehicle_fitness_certificate_no, $purpose, $user_id);
+        $stmt->bind_param("iiiissssssiisss", $district_id, $range_id, $report_year, $report_month, $health_certificate_no, $farmer_nic, $applicant_name_address, $farm_registration_no, $date_of_issue, $species, $animal_details_male, $animal_details_female, $vehicle_fitness_certificate_no, $purpose, $user_id);
         
         if ($stmt->execute()) {
             header("Location: ../health_certificate.php?status=success&msg=Record+Created+Successfully");
@@ -75,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             report_year = ?, 
             report_month = ?, 
             health_certificate_no = ?, 
+            farmer_nic = ?, 
             applicant_name_address = ?, 
             farm_registration_no = ?, 
             date_of_issue = ?, 
@@ -88,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: ../health_certificate.php?status=error&msg=" . urlencode($mysqli->error));
             exit();
         }
-        $stmt->bind_param("iisssssiissii", $report_year, $report_month, $health_certificate_no, $applicant_name_address, $farm_registration_no, $date_of_issue, $species, $animal_details_male, $animal_details_female, $vehicle_fitness_certificate_no, $purpose, $id, $range_id);
+        $stmt->bind_param("iissssssiissii", $report_year, $report_month, $health_certificate_no, $farmer_nic, $applicant_name_address, $farm_registration_no, $date_of_issue, $species, $animal_details_male, $animal_details_female, $vehicle_fitness_certificate_no, $purpose, $id, $range_id);
         
         if ($stmt->execute()) {
             header("Location: ../health_certificate.php?status=success&msg=Record+Updated+Successfully");

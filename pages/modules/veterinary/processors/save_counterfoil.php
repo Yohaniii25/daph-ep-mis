@@ -30,9 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $book_serial_no     = trim(htmlspecialchars($_POST['book_serial_no'] ?? ''));
     $page_count         = trim(htmlspecialchars($_POST['page_count'] ?? ''));
-    $issued_to          = trim(htmlspecialchars($_POST['issued_to'] ?? ''));
-    $date_of_issue      = !empty($_POST['date_of_issue']) ? $_POST['date_of_issue'] : null;
-    $date_of_return     = !empty($_POST['date_of_return']) ? $_POST['date_of_return'] : null;
+    $issued_to          = null; // Field deprecated & removed as per individual leaf tracking requirement
+    $date_of_issue      = null;
+    $date_of_return     = null;
 
     if (!$user_id || empty($counterfoil_type) || $available_quantity < 0) {
         echo json_encode(['success' => false, 'message' => 'Validation error: All key indicators must be specified.']);

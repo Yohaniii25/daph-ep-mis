@@ -31,23 +31,89 @@ if (!empty($range_id)) {
     $rng_stmt->close();
 }
 
+// Compute tab badge counts
+$cnt_books = 0;
+if (!empty($range_id)) {
+    $b_cnt_stmt = $mysqli->prepare("SELECT COUNT(*) AS cnt FROM counterfoil_assets WHERE district_id = ? AND range_id = ? AND is_active = 1");
+    if ($b_cnt_stmt) {
+        $b_cnt_stmt->bind_param("ii", $district_id, $range_id);
+        $b_cnt_stmt->execute();
+        $cnt_books = $b_cnt_stmt->get_result()->fetch_assoc()['cnt'] ?? 0;
+        $b_cnt_stmt->close();
+    }
+}
+
+$cnt_leaves = 0;
+if (!empty($range_id)) {
+    $l_cnt_stmt = $mysqli->prepare("SELECT COUNT(*) AS cnt FROM counterfoil_leaf_issues WHERE range_id = ?");
+    if ($l_cnt_stmt) {
+        $l_cnt_stmt->bind_param("i", $range_id);
+        $l_cnt_stmt->execute();
+        $cnt_leaves = $l_cnt_stmt->get_result()->fetch_assoc()['cnt'] ?? 0;
+        $l_cnt_stmt->close();
+    }
+}
+
 require_once '../../../includes/header.php';
 ?>
 
 <link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
+<style>
+.cf-nav-tabs {
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+}
+.cf-nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #6c757d;
+    font-weight: 600;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0;
+    transition: all 0.2s ease-in-out;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.cf-nav-tabs .nav-link:hover {
+    color: #e67e22;
+    border-bottom-color: rgba(230, 126, 34, 0.4);
+}
+.cf-nav-tabs .nav-link.active {
+    color: #e67e22;
+    background: transparent;
+    border-bottom-color: #e67e22;
+}
+.cf-nav-tabs .nav-link.active .badge-tab {
+    background-color: #e67e22 !important;
+    color: #fff !important;
+}
+.cf-nav-tabs .nav-link .badge-tab {
+    font-size: 11px;
+    padding: 0.25rem 0.55rem;
+    border-radius: 20px;
+    background-color: #f1f3f5;
+    color: #495057;
+    transition: all 0.2s ease-in-out;
+}
+</style>
 
-        
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold text-dark">7. Counterfoil Books Registry</h3>
+                <h3 class="fw-bold text-dark">7. Counterfoil Records &amp; Register</h3>
                 <p class="text-muted small mb-0">
                     Range Office: <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> | 
                     District: <strong class="text-dark"><?= htmlspecialchars($district_name) ?></strong>
                 </p>
             </div>
             <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#issueCounterfoilLeafModal">
+                    <i class="bi bi-file-earmark-person me-2"></i>Issue Individual Certificate / Leaf
+                </button>
                 <button class="btn text-white shadow-sm" style="background-color: #e67e22;" data-bs-toggle="modal" data-bs-target="#addCounterfoilModal">
                     <i class="bi bi-plus-circle-fill me-2"></i>Add Counterfoil Record
                 </button>
@@ -57,21 +123,42 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <div class="table-responsive">
+        <!-- ── Navigation Tabs ─────────────────────────────────────────── -->
+        <ul class="nav cf-nav-tabs" id="counterfoilTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-books" data-bs-toggle="tab" data-bs-target="#pane-books" type="button" role="tab" aria-controls="pane-books" aria-selected="true">
+                    <i class="bi bi-journal-bookmark-fill text-primary"></i>
+                    <span>Counterfoil Books Registry</span>
+                    <span class="badge badge-tab"><?= number_format($cnt_books) ?></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-leaves" data-bs-toggle="tab" data-bs-target="#pane-leaves" type="button" role="tab" aria-controls="pane-leaves" aria-selected="false">
+                    <i class="bi bi-file-earmark-person-fill text-success"></i>
+                    <span>Issued Counterfoil Leaves &amp; Certificates Register</span>
+                    <span class="badge badge-tab"><?= number_format($cnt_leaves) ?></span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- ── Tab Contents ────────────────────────────────────────────── -->
+        <div class="tab-content" id="counterfoilTabsContent">
+            <!-- TAB PANE 1: Counterfoil Books Registry -->
+            <div class="tab-pane fade show active" id="pane-books" role="tabpanel" aria-labelledby="tab-books" tabindex="0">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
                     <table id="counterfoilTable" class="table table-hover align-middle w-100">
                         <thead class="table-light text-uppercase small">
                             <tr>
-                                <th>Type</th>
-                                <th>Book / Serial Range</th>
+                                <th>Book Type</th>
+                                <th>Serial No. Range</th>
+                                <th>Total Pages</th>
                                 <th>Issue Order No.</th>
                                 <th>Received From</th>
                                 <th>Receipt No.</th>
                                 <th class="text-center">Quantity</th>
-                                <th>To Whom Issued</th>
-                                <th>Issue / Return Date</th>
-                                <th>Date of Purchase / Received</th>
+                                <th>Date Received / Logged</th>
                                 <th>Condition</th>
                                 <th>Specification / Remarks</th>
                                 <th class="text-center">Actions</th>
@@ -95,9 +182,9 @@ require_once '../../../includes/header.php';
                                 <td><span class="fw-bold text-dark"><?= htmlspecialchars($row['counterfoil_type']) ?></span></td>
                                 <td>
                                     <span class="font-monospace fw-bold text-dark"><?= !empty($row['book_serial_no']) ? htmlspecialchars($row['book_serial_no']) : '-' ?></span>
-                                    <?php if(!empty($row['page_count'])): ?>
-                                        <br><small class="text-muted"><i class="bi bi-file-earmark-break me-1"></i><?= htmlspecialchars($row['page_count']) ?></small>
-                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border font-monospace"><?= !empty($row['page_count']) ? htmlspecialchars($row['page_count']) : '-' ?></span>
                                 </td>
                                 <td><span class="badge bg-light text-dark border font-monospace"><?= !empty($row['issue_order_no']) ? htmlspecialchars($row['issue_order_no']) : '-' ?></span></td>
                                 <td><small class="text-secondary"><?= !empty($row['received_from']) ? htmlspecialchars($row['received_from']) : '-' ?></small></td>
@@ -106,13 +193,6 @@ require_once '../../../includes/header.php';
                                     <span class="badge bg-primary fs-6 px-2 py-1"><?= sprintf("%02d", $row['available_quantity']) ?></span>
                                     <br>
                                     <small class="text-muted" style="font-size:10px;" title="Baseline + Received">Base: <?= intval($row['initial_count']) ?> | Recv: <?= intval($row['received_quantity'] ?? 0) ?></small>
-                                </td>
-                                <td><small class="fw-semibold text-dark"><?= !empty($row['issued_to']) ? htmlspecialchars($row['issued_to']) : '-' ?></small></td>
-                                <td>
-                                    <small class="text-muted">
-                                        Issued: <span class="text-dark fw-medium"><?= !empty($row['date_of_issue']) ? htmlspecialchars($row['date_of_issue']) : '-' ?></span><br>
-                                        Return: <span class="text-dark fw-medium"><?= !empty($row['date_of_return']) ? htmlspecialchars($row['date_of_return']) : '-' ?></span>
-                                    </small>
                                 </td>
                                 <td class="text-secondary small fw-medium"><?= htmlspecialchars($row['purchase_date']) ?></td>
                                 <td><span class="badge <?= $badge_style ?> rounded-pill px-2.5 py-1.5"><?= htmlspecialchars($row['current_condition']) ?></span></td>
@@ -149,12 +229,81 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
         </div>
+    </div><!-- /#pane-books -->
+
+    <!-- TAB PANE 2: Issued Counterfoil Leaves & Certificates Register -->
+    <div class="tab-pane fade" id="pane-leaves" role="tabpanel" aria-labelledby="tab-leaves" tabindex="0">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-person-check me-2 text-primary"></i>Issued Counterfoil Leaves &amp; Certificates Register</h5>
+                    <small class="text-muted">Direct individual certificate and leaf issuance to farmers linked via National Identity Card (NIC)</small>
+                </div>
+                <button class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#issueCounterfoilLeafModal">
+                    <i class="bi bi-plus-circle me-1"></i>Issue New Leaf / Certificate
+                </button>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table id="leafIssuesTable" class="table table-hover align-middle w-100">
+                        <thead class="table-light text-uppercase small">
+                            <tr>
+                                <th>Date</th>
+                                <th>Leaf Serial No</th>
+                                <th>Book Type</th>
+                                <th>Farmer NIC</th>
+                                <th>Farmer Name &amp; Location</th>
+                                <th>Farm Reg No</th>
+                                <th>Current Animal Counts</th>
+                                <th>Purpose / Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $lf_stmt = $mysqli->prepare("SELECT * FROM counterfoil_leaf_issues WHERE range_id = ? ORDER BY id DESC");
+                            if ($lf_stmt) {
+                                $lf_stmt->bind_param("i", $range_id);
+                                $lf_stmt->execute();
+                                $lf_res = $lf_stmt->get_result();
+                                while ($lf = $lf_res->fetch_assoc()):
+                            ?>
+                            <tr>
+                                <td class="text-secondary small fw-medium"><?= htmlspecialchars($lf['issue_date']) ?></td>
+                                <td><span class="font-monospace fw-bold text-dark"><?= htmlspecialchars($lf['leaf_serial_no']) ?></span></td>
+                                <td><span class="badge bg-secondary-subtle text-secondary border"><?= htmlspecialchars($lf['counterfoil_type']) ?></span></td>
+                                <td><span class="font-monospace fw-bold text-primary"><?= htmlspecialchars($lf['farmer_nic']) ?></span></td>
+                                <td>
+                                    <div class="fw-bold text-dark"><?= htmlspecialchars($lf['farmer_name']) ?></div>
+                                    <small class="text-muted"><?= htmlspecialchars($lf['location_address'] ?: '-') ?></small>
+                                </td>
+                                <td><span class="badge bg-light text-dark border font-monospace"><?= htmlspecialchars($lf['farm_registration_no'] ?: '-') ?></span></td>
+                                <td><small class="text-secondary fw-semibold"><?= htmlspecialchars($lf['animal_counts_summary'] ?: '-') ?></small></td>
+                                <td>
+                                    <div class="text-dark small fw-medium"><?= htmlspecialchars($lf['purpose'] ?: '-') ?></div>
+                                    <?php if (!empty($lf['remarks'])): ?>
+                                        <small class="text-muted"><?= htmlspecialchars($lf['remarks']) ?></small>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php 
+                                endwhile;
+                                $lf_stmt->close();
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div><!-- /#pane-leaves -->
+</div><!-- /#counterfoilTabsContent -->
     </main>
 </div>
 
 <?php include 'models/add_counterfoil.php'; ?>
 <?php include 'models/edit_counterfoil.php'; ?>
 <?php include 'models/view_counterfoil.php'; ?>
+<?php include 'models/modal_issue_counterfoil_leaf.php'; ?>
 <?php include 'models/modal_board_of_survey.php'; ?>
 <?php include 'models/modal_inventory_transfer.php'; ?>
 
@@ -168,6 +317,14 @@ require_once '../../../includes/header.php';
     var dataTable;
     $(document).ready(function() {
         dataTable = $('#counterfoilTable').DataTable({ "pageLength": 10 });
+        if ($('#leafIssuesTable').length) {
+            $('#leafIssuesTable').DataTable({ "pageLength": 10, "order": [[0, "desc"]] });
+        }
+
+        // Adjust DataTables column alignments when toggling tabs
+        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+            $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+        });
 
         $('#addCounterfoilForm').on('submit', function(e) {
             e.preventDefault();
@@ -243,15 +400,6 @@ require_once '../../../includes/header.php';
         if (document.getElementById('view_counterfoil_specification')) {
             document.getElementById('view_counterfoil_specification').textContent = data.specification || '-';
         }
-        if (document.getElementById('view_counterfoil_issued_to')) {
-            document.getElementById('view_counterfoil_issued_to').textContent = data.issued_to || '-';
-        }
-        if (document.getElementById('view_counterfoil_date_of_issue')) {
-            document.getElementById('view_counterfoil_date_of_issue').textContent = data.date_of_issue || '-';
-        }
-        if (document.getElementById('view_counterfoil_date_of_return')) {
-            document.getElementById('view_counterfoil_date_of_return').textContent = data.date_of_return || '-';
-        }
         document.getElementById('view_counterfoil_remarks').textContent = data.remarks || '-';
         var modal = new bootstrap.Modal(document.getElementById('viewCounterfoilModal'));
         modal.show();
@@ -289,15 +437,6 @@ require_once '../../../includes/header.php';
         }
         if (document.getElementById('edit_counterfoil_specification')) {
             document.getElementById('edit_counterfoil_specification').value = data.specification || '';
-        }
-        if (document.getElementById('edit_counterfoil_issued_to')) {
-            document.getElementById('edit_counterfoil_issued_to').value = data.issued_to || '';
-        }
-        if (document.getElementById('edit_counterfoil_date_of_issue')) {
-            document.getElementById('edit_counterfoil_date_of_issue').value = data.date_of_issue || '';
-        }
-        if (document.getElementById('edit_counterfoil_date_of_return')) {
-            document.getElementById('edit_counterfoil_date_of_return').value = data.date_of_return || '';
         }
         document.getElementById('edit_counterfoil_remarks').value = data.remarks || '';
         document.getElementById('edit_counterfoil_unit').value = data.unit || 'range_veterinary_officer';

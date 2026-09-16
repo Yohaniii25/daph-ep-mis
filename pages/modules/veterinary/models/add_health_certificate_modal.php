@@ -35,27 +35,78 @@
 
                         <div class="col-12"><hr class="my-1 text-muted"></div>
 
+                        <!-- Farmer NIC Integration & Auto-Pull Section -->
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Health Certificate No.</label>
+                            <label class="form-label small fw-bold text-dark">
+                                Farmer Identity Card Number (NIC) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white text-muted"><i class="bi bi-person-badge-fill text-primary"></i></span>
+                                <input type="text" 
+                                       name="farmer_nic" 
+                                       id="add_hc_farmer_nic" 
+                                       class="form-control form-control-sm font-monospace fw-bold" 
+                                       placeholder="e.g. 198214502391 or 765421980V" 
+                                       autocomplete="off" 
+                                       required>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="btn_lookup_farmer_nic" title="Lookup Farmer">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small class="text-muted" style="font-size: 11px;">
+                                    Auto-fills Farm Reg No., Address &amp; Animal Counts
+                                </small>
+                                <span id="add_hc_nic_status" class="badge bg-secondary-subtle text-secondary small" style="display: none;"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Health Certificate No. <span class="text-danger">*</span></label>
                             <input type="text" name="health_certificate_no" class="form-control form-control-sm" placeholder="e.g. HC/2026/1029" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Date of Issue</label>
-                            <input type="date" name="date_of_issue" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>" required>
+
+                        <!-- Live Farmer Details & Animal Counts Auto-Pull Card (Collapsible / Dynamic) -->
+                        <div class="col-12" id="add_hc_farmer_info_card" style="display: none;">
+                            <div class="p-3 rounded-3 border bg-light-subtle shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Farmer Profile Linked
+                                    </span>
+                                    <small class="text-muted" id="add_hc_farmer_reg_display"></small>
+                                </div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-12">
+                                        <small class="text-muted d-block fw-semibold" style="font-size: 11px;">CURRENT REGISTERED ANIMAL POPULATION</small>
+                                        <div class="d-flex flex-wrap gap-2 mt-1" id="add_hc_animal_counts_badges">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Farm Registration No.</label>
-                            <input type="text" name="farm_registration_no" class="form-control form-control-sm" placeholder="e.g. FRN/BAL/89">
+                            <input type="text" name="farm_registration_no" id="add_hc_farm_registration_no" class="form-control form-control-sm font-monospace" placeholder="e.g. FRN/EP/KAN/001">
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small fw-bold">Date of Issue <span class="text-danger">*</span></label>
+                            <input type="date" name="date_of_issue" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>" required>
+                        </div>
+
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Species Details</label>
-                            <input type="text" name="species" class="form-control form-control-sm" placeholder="e.g. Cattle, Poultry, Canine">
+                            <input type="text" name="species" id="add_hc_species" class="form-control form-control-sm" placeholder="e.g. Cattle, Buffalo, Goat, Poultry">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Vehicle Fitness Certificate No.</label>
+                            <input type="text" name="vehicle_fitness_certificate_no" class="form-control form-control-sm" placeholder="e.g. VF/4580">
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label small fw-bold">Applicant Name & Address</label>
-                            <textarea name="applicant_name_address" class="form-control form-control-sm" rows="2" placeholder="Enter Full Name and Registered Address" required></textarea>
+                            <label class="form-label small fw-bold">Applicant Name &amp; Address <span class="text-danger">*</span></label>
+                            <textarea name="applicant_name_address" id="add_hc_applicant_name_address" class="form-control form-control-sm" rows="2" placeholder="Enter Full Name and Registered Address" required></textarea>
                         </div>
 
                         <div class="col-md-6">

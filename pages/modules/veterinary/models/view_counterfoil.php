@@ -55,18 +55,6 @@
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Specification (Brand / Model / Form Ref)</small>
                         <span class="fw-semibold text-dark" id="view_counterfoil_specification">-</span>
                     </div>
-                    <div class="col-md-6">
-                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">To Whom Issued</small>
-                        <span class="fw-bold text-primary" id="view_counterfoil_issued_to">-</span>
-                    </div>
-                    <div class="col-md-3">
-                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Date of Issue</small>
-                        <span class="fw-semibold text-dark" id="view_counterfoil_date_of_issue">-</span>
-                    </div>
-                    <div class="col-md-3">
-                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Date of Return</small>
-                        <span class="fw-semibold text-dark" id="view_counterfoil_date_of_return">-</span>
-                    </div>
                     <div class="col-md-12">
                         <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:11px;">Remarks / Additional Notes</small>
                         <span class="text-secondary" id="view_counterfoil_remarks">-</span>

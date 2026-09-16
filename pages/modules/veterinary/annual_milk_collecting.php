@@ -7,6 +7,10 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_
     exit();
 }
 
+$qs = !empty($_SERVER['QUERY_STRING']) ? '&' . $_SERVER['QUERY_STRING'] : '';
+header("Location: milk_collection_details.php?tab=collecting" . $qs);
+exit();
+
 $user_id = $_SESSION['user_id'] ?? null;
 $range_id = $_SESSION['range_id'] ?? null;
 

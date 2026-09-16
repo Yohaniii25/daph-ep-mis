@@ -53,9 +53,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Calculations
     $total_mileage = round($milometer_in - $milometer_out, 2);
-    $fuel_balance = round(($fuel_position_in_tank + $fuel_drawn) - $fuel_consumed, 2);
+
+    $prev_fuel_balance = isset($_POST['prev_fuel_balance']) ? floatval($_POST['prev_fuel_balance']) : 0.0;
+    if ($prev_fuel_balance <= 0) {
+        $prev_stmt = $mysqli->prepare("SELECT fuel_balance FROM vehicle_running_charts WHERE vehicle_id = ? AND is_active = 1 AND id < ? ORDER BY trip_date DESC, id DESC LIMIT 1");
+        if ($prev_stmt) {
+            $prev_stmt->bind_param("ii", $vehicle_id, $id);
+            $prev_stmt->execute();
+            $prev_res = $prev_stmt->get_result()->fetch_assoc();
+            if ($prev_res && isset($prev_res['fuel_balance'])) {
+                $prev_fuel_balance = floatval($prev_res['fuel_balance']);
+            }
+            $prev_stmt->close();
+        }
+    }
+
+    if (isset($_POST['fuel_position_in_tank']) && floatval($_POST['fuel_position_in_tank']) > 0) {
+        $fuel_position_in_tank = floatval($_POST['fuel_position_in_tank']);
+    } else {
+        $fuel_position_in_tank = round($prev_fuel_balance + $fuel_drawn, 2);
+    }
+
+    $fuel_balance = round($fuel_position_in_tank - $fuel_consumed, 2);
     if ($fuel_balance < 0) {
-        echo json_encode(['success' => false, 'message' => 'Fuel consumed cannot exceed total fuel available in tank + drawn.']);
+        echo json_encode(['success' => false, 'message' => 'Fuel consumed cannot exceed total fuel available in tank (' . $fuel_position_in_tank . ' L).']);
         exit();
     }
     $miles_per_gallon = ($fuel_consumed > 0) ? round($total_mileage / $fuel_consumed, 2) : 0.00;

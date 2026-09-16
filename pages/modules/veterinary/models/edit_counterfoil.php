@@ -59,16 +59,20 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-dark">
-                                        Book / Serial No. Range (e.g. 1-5)
+                                        Specific Serial Number Range <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" name="book_serial_no" id="edit_counterfoil_book_serial_no" class="form-control font-monospace" placeholder="e.g. 1-5">
-                                    <small class="text-muted" style="font-size: 10px;">Number of book - serial numbers (e.g. 1-5)</small>
+                                    <input type="text" name="book_serial_no" id="edit_counterfoil_book_serial_no" class="form-control font-monospace fw-semibold" placeholder="e.g. 001001 - 001050" required>
+                                    <small class="text-muted" style="font-size: 10px;">Specific start and end serial numbers (e.g. 001001 - 001050)</small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-dark">
-                                        Page Counts (Leaves / Pages per Book)
+                                        Total Page Counts <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" name="page_count" id="edit_counterfoil_page_count" class="form-control" placeholder="e.g. 50 Pages / 100 Folios">
+                                    <div class="input-group">
+                                        <input type="number" name="page_count" id="edit_counterfoil_page_count" class="form-control font-monospace fw-bold" placeholder="50" min="1" required>
+                                        <span class="input-group-text bg-light text-muted small">Pages / Leaves</span>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 10px;">Total leaves or folios per book</small>
                                 </div>
                             </div>
                         </div>
@@ -203,36 +207,13 @@
                         </div>
                     </div>
 
-                    <!-- SECTION 5: Custody & Issue Tracking -->
-                    <div class="card border-0 shadow-sm rounded-3 mb-3">
-                        <div class="card-body p-3">
-                            <h6 class="text-uppercase fw-bold text-muted small mb-3" style="letter-spacing: 0.5px;">
-                                <i class="bi bi-person-check-fill me-1 text-primary"></i> Custody / Issue &amp; Return Tracking
-                            </h6>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-dark">To Whom Issued</label>
-                                    <input type="text" name="issued_to" id="edit_counterfoil_issued_to" class="form-control" placeholder="e.g. Dr. K. Perera / Range Veterinary Officer">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-dark">Date of Issue</label>
-                                    <input type="date" name="date_of_issue" id="edit_counterfoil_date_of_issue" class="form-control">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-dark">Date of Return</label>
-                                    <input type="date" name="date_of_return" id="edit_counterfoil_date_of_return" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION 6: Remarks / Serial Numbers -->
+                    <!-- SECTION 5: Remarks / Notes -->
                     <div class="card border-0 shadow-sm rounded-3">
                         <div class="card-body p-3">
                             <label class="form-label small fw-bold text-dark mb-1">
-                                <i class="bi bi-123 me-1 text-muted"></i>Serial Numbers &amp; Additional Remarks
+                                <i class="bi bi-chat-left-text me-1 text-muted"></i>Additional Remarks &amp; Stock Notes
                             </label>
-                            <textarea name="remarks" id="edit_counterfoil_remarks" class="form-control shadow-none" rows="2" placeholder="e.g. Serial Nos 0014500 to 0014600, custodial officer notes..."></textarea>
+                            <textarea name="remarks" id="edit_counterfoil_remarks" class="form-control shadow-none" rows="2" placeholder="e.g. Counterfoil book physical verification notes..."></textarea>
                         </div>
                     </div>
                 </div>

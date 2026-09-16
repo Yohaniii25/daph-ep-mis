@@ -35,6 +35,26 @@ if (!empty($range_id)) {
     }
 }
 
+// Helper function to handle PDF upload
+function handlePdfUpload($file_input_name) {
+    if (isset($_FILES[$file_input_name]) && $_FILES[$file_input_name]['error'] === UPLOAD_ERR_OK) {
+        $file_tmp = $_FILES[$file_input_name]['tmp_name'];
+        $file_name = $_FILES[$file_input_name]['name'];
+        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        if ($file_ext === 'pdf') {
+            $target_dir = __DIR__ . '/../../../assets/uploads/code_of_conduct/';
+            if (!is_dir($target_dir)) {
+                mkdir($target_dir, 0777, true);
+            }
+            $new_filename = 'coc_' . time() . '_' . bin2hex(random_bytes(4)) . '.pdf';
+            if (move_uploaded_file($file_tmp, $target_dir . $new_filename)) {
+                return 'assets/uploads/code_of_conduct/' . $new_filename;
+            }
+        }
+    }
+    return null;
+}
+
 // Inline CRUD actions:
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -50,18 +70,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $financial_records_availability = trim($_POST['financial_records_availability']);
             $regulated_by = trim($_POST['regulated_by']);
             $tp_no = trim($_POST['tp_no']);
+            $code_of_conduct_pdf = handlePdfUpload('code_of_conduct_pdf');
 
             $insert_query = "
                 INSERT INTO livestock_societies 
                 (vs_range, gn_division, name_address, overall_objective, total_members, 
                  reg_no, reg_department, major_activities, financial_records_availability, 
-                 regulated_by, tp_no)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 regulated_by, tp_no, code_of_conduct_pdf)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $mysqli->prepare($insert_query);
             if ($stmt) {
                 $stmt->bind_param(
-                    "ssssissssss",
+                    "ssssisssssss",
                     $vs_range,
                     $gn_division,
                     $name_address,
@@ -72,7 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $major_activities,
                     $financial_records_availability,
                     $regulated_by,
-                    $tp_no
+                    $tp_no,
+                    $code_of_conduct_pdf
                 );
                 if ($stmt->execute()) {
                     header("Location: annual_livestock_societies.php?status=success&msg=" . urlencode("Livestock society added successfully."));
@@ -98,40 +120,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $regulated_by = trim($_POST['regulated_by']);
             $tp_no = trim($_POST['tp_no']);
 
-            $update_query = "
-                UPDATE livestock_societies 
-                SET vs_range = ?, gn_division = ?, name_address = ?, overall_objective = ?, total_members = ?, 
-                    reg_no = ?, reg_department = ?, major_activities = ?, financial_records_availability = ?, 
-                    regulated_by = ?, tp_no = ?
-                WHERE id = ? AND vs_range = ?
-            ";
-            $stmt = $mysqli->prepare($update_query);
-            if ($stmt) {
-                $stmt->bind_param(
-                    "ssssissssssis",
-                    $vs_range,
-                    $gn_division,
-                    $name_address,
-                    $overall_objective,
-                    $total_members,
-                    $reg_no,
-                    $reg_department,
-                    $major_activities,
-                    $financial_records_availability,
-                    $regulated_by,
-                    $tp_no,
-                    $id,
-                    $range_name
-                );
-                if ($stmt->execute()) {
-                    header("Location: annual_livestock_societies.php?status=success&msg=" . urlencode("Livestock society updated successfully."));
-                } else {
-                    header("Location: annual_livestock_societies.php?status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+            $new_pdf = handlePdfUpload('code_of_conduct_pdf');
+            if ($new_pdf !== null) {
+                // Remove old PDF if exists
+                $old_q = $mysqli->prepare("SELECT code_of_conduct_pdf FROM livestock_societies WHERE id = ?");
+                if ($old_q) {
+                    $old_q->bind_param("i", $id);
+                    $old_q->execute();
+                    $res = $old_q->get_result()->fetch_assoc();
+                    if (!empty($res['code_of_conduct_pdf'])) {
+                        $old_file = __DIR__ . '/../../../' . $res['code_of_conduct_pdf'];
+                        if (file_exists($old_file)) {
+                            @unlink($old_file);
+                        }
+                    }
+                    $old_q->close();
                 }
-                $stmt->close();
+
+                $update_query = "
+                    UPDATE livestock_societies 
+                    SET vs_range = ?, gn_division = ?, name_address = ?, overall_objective = ?, total_members = ?, 
+                        reg_no = ?, reg_department = ?, major_activities = ?, financial_records_availability = ?, 
+                        regulated_by = ?, tp_no = ?, code_of_conduct_pdf = ?
+                    WHERE id = ? AND vs_range = ?
+                ";
+                $stmt = $mysqli->prepare($update_query);
+                if ($stmt) {
+                    $stmt->bind_param(
+                        "ssssisssssssis",
+                        $vs_range,
+                        $gn_division,
+                        $name_address,
+                        $overall_objective,
+                        $total_members,
+                        $reg_no,
+                        $reg_department,
+                        $major_activities,
+                        $financial_records_availability,
+                        $regulated_by,
+                        $tp_no,
+                        $new_pdf,
+                        $id,
+                        $range_name
+                    );
+                    $stmt->execute();
+                    $stmt->close();
+                }
             } else {
-                header("Location: annual_livestock_societies.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
+                $update_query = "
+                    UPDATE livestock_societies 
+                    SET vs_range = ?, gn_division = ?, name_address = ?, overall_objective = ?, total_members = ?, 
+                        reg_no = ?, reg_department = ?, major_activities = ?, financial_records_availability = ?, 
+                        regulated_by = ?, tp_no = ?
+                    WHERE id = ? AND vs_range = ?
+                ";
+                $stmt = $mysqli->prepare($update_query);
+                if ($stmt) {
+                    $stmt->bind_param(
+                        "ssssissssssis",
+                        $vs_range,
+                        $gn_division,
+                        $name_address,
+                        $overall_objective,
+                        $total_members,
+                        $reg_no,
+                        $reg_department,
+                        $major_activities,
+                        $financial_records_availability,
+                        $regulated_by,
+                        $tp_no,
+                        $id,
+                        $range_name
+                    );
+                    $stmt->execute();
+                    $stmt->close();
+                }
             }
+
+            header("Location: annual_livestock_societies.php?status=success&msg=" . urlencode("Livestock society updated successfully."));
             exit();
         }
     }
@@ -139,6 +205,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])) {
     $id = intval($_GET['id']);
+    // Unlink file if exists
+    $old_q = $mysqli->prepare("SELECT code_of_conduct_pdf FROM livestock_societies WHERE id = ?");
+    if ($old_q) {
+        $old_q->bind_param("i", $id);
+        $old_q->execute();
+        $res = $old_q->get_result()->fetch_assoc();
+        if (!empty($res['code_of_conduct_pdf'])) {
+            $old_file = __DIR__ . '/../../../' . $res['code_of_conduct_pdf'];
+            if (file_exists($old_file)) {
+                @unlink($old_file);
+            }
+        }
+        $old_q->close();
+    }
+
     $stmt = $mysqli->prepare("DELETE FROM livestock_societies WHERE id = ? AND vs_range = ?");
     if ($stmt) {
         $stmt->bind_param("is", $id, $range_name);
@@ -262,6 +343,7 @@ require_once '../../../includes/header.php';
                                 <th>Availability of Financial Records</th>
                                 <th>Regulated By</th>
                                 <th>T.P.No</th>
+                                <th class="text-center">Code of Conduct</th>
                                 <th class="text-center" style="width: 12%">Actions</th>
                             </tr>
                         </thead>
@@ -279,7 +361,8 @@ require_once '../../../includes/header.php';
                                     data-major_activities="<?= htmlspecialchars($row['major_activities']) ?>"
                                     data-financial_records_availability="<?= htmlspecialchars($row['financial_records_availability']) ?>"
                                     data-regulated_by="<?= htmlspecialchars($row['regulated_by']) ?>"
-                                    data-tp_no="<?= htmlspecialchars($row['tp_no']) ?>">
+                                    data-tp_no="<?= htmlspecialchars($row['tp_no']) ?>"
+                                    data-code_of_conduct_pdf="<?= htmlspecialchars($row['code_of_conduct_pdf'] ?? '') ?>">
                                     <td class="fw-bold text-center"><?= htmlspecialchars($row['id']) ?></td>
                                     <td><?= htmlspecialchars($row['vs_range']) ?></td>
                                     <td><?= htmlspecialchars($row['gn_division']) ?></td>
@@ -296,6 +379,15 @@ require_once '../../../includes/header.php';
                                     </td>
                                     <td><?= htmlspecialchars($row['regulated_by']) ?></td>
                                     <td><?= htmlspecialchars($row['tp_no']) ?></td>
+                                    <td class="text-center">
+                                        <?php if (!empty($row['code_of_conduct_pdf'])): ?>
+                                            <a href="../../../<?= htmlspecialchars($row['code_of_conduct_pdf']) ?>" target="_blank" class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold" title="Open Code of Conduct PDF">
+                                                <i class="bi bi-file-earmark-pdf-fill me-1"></i>PDF
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="badge bg-light text-muted border">None</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="text-center">
                                         <button class="btn btn-sm btn-outline-info btn-view" title="View"><i class="bi bi-eye"></i></button>
                                         <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
@@ -315,7 +407,7 @@ require_once '../../../includes/header.php';
 <!-- Modal: Add Record -->
 <div class="modal fade" id="addSocModal" tabindex="-1" aria-labelledby="addSocModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="add">
             <div class="modal-content">
                 <div class="modal-header" style="background-color: #370709; color: white;">
@@ -372,6 +464,11 @@ require_once '../../../includes/header.php';
                             <label class="form-label">T.P. No</label>
                             <input type="text" name="tp_no" class="form-control" placeholder="Telephone Number">
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>Code of Conduct (PDF Document)</label>
+                            <input type="file" name="code_of_conduct_pdf" class="form-control" accept="application/pdf">
+                            <small class="text-muted">Attach PDF document representing this society's official Code of Conduct.</small>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -386,7 +483,7 @@ require_once '../../../includes/header.php';
 <!-- Modal: Edit Record -->
 <div class="modal fade" id="editSocModal" tabindex="-1" aria-labelledby="editSocModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="id" id="edit_id">
             <div class="modal-content">
@@ -443,6 +540,12 @@ require_once '../../../includes/header.php';
                         <div class="col-md-4">
                             <label class="form-label">T.P. No</label>
                             <input type="text" name="tp_no" id="edit_tp_no" class="form-control">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold"><i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>Code of Conduct (PDF Document)</label>
+                            <input type="file" name="code_of_conduct_pdf" class="form-control" accept="application/pdf">
+                            <div id="edit_code_of_conduct_preview" class="mt-1"></div>
+                            <small class="text-muted">Attach new PDF to replace existing Code of Conduct, or leave empty to retain current.</small>
                         </div>
                     </div>
                 </div>
@@ -509,6 +612,10 @@ require_once '../../../includes/header.php';
                         <tr>
                             <th>T.P. No</th>
                             <td id="view_tp_no"></td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>Code of Conduct</th>
+                            <td id="view_code_of_conduct"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -587,6 +694,13 @@ $(document).ready(function() {
         $(\'#view_regulated_by\').text($row.data(\'regulated_by\') || \'N/A\');
         $(\'#view_tp_no\').text($row.data(\'tp_no\') || \'N/A\');
 
+        var coc = $row.data(\'code_of_conduct_pdf\');
+        if (coc) {
+            $(\'#view_code_of_conduct\').html(\'<a href="../../../\' + coc + \'" target="_blank" class="btn btn-sm btn-danger fw-bold"><i class="bi bi-file-earmark-pdf-fill me-1"></i>View Code of Conduct Document</a>\');
+        } else {
+            $(\'#view_code_of_conduct\').html(\'<span class="badge bg-light text-muted border">No PDF Document Attached</span>\');
+        }
+
         new bootstrap.Modal(document.getElementById(\'viewSocModal\')).show();
     });
 
@@ -604,6 +718,13 @@ $(document).ready(function() {
         $(\'#edit_financial_records_availability\').val($row.data(\'financial_records_availability\'));
         $(\'#edit_regulated_by\').val($row.data(\'regulated_by\'));
         $(\'#edit_tp_no\').val($row.data(\'tp_no\'));
+
+        var coc = $row.data(\'code_of_conduct_pdf\');
+        if (coc) {
+            $(\'#edit_code_of_conduct_preview\').html(\'<span class="badge bg-light text-dark border me-2"><i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>Current PDF Attached</span><a href="../../../\' + coc + \'" target="_blank" class="btn btn-sm btn-outline-danger py-0 px-2 fw-bold">Open File</a>\');
+        } else {
+            $(\'#edit_code_of_conduct_preview\').html(\'<small class="text-muted fst-italic">No document currently attached.</small>\');
+        }
 
         new bootstrap.Modal(document.getElementById(\'editSocModal\')).show();
     });

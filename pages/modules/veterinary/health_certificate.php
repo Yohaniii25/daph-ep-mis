@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once '../../../config/db_connect.php';
 
@@ -47,7 +47,7 @@ $selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y')
 $records = [];
 if (!empty($range_id)) {
     $records_sql = "
-        SELECT id, report_year, report_month, health_certificate_no, applicant_name_address, 
+        SELECT id, report_year, report_month, health_certificate_no, farmer_nic, applicant_name_address, 
                farm_registration_no, date_of_issue, species, animal_details_male, 
                animal_details_female, vehicle_fitness_certificate_no, purpose 
         FROM health_certificate_issues 
@@ -186,23 +186,24 @@ require_once '../../../includes/header.php';
                     <table class="table table-hover align-middle mb-0" id="healthCertTable" style="min-width: 1200px;">
                         <thead class="table-light text-secondary small uppercase">
                             <tr>
-                                <th class="text-center" style="width: 8%">Month</th>
-                                <th class="text-center" style="width: 10%">Certificate No</th>
-                                <th style="width: 18%">Applicant Name & Address</th>
-                                <th class="text-center" style="width: 10%">Farm Reg No</th>
+                                <th class="text-center" style="width: 7%">Month</th>
+                                <th class="text-center" style="width: 9%">Certificate No</th>
+                                <th class="text-center" style="width: 10%">Farmer NIC</th>
+                                <th style="width: 17%">Applicant Name & Address</th>
+                                <th class="text-center" style="width: 9%">Farm Reg No</th>
                                 <th class="text-center" style="width: 8%">Issue Date</th>
                                 <th class="text-center" style="width: 8%">Species</th>
                                 <th class="text-end" style="width: 6%">Male Qty</th>
                                 <th class="text-end" style="width: 6%">Female Qty</th>
-                                <th class="text-center" style="width: 10%">Vehicle Cert</th>
-                                <th style="width: 10%">Purpose</th>
+                                <th class="text-center" style="width: 9%">Vehicle Cert</th>
+                                <th style="width: 9%">Purpose</th>
                                 <th class="text-center" style="width: 8%">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="small">
                             <?php if (empty($records)): ?>
                                 <tr>
-                                    <td colspan="11" class="text-center py-4 text-muted">
+                                    <td colspan="12" class="text-center py-4 text-muted">
                                         <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                                         No records located for the selected year <?= $selected_year ?>.
                                     </td>
@@ -214,6 +215,7 @@ require_once '../../../includes/header.php';
                                         data-year="<?= htmlspecialchars($row['report_year']) ?>"
                                         data-month="<?= htmlspecialchars($row['report_month']) ?>"
                                         data-cert_no="<?= htmlspecialchars($row['health_certificate_no']) ?>"
+                                        data-farmer_nic="<?= htmlspecialchars($row['farmer_nic'] ?? '') ?>"
                                         data-applicant="<?= htmlspecialchars($row['applicant_name_address']) ?>"
                                         data-farm_reg="<?= htmlspecialchars($row['farm_registration_no']) ?>"
                                         data-issue_date="<?= htmlspecialchars($row['date_of_issue']) ?>"
@@ -224,6 +226,7 @@ require_once '../../../includes/header.php';
                                         data-purpose="<?= htmlspecialchars($row['purpose']) ?>">
                                         <td class="text-center fw-bold text-dark"><?= $month_names[$row['report_month']] ?></td>
                                         <td class="text-center font-monospace fw-semibold"><?= htmlspecialchars($row['health_certificate_no']) ?></td>
+                                        <td class="text-center font-monospace fw-bold text-dark"><?= htmlspecialchars($row['farmer_nic'] ?: '-') ?></td>
                                         <td><?= nl2br(htmlspecialchars($row['applicant_name_address'])) ?></td>
                                         <td class="text-center font-monospace"><?= htmlspecialchars($row['farm_registration_no'] ?: '-') ?></td>
                                         <td class="text-center"><?= htmlspecialchars($row['date_of_issue']) ?></td>
@@ -307,6 +310,92 @@ $(document).ready(function() {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
+    // Farmer NIC Auto-Pull Helper Function
+    function lookupFarmerNIC(nicInputSelector, prefix) {
+        var nic = $(nicInputSelector).val().trim();
+        if (!nic) {
+            $("#" + prefix + "_nic_status").hide();
+            $("#" + prefix + "_farmer_info_card").slideUp();
+            return;
+        }
+
+        $("#" + prefix + "_nic_status").removeClass("bg-success text-white bg-warning text-dark bg-danger").addClass("bg-secondary-subtle text-secondary").html(\'<span class="spinner-border spinner-border-sm me-1"></span>Verifying...\').show();
+
+        $.ajax({
+            url: "processors/get_farmer_by_nic.php",
+            type: "GET",
+            data: { nic: nic },
+            dataType: "json",
+            success: function(resp) {
+                if (resp.success && resp.found && resp.farmer) {
+                    var f = resp.farmer;
+                    $("#" + prefix + "_nic_status").removeClass("bg-secondary-subtle text-secondary bg-warning text-dark bg-danger").addClass("bg-success-subtle text-success border border-success-subtle").html(\'<i class="bi bi-check-circle-fill me-1"></i>Found: \' + f.full_name);
+
+                    // Auto-fill form fields
+                    if (prefix === "add_hc") {
+                        $("#add_hc_farm_registration_no").val(f.farm_registration_no || "");
+                        var fullAddress = f.full_name + "\\n" + (f.location_address || "");
+                        $("#add_hc_applicant_name_address").val(fullAddress);
+                    } else if (prefix === "edit_hc") {
+                        $("#edit_farm_registration_no").val(f.farm_registration_no || "");
+                        var fullAddress = f.full_name + "\\n" + (f.location_address || "");
+                        $("#edit_applicant_name_address").val(fullAddress);
+                    }
+
+                    // Render animal counts badges
+                    var animals = f.animal_counts;
+                    var badgesHtml = \'\' +
+                        \'<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Cattle: <strong>\' + animals.cattle + \'</strong></span>\' +
+                        \'<span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Buffalo: <strong>\' + animals.buffalo + \'</strong></span>\' +
+                        \'<span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Goat: <strong>\' + animals.goat + \'</strong></span>\' +
+                        \'<span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Swine: <strong>\' + animals.swine + \'</strong></span>\' +
+                        \'<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Poultry: <strong>\' + animals.poultry + \'</strong></span>\' +
+                        \'<span class="badge bg-dark text-white px-2 py-1"><i class="bi bi-calculator me-1"></i>Total: <strong>\' + f.total_animal_count + \'</strong></span>\';
+
+                    $("#" + prefix + "_animal_counts_badges").html(badgesHtml);
+                    $("#" + prefix + "_farmer_reg_display").html(\'<strong>Farm Reg:</strong> \' + (f.farm_registration_no || "N/A") + \' | <strong>Location:</strong> \' + (f.location_address || "N/A"));
+                    $("#" + prefix + "_farmer_info_card").slideDown();
+                } else {
+                    $("#" + prefix + "_nic_status").removeClass("bg-secondary-subtle text-secondary bg-success text-white").addClass("bg-warning-subtle text-dark border border-warning-subtle").html(\'<i class="bi bi-exclamation-triangle me-1"></i>Unregistered NIC (Manual Entry)\');
+                    $("#" + prefix + "_farmer_info_card").slideUp();
+                }
+            },
+            error: function() {
+                $("#" + prefix + "_nic_status").removeClass("bg-secondary-subtle text-secondary").addClass("bg-danger text-white").text("Lookup error");
+            }
+        });
+    }
+
+    // Add modal NIC listeners
+    var addNicTimer = null;
+    $("#add_hc_farmer_nic").on("input", function() {
+        clearTimeout(addNicTimer);
+        addNicTimer = setTimeout(function() {
+            lookupFarmerNIC("#add_hc_farmer_nic", "add_hc");
+        }, 300);
+    });
+    $("#add_hc_farmer_nic").on("blur", function() {
+        lookupFarmerNIC("#add_hc_farmer_nic", "add_hc");
+    });
+    $("#btn_lookup_farmer_nic").on("click", function() {
+        lookupFarmerNIC("#add_hc_farmer_nic", "add_hc");
+    });
+
+    // Edit modal NIC listeners
+    var editNicTimer = null;
+    $("#edit_farmer_nic").on("input", function() {
+        clearTimeout(editNicTimer);
+        editNicTimer = setTimeout(function() {
+            lookupFarmerNIC("#edit_farmer_nic", "edit_hc");
+        }, 300);
+    });
+    $("#edit_farmer_nic").on("blur", function() {
+        lookupFarmerNIC("#edit_farmer_nic", "edit_hc");
+    });
+    $("#btn_lookup_edit_farmer_nic").on("click", function() {
+        lookupFarmerNIC("#edit_farmer_nic", "edit_hc");
+    });
+
     // Edit button click handler
     $(document).on(\'click\', \'.btn-edit-health\', function() {
         var $row = $(this).closest(\'tr\');
@@ -314,6 +403,7 @@ $(document).ready(function() {
         $(\'#edit_report_year\').val($row.data(\'year\'));
         $(\'#edit_report_month\').val($row.data(\'month\'));
         $(\'#edit_health_certificate_no\').val($row.data(\'cert_no\'));
+        $(\'#edit_farmer_nic\').val($row.data(\'farmer_nic\') || \'\');
         $(\'#edit_applicant_name_address\').val($row.data(\'applicant\'));
         $(\'#edit_farm_registration_no\').val($row.data(\'farm_reg\'));
         $(\'#edit_date_of_issue\').val($row.data(\'issue_date\'));
@@ -322,6 +412,13 @@ $(document).ready(function() {
         $(\'#edit_animal_details_female\').val($row.data(\'female\'));
         $(\'#edit_vehicle_fitness_certificate_no\').val($row.data(\'vehicle\'));
         $(\'#edit_purpose\').val($row.data(\'purpose\'));
+
+        if ($row.data(\'farmer_nic\')) {
+            lookupFarmerNIC("#edit_farmer_nic", "edit_hc");
+        } else {
+            $("#edit_hc_farmer_info_card").hide();
+            $("#edit_hc_nic_status").hide();
+        }
 
         new bootstrap.Modal(document.getElementById(\'editHealthCertModal\')).show();
     });
