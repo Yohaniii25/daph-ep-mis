@@ -264,8 +264,12 @@ require_once '../../../includes/header.php';
                                             <label class="form-check-label small" for="animGoat">Goat</label>
                                         </div>
                                         <div class="form-check mb-1">
+                                            <input class="form-check-input animal-option" type="checkbox" value="Sheep" id="animSheep" checked>
+                                            <label class="form-check-label small" for="animSheep">Sheep</label>
+                                        </div>
+                                        <div class="form-check mb-1">
                                             <input class="form-check-input animal-option" type="checkbox" value="Chicken" id="animChicken" checked>
-                                            <label class="form-check-label small" for="animChicken">Chicken</label>
+                                            <label class="form-check-label small" for="animChicken">Poultry</label>
                                         </div>
                                         <div class="form-check mb-1">
                                             <input class="form-check-input animal-option" type="checkbox" value="Pig" id="animPig" checked>
@@ -342,7 +346,7 @@ require_once '../../../includes/header.php';
                         <a href="meat_sales.php" class="btn btn-danger w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 border-2">
                             <i class="bi bi-basket3-fill fs-3 mb-2"></i>
                             <span class="text-center fw-bold">Meat Sales Details</span>
-                            <small class="text-white-50 small">Beef, Mutton, Chicken, Other</small>
+                            <small class="text-white-50 small">Beef, Mutton, Poultry, Other</small>
                         </a>
                     </div>
                     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
@@ -668,6 +672,7 @@ $(document).ready(function() {
                     $("#animal_count_Cow").val(res.data.Cow || 0);
                     $("#animal_count_Buffalo").val(res.data.Buffalo || 0);
                     $("#animal_count_Goat").val(res.data.Goat || 0);
+                    $("#animal_count_Sheep").val(res.data.Sheep || 0);
                     $("#animal_count_Chicken").val(res.data.Chicken || 0);
                     $("#animal_count_Pig").val(res.data.Pig || 0);
                     $("#animal_count_Others").val(res.data.Others || 0);
@@ -704,7 +709,7 @@ $(document).ready(function() {
                     tbody.empty();
                     $("#animalRecordsCountBadge").text(res.data.length);
                     if (res.data.length === 0) {
-                        tbody.append('<tr><td colspan="9" class="text-center py-3 text-muted">No animal population records found for this range.</td></tr>');
+                        tbody.append('<tr><td colspan="10" class="text-center py-3 text-muted">No animal population records found for this range.</td></tr>');
                         return;
                     }
                     res.data.forEach(function(item) {
@@ -713,6 +718,7 @@ $(document).ready(function() {
                                 data-cow="${item.Cow}" 
                                 data-buffalo="${item.Buffalo}" 
                                 data-goat="${item.Goat}" 
+                                data-sheep="${item.Sheep || 0}" 
                                 data-chicken="${item.Chicken}" 
                                 data-pig="${item.Pig}" 
                                 data-others="${item.Others}">
@@ -720,6 +726,7 @@ $(document).ready(function() {
                                 <td class="text-end font-monospace">${Number(item.Cow).toLocaleString()}</td>
                                 <td class="text-end font-monospace">${Number(item.Buffalo).toLocaleString()}</td>
                                 <td class="text-end font-monospace">${Number(item.Goat).toLocaleString()}</td>
+                                <td class="text-end font-monospace">${Number(item.Sheep || 0).toLocaleString()}</td>
                                 <td class="text-end font-monospace">${Number(item.Chicken).toLocaleString()}</td>
                                 <td class="text-end font-monospace">${Number(item.Pig).toLocaleString()}</td>
                                 <td class="text-end font-monospace">${Number(item.Others).toLocaleString()}</td>
@@ -741,7 +748,7 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                $("#recordedAnimalDemographicsTable tbody").html('<tr><td colspan="9" class="text-center py-3 text-danger">Failed to load records.</td></tr>');
+                $("#recordedAnimalDemographicsTable tbody").html('<tr><td colspan="10" class="text-center py-3 text-danger">Failed to load records.</td></tr>');
             }
         });
     }
@@ -835,6 +842,7 @@ $(document).ready(function() {
         const cow = row.data("cow");
         const buffalo = row.data("buffalo");
         const goat = row.data("goat");
+        const sheep = row.data("sheep");
         const chicken = row.data("chicken");
         const pig = row.data("pig");
         const others = row.data("others");
@@ -843,6 +851,7 @@ $(document).ready(function() {
         $("#animal_count_Cow").val(cow);
         $("#animal_count_Buffalo").val(buffalo);
         $("#animal_count_Goat").val(goat);
+        $("#animal_count_Sheep").val(sheep);
         $("#animal_count_Chicken").val(chicken);
         $("#animal_count_Pig").val(pig);
         $("#animal_count_Others").val(others);

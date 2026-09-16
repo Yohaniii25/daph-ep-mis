@@ -61,6 +61,6 @@ if ($edit_id > 0) {
 }
 
 // 5. Clean Redirect keeping the view context intact
-header("Location: ../vaccination_targets.php?year=" . $year);
+header("Location: ../vaccination_targets.php?year=" . $year . "&tab=vaccinators");
 $mysqli->close();
 exit();

@@ -33,6 +33,6 @@ if ($del) {
     $_SESSION['msg_type'] = "danger";
 }
 
-header("Location: ../vaccination_targets.php?year=" . $year);
+header("Location: ../vaccination_targets.php?year=" . $year . "&tab=vaccinators");
 $mysqli->close();
 exit();

@@ -37,7 +37,7 @@ if ($action !== null) {
         exit();
     }
 
-    $valid_animals = ['Cow', 'Buffalo', 'Goat', 'Chicken', 'Pig', 'Others'];
+    $valid_animals = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Chicken', 'Pig', 'Others'];
 
     // 1. Get List Action
     if ($action === 'get_list') {
@@ -64,6 +64,7 @@ if ($action !== null) {
                     'Cow'     => 0,
                     'Buffalo' => 0,
                     'Goat'    => 0,
+                    'Sheep'   => 0,
                     'Chicken' => 0,
                     'Pig'     => 0,
                     'Others'  => 0,
@@ -111,6 +112,7 @@ if ($action !== null) {
             'Cow'     => 0,
             'Buffalo' => 0,
             'Goat'    => 0,
+            'Sheep'   => 0,
             'Chicken' => 0,
             'Pig'     => 0,
             'Others'  => 0

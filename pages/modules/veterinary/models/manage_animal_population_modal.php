@@ -85,10 +85,21 @@
                                 <div class="col-12 col-sm-6 col-md-4">
                                     <div class="p-3 border rounded h-100 bg-white shadow-xs">
                                         <label class="form-label small fw-bold text-warning mb-1">
-                                            <i class="bi bi-award-fill me-1"></i> Goat / Sheep
+                                            <i class="bi bi-award-fill me-1"></i> Goat
                                         </label>
                                         <input type="number" name="counts[Goat]" id="animal_count_Goat" class="form-control form-control-sm animal-counter-input" min="0" value="0" placeholder="0" required>
-                                        <small class="text-muted d-block mt-1">Total goat & sheep count.</small>
+                                        <small class="text-muted d-block mt-1">Total goat count.</small>
+                                    </div>
+                                </div>
+
+                                <!-- Sheep -->
+                                <div class="col-12 col-sm-6 col-md-4">
+                                    <div class="p-3 border rounded h-100 bg-white shadow-xs">
+                                        <label class="form-label small fw-bold mb-1" style="color: #6f42c1;">
+                                            <i class="bi bi-award-fill me-1"></i> Sheep
+                                        </label>
+                                        <input type="number" name="counts[Sheep]" id="animal_count_Sheep" class="form-control form-control-sm animal-counter-input" min="0" value="0" placeholder="0" required>
+                                        <small class="text-muted d-block mt-1">Total sheep count.</small>
                                     </div>
                                 </div>
 
@@ -96,7 +107,7 @@
                                 <div class="col-12 col-sm-6 col-md-4">
                                     <div class="p-3 border rounded h-100 bg-white shadow-xs">
                                         <label class="form-label small fw-bold text-success mb-1">
-                                            <i class="bi bi-award-fill me-1"></i> Chicken / Poultry
+                                            <i class="bi bi-award-fill me-1"></i> Poultry
                                         </label>
                                         <input type="number" name="counts[Chicken]" id="animal_count_Chicken" class="form-control form-control-sm animal-counter-input" min="0" value="0" placeholder="0" required>
                                         <small class="text-muted d-block mt-1">Total poultry birds count.</small>
@@ -166,7 +177,8 @@
                                         <th class="text-end">Cow</th>
                                         <th class="text-end">Buffalo</th>
                                         <th class="text-end">Goat</th>
-                                        <th class="text-end">Chicken</th>
+                                        <th class="text-end">Sheep</th>
+                                        <th class="text-end">Poultry</th>
                                         <th class="text-end">Pig</th>
                                         <th class="text-end">Others</th>
                                         <th class="text-end fw-bold" style="color: #370709;">Total</th>

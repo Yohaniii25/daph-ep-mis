@@ -265,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (selected.length === 0) {
             btn.textContent = 'None Selected';
         } else if (selected.length === totalOptions) {
-            btn.textContent = 'All Animals Selected (6)';
+            btn.textContent = `All Animals Selected (${totalOptions})`;
         } else {
             btn.textContent = selected.join(', ');
         }
