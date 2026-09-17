@@ -88,6 +88,8 @@ if (isset($_GET['month'])) {
     }
 }
 
+$range_param = $requested_range_id ? ('&range_id=' . $requested_range_id) : ($range_id ? ('&range_id=' . $range_id) : '');
+
 // Inline CRUD actions:
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -119,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $check_stmt->execute();
             if ($check_stmt->get_result()->num_rows > 0) {
                 $period_name = $month ? ($months_map[$month] . " $year") : "Year $year";
-                header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("A record for $period_name already exists."));
+                header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=error&msg=" . urlencode("A record for $period_name already exists."));
                 exit();
             }
             $check_stmt->close();
@@ -156,13 +158,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $user_id
                 );
                 if ($stmt->execute()) {
-                    header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Data added successfully."));
+                    header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=success&msg=" . urlencode("Data added successfully."));
                 } else {
-                    header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
+                    header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=error&msg=" . urlencode("Failed to write to database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
         } elseif ($_POST['action'] === 'edit') {
@@ -215,13 +217,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $range_id
                 );
                 if ($stmt->execute()) {
-                    header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Data updated successfully."));
+                    header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=success&msg=" . urlencode("Data updated successfully."));
                 } else {
-                    header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
+                    header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=error&msg=" . urlencode("Failed to update database: " . $stmt->error));
                 }
                 $stmt->close();
             } else {
-                header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Query preparation failed."));
+                header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=error&msg=" . urlencode("Query preparation failed."));
             }
             exit();
         }
@@ -234,9 +236,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['id'])
     if ($stmt) {
         $stmt->bind_param("ii", $id, $range_id);
         if ($stmt->execute()) {
-            header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=success&msg=" . urlencode("Record deleted successfully."));
+            header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=success&msg=" . urlencode("Record deleted successfully."));
         } else {
-            header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . "&status=error&msg=" . urlencode("Failed to delete record."));
+            header("Location: annual_producers_processors.php?year=" . urlencode($selected_year) . "&month=" . urlencode($selected_month) . $range_param . "&status=error&msg=" . urlencode("Failed to delete record."));
         }
         $stmt->close();
     }
@@ -285,6 +287,65 @@ foreach ($records as $r) {
     $summary['feed_producers_sum'] += $r['feed_producers_count'];
     $summary['poultry_processors_sum'] += $r['poultry_processors_count'];
     $summary['organic_fert_sum'] += $r['organic_fert_prod_mt_year'];
+}
+
+// --- AUTOMATED SUMMARY DASHBOARD AGGREGATIONS (Annual & Monthly Roll-Up) ---
+$pp_summary_year = ($selected_year !== 'all') ? intval($selected_year) : intval(date('Y'));
+
+// 1. Yearly Roll-Up Query
+$pp_yr_sql = "
+    SELECT report_year,
+           COUNT(id) as record_count,
+           SUM(chick_producers_count) as sum_chick_farms,
+           SUM(chicks_produced_month) as sum_chicks_month,
+           SUM(feed_producers_count) as sum_feed_farms,
+           SUM(feed_production_mt_month) as sum_feed_mt_month,
+           SUM(poultry_processors_count) as sum_processors,
+           SUM(chicken_sale_live_kg_month) as sum_live_kg,
+           SUM(chicken_sale_dressed_kg_month) as sum_dressed_kg,
+           SUM(organic_fert_farm_families) as sum_fert_families,
+           SUM(organic_fert_prod_mt_year) as sum_fert_mt_year,
+           SUM(organic_fert_sale_kg_month) as sum_fert_sale_kg
+    FROM annual_producers_processors
+    WHERE 1=1 " . (!empty($range_id) ? "AND range_id = ?" : "") . "
+    GROUP BY report_year
+    ORDER BY report_year DESC
+";
+$pp_yr_stmt = $mysqli->prepare($pp_yr_sql);
+$prod_proc_yearly_rollup = [];
+if ($pp_yr_stmt) {
+    if (!empty($range_id)) $pp_yr_stmt->bind_param("i", $range_id);
+    $pp_yr_stmt->execute();
+    $prod_proc_yearly_rollup = $pp_yr_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $pp_yr_stmt->close();
+}
+
+// 2. Monthly Progression Query
+$pp_mo_sql = "
+    SELECT report_month,
+           COUNT(id) as record_count,
+           SUM(chick_producers_count) as sum_chick_farms,
+           SUM(chicks_produced_month) as sum_chicks_month,
+           SUM(feed_production_mt_month) as sum_feed_mt_month,
+           SUM(chicken_sale_live_kg_month) as sum_live_kg,
+           SUM(chicken_sale_dressed_kg_month) as sum_dressed_kg,
+           SUM(organic_fert_sale_kg_month) as sum_fert_sale_kg
+    FROM annual_producers_processors
+    WHERE report_year = ? " . (!empty($range_id) ? "AND range_id = ?" : "") . "
+    GROUP BY report_month
+    ORDER BY report_month ASC
+";
+$pp_mo_stmt = $mysqli->prepare($pp_mo_sql);
+$prod_proc_monthly_rollup = [];
+if ($pp_mo_stmt) {
+    if (!empty($range_id)) {
+        $pp_mo_stmt->bind_param("ii", $pp_summary_year, $range_id);
+    } else {
+        $pp_mo_stmt->bind_param("i", $pp_summary_year);
+    }
+    $pp_mo_stmt->execute();
+    $prod_proc_monthly_rollup = $pp_mo_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $pp_mo_stmt->close();
 }
 
 require_once '../../../includes/header.php';
@@ -396,6 +457,107 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
+        <!-- Automated Production Outlets Summary (Annual Roll-Up & Summary Calculator) -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="card-title mb-0 fw-bold text-dark">
+                        <i class="bi bi-calculator-fill text-danger me-2"></i>Automated Production Outlets Summary (Annual Roll-Up)
+                    </h5>
+                    <small class="text-muted">Real-time compilation of manual entries eliminating manual end-of-year calculations</small>
+                </div>
+                <div>
+                    <ul class="nav nav-pills card-header-pills gap-1" id="ppSummaryTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active py-1 px-3 fw-bold small btn-sm" id="pp-yearly-tab" data-bs-toggle="pill" data-bs-target="#pp-yearly-content" type="button" role="tab">Yearly Roll-Up</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-1 px-3 fw-bold small btn-sm" id="pp-monthly-tab" data-bs-toggle="pill" data-bs-target="#pp-monthly-content" type="button" role="tab">Monthly Progression (<?= $pp_summary_year ?>)</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="tab-content" id="ppSummaryTabContent">
+                    <!-- Yearly Roll-Up Tab -->
+                    <div class="tab-pane fade show active" id="pp-yearly-content" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle mb-0">
+                                <thead class="table-light text-secondary small text-uppercase">
+                                    <tr>
+                                        <th class="ps-3">Report Year</th>
+                                        <th class="text-center">Recorded Entries</th>
+                                        <th class="text-end text-primary">Avg Chicks Produced (Nos/mo)</th>
+                                        <th class="text-end text-success">Feed Output (MT/mo)</th>
+                                        <th class="text-end text-danger">Live Poultry Sold (kg/mo)</th>
+                                        <th class="text-end text-danger">Dressed Poultry (kg/mo)</th>
+                                        <th class="text-end text-warning pe-3">Organic Fertilizer (MT/yr)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($prod_proc_yearly_rollup)): ?>
+                                        <tr>
+                                            <td colspan="7" class="text-center py-3 text-muted">No production & processor entries found.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($prod_proc_yearly_rollup as $row): ?>
+                                            <tr>
+                                                <td class="ps-3 fw-bold text-dark"><i class="bi bi-calendar-check me-1 text-primary"></i><?= $row['report_year'] ?></td>
+                                                <td class="text-center"><span class="badge bg-light text-dark border"><?= number_format($row['record_count']) ?> logs</span></td>
+                                                <td class="text-end font-monospace text-primary fw-bold"><?= number_format($row['sum_chicks_month']) ?></td>
+                                                <td class="text-end font-monospace text-success fw-bold"><?= number_format($row['sum_feed_mt_month'], 2) ?></td>
+                                                <td class="text-end font-monospace text-danger fw-bold"><?= number_format($row['sum_live_kg'], 2) ?></td>
+                                                <td class="text-end font-monospace text-danger fw-bold"><?= number_format($row['sum_dressed_kg'], 2) ?></td>
+                                                <td class="text-end font-monospace text-warning fw-bold pe-3"><?= number_format($row['sum_fert_mt_year'], 2) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Breakdown Tab -->
+                    <div class="tab-pane fade" id="pp-monthly-content" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle mb-0">
+                                <thead class="table-light text-secondary small text-uppercase">
+                                    <tr>
+                                        <th class="ps-3">Month</th>
+                                        <th class="text-center">Recorded Entries</th>
+                                        <th class="text-end text-primary">Chicks Produced (Nos)</th>
+                                        <th class="text-end text-success">Feed Produced (MT)</th>
+                                        <th class="text-end text-danger">Live Poultry Sold (kg)</th>
+                                        <th class="text-end text-danger">Dressed Poultry (kg)</th>
+                                        <th class="text-end text-warning pe-3">Organic Fert Sales (kg)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($prod_proc_monthly_rollup)): ?>
+                                        <tr>
+                                            <td colspan="7" class="text-center py-3 text-muted">No monthly logs recorded for <?= $pp_summary_year ?>.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($prod_proc_monthly_rollup as $m_row): ?>
+                                            <tr>
+                                                <td class="ps-3 fw-bold text-dark"><i class="bi bi-calendar3 me-1 text-secondary"></i><?= !empty($m_row['report_month']) && isset($months_map[$m_row['report_month']]) ? $months_map[$m_row['report_month']] : 'Annual Aggregate' ?></td>
+                                                <td class="text-center"><span class="badge bg-light text-dark border"><?= number_format($m_row['record_count']) ?> logs</span></td>
+                                                <td class="text-end font-monospace text-primary fw-bold"><?= number_format($m_row['sum_chicks_month']) ?></td>
+                                                <td class="text-end font-monospace text-success fw-bold"><?= number_format($m_row['sum_feed_mt_month'], 2) ?></td>
+                                                <td class="text-end font-monospace text-danger fw-bold"><?= number_format($m_row['sum_live_kg'], 2) ?></td>
+                                                <td class="text-end font-monospace text-danger fw-bold"><?= number_format($m_row['sum_dressed_kg'], 2) ?></td>
+                                                <td class="text-end font-monospace text-warning fw-bold pe-3"><?= number_format($m_row['sum_fert_sale_kg'], 2) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- RECORDS LIST TABLE -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
@@ -490,7 +652,7 @@ require_once '../../../includes/header.php';
 
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-outline-primary btn-edit" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                            <a href="annual_producers_processors.php?year=<?= urlencode($selected_year) ?>&month=<?= urlencode($selected_month) ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
+                                            <a href="annual_producers_processors.php?year=<?= urlencode($selected_year) ?>&month=<?= urlencode($selected_month) ?><?= $range_param ?>&action=delete&id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete" title="Delete"><i class="bi bi-trash"></i></a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -509,6 +671,9 @@ require_once '../../../includes/header.php';
     <div class="modal-dialog modal-lg">
         <form method="POST">
             <input type="hidden" name="action" value="add">
+            <?php if ($requested_range_id || $range_id): ?>
+                <input type="hidden" name="range_id" value="<?= htmlspecialchars($requested_range_id ?: $range_id) ?>">
+            <?php endif; ?>
             <div class="modal-content">
                 <div class="modal-header" style="background-color: #370709; color: white;">
                     <h5 class="modal-title" id="addProdProcModalLabel"><i class="bi bi-plus-circle me-2"></i>Add Annual Producers & Processors</h5>
@@ -617,6 +782,9 @@ require_once '../../../includes/header.php';
         <form method="POST">
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="id" id="edit_id">
+            <?php if ($requested_range_id || $range_id): ?>
+                <input type="hidden" name="range_id" value="<?= htmlspecialchars($requested_range_id ?: $range_id) ?>">
+            <?php endif; ?>
             <div class="modal-content">
                 <div class="modal-header" style="background-color: #370709; color: white;">
                     <h5 class="modal-title" id="editProdProcModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit Annual Producers & Processors</h5>

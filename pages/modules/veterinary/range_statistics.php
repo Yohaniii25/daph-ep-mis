@@ -83,8 +83,147 @@ if ($range_id) {
         $stmt_ayr->close();
     }
 }
-$animal_pop_years = array_unique($animal_pop_years);
-rsort($animal_pop_years);
+// ==========================================
+// AUTOMATED SUMMARY CALCULATOR & AGGREGATOR
+// ==========================================
+$prod_summary_year = isset($_GET['prod_year']) ? ($_GET['prod_year'] === 'all' ? 'all' : intval($_GET['prod_year'])) : intval(date('Y'));
+
+// 1. Milk Collection Aggregator
+$milk_summary = ['centers' => 0, 'cow_milk' => 0, 'buffalo_milk' => 0, 'goat_milk' => 0, 'total_milk' => 0, 'chilling_cap' => 0];
+$milk_query = "
+    SELECT 
+        COUNT(*) as centers,
+        COALESCE(SUM(cow_milk_lit_month), 0) as cow_milk,
+        COALESCE(SUM(buffalo_milk_lit_month), 0) as buffalo_milk,
+        COALESCE(SUM(goat_milk_lit_month), 0) as goat_milk,
+        COALESCE(SUM(milk_collection_lit_per_month), 0) as total_milk,
+        COALESCE(SUM(milk_chilling_capacity), 0) as chilling_cap
+    FROM milk_collecting_centers
+    WHERE (range_id = ? OR vs_range = ?) " . ($prod_summary_year !== 'all' ? "AND report_year = ?" : "");
+$stmt_milk = $mysqli->prepare($milk_query);
+if ($stmt_milk) {
+    if ($prod_summary_year !== 'all') {
+        $stmt_milk->bind_param("isi", $range_id, $range_name, $prod_summary_year);
+    } else {
+        $stmt_milk->bind_param("is", $range_id, $range_name);
+    }
+    $stmt_milk->execute();
+    $res_milk = $stmt_milk->get_result();
+    if ($row_milk = $res_milk->fetch_assoc()) {
+        $milk_summary = $row_milk;
+    }
+    $stmt_milk->close();
+}
+
+// 2. Feed Production Mills Aggregator
+$feed_summary = ['mills' => 0, 'total_mt' => 0, 'categories' => []];
+$feed_query = "
+    SELECT 
+        COUNT(DISTINCT feed_mill_name) as mills,
+        COALESCE(SUM(produced_qty_mt_month), 0) as total_mt
+    FROM annual_feed_production
+    WHERE (range_id = ?) " . ($prod_summary_year !== 'all' ? "AND report_year = ?" : "");
+$stmt_feed = $mysqli->prepare($feed_query);
+if ($stmt_feed) {
+    if ($prod_summary_year !== 'all') {
+        $stmt_feed->bind_param("ii", $range_id, $prod_summary_year);
+    } else {
+        $stmt_feed->bind_param("i", $range_id);
+    }
+    $stmt_feed->execute();
+    $res_feed = $stmt_feed->get_result();
+    if ($row_feed = $res_feed->fetch_assoc()) {
+        $feed_summary['mills'] = $row_feed['mills'];
+        $feed_summary['total_mt'] = $row_feed['total_mt'];
+    }
+    $stmt_feed->close();
+}
+
+// Feed Categories
+$feed_cat_query = "
+    SELECT category_type, COALESCE(SUM(produced_qty_mt_month), 0) as cat_mt
+    FROM annual_feed_production
+    WHERE (range_id = ?) " . ($prod_summary_year !== 'all' ? "AND report_year = ?" : "") . "
+    GROUP BY category_type";
+$stmt_fcat = $mysqli->prepare($feed_cat_query);
+if ($stmt_fcat) {
+    if ($prod_summary_year !== 'all') {
+        $stmt_fcat->bind_param("ii", $range_id, $prod_summary_year);
+    } else {
+        $stmt_fcat->bind_param("i", $range_id);
+    }
+    $stmt_fcat->execute();
+    $res_fcat = $stmt_fcat->get_result();
+    while ($rf = $res_fcat->fetch_assoc()) {
+        $feed_summary['categories'][$rf['category_type']] = floatval($rf['cat_mt']);
+    }
+    $stmt_fcat->close();
+}
+
+// 3. Production Outlets (Producers & Processors) Aggregator
+$outlets_summary = ['chicks' => 0, 'live_chicken_kg' => 0, 'dressed_chicken_kg' => 0, 'organic_fert_mt' => 0, 'organic_families' => 0];
+$outlets_query = "
+    SELECT 
+        COALESCE(SUM(chicks_produced_month), 0) as chicks,
+        COALESCE(SUM(chicken_sale_live_kg_month), 0) as live_chicken_kg,
+        COALESCE(SUM(chicken_sale_dressed_kg_month), 0) as dressed_chicken_kg,
+        COALESCE(SUM(organic_fert_prod_mt_year), 0) as organic_fert_mt,
+        COALESCE(SUM(organic_fert_farm_families), 0) as organic_families
+    FROM annual_producers_processors
+    WHERE (range_id = ?) " . ($prod_summary_year !== 'all' ? "AND report_year = ?" : "");
+$stmt_out = $mysqli->prepare($outlets_query);
+if ($stmt_out) {
+    if ($prod_summary_year !== 'all') {
+        $stmt_out->bind_param("ii", $range_id, $prod_summary_year);
+    } else {
+        $stmt_out->bind_param("i", $range_id);
+    }
+    $stmt_out->execute();
+    $res_out = $stmt_out->get_result();
+    if ($row_out = $res_out->fetch_assoc()) {
+        $outlets_summary = $row_out;
+    }
+    $stmt_out->close();
+}
+
+// 4. Meat Sales Aggregator
+$meat_summary = ['total_kg' => 0, 'total_revenue' => 0, 'categories' => [], 'others_detail' => []];
+$meat_query = "
+    SELECT 
+        meat_type,
+        other_meat_name,
+        COALESCE(SUM(sales_volume_kg), 0) as total_kg,
+        COALESCE(SUM(total_sales_amount), 0) as total_revenue
+    FROM meat_sales_records
+    WHERE (range_id = ? OR vs_range = ?) " . ($prod_summary_year !== 'all' ? "AND report_year = ?" : "") . "
+    GROUP BY meat_type, other_meat_name";
+$stmt_meat = $mysqli->prepare($meat_query);
+if ($stmt_meat) {
+    if ($prod_summary_year !== 'all') {
+        $stmt_meat->bind_param("isi", $range_id, $range_name, $prod_summary_year);
+    } else {
+        $stmt_meat->bind_param("is", $range_id, $range_name);
+    }
+    $stmt_meat->execute();
+    $res_meat = $stmt_meat->get_result();
+    while ($rm = $res_meat->fetch_assoc()) {
+        $m_type = $rm['meat_type'];
+        $m_kg = floatval($rm['total_kg']);
+        $m_rev = floatval($rm['total_revenue']);
+        $meat_summary['total_kg'] += $m_kg;
+        $meat_summary['total_revenue'] += $m_rev;
+        $meat_summary['categories'][$m_type] = ($meat_summary['categories'][$m_type] ?? 0) + $m_kg;
+        if ($m_type === 'Other' && !empty($rm['other_meat_name'])) {
+            $oname = trim($rm['other_meat_name']);
+            $meat_summary['others_detail'][$oname] = ($meat_summary['others_detail'][$oname] ?? 0) + $m_kg;
+        }
+    }
+    $stmt_meat->close();
+}
+
+// Available production summary years
+$available_prod_years = array_unique(array_merge($pop_years, [intval(date('Y')), intval(date('Y')) - 1, 2025, 2024]));
+rsort($available_prod_years);
 
 require_once '../../../includes/header.php';
 ?>
@@ -306,6 +445,233 @@ require_once '../../../includes/header.php';
                         </div>
 
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Automated Production & Sales Summary Dashboard -->
+        <div class="card gov-card mb-5">
+            <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: #370709;">
+                        <i class="bi bi-speedometer2 text-danger me-2"></i>Automated Production & Sales Summary Dashboards
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Real-time compilation of manual entries across milk centers, feed mills, production outlets, and meat sales (Year: <strong class="text-dark"><?= $prod_summary_year === 'all' ? 'All Years Combined' : $prod_summary_year ?></strong>).
+                    </p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <form method="GET" class="d-flex align-items-center gap-2 mb-0">
+                        <?php if ($requested_range_id): ?>
+                            <input type="hidden" name="range_id" value="<?= $requested_range_id ?>">
+                        <?php endif; ?>
+                        <label class="small fw-bold text-muted text-nowrap mb-0">Summary Year:</label>
+                        <select name="prod_year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 120px;">
+                            <option value="all" <?= ($prod_summary_year === 'all') ? 'selected' : '' ?>>All Years</option>
+                            <?php foreach ($available_prod_years as $py): ?>
+                                <option value="<?= $py ?>" <?= ($prod_summary_year !== 'all' && intval($prod_summary_year) === $py) ? 'selected' : '' ?>><?= $py ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <!-- 4 Top Executive Summary Cards -->
+                <div class="row g-3 mb-4">
+                    <!-- Milk Collection Summary Card -->
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="card border-0 shadow-sm rounded-3 h-100 p-3" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0284c7 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-uppercase fw-bold small text-primary">Milk Collection</span>
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1"><?= number_format($milk_summary['centers']) ?> Centers</span>
+                            </div>
+                            <h3 class="fw-bold my-2 text-dark">
+                                <?= number_format($milk_summary['total_milk']) ?> <small class="fs-6 text-muted">Liters</small>
+                            </h3>
+                            <div class="small text-muted mt-auto pt-2 border-top">
+                                <div class="d-flex justify-content-between">
+                                    <span>Cow: <strong><?= number_format($milk_summary['cow_milk']) ?></strong> L</span>
+                                    <span>Buff: <strong><?= number_format($milk_summary['buffalo_milk']) ?></strong> L</span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span>Goat: <strong><?= number_format($milk_summary['goat_milk']) ?></strong> L</span>
+                                    <span>Chilling: <strong><?= number_format($milk_summary['chilling_cap']) ?></strong> L</span>
+                                </div>
+                            </div>
+                            <a href="milk_collection_details.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-sm btn-outline-primary mt-3 w-100 fw-bold">
+                                View Milk Log <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Feed Production Summary Card -->
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="card border-0 shadow-sm rounded-3 h-100 p-3" style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border-left: 4px solid #ca8a04 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-uppercase fw-bold small text-dark">Feed Production</span>
+                                <span class="badge bg-warning text-dark rounded-pill px-2 py-1"><?= number_format($feed_summary['mills']) ?> Active Mills</span>
+                            </div>
+                            <h3 class="fw-bold my-2 text-dark">
+                                <?= number_format($feed_summary['total_mt'], 2) ?> <small class="fs-6 text-muted">MT Total</small>
+                            </h3>
+                            <div class="small text-muted mt-auto pt-2 border-top">
+                                <?php if (empty($feed_summary['categories'])): ?>
+                                    <span>No mill entries logged for this period.</span>
+                                <?php else: ?>
+                                    <?php foreach (array_slice($feed_summary['categories'], 0, 2, true) as $fcat => $fmt): ?>
+                                        <div class="d-flex justify-content-between">
+                                            <span><?= ucfirst(htmlspecialchars($fcat)) ?>:</span>
+                                            <strong><?= number_format($fmt, 1) ?> MT</strong>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                            <a href="annual_feed_production.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-sm btn-outline-warning text-dark mt-3 w-100 fw-bold">
+                                View Feed Mills <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Production Outlets Summary Card -->
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="card border-0 shadow-sm rounded-3 h-100 p-3" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #16a34a !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-uppercase fw-bold small text-success">Production Outlets</span>
+                                <span class="badge bg-success text-white rounded-pill px-2 py-1"><?= number_format($outlets_summary['chicks']) ?> Chicks</span>
+                            </div>
+                            <h3 class="fw-bold my-2 text-dark">
+                                <?= number_format($outlets_summary['live_chicken_kg'] + $outlets_summary['dressed_chicken_kg']) ?> <small class="fs-6 text-muted">kg Poultry</small>
+                            </h3>
+                            <div class="small text-muted mt-auto pt-2 border-top">
+                                <div class="d-flex justify-content-between">
+                                    <span>Live: <strong><?= number_format($outlets_summary['live_chicken_kg']) ?></strong> kg</span>
+                                    <span>Dressed: <strong><?= number_format($outlets_summary['dressed_chicken_kg']) ?></strong> kg</span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span>Organic Fert: <strong><?= number_format($outlets_summary['organic_fert_mt'], 1) ?></strong> MT</span>
+                                </div>
+                            </div>
+                            <a href="annual_producers_processors.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-sm btn-outline-success mt-3 w-100 fw-bold">
+                                View Outlets <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Meat Sales Summary Card -->
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="card border-0 shadow-sm rounded-3 h-100 p-3" style="background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border-left: 4px solid #e11d48 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-uppercase fw-bold small text-danger">Meat Sales Turnover</span>
+                                <span class="badge bg-danger text-white rounded-pill px-2 py-1"><?= number_format($meat_summary['total_kg'], 1) ?> kg</span>
+                            </div>
+                            <h3 class="fw-bold my-2 text-danger">
+                                Rs. <?= number_format($meat_summary['total_revenue'], 2) ?>
+                            </h3>
+                            <div class="small text-muted mt-auto pt-2 border-top">
+                                <div class="d-flex justify-content-between">
+                                    <span>Beef: <strong><?= number_format($meat_summary['categories']['Beef'] ?? 0) ?></strong> kg</span>
+                                    <span>Mutton: <strong><?= number_format($meat_summary['categories']['Mutton'] ?? 0) ?></strong> kg</span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span>Chicken: <strong><?= number_format($meat_summary['categories']['Chicken'] ?? 0) ?></strong> kg</span>
+                                    <span>Others: <strong><?= number_format($meat_summary['categories']['Other'] ?? 0) ?></strong> kg</span>
+                                </div>
+                            </div>
+                            <a href="meat_sales.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-sm btn-outline-danger mt-3 w-100 fw-bold">
+                                View Meat Sales <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aggregated Sector Overview Table -->
+                <div class="table-responsive rounded border">
+                    <table class="table table-hover table-striped align-middle mb-0">
+                        <thead class="table-light small text-secondary text-uppercase">
+                            <tr>
+                                <th>Operational Sector</th>
+                                <th>Active Units / Outlets</th>
+                                <th>Primary Volume Aggregation</th>
+                                <th>Secondary Metrics & Categorization</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            <tr>
+                                <td class="fw-bold text-dark">
+                                    <i class="bi bi-droplet-half text-primary me-2 fs-6"></i>Milk Collection Centers
+                                </td>
+                                <td><span class="badge bg-primary-subtle text-primary fw-bold"><?= number_format($milk_summary['centers']) ?> Centers</span></td>
+                                <td><strong class="text-primary fs-6"><?= number_format($milk_summary['total_milk']) ?></strong> Liters Total</td>
+                                <td>
+                                    Cow: <?= number_format($milk_summary['cow_milk']) ?> L | Buffalo: <?= number_format($milk_summary['buffalo_milk']) ?> L | Goat: <?= number_format($milk_summary['goat_milk']) ?> L
+                                </td>
+                                <td class="text-center">
+                                    <a href="milk_collection_details.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-xs btn-outline-primary py-1 px-2 fw-bold">
+                                        Open Module
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold text-dark">
+                                    <i class="bi bi-prescription2 text-warning me-2 fs-6"></i>Feed Production Mills
+                                </td>
+                                <td><span class="badge bg-warning-subtle text-dark fw-bold"><?= number_format($feed_summary['mills']) ?> Registered Mills</span></td>
+                                <td><strong class="text-dark fs-6"><?= number_format($feed_summary['total_mt'], 2) ?></strong> Metric Tons (MT)</td>
+                                <td>
+                                    <?php 
+                                        if (!empty($feed_summary['categories'])) {
+                                            $cat_strs = [];
+                                            foreach ($feed_summary['categories'] as $ck => $cv) {
+                                                $cat_strs[] = ucfirst(htmlspecialchars($ck)) . ': ' . number_format($cv, 1) . ' MT';
+                                            }
+                                            echo implode(' | ', $cat_strs);
+                                        } else {
+                                            echo '<span class="text-muted">No feed production logs</span>';
+                                        }
+                                    ?>
+                                </td>
+                                <td class="text-center">
+                                    <a href="annual_feed_production.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-xs btn-outline-warning text-dark py-1 px-2 fw-bold">
+                                        Open Module
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold text-dark">
+                                    <i class="bi bi-buildings text-success me-2 fs-6"></i>Production Outlets (Producers & Processors)
+                                </td>
+                                <td><span class="badge bg-success-subtle text-success fw-bold">Active Outlets</span></td>
+                                <td><strong class="text-success fs-6"><?= number_format($outlets_summary['chicks']) ?></strong> Day-Old Chicks</td>
+                                <td>
+                                    Live Poultry: <?= number_format($outlets_summary['live_chicken_kg']) ?> kg | Dressed: <?= number_format($outlets_summary['dressed_chicken_kg']) ?> kg | Organic Fertilizer: <?= number_format($outlets_summary['organic_fert_mt'], 1) ?> MT
+                                </td>
+                                <td class="text-center">
+                                    <a href="annual_producers_processors.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-xs btn-outline-success py-1 px-2 fw-bold">
+                                        Open Module
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold text-dark">
+                                    <i class="bi bi-basket3-fill text-danger me-2 fs-6"></i>Meat Sales Details
+                                </td>
+                                <td><span class="badge bg-danger-subtle text-danger fw-bold">Wholesale & Retail</span></td>
+                                <td><strong class="text-danger fs-6"><?= number_format($meat_summary['total_kg'], 1) ?></strong> kg (Rs. <?= number_format($meat_summary['total_revenue'], 2) ?>)</td>
+                                <td>
+                                    Beef: <?= number_format($meat_summary['categories']['Beef'] ?? 0) ?> kg | Mutton: <?= number_format($meat_summary['categories']['Mutton'] ?? 0) ?> kg | Chicken: <?= number_format($meat_summary['categories']['Chicken'] ?? 0) ?> kg
+                                    <?php if (!empty($meat_summary['others_detail'])): ?>
+                                        | <span class="fw-bold">Others:</span> <?= implode(', ', array_map(fn($k, $v) => htmlspecialchars($k) . ' (' . number_format($v) . ' kg)', array_keys($meat_summary['others_detail']), $meat_summary['others_detail'])) ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <a href="meat_sales.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-xs btn-outline-danger py-1 px-2 fw-bold">
+                                        Open Module
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

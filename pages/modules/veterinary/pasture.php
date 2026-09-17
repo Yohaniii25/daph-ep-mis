@@ -56,33 +56,6 @@ if ($range_id) {
     }
 }
 
-// Ensure target database table exists for Pasture & Fodder Lands
-$table_init_sql = "
-CREATE TABLE IF NOT EXISTS pasture_fodder_lands (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    vs_range VARCHAR(255) NOT NULL,
-    report_year INT DEFAULT 2024,
-    report_month TINYINT(4) NULL,
-    
-    -- Pasture Land Fields
-    pasture_families_quarter_ac INT DEFAULT 0 COMMENT '1/4 Ac',
-    pasture_families_half_ac INT DEFAULT 0 COMMENT '1/2 Ac',
-    pasture_families_one_ac INT DEFAULT 0 COMMENT '1 Ac',
-    pasture_families_gt_one_ac INT DEFAULT 0 COMMENT '> 1Ac',
-    pasture_total_acre DECIMAL(10,2) DEFAULT 0,
-    pasture_total_families INT DEFAULT 0,
-    
-    -- Fodder Land Fields
-    fodder_families_quarter_ac INT DEFAULT 0 COMMENT '1/4 Ac',
-    fodder_families_half_ac INT DEFAULT 0 COMMENT '1/2 Ac',
-    fodder_families_one_ac INT DEFAULT 0 COMMENT '1 Ac',
-    fodder_families_gt_one_ac INT DEFAULT 0 COMMENT '> 1Ac',
-    fodder_total_acre DECIMAL(10,2) DEFAULT 0,
-    fodder_total_families INT DEFAULT 0,
-    
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);";
-$mysqli->query($table_init_sql);
 
 // Auto-migrate: add report_year / report_month columns if missing
 $chk_col = $mysqli->query("SHOW COLUMNS FROM pasture_fodder_lands LIKE 'report_year'");

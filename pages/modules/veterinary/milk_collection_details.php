@@ -13,6 +13,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_
 $user_id = $_SESSION['user_id'] ?? null;
 $requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
 $range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
+$range_param = $requested_range_id ? ('&range_id=' . $requested_range_id) : ($range_id ? ('&range_id=' . $range_id) : '');
 
 $range_name = 'All Ranges / General';
 $district_name = 'Eastern Province';
@@ -45,10 +46,10 @@ if (!in_array($active_tab, ['collecting', 'processing', 'sales'])) {
     $active_tab = 'collecting';
 }
 
-// Global Month, Year, and Date Filters
+// Global Month & Year Filters (Date removed)
 $selected_year = isset($_GET['year']) ? ($_GET['year'] === 'all' ? 'all' : intval($_GET['year'])) : intval(date('Y'));
 $selected_month = isset($_GET['month']) ? ($_GET['month'] === 'all' ? 'all' : intval($_GET['month'])) : 'all';
-$selected_date = isset($_GET['date']) && !empty($_GET['date']) ? trim($_GET['date']) : '';
+$selected_location = isset($_GET['location']) && trim($_GET['location']) !== '' && $_GET['location'] !== 'all' ? trim($_GET['location']) : 'all';
 
 $months_map = [
     1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
@@ -71,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sub_module = $_POST['sub_module'] ?? '';
     $action = $_POST['action'] ?? '';
     $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : date('Y-m-d');
-    $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : intval(date('Y', strtotime($record_date)));
-    $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : intval(date('n', strtotime($record_date)));
+    $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : intval(date('Y'));
+    $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : intval(date('n'));
 
     if ($sub_module === 'collecting') {
         if ($action === 'add') {
@@ -97,16 +98,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("siiiissssddddds", $vs_range, $district_id, $range_id, $r_year, $r_month, $record_date, $name, $address, $contact, $cow_milk, $buffalo_milk, $goat_milk, $total_milk, $chilling_cap, $supply_to);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=collecting&year=$r_year&month=" . ($r_month ?? 'all') . "&status=success&msg=" . urlencode("Collecting center added successfully."));
+                header("Location: milk_collection_details.php?tab=collecting&year=$r_year&month=" . ($r_month ?? 'all') . $range_param . "&status=success&msg=" . urlencode("Collecting center added successfully."));
             } else {
-                header("Location: milk_collection_details.php?tab=collecting&status=error&msg=" . urlencode("Insert failed: " . $mysqli->error));
+                header("Location: milk_collection_details.php?tab=collecting" . $range_param . "&status=error&msg=" . urlencode("Insert failed: " . $mysqli->error));
             }
             exit();
         } elseif ($action === 'edit') {
             $id = intval($_POST['id'] ?? 0);
-            $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : null;
-            $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : ($record_date ? intval(date('Y', strtotime($record_date))) : intval(date('Y')));
-            $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : ($record_date ? intval(date('n', strtotime($record_date))) : null);
+            $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : date('Y-m-d');
+            $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : intval(date('Y'));
+            $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : null;
             $vs_range = trim($_POST['vs_range'] ?: $range_name);
             $name = trim($_POST['collecting_center_name'] ?? '');
             $address = trim($_POST['address'] ?? '');
@@ -121,17 +122,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $mysqli->prepare("
                 UPDATE milk_collecting_centers 
                 SET vs_range = ?, report_year = ?, report_month = ?, record_date = ?, collecting_center_name = ?, address = ?, contact_no = ?, 
-                    cow_milk_lit_month = ?, buffalo_milk_lit_month = ?, goat_milk_lit_month = ?, milk_collection_lit_per_month = ?, 
-                    milk_chilling_capacity = ?, milk_supply_to = ?
+                    cow_milk_lit_month = ?, buffalo_milk_lit_month = ?, goat_milk_lit_month = ?, milk_collection_lit_per_month = ?, milk_chilling_capacity = ?, milk_supply_to = ?
                 WHERE id = ?
             ");
             if ($stmt) {
                 $stmt->bind_param("siissssdddddsi", $vs_range, $r_year, $r_month, $record_date, $name, $address, $contact, $cow_milk, $buffalo_milk, $goat_milk, $total_milk, $chilling_cap, $supply_to, $id);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=collecting&year=$r_year&month=" . ($r_month ?? 'all') . "&status=success&msg=" . urlencode("Collecting center updated successfully."));
+                header("Location: milk_collection_details.php?tab=collecting&year=$r_year&month=" . ($r_month ?? 'all') . $range_param . "&status=success&msg=" . urlencode("Collecting center updated successfully."));
             } else {
-                header("Location: milk_collection_details.php?tab=collecting&status=error&msg=" . urlencode("Update failed."));
+                header("Location: milk_collection_details.php?tab=collecting" . $range_param . "&status=error&msg=" . urlencode("Update failed."));
             }
             exit();
         } elseif ($action === 'delete') {
@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("i", $id);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=collecting&status=success&msg=" . urlencode("Collecting center deleted."));
+                header("Location: milk_collection_details.php?tab=collecting" . $range_param . "&status=success&msg=" . urlencode("Collecting center deleted."));
             }
             exit();
         }
@@ -176,16 +176,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   $yoghurt, $curd, $ice_cream, $ghee, $other_product, $total_lit, $income_range);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=processing&year=$r_year&month=" . ($r_month ?? 'all') . "&status=success&msg=" . urlencode("Processing center added successfully."));
+                header("Location: milk_collection_details.php?tab=processing&year=$r_year&month=" . ($r_month ?? 'all') . $range_param . "&status=success&msg=" . urlencode("Processing center added successfully."));
             } else {
-                header("Location: milk_collection_details.php?tab=processing&status=error&msg=" . urlencode("Insert failed: " . $mysqli->error));
+                header("Location: milk_collection_details.php?tab=processing" . $range_param . "&status=error&msg=" . urlencode("Insert failed: " . $mysqli->error));
             }
             exit();
         } elseif ($action === 'edit') {
             $id = intval($_POST['id'] ?? 0);
-            $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : null;
-            $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : ($record_date ? intval(date('Y', strtotime($record_date))) : intval(date('Y')));
-            $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : ($record_date ? intval(date('n', strtotime($record_date))) : null);
+            $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : date('Y-m-d');
+            $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : intval(date('Y'));
+            $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : null;
             $vs_range = trim($_POST['vs_range'] ?: $range_name);
             $name = trim($_POST['processing_center_name'] ?? '');
             $address = trim($_POST['address'] ?? '');
@@ -215,9 +215,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   $yoghurt, $curd, $ice_cream, $ghee, $other_product, $total_lit, $income_range, $id);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=processing&year=$r_year&month=" . ($r_month ?? 'all') . "&status=success&msg=" . urlencode("Processing center updated successfully."));
+                header("Location: milk_collection_details.php?tab=processing&year=$r_year&month=" . ($r_month ?? 'all') . $range_param . "&status=success&msg=" . urlencode("Processing center updated successfully."));
             } else {
-                header("Location: milk_collection_details.php?tab=processing&status=error&msg=" . urlencode("Update failed."));
+                header("Location: milk_collection_details.php?tab=processing" . $range_param . "&status=error&msg=" . urlencode("Update failed."));
             }
             exit();
         } elseif ($action === 'delete') {
@@ -227,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("i", $id);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=processing&status=success&msg=" . urlencode("Processing center deleted."));
+                header("Location: milk_collection_details.php?tab=processing" . $range_param . "&status=success&msg=" . urlencode("Processing center deleted."));
             }
             exit();
         }
@@ -263,16 +263,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   $fresh_milk, $yoghurt, $curd, $ice_cream, $ghee, $other_product, $total_lit, $income_range);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=sales&year=$r_year&month=" . ($r_month ?? 'all') . "&status=success&msg=" . urlencode("Sales center added successfully."));
+                header("Location: milk_collection_details.php?tab=sales&year=$r_year&month=" . ($r_month ?? 'all') . $range_param . "&status=success&msg=" . urlencode("Sales center added successfully."));
             } else {
-                header("Location: milk_collection_details.php?tab=sales&status=error&msg=" . urlencode("Insert failed: " . $mysqli->error));
+                header("Location: milk_collection_details.php?tab=sales" . $range_param . "&status=error&msg=" . urlencode("Insert failed: " . $mysqli->error));
             }
             exit();
         } elseif ($action === 'edit') {
             $id = intval($_POST['id'] ?? 0);
-            $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : null;
-            $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : ($record_date ? intval(date('Y', strtotime($record_date))) : intval(date('Y')));
-            $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : ($record_date ? intval(date('n', strtotime($record_date))) : null);
+            $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : date('Y-m-d');
+            $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : intval(date('Y'));
+            $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : null;
             $vs_range = trim($_POST['vs_range'] ?: $range_name);
             $name = trim($_POST['sales_center_name'] ?? '');
             $address = trim($_POST['address'] ?? '');
@@ -303,9 +303,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   $fresh_milk, $yoghurt, $curd, $ice_cream, $ghee, $other_product, $total_lit, $income_range, $id);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=sales&year=$r_year&month=" . ($r_month ?? 'all') . "&status=success&msg=" . urlencode("Sales center updated successfully."));
+                header("Location: milk_collection_details.php?tab=sales&year=$r_year&month=" . ($r_month ?? 'all') . $range_param . "&status=success&msg=" . urlencode("Sales center updated successfully."));
             } else {
-                header("Location: milk_collection_details.php?tab=sales&status=error&msg=" . urlencode("Update failed."));
+                header("Location: milk_collection_details.php?tab=sales" . $range_param . "&status=error&msg=" . urlencode("Update failed."));
             }
             exit();
         } elseif ($action === 'delete') {
@@ -315,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("i", $id);
                 $stmt->execute();
                 $stmt->close();
-                header("Location: milk_collection_details.php?tab=sales&status=success&msg=" . urlencode("Sales center deleted."));
+                header("Location: milk_collection_details.php?tab=sales" . $range_param . "&status=success&msg=" . urlencode("Sales center deleted."));
             }
             exit();
         }
@@ -323,7 +323,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Build Filter SQL helper
-function buildFilterQuery($base_sql, $range_id, $range_name, $selected_year, $selected_month, $selected_date = '') {
+function buildFilterQuery($base_sql, $range_id, $range_name, $selected_year, $selected_month, $selected_location = 'all', $loc_field = '') {
     $where = ["1=1"];
     $params = [];
     $types = "";
@@ -344,17 +344,67 @@ function buildFilterQuery($base_sql, $range_id, $range_name, $selected_year, $se
         $params[] = $selected_month;
         $types .= "i";
     }
-    if (!empty($selected_date)) {
-        $where[] = "record_date = ?";
-        $params[] = $selected_date;
-        $types .= "s";
+    if ($selected_location !== 'all' && !empty($loc_field)) {
+        $where[] = "($loc_field = ? OR address = ?)";
+        $params[] = $selected_location;
+        $params[] = $selected_location;
+        $types .= "ss";
     }
     $where_sql = implode(" AND ", $where);
-    return ["sql" => "$base_sql WHERE $where_sql ORDER BY record_date DESC, report_year DESC, id DESC", "params" => $params, "types" => $types];
+    return ["sql" => "$base_sql WHERE $where_sql ORDER BY report_year DESC, report_month DESC, id DESC", "params" => $params, "types" => $types];
+}
+
+// Determine distinct available locations / centers for the active tab (auto-updating on new registrations)
+$loc_tab_table = 'milk_collecting_centers';
+$loc_tab_field = 'collecting_center_name';
+if ($active_tab === 'processing') {
+    $loc_tab_table = 'milk_processing_centers';
+    $loc_tab_field = 'processing_center_name';
+} elseif ($active_tab === 'sales') {
+    $loc_tab_table = 'milk_product_sales_centers';
+    $loc_tab_field = 'sales_center_name';
+}
+
+$loc_where = ["1=1"];
+$loc_params = [];
+$loc_types = "";
+if (!empty($range_id)) {
+    $loc_where[] = "(range_id = ? OR vs_range = ?)";
+    $loc_params[] = $range_id;
+    $loc_params[] = $range_name;
+    $loc_types .= "is";
+}
+$loc_sql = "
+    SELECT DISTINCT $loc_tab_field AS center_name, address 
+    FROM $loc_tab_table 
+    WHERE " . implode(" AND ", $loc_where) . " 
+      AND $loc_tab_field IS NOT NULL AND TRIM($loc_tab_field) != ''
+    ORDER BY $loc_tab_field ASC
+";
+$loc_stmt = $mysqli->prepare($loc_sql);
+$available_locations = [];
+if ($loc_stmt) {
+    if (!empty($loc_params)) {
+        $loc_stmt->bind_param($loc_types, ...$loc_params);
+    }
+    $loc_stmt->execute();
+    $lres = $loc_stmt->get_result();
+    while ($lrow = $lres->fetch_assoc()) {
+        $cname = trim($lrow['center_name']);
+        $caddr = trim($lrow['address'] ?? '');
+        if (!empty($cname) && !isset($available_locations[$cname])) {
+            $available_locations[$cname] = [
+                'name' => $cname,
+                'address' => $caddr,
+                'label' => !empty($caddr) ? "$cname ($caddr)" : $cname
+            ];
+        }
+    }
+    $loc_stmt->close();
 }
 
 // 1. Fetch Collecting Centers
-$q1 = buildFilterQuery("SELECT * FROM milk_collecting_centers", $range_id, $range_name, $selected_year, $selected_month, $selected_date);
+$q1 = buildFilterQuery("SELECT * FROM milk_collecting_centers", $range_id, $range_name, $selected_year, $selected_month, ($active_tab === 'collecting' ? $selected_location : 'all'), 'collecting_center_name');
 $stmt1 = $mysqli->prepare($q1['sql']);
 if (!empty($q1['params'])) $stmt1->bind_param($q1['types'], ...$q1['params']);
 $stmt1->execute();
@@ -362,7 +412,7 @@ $collecting_records = $stmt1->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt1->close();
 
 // 2. Fetch Processing Centers
-$q2 = buildFilterQuery("SELECT * FROM milk_processing_centers", $range_id, $range_name, $selected_year, $selected_month, $selected_date);
+$q2 = buildFilterQuery("SELECT * FROM milk_processing_centers", $range_id, $range_name, $selected_year, $selected_month, ($active_tab === 'processing' ? $selected_location : 'all'), 'processing_center_name');
 $stmt2 = $mysqli->prepare($q2['sql']);
 if (!empty($q2['params'])) $stmt2->bind_param($q2['types'], ...$q2['params']);
 $stmt2->execute();
@@ -370,7 +420,7 @@ $processing_records = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt2->close();
 
 // 3. Fetch Sales Centers
-$q3 = buildFilterQuery("SELECT * FROM milk_product_sales_centers", $range_id, $range_name, $selected_year, $selected_month, $selected_date);
+$q3 = buildFilterQuery("SELECT * FROM milk_product_sales_centers", $range_id, $range_name, $selected_year, $selected_month, ($active_tab === 'sales' ? $selected_location : 'all'), 'sales_center_name');
 $stmt3 = $mysqli->prepare($q3['sql']);
 if (!empty($q3['params'])) $stmt3->bind_param($q3['types'], ...$q3['params']);
 $stmt3->execute();
@@ -400,6 +450,161 @@ foreach ($sales_records as $r) {
     $sales_totals['buffalo'] += floatval($r['buffalo_milk_lit_month']);
     $sales_totals['goat'] += floatval($r['goat_milk_lit_month']);
     $sales_totals['total'] += floatval($r['total_lit_per_month']);
+}
+
+// --- AUTOMATED SUMMARY DASHBOARD AGGREGATIONS (Targeted by Location if selected, else Range-wide) ---
+$milk_summary_year = ($selected_year !== 'all') ? intval($selected_year) : intval(date('Y'));
+$range_param = $requested_range_id ? ('&range_id=' . $requested_range_id) : ($range_id ? ('&range_id=' . $range_id) : '');
+
+// 1. Collecting Centers Roll-Up
+$col_yr_where = ["1=1"];
+$col_yr_params = [];
+$col_yr_types = "";
+if (!empty($range_id)) {
+    $col_yr_where[] = "(range_id = ? OR vs_range = ?)";
+    $col_yr_params[] = $range_id;
+    $col_yr_params[] = $range_name;
+    $col_yr_types .= "is";
+}
+if ($active_tab === 'collecting' && $selected_location !== 'all') {
+    $col_yr_where[] = "(collecting_center_name = ? OR address = ?)";
+    $col_yr_params[] = $selected_location;
+    $col_yr_params[] = $selected_location;
+    $col_yr_types .= "ss";
+}
+$col_yr_sql = "
+    SELECT report_year,
+           COUNT(id) as total_centers,
+           SUM(cow_milk_lit_month) as sum_cow,
+           SUM(buffalo_milk_lit_month) as sum_buffalo,
+           SUM(goat_milk_lit_month) as sum_goat,
+           SUM(COALESCE(milk_collection_lit_per_month, cow_milk_lit_month + buffalo_milk_lit_month + goat_milk_lit_month)) as sum_total
+    FROM milk_collecting_centers
+    WHERE " . implode(" AND ", $col_yr_where) . "
+    GROUP BY report_year
+    ORDER BY report_year DESC
+";
+$col_yr_stmt = $mysqli->prepare($col_yr_sql);
+$collecting_yearly_rollup = [];
+if ($col_yr_stmt) {
+    if (!empty($col_yr_params)) $col_yr_stmt->bind_param($col_yr_types, ...$col_yr_params);
+    $col_yr_stmt->execute();
+    $collecting_yearly_rollup = $col_yr_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $col_yr_stmt->close();
+}
+
+$col_mo_where = ["report_year = ?"];
+$col_mo_params = [$milk_summary_year];
+$col_mo_types = "i";
+if (!empty($range_id)) {
+    $col_mo_where[] = "(range_id = ? OR vs_range = ?)";
+    $col_mo_params[] = $range_id;
+    $col_mo_params[] = $range_name;
+    $col_mo_types .= "is";
+}
+if ($active_tab === 'collecting' && $selected_location !== 'all') {
+    $col_mo_where[] = "(collecting_center_name = ? OR address = ?)";
+    $col_mo_params[] = $selected_location;
+    $col_mo_params[] = $selected_location;
+    $col_mo_types .= "ss";
+}
+$col_mo_sql = "
+    SELECT report_month,
+           COUNT(id) as total_centers,
+           SUM(cow_milk_lit_month) as sum_cow,
+           SUM(buffalo_milk_lit_month) as sum_buffalo,
+           SUM(goat_milk_lit_month) as sum_goat,
+           SUM(COALESCE(milk_collection_lit_per_month, cow_milk_lit_month + buffalo_milk_lit_month + goat_milk_lit_month)) as sum_total
+    FROM milk_collecting_centers
+    WHERE " . implode(" AND ", $col_mo_where) . "
+    GROUP BY report_month
+    ORDER BY report_month ASC
+";
+$col_mo_stmt = $mysqli->prepare($col_mo_sql);
+$collecting_monthly_rollup = [];
+if ($col_mo_stmt) {
+    $col_mo_stmt->bind_param($col_mo_types, ...$col_mo_params);
+    $col_mo_stmt->execute();
+    $collecting_monthly_rollup = $col_mo_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $col_mo_stmt->close();
+}
+
+// 2. Processing Centers Roll-Up
+$proc_yr_where = ["1=1"];
+$proc_yr_params = [];
+$proc_yr_types = "";
+if (!empty($range_id)) {
+    $proc_yr_where[] = "(range_id = ? OR vs_range = ?)";
+    $proc_yr_params[] = $range_id;
+    $proc_yr_params[] = $range_name;
+    $proc_yr_types .= "is";
+}
+if ($active_tab === 'processing' && $selected_location !== 'all') {
+    $proc_yr_where[] = "(processing_center_name = ? OR address = ?)";
+    $proc_yr_params[] = $selected_location;
+    $proc_yr_params[] = $selected_location;
+    $proc_yr_types .= "ss";
+}
+$proc_yr_sql = "
+    SELECT report_year,
+           COUNT(id) as total_centers,
+           SUM(cow_milk_lit_month) as sum_cow,
+           SUM(buffalo_milk_lit_month) as sum_buffalo,
+           SUM(goat_milk_lit_month) as sum_goat,
+           SUM(total_lit_per_month) as sum_total,
+           SUM(yoghurt_lit_per_month) as sum_yoghurt,
+           SUM(curd_lit_per_month) as sum_curd,
+           SUM(ghee_lit_per_month) as sum_ghee
+    FROM milk_processing_centers
+    WHERE " . implode(" AND ", $proc_yr_where) . "
+    GROUP BY report_year
+    ORDER BY report_year DESC
+";
+$proc_yr_stmt = $mysqli->prepare($proc_yr_sql);
+$processing_yearly_rollup = [];
+if ($proc_yr_stmt) {
+    if (!empty($proc_yr_params)) $proc_yr_stmt->bind_param($proc_yr_types, ...$proc_yr_params);
+    $proc_yr_stmt->execute();
+    $processing_yearly_rollup = $proc_yr_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $proc_yr_stmt->close();
+}
+
+// 3. Sales Centers Roll-Up
+$sales_yr_where = ["1=1"];
+$sales_yr_params = [];
+$sales_yr_types = "";
+if (!empty($range_id)) {
+    $sales_yr_where[] = "(range_id = ? OR vs_range = ?)";
+    $sales_yr_params[] = $range_id;
+    $sales_yr_params[] = $range_name;
+    $sales_yr_types .= "is";
+}
+if ($active_tab === 'sales' && $selected_location !== 'all') {
+    $sales_yr_where[] = "(sales_center_name = ? OR address = ?)";
+    $sales_yr_params[] = $selected_location;
+    $sales_yr_params[] = $selected_location;
+    $sales_yr_types .= "ss";
+}
+$sales_yr_sql = "
+    SELECT report_year,
+           COUNT(id) as total_centers,
+           SUM(cow_milk_lit_month) as sum_cow,
+           SUM(buffalo_milk_lit_month) as sum_buffalo,
+           SUM(goat_milk_lit_month) as sum_goat,
+           SUM(total_lit_per_month) as sum_total,
+           SUM(fresh_milk_lit_per_month) as sum_fresh
+    FROM milk_product_sales_centers
+    WHERE " . implode(" AND ", $sales_yr_where) . "
+    GROUP BY report_year
+    ORDER BY report_year DESC
+";
+$sales_yr_stmt = $mysqli->prepare($sales_yr_sql);
+$sales_yearly_rollup = [];
+if ($sales_yr_stmt) {
+    if (!empty($sales_yr_params)) $sales_yr_stmt->bind_param($sales_yr_types, ...$sales_yr_params);
+    $sales_yr_stmt->execute();
+    $sales_yearly_rollup = $sales_yr_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $sales_yr_stmt->close();
 }
 
 include '../../../includes/header.php';
@@ -455,11 +660,14 @@ include '../../../includes/header.php';
         </div>
     </div>
 
-    <!-- GLOBAL REPORTING FILTERS (Month, Year, & Date) -->
+    <!-- GLOBAL REPORTING FILTERS (Year, Month, Location/Outlet) -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body bg-light p-3 rounded">
             <form method="GET" class="row g-3 align-items-end" id="filterForm">
                 <input type="hidden" name="tab" value="<?= htmlspecialchars($active_tab) ?>">
+                <?php if ($requested_range_id || $range_id): ?>
+                    <input type="hidden" name="range_id" value="<?= htmlspecialchars($requested_range_id ?: $range_id) ?>">
+                <?php endif; ?>
                 <div class="col-md-3">
                     <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-calendar-check me-1"></i>Report Year</label>
                     <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -478,13 +686,23 @@ include '../../../includes/header.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-calendar-date me-1"></i>Specific Date</label>
-                    <input type="date" name="date" class="form-control form-control-sm" value="<?= htmlspecialchars($selected_date) ?>" onchange="this.form.submit()">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                        <?= $active_tab === 'sales' ? 'Sales Outlet / Location' : ($active_tab === 'processing' ? 'Processing Facility / Location' : 'Collecting Center / Location') ?>
+                    </label>
+                    <select name="location" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="all" <?= ($selected_location === 'all') ? 'selected' : '' ?>>All Registered <?= $active_tab === 'sales' ? 'Outlets' : 'Centers' ?> (<?= count($available_locations) ?>)</option>
+                        <?php foreach ($available_locations as $key => $loc): ?>
+                            <option value="<?= htmlspecialchars($loc['name']) ?>" <?= ($selected_location === $loc['name']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($loc['label']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-sm btn-dark flex-grow-1"><i class="bi bi-funnel-fill me-1"></i>Apply Filters</button>
-                    <a href="milk_collection_details.php?tab=<?= $active_tab ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-dark flex-grow-1"><i class="bi bi-funnel-fill me-1"></i>Filter</button>
+                    <a href="milk_collection_details.php?tab=<?= $active_tab ?><?= $range_param ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
                 </div>
             </form>
         </div>
@@ -494,21 +712,21 @@ include '../../../includes/header.php';
     <ul class="nav nav-pills mb-4 gap-2 bg-white p-2 rounded shadow-sm">
         <li class="nav-item">
             <a class="nav-link fw-bold px-4 py-2 <?= $active_tab === 'collecting' ? 'active shadow-sm' : 'text-dark' ?>" 
-               href="milk_collection_details.php?tab=collecting&year=<?= $selected_year ?>&month=<?= $selected_month ?>&date=<?= urlencode($selected_date) ?>">
+               href="milk_collection_details.php?tab=collecting&year=<?= $selected_year ?>&month=<?= $selected_month ?><?= $range_param ?>">
                 <i class="bi bi-bucket-fill me-2"></i>Milk Collecting Centers
                 <span class="badge <?= $active_tab === 'collecting' ? 'bg-white text-primary' : 'bg-primary text-white' ?> ms-2"><?= count($collecting_records) ?></span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link fw-bold px-4 py-2 <?= $active_tab === 'processing' ? 'active shadow-sm' : 'text-dark' ?>" 
-               href="milk_collection_details.php?tab=processing&year=<?= $selected_year ?>&month=<?= $selected_month ?>&date=<?= urlencode($selected_date) ?>">
+               href="milk_collection_details.php?tab=processing&year=<?= $selected_year ?>&month=<?= $selected_month ?><?= $range_param ?>">
                 <i class="bi bi-gear-wide-connected me-2"></i>Milk Processing Centers
                 <span class="badge <?= $active_tab === 'processing' ? 'bg-white text-primary' : 'bg-primary text-white' ?> ms-2"><?= count($processing_records) ?></span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link fw-bold px-4 py-2 <?= $active_tab === 'sales' ? 'active shadow-sm' : 'text-dark' ?>" 
-               href="milk_collection_details.php?tab=sales&year=<?= $selected_year ?>&month=<?= $selected_month ?>&date=<?= urlencode($selected_date) ?>">
+               href="milk_collection_details.php?tab=sales&year=<?= $selected_year ?>&month=<?= $selected_month ?><?= $range_param ?>">
                 <i class="bi bi-shop me-2"></i>Milk Sales Centers
                 <span class="badge <?= $active_tab === 'sales' ? 'bg-white text-primary' : 'bg-primary text-white' ?> ms-2"><?= count($sales_records) ?></span>
             </a>
@@ -557,6 +775,109 @@ include '../../../includes/header.php';
             </div>
         </div>
 
+        <!-- Automated Milk Collection Summary (Annual Roll-Up & Summary Calculator) -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="card-title mb-0 fw-bold text-dark">
+                        <i class="bi bi-calculator-fill text-primary me-2"></i>Automated Milk Collection Summary (Annual Roll-Up)
+                    </h5>
+                    <small class="text-muted">Real-time compilation of manual collection entries eliminating manual end-of-year calculations</small>
+                <div class="d-flex align-items-center gap-2">
+                    <?php if ($active_tab === 'collecting' && $selected_location !== 'all'): ?>
+                        <span class="badge bg-primary text-white px-3 py-2">
+                            <i class="bi bi-geo-alt-fill me-1"></i>Targeted Location: <?= htmlspecialchars($selected_location) ?>
+                        </span>
+                    <?php endif; ?>
+                    <ul class="nav nav-pills card-header-pills gap-1" id="colSummaryTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active py-1 px-3 fw-bold small btn-sm" id="col-yearly-tab" data-bs-toggle="pill" data-bs-target="#col-yearly-content" type="button" role="tab">Yearly Roll-Up</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-1 px-3 fw-bold small btn-sm" id="col-monthly-tab" data-bs-toggle="pill" data-bs-target="#col-monthly-content" type="button" role="tab">Monthly Progression (<?= $milk_summary_year ?>)</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="tab-content" id="colSummaryTabContent">
+                    <!-- Yearly Roll-Up Tab -->
+                    <div class="tab-pane fade show active" id="col-yearly-content" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle mb-0">
+                                <thead class="table-light text-secondary small text-uppercase">
+                                    <tr>
+                                        <th class="ps-3">Report Year</th>
+                                        <th class="text-center">Active Centers</th>
+                                        <th class="text-end text-primary">Cow Milk (L/mo)</th>
+                                        <th class="text-end text-info">Buffalo Milk (L/mo)</th>
+                                        <th class="text-end text-warning">Goat Milk (L/mo)</th>
+                                        <th class="text-end fw-bold text-success">Total Monthly Volume (L)</th>
+                                        <th class="text-end fw-bold text-dark pe-3">Annual Estimate (L/yr)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($collecting_yearly_rollup)): ?>
+                                        <tr>
+                                            <td colspan="7" class="text-center py-3 text-muted">No collection records found to compile.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($collecting_yearly_rollup as $row): ?>
+                                            <tr>
+                                                <td class="ps-3 fw-bold text-dark"><i class="bi bi-calendar-check me-1 text-primary"></i><?= $row['report_year'] ?></td>
+                                                <td class="text-center"><span class="badge bg-light text-dark border"><?= number_format($row['total_centers']) ?> centers</span></td>
+                                                <td class="text-end font-monospace text-primary fw-bold"><?= number_format($row['sum_cow'], 2) ?></td>
+                                                <td class="text-end font-monospace text-info fw-bold"><?= number_format($row['sum_buffalo'], 2) ?></td>
+                                                <td class="text-end font-monospace text-warning fw-bold"><?= number_format($row['sum_goat'], 2) ?></td>
+                                                <td class="text-end font-monospace fw-bold text-success"><?= number_format($row['sum_total'], 2) ?></td>
+                                                <td class="text-end font-monospace fw-bold text-dark pe-3"><?= number_format($row['sum_total'] * 12, 2) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Breakdown Tab -->
+                    <div class="tab-pane fade" id="col-monthly-content" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle mb-0">
+                                <thead class="table-light text-secondary small text-uppercase">
+                                    <tr>
+                                        <th class="ps-3">Month</th>
+                                        <th class="text-center">Logged Centers</th>
+                                        <th class="text-end text-primary">Cow Milk (L)</th>
+                                        <th class="text-end text-info">Buffalo Milk (L)</th>
+                                        <th class="text-end text-warning">Goat Milk (L)</th>
+                                        <th class="text-end fw-bold text-success pe-3">Total Volume (L)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($collecting_monthly_rollup)): ?>
+                                        <tr>
+                                            <td colspan="6" class="text-center py-3 text-muted">No monthly breakdown data available for <?= $milk_summary_year ?>.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($collecting_monthly_rollup as $m_row): ?>
+                                            <tr>
+                                                <td class="ps-3 fw-bold text-dark"><i class="bi bi-calendar3 me-1 text-secondary"></i><?= !empty($m_row['report_month']) && isset($months_map[$m_row['report_month']]) ? $months_map[$m_row['report_month']] : 'Annual Aggregate' ?></td>
+                                                <td class="text-center"><span class="badge bg-light text-dark border"><?= number_format($m_row['total_centers']) ?> centers</span></td>
+                                                <td class="text-end font-monospace text-primary fw-bold"><?= number_format($m_row['sum_cow'], 2) ?></td>
+                                                <td class="text-end font-monospace text-info fw-bold"><?= number_format($m_row['sum_buffalo'], 2) ?></td>
+                                                <td class="text-end font-monospace text-warning fw-bold"><?= number_format($m_row['sum_goat'], 2) ?></td>
+                                                <td class="text-end font-monospace fw-bold text-success pe-3"><?= number_format($m_row['sum_total'], 2) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Table: Collecting Centers -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
@@ -564,7 +885,10 @@ include '../../../includes/header.php';
                     <i class="bi bi-bucket-fill me-2 text-primary"></i>Milk Collecting Centers List
                 </h5>
                 <div class="small text-muted">
-                    Period: <strong><?= (!empty($selected_date) ? 'Date: ' . date('d M Y', strtotime($selected_date)) . ' | ' : '') . ($selected_month !== 'all' ? $months_map[$selected_month] . ' ' : '') . ($selected_year === 'all' ? 'All Years' : $selected_year) ?></strong>
+                    Period: <strong><?= ($selected_month !== 'all' ? $months_map[$selected_month] . ' ' : '') . ($selected_year === 'all' ? 'All Years' : $selected_year) ?></strong>
+                    <?php if ($active_tab === 'collecting' && $selected_location !== 'all'): ?>
+                        | Center: <strong class="text-primary"><?= htmlspecialchars($selected_location) ?></strong>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -573,7 +897,6 @@ include '../../../includes/header.php';
                         <thead class="table-light text-secondary small text-uppercase">
                             <tr>
                                 <th class="ps-3">#</th>
-                                <th>Date</th>
                                 <th>Period</th>
                                 <th>Center Name & Address</th>
                                 <th>Contact</th>
@@ -589,19 +912,12 @@ include '../../../includes/header.php';
                         <tbody>
                             <?php if (empty($collecting_records)): ?>
                                 <tr>
-                                    <td colspan="12" class="text-center py-5 text-muted">No milk collecting centers found.</td>
+                                    <td colspan="11" class="text-center py-5 text-muted">No milk collecting centers found.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($collecting_records as $idx => $r): ?>
                                     <tr>
                                         <td class="ps-3 fw-bold text-muted"><?= $idx + 1 ?></td>
-                                        <td>
-                                            <?php if (!empty($r['record_date'])): ?>
-                                                <span class="fw-semibold text-dark"><i class="bi bi-calendar3 me-1 text-secondary"></i><?= date('d M Y', strtotime($r['record_date'])) ?></span>
-                                            <?php else: ?>
-                                                <span class="text-muted">—</span>
-                                            <?php endif; ?>
-                                        </td>
                                         <td>
                                             <span class="fw-bold"><?= $r['report_year'] ?? 2025 ?></span>
                                             <span class="badge bg-light text-dark border ms-1"><?= !empty($r['report_month']) && isset($months_map[$r['report_month']]) ? substr($months_map[$r['report_month']], 0, 3) : 'Annual' ?></span>
@@ -695,6 +1011,67 @@ include '../../../includes/header.php';
             </div>
         </div>
 
+        <!-- Automated Milk Processing Summary (Annual Roll-Up & Summary Calculator) -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="card-title mb-0 fw-bold text-dark">
+                        <i class="bi bi-calculator-fill text-primary me-2"></i>Automated Milk Processing Summary (Annual Roll-Up)
+                    </h5>
+                    <small class="text-muted">Real-time compilation of processing throughput & value-added milk products</small>
+                <div class="d-flex align-items-center gap-2">
+                    <?php if ($active_tab === 'processing' && $selected_location !== 'all'): ?>
+                        <span class="badge bg-primary text-white px-3 py-2">
+                            <i class="bi bi-geo-alt-fill me-1"></i>Targeted Location: <?= htmlspecialchars($selected_location) ?>
+                        </span>
+                    <?php endif; ?>
+                    <span class="badge bg-light text-dark border px-3 py-2"><i class="bi bi-shield-check text-success me-1"></i>Year-End Auto-Compiled</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0">
+                        <thead class="table-light text-secondary small text-uppercase">
+                            <tr>
+                                <th class="ps-3">Report Year</th>
+                                <th class="text-center">Processing Units</th>
+                                <th class="text-end text-primary">Cow Intake (L/mo)</th>
+                                <th class="text-end text-info">Buffalo Intake (L/mo)</th>
+                                <th class="text-end text-warning">Goat Intake (L/mo)</th>
+                                <th class="text-end">Yoghurt (L/mo)</th>
+                                <th class="text-end">Curd (L/mo)</th>
+                                <th class="text-end">Ghee (L/mo)</th>
+                                <th class="text-end fw-bold text-success">Total Processing (L/mo)</th>
+                                <th class="text-end fw-bold text-dark pe-3">Annual Estimate (L/yr)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($processing_yearly_rollup)): ?>
+                                <tr>
+                                    <td colspan="10" class="text-center py-3 text-muted">No processing records found to compile.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($processing_yearly_rollup as $row): ?>
+                                    <tr>
+                                        <td class="ps-3 fw-bold text-dark"><i class="bi bi-calendar-check me-1 text-primary"></i><?= $row['report_year'] ?></td>
+                                        <td class="text-center"><span class="badge bg-light text-dark border"><?= number_format($row['total_centers']) ?> units</span></td>
+                                        <td class="text-end font-monospace text-primary fw-bold"><?= number_format($row['sum_cow'], 2) ?></td>
+                                        <td class="text-end font-monospace text-info fw-bold"><?= number_format($row['sum_buffalo'], 2) ?></td>
+                                        <td class="text-end font-monospace text-warning fw-bold"><?= number_format($row['sum_goat'], 2) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['sum_yoghurt'], 2) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['sum_curd'], 2) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['sum_ghee'], 2) ?></td>
+                                        <td class="text-end font-monospace fw-bold text-success"><?= number_format($row['sum_total'], 2) ?></td>
+                                        <td class="text-end font-monospace fw-bold text-dark pe-3"><?= number_format($row['sum_total'] * 12, 2) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Table: Processing Centers -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
@@ -702,7 +1079,10 @@ include '../../../includes/header.php';
                     <i class="bi bi-gear-wide-connected me-2 text-primary"></i>Milk Processing Centers List
                 </h5>
                 <div class="small text-muted">
-                    Period: <strong><?= (!empty($selected_date) ? 'Date: ' . date('d M Y', strtotime($selected_date)) . ' | ' : '') . ($selected_month !== 'all' ? $months_map[$selected_month] . ' ' : '') . ($selected_year === 'all' ? 'All Years' : $selected_year) ?></strong>
+                    Period: <strong><?= ($selected_month !== 'all' ? $months_map[$selected_month] . ' ' : '') . ($selected_year === 'all' ? 'All Years' : $selected_year) ?></strong>
+                    <?php if ($active_tab === 'processing' && $selected_location !== 'all'): ?>
+                        | Facility: <strong class="text-primary"><?= htmlspecialchars($selected_location) ?></strong>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -711,7 +1091,6 @@ include '../../../includes/header.php';
                         <thead class="table-light text-secondary small text-uppercase">
                             <tr>
                                 <th class="ps-3">#</th>
-                                <th>Date</th>
                                 <th>Period</th>
                                 <th>Center Name & Address</th>
                                 <th class="text-end text-primary">Cow (L/m)</th>
@@ -726,19 +1105,12 @@ include '../../../includes/header.php';
                         <tbody>
                             <?php if (empty($processing_records)): ?>
                                 <tr>
-                                    <td colspan="11" class="text-center py-5 text-muted">No milk processing centers found.</td>
+                                    <td colspan="10" class="text-center py-5 text-muted">No milk processing centers found.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($processing_records as $idx => $r): ?>
                                     <tr>
                                         <td class="ps-3 fw-bold text-muted"><?= $idx + 1 ?></td>
-                                        <td>
-                                            <?php if (!empty($r['record_date'])): ?>
-                                                <span class="fw-semibold text-dark"><i class="bi bi-calendar3 me-1 text-secondary"></i><?= date('d M Y', strtotime($r['record_date'])) ?></span>
-                                            <?php else: ?>
-                                                <span class="text-muted">—</span>
-                                            <?php endif; ?>
-                                        </td>
                                         <td>
                                             <span class="fw-bold"><?= $r['report_year'] ?? 2025 ?></span>
                                             <span class="badge bg-light text-dark border ms-1"><?= !empty($r['report_month']) && isset($months_map[$r['report_month']]) ? substr($months_map[$r['report_month']], 0, 3) : 'Annual' ?></span>
@@ -843,6 +1215,63 @@ include '../../../includes/header.php';
             </div>
         </div>
 
+        <!-- Automated Milk Sales Summary (Annual Roll-Up & Summary Calculator) -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="card-title mb-0 fw-bold text-dark">
+                        <i class="bi bi-calculator-fill text-primary me-2"></i>Automated Milk Sales Summary (Annual Roll-Up)
+                    </h5>
+                    <small class="text-muted">Real-time compilation of retail & bulk milk marketing and distributions</small>
+                <div class="d-flex align-items-center gap-2">
+                    <?php if ($active_tab === 'sales' && $selected_location !== 'all'): ?>
+                        <span class="badge bg-primary text-white px-3 py-2">
+                            <i class="bi bi-geo-alt-fill me-1"></i>Targeted Outlet: <?= htmlspecialchars($selected_location) ?>
+                        </span>
+                    <?php endif; ?>
+                    <span class="badge bg-light text-dark border px-3 py-2"><i class="bi bi-shield-check text-success me-1"></i>Year-End Auto-Compiled</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0">
+                        <thead class="table-light text-secondary small text-uppercase">
+                            <tr>
+                                <th class="ps-3">Report Year</th>
+                                <th class="text-center">Sales Outlets</th>
+                                <th class="text-end text-primary">Cow Milk (L/mo)</th>
+                                <th class="text-end text-info">Buffalo Milk (L/mo)</th>
+                                <th class="text-end text-warning">Goat Milk (L/mo)</th>
+                                <th class="text-end">Fresh Milk Sold (L/mo)</th>
+                                <th class="text-end fw-bold text-success">Total Sales (L/mo)</th>
+                                <th class="text-end fw-bold text-dark pe-3">Annual Estimate (L/yr)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($sales_yearly_rollup)): ?>
+                                <tr>
+                                    <td colspan="8" class="text-center py-3 text-muted">No sales records found to compile.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($sales_yearly_rollup as $row): ?>
+                                    <tr>
+                                        <td class="ps-3 fw-bold text-dark"><i class="bi bi-calendar-check me-1 text-primary"></i><?= $row['report_year'] ?></td>
+                                        <td class="text-center"><span class="badge bg-light text-dark border"><?= number_format($row['total_centers']) ?> outlets</span></td>
+                                        <td class="text-end font-monospace text-primary fw-bold"><?= number_format($row['sum_cow'], 2) ?></td>
+                                        <td class="text-end font-monospace text-info fw-bold"><?= number_format($row['sum_buffalo'], 2) ?></td>
+                                        <td class="text-end font-monospace text-warning fw-bold"><?= number_format($row['sum_goat'], 2) ?></td>
+                                        <td class="text-end font-monospace"><?= number_format($row['sum_fresh'], 2) ?></td>
+                                        <td class="text-end font-monospace fw-bold text-success"><?= number_format($row['sum_total'], 2) ?></td>
+                                        <td class="text-end font-monospace fw-bold text-dark pe-3"><?= number_format($row['sum_total'] * 12, 2) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Table: Sales Centers -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
@@ -850,7 +1279,10 @@ include '../../../includes/header.php';
                     <i class="bi bi-shop me-2 text-primary"></i>Milk Product Sales Centers List
                 </h5>
                 <div class="small text-muted">
-                    Period: <strong><?= (!empty($selected_date) ? 'Date: ' . date('d M Y', strtotime($selected_date)) . ' | ' : '') . ($selected_month !== 'all' ? $months_map[$selected_month] . ' ' : '') . ($selected_year === 'all' ? 'All Years' : $selected_year) ?></strong>
+                    Period: <strong><?= ($selected_month !== 'all' ? $months_map[$selected_month] . ' ' : '') . ($selected_year === 'all' ? 'All Years' : $selected_year) ?></strong>
+                    <?php if ($active_tab === 'sales' && $selected_location !== 'all'): ?>
+                        | Outlet: <strong class="text-primary"><?= htmlspecialchars($selected_location) ?></strong>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -859,7 +1291,6 @@ include '../../../includes/header.php';
                         <thead class="table-light text-secondary small text-uppercase">
                             <tr>
                                 <th class="ps-3">#</th>
-                                <th>Date</th>
                                 <th>Period</th>
                                 <th>Sales Center & Address</th>
                                 <th class="text-end text-primary">Cow (L/m)</th>
@@ -874,19 +1305,12 @@ include '../../../includes/header.php';
                         <tbody>
                             <?php if (empty($sales_records)): ?>
                                 <tr>
-                                    <td colspan="11" class="text-center py-5 text-muted">No milk product sales centers found.</td>
+                                    <td colspan="10" class="text-center py-5 text-muted">No milk product sales centers found.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($sales_records as $idx => $r): ?>
                                     <tr>
                                         <td class="ps-3 fw-bold text-muted"><?= $idx + 1 ?></td>
-                                        <td>
-                                            <?php if (!empty($r['record_date'])): ?>
-                                                <span class="fw-semibold text-dark"><i class="bi bi-calendar3 me-1 text-secondary"></i><?= date('d M Y', strtotime($r['record_date'])) ?></span>
-                                            <?php else: ?>
-                                                <span class="text-muted">—</span>
-                                            <?php endif; ?>
-                                        </td>
                                         <td>
                                             <span class="fw-bold"><?= $r['report_year'] ?? 2025 ?></span>
                                             <span class="badge bg-light text-dark border ms-1"><?= !empty($r['report_month']) && isset($months_map[$r['report_month']]) ? substr($months_map[$r['report_month']], 0, 3) : 'Annual' ?></span>
@@ -950,7 +1374,11 @@ include '../../../includes/header.php';
         </div>
     <?php endif; ?>
 
-</div>
+<datalist id="milk_centers_list">
+    <?php foreach ($available_locations as $loc): ?>
+        <option value="<?= htmlspecialchars($loc['name']) ?>"><?= htmlspecialchars($loc['address']) ?></option>
+    <?php endforeach; ?>
+</datalist>
 
 <!-- MODAL: ADD COLLECTING CENTER -->
 <div class="modal fade" id="addCollectingModal" tabindex="-1" aria-hidden="true">
@@ -960,24 +1388,20 @@ include '../../../includes/header.php';
                 <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Add Milk Collecting Center</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="milk_collection_details.php?tab=collecting">
+            <form method="POST" action="milk_collection_details.php?tab=collecting<?= $range_param ?>">
                 <input type="hidden" name="sub_module" value="collecting">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">VS Range</label>
                             <input type="text" name="vs_range" class="form-control" value="<?= htmlspecialchars($range_name) ?>" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Date of Record <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="add_col_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="add_col_year" class="form-control" value="<?= date('Y') ?>" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="add_col_month" class="form-select">
                                 <option value="">Annual Aggregate</option>
@@ -990,7 +1414,7 @@ include '../../../includes/header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Collecting Center Name <span class="text-danger">*</span></label>
-                            <input type="text" name="collecting_center_name" class="form-control" required placeholder="e.g. Mahaoya Milk Chilling & Collection Point">
+                            <input type="text" name="collecting_center_name" class="form-control" list="milk_centers_list" required placeholder="e.g. Mahaoya Milk Chilling & Collection Point">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contact Number</label>
@@ -1055,24 +1479,20 @@ include '../../../includes/header.php';
                 <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Add Milk Processing Center</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="milk_collection_details.php?tab=processing">
+            <form method="POST" action="milk_collection_details.php?tab=processing<?= $range_param ?>">
                 <input type="hidden" name="sub_module" value="processing">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">VS Range</label>
                             <input type="text" name="vs_range" class="form-control" value="<?= htmlspecialchars($range_name) ?>" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Date of Record <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="add_proc_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="add_proc_year" class="form-control" value="<?= date('Y') ?>" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="add_proc_month" class="form-select">
                                 <option value="">Annual Aggregate</option>
@@ -1085,7 +1505,7 @@ include '../../../includes/header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Processing Center Name <span class="text-danger">*</span></label>
-                            <input type="text" name="processing_center_name" class="form-control" required placeholder="e.g. Eastern Dairy Processors Ltd">
+                            <input type="text" name="processing_center_name" class="form-control" list="milk_centers_list" required placeholder="e.g. Eastern Dairy Processors Ltd">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contact Number</label>
@@ -1168,24 +1588,20 @@ include '../../../includes/header.php';
                 <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Add Milk Sales Center</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="milk_collection_details.php?tab=sales">
+            <form method="POST" action="milk_collection_details.php?tab=sales<?= $range_param ?>">
                 <input type="hidden" name="sub_module" value="sales">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">VS Range</label>
                             <input type="text" name="vs_range" class="form-control" value="<?= htmlspecialchars($range_name) ?>" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Date of Record <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="add_sales_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="add_sales_year" class="form-control" value="<?= date('Y') ?>" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="add_sales_month" class="form-select">
                                 <option value="">Annual Aggregate</option>
@@ -1198,7 +1614,7 @@ include '../../../includes/header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Sales Center / Milk Bar Name <span class="text-danger">*</span></label>
-                            <input type="text" name="sales_center_name" class="form-control" required placeholder="e.g. Fresh Milk Bar - Clock Tower">
+                            <input type="text" name="sales_center_name" class="form-control" list="milk_centers_list" required placeholder="e.g. Fresh Milk Bar - Clock Tower">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contact Number</label>
@@ -1276,25 +1692,21 @@ include '../../../includes/header.php';
                 <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Milk Collecting Center</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="milk_collection_details.php?tab=collecting">
+            <form method="POST" action="milk_collection_details.php?tab=collecting<?= $range_param ?>">
                 <input type="hidden" name="sub_module" value="collecting">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_col_id">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">VS Range</label>
                             <input type="text" name="vs_range" id="edit_col_range" class="form-control" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Date of Record <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="edit_col_date" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="edit_col_year" class="form-control" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="edit_col_month" class="form-select">
                                 <option value="">Annual Aggregate</option>
@@ -1307,7 +1719,7 @@ include '../../../includes/header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Collecting Center Name</label>
-                            <input type="text" name="collecting_center_name" id="edit_col_name" class="form-control" required>
+                            <input type="text" name="collecting_center_name" id="edit_col_name" class="form-control" list="milk_centers_list" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contact Number</label>
@@ -1363,25 +1775,21 @@ include '../../../includes/header.php';
                 <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Milk Processing Center</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="milk_collection_details.php?tab=processing">
+            <form method="POST" action="milk_collection_details.php?tab=processing<?= $range_param ?>">
                 <input type="hidden" name="sub_module" value="processing">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_proc_id">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">VS Range</label>
                             <input type="text" name="vs_range" id="edit_proc_range" class="form-control" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Date of Record <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="edit_proc_date" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="edit_proc_year" class="form-control" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="edit_proc_month" class="form-select">
                                 <option value="">Annual Aggregate</option>
@@ -1394,7 +1802,7 @@ include '../../../includes/header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Processing Center Name</label>
-                            <input type="text" name="processing_center_name" id="edit_proc_name" class="form-control" required>
+                            <input type="text" name="processing_center_name" id="edit_proc_name" class="form-control" list="milk_centers_list" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contact Number</label>
@@ -1467,25 +1875,21 @@ include '../../../includes/header.php';
                 <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Edit Milk Sales Center</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="milk_collection_details.php?tab=sales">
+            <form method="POST" action="milk_collection_details.php?tab=sales<?= $range_param ?>">
                 <input type="hidden" name="sub_module" value="sales">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_sales_id">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">VS Range</label>
                             <input type="text" name="vs_range" id="edit_sales_range" class="form-control" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Date of Record <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="edit_sales_date" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Year</label>
                             <input type="number" name="report_year" id="edit_sales_year" class="form-control" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="edit_sales_month" class="form-select">
                                 <option value="">Annual Aggregate</option>
@@ -1498,7 +1902,7 @@ include '../../../includes/header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Sales Center Name</label>
-                            <input type="text" name="sales_center_name" id="edit_sales_name" class="form-control" required>
+                            <input type="text" name="sales_center_name" id="edit_sales_name" class="form-control" list="milk_centers_list" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contact Number</label>
@@ -1586,26 +1990,6 @@ ob_start();
 ?>
 <script>
 $(document).ready(function() {
-    // Synchronize Date changes to Year and Month selects
-    function syncDateToYearMonth(dateSelector, yearSelector, monthSelector) {
-        $(dateSelector).on("change", function() {
-            const val = $(this).val();
-            if (val) {
-                const parts = val.split('-');
-                if (parts.length === 3) {
-                    $(yearSelector).val(parts[0]);
-                    $(monthSelector).val(parseInt(parts[1], 10));
-                }
-            }
-        });
-    }
-    syncDateToYearMonth("#add_col_date", "#add_col_year", "#add_col_month");
-    syncDateToYearMonth("#edit_col_date", "#edit_col_year", "#edit_col_month");
-    syncDateToYearMonth("#add_proc_date", "#add_proc_year", "#add_proc_month");
-    syncDateToYearMonth("#edit_proc_date", "#edit_proc_year", "#edit_proc_month");
-    syncDateToYearMonth("#add_sales_date", "#add_sales_year", "#add_sales_month");
-    syncDateToYearMonth("#edit_sales_date", "#edit_sales_year", "#edit_sales_month");
-
     // Collecting add calculation preview
     $(".calc-collecting").on("input", function() {
         const c = parseFloat($("#add_c_cow").val()) || 0;
@@ -1618,7 +2002,6 @@ $(document).ready(function() {
     $(".btn-edit-collecting").on("click", function() {
         const btn = $(this);
         $("#edit_col_id").val(btn.data("id"));
-        $("#edit_col_date").val(btn.data("date") || "");
         $("#edit_col_range").val(btn.data("range"));
         $("#edit_col_year").val(btn.data("year"));
         $("#edit_col_month").val(btn.data("month"));
@@ -1637,7 +2020,6 @@ $(document).ready(function() {
     $(".btn-edit-processing").on("click", function() {
         const btn = $(this);
         $("#edit_proc_id").val(btn.data("id"));
-        $("#edit_proc_date").val(btn.data("date") || "");
         $("#edit_proc_range").val(btn.data("range"));
         $("#edit_proc_year").val(btn.data("year"));
         $("#edit_proc_month").val(btn.data("month"));
@@ -1659,7 +2041,6 @@ $(document).ready(function() {
     $(".btn-edit-sales").on("click", function() {
         const btn = $(this);
         $("#edit_sales_id").val(btn.data("id"));
-        $("#edit_sales_date").val(btn.data("date") || "");
         $("#edit_sales_range").val(btn.data("range"));
         $("#edit_sales_year").val(btn.data("year"));
         $("#edit_sales_month").val(btn.data("month"));
@@ -1683,7 +2064,7 @@ $(document).ready(function() {
         $("#deleteEntryModule").val(module);
         $("#deleteEntryId").val(btn.data("id"));
         $("#deleteEntryTitle").text(btn.data("title"));
-        $("#deleteEntryForm").attr("action", `milk_collection_details.php?tab=${module}`);
+        $("#deleteEntryForm").attr("action", `milk_collection_details.php?tab=${module}<?= $range_param ?>`);
         $("#deleteEntryModal").modal("show");
     });
 });

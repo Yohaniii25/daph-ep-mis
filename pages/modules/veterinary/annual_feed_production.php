@@ -222,6 +222,31 @@ foreach ($records as $r) {
     $summary['categories'][$cat]++;
 }
 
+// Automated Yearly & Monthly Aggregation for Feed Production
+$feed_yearly_rollup = [];
+$feed_rollup_stmt = $mysqli->prepare("
+    SELECT report_year, category_type, COUNT(DISTINCT feed_mill_name) as mills_count, SUM(produced_qty_mt_month) as total_mt
+    FROM annual_feed_production
+    WHERE range_id = ?
+    GROUP BY report_year, category_type
+    ORDER BY report_year DESC
+");
+if ($feed_rollup_stmt) {
+    $feed_rollup_stmt->bind_param("i", $range_id);
+    $feed_rollup_stmt->execute();
+    $f_res = $feed_rollup_stmt->get_result();
+    while ($frow = $f_res->fetch_assoc()) {
+        $fyr = $frow['report_year'];
+        if (!isset($feed_yearly_rollup[$fyr])) {
+            $feed_yearly_rollup[$fyr] = ['total_mt' => 0, 'mills' => 0, 'categories' => []];
+        }
+        $feed_yearly_rollup[$fyr]['total_mt'] += floatval($frow['total_mt']);
+        $feed_yearly_rollup[$fyr]['mills'] += intval($frow['mills_count']);
+        $feed_yearly_rollup[$fyr]['categories'][$frow['category_type']] = floatval($frow['total_mt']);
+    }
+    $feed_rollup_stmt->close();
+}
+
 require_once '../../../includes/header.php';
 ?>
 
@@ -327,6 +352,54 @@ require_once '../../../includes/header.php';
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTOMATED SUMMARY DASHBOARD (Real-Time Aggregations) -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-calculator-fill text-warning me-2"></i>Automated Feed Production Summary (Annual Roll-Up)
+                    </h6>
+                    <small class="text-muted">Real-time compiled output across all feed mills to eliminate manual end-of-year calculations.</small>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light small text-secondary text-uppercase">
+                            <tr>
+                                <th>Report Year</th>
+                                <th class="text-center">Active Mills</th>
+                                <th>Category Breakdown</th>
+                                <th class="text-end bg-light fw-bold">Total Annual Production (MT)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            <?php if (empty($feed_yearly_rollup)): ?>
+                                <tr><td colspan="4" class="text-center py-3 text-muted">No feed production data recorded yet.</td></tr>
+                            <?php else: ?>
+                                <?php foreach ($feed_yearly_rollup as $yr => $yr_data): ?>
+                                    <tr>
+                                        <td class="fw-bold text-dark"><i class="bi bi-calendar-event me-1 text-warning"></i>Year <?= $yr ?></td>
+                                        <td class="text-center"><span class="badge bg-warning-subtle text-dark fw-bold"><?= $yr_data['mills'] ?> Mills</span></td>
+                                        <td>
+                                            <?php 
+                                                $cats_display = [];
+                                                foreach ($yr_data['categories'] as $cname => $cmt) {
+                                                    $cats_display[] = '<span class="badge bg-light text-dark border me-1">' . ucfirst(htmlspecialchars($cname)) . ': ' . number_format($cmt, 1) . ' MT</span>';
+                                                }
+                                                echo implode(' ', $cats_display);
+                                            ?>
+                                        </td>
+                                        <td class="text-end fw-bold text-dark font-monospace bg-light fs-6"><?= number_format($yr_data['total_mt'], 2) ?> MT</td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

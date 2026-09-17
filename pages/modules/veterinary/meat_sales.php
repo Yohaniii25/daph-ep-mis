@@ -39,11 +39,12 @@ if (!empty($range_id)) {
     }
 }
 
-// Global Month, Year, and Specific Date Filters
+// Global Month, Year, Meat Category, and Location Filters
 $selected_year = isset($_GET['year']) ? ($_GET['year'] === 'all' ? 'all' : intval($_GET['year'])) : intval(date('Y'));
 $selected_month = isset($_GET['month']) ? ($_GET['month'] === 'all' ? 'all' : intval($_GET['month'])) : 'all';
-$selected_date = isset($_GET['date']) && !empty($_GET['date']) ? trim($_GET['date']) : '';
 $selected_category = isset($_GET['category']) ? trim($_GET['category']) : 'all';
+$selected_location = isset($_GET['location']) && trim($_GET['location']) !== '' && $_GET['location'] !== 'all' ? trim($_GET['location']) : 'all';
+$range_param = $requested_range_id ? "&range_id=" . $requested_range_id : ($range_id ? "&range_id=" . $range_id : "");
 
 $months_map = [
     1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
@@ -56,9 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add') {
-        $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : date('Y-m-d');
-        $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : intval(date('Y', strtotime($record_date)));
-        $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : intval(date('n', strtotime($record_date)));
+        $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : intval(date('Y'));
+        $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : null;
+        $record_date = sprintf('%04d-%02d-01', $r_year, $r_month ?: 1);
         $meat_type = trim($_POST['meat_type'] ?? 'Beef');
         $other_meat_name = ($meat_type === 'Other') ? trim($_POST['other_meat_name'] ?? '') : null;
         $sales_volume_kg = floatval($_POST['sales_volume_kg'] ?? 0);
@@ -95,20 +96,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user_id
             );
             if ($stmt->execute()) {
-                header("Location: meat_sales.php?year=$r_year&month=" . ($r_month ?? 'all') . "&status=success&msg=" . urlencode("Meat sales record added successfully."));
+                header("Location: meat_sales.php?year=$r_year&month=" . ($r_month ?? 'all') . $range_param . "&status=success&msg=" . urlencode("Meat sales record added successfully."));
             } else {
-                header("Location: meat_sales.php?status=error&msg=" . urlencode("Database insert failed: " . $stmt->error));
+                header("Location: meat_sales.php?status=error" . $range_param . "&msg=" . urlencode("Database insert failed: " . $stmt->error));
             }
             $stmt->close();
         } else {
-            header("Location: meat_sales.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
+            header("Location: meat_sales.php?status=error" . $range_param . "&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
         }
         exit();
     } elseif ($action === 'edit') {
         $id = intval($_POST['id'] ?? 0);
-        $record_date = !empty($_POST['record_date']) ? trim($_POST['record_date']) : null;
-        $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : ($record_date ? intval(date('Y', strtotime($record_date))) : intval(date('Y')));
-        $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : ($record_date ? intval(date('n', strtotime($record_date))) : null);
+        $r_year = !empty($_POST['report_year']) ? intval($_POST['report_year']) : intval(date('Y'));
+        $r_month = (!empty($_POST['report_month']) && $_POST['report_month'] !== 'all') ? intval($_POST['report_month']) : null;
+        $record_date = sprintf('%04d-%02d-01', $r_year, $r_month ?: 1);
         $meat_type = trim($_POST['meat_type'] ?? 'Beef');
         $other_meat_name = ($meat_type === 'Other') ? trim($_POST['other_meat_name'] ?? '') : null;
         $sales_volume_kg = floatval($_POST['sales_volume_kg'] ?? 0);
@@ -141,13 +142,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id
             );
             if ($stmt->execute()) {
-                header("Location: meat_sales.php?year=$r_year&month=" . ($r_month ?? 'all') . "&status=success&msg=" . urlencode("Meat sales record updated successfully."));
+                header("Location: meat_sales.php?year=$r_year&month=" . ($r_month ?? 'all') . $range_param . "&status=success&msg=" . urlencode("Meat sales record updated successfully."));
             } else {
-                header("Location: meat_sales.php?status=error&msg=" . urlencode("Database update failed: " . $stmt->error));
+                header("Location: meat_sales.php?status=error" . $range_param . "&msg=" . urlencode("Database update failed: " . $stmt->error));
             }
             $stmt->close();
         } else {
-            header("Location: meat_sales.php?status=error&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
+            header("Location: meat_sales.php?status=error" . $range_param . "&msg=" . urlencode("Query preparation failed: " . $mysqli->error));
         }
         exit();
     } elseif ($action === 'delete') {
@@ -157,9 +158,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("i", $id);
             $stmt->execute();
             $stmt->close();
-            header("Location: meat_sales.php?year=$selected_year&month=$selected_month&status=success&msg=" . urlencode("Meat sales record deleted."));
+            header("Location: meat_sales.php?year=$selected_year&month=$selected_month" . $range_param . "&status=success&msg=" . urlencode("Meat sales record deleted."));
         } else {
-            header("Location: meat_sales.php?status=error&msg=" . urlencode("Delete failed."));
+            header("Location: meat_sales.php?status=error" . $range_param . "&msg=" . urlencode("Delete failed."));
         }
         exit();
     }
@@ -189,20 +190,20 @@ if ($selected_month !== 'all') {
     $types .= "i";
 }
 
-if (!empty($selected_date)) {
-    $where_clauses[] = "record_date = ?";
-    $params[] = $selected_date;
-    $types .= "s";
-}
-
 if ($selected_category !== 'all') {
     $where_clauses[] = "meat_type = ?";
     $params[] = $selected_category;
     $types .= "s";
 }
 
+if ($selected_location !== 'all') {
+    $where_clauses[] = "outlet_name_address = ?";
+    $params[] = $selected_location;
+    $types .= "s";
+}
+
 $where_sql = implode(" AND ", $where_clauses);
-$query_sql = "SELECT * FROM meat_sales_records WHERE $where_sql ORDER BY record_date DESC, report_year DESC, report_month DESC, id DESC";
+$query_sql = "SELECT * FROM meat_sales_records WHERE $where_sql ORDER BY report_year DESC, report_month DESC, id DESC";
 
 $stmt = $mysqli->prepare($query_sql);
 if (!empty($params)) {
@@ -215,6 +216,7 @@ $meat_records = [];
 $total_volume = 0;
 $total_turnover = 0;
 $category_breakdown = ['Beef' => 0, 'Mutton' => 0, 'Chicken' => 0, 'Other' => 0];
+$other_breakdown = [];
 
 while ($row = $records_result->fetch_assoc()) {
     $meat_records[] = $row;
@@ -223,10 +225,75 @@ while ($row = $records_result->fetch_assoc()) {
     if (isset($category_breakdown[$row['meat_type']])) {
         $category_breakdown[$row['meat_type']] += floatval($row['sales_volume_kg']);
     }
+    if ($row['meat_type'] === 'Other') {
+        $sub = !empty($row['other_meat_name']) ? trim($row['other_meat_name']) : 'Others';
+        $other_breakdown[$sub] = ($other_breakdown[$sub] ?? 0) + floatval($row['sales_volume_kg']);
+    }
 }
 $stmt->close();
 
 $avg_value_per_kg = ($total_volume > 0) ? ($total_turnover / $total_volume) : 0;
+
+// Automated Monthly & Yearly Summary Calculator (Targeted by Location if selected, else Range-wide)
+$monthly_summary = [];
+$yearly_summary = [];
+
+$sum_where = ["(range_id = ? OR vs_range = ?)"];
+$sum_params = [$range_id, $range_name];
+$sum_types = "is";
+
+if ($selected_location !== 'all') {
+    $sum_where[] = "outlet_name_address = ?";
+    $sum_params[] = $selected_location;
+    $sum_types .= "s";
+}
+
+$sum_where_sql = implode(" AND ", $sum_where);
+$summary_sql = "
+    SELECT 
+        report_year,
+        report_month,
+        meat_type,
+        other_meat_name,
+        SUM(sales_volume_kg) as sub_kg,
+        SUM(total_sales_amount) as sub_amount,
+        COUNT(*) as record_count
+    FROM meat_sales_records
+    WHERE $sum_where_sql
+    GROUP BY report_year, report_month, meat_type, other_meat_name
+    ORDER BY report_year DESC, report_month DESC
+";
+$summary_stmt = $mysqli->prepare($summary_sql);
+if ($summary_stmt) {
+    $summary_stmt->bind_param($sum_types, ...$sum_params);
+    $summary_stmt->execute();
+    $s_res = $summary_stmt->get_result();
+    while ($sr = $s_res->fetch_assoc()) {
+        $yr = intval($sr['report_year']);
+        $mo = !empty($sr['report_month']) ? intval($sr['report_month']) : 0;
+        $m_type = $sr['meat_type'];
+        $o_name = trim($sr['other_meat_name'] ?? '');
+        $label = ($m_type === 'Other' && !empty($o_name)) ? $o_name : $m_type;
+        
+        if (!isset($yearly_summary[$yr])) {
+            $yearly_summary[$yr] = ['total_kg' => 0, 'total_amount' => 0, 'types' => []];
+        }
+        $yearly_summary[$yr]['total_kg'] += floatval($sr['sub_kg']);
+        $yearly_summary[$yr]['total_amount'] += floatval($sr['sub_amount']);
+        $yearly_summary[$yr]['types'][$label] = ($yearly_summary[$yr]['types'][$label] ?? 0) + floatval($sr['sub_kg']);
+        
+        if ($mo > 0) {
+            $key = "$yr-" . str_pad($mo, 2, '0', STR_PAD_LEFT);
+            if (!isset($monthly_summary[$key])) {
+                $monthly_summary[$key] = ['year' => $yr, 'month' => $mo, 'total_kg' => 0, 'total_amount' => 0, 'types' => []];
+            }
+            $monthly_summary[$key]['total_kg'] += floatval($sr['sub_kg']);
+            $monthly_summary[$key]['total_amount'] += floatval($sr['sub_amount']);
+            $monthly_summary[$key]['types'][$label] = ($monthly_summary[$key]['types'][$label] ?? 0) + floatval($sr['sub_kg']);
+        }
+    }
+    $summary_stmt->close();
+}
 
 // Determine distinct available years for filter
 $years_query = $mysqli->query("SELECT DISTINCT report_year FROM meat_sales_records ORDER BY report_year DESC");
@@ -239,6 +306,31 @@ if ($years_query) {
 if (!in_array(intval(date('Y')), $available_years)) {
     $available_years[] = intval(date('Y'));
     rsort($available_years);
+}
+
+// Determine distinct available locations/outlets for filter (automatically includes newly registered ones)
+$loc_where = ["outlet_name_address IS NOT NULL AND TRIM(outlet_name_address) != ''"];
+$loc_params = [];
+$loc_types = "";
+if (!empty($range_id)) {
+    $loc_where[] = "(range_id = ? OR vs_range = ?)";
+    $loc_params[] = $range_id;
+    $loc_params[] = $range_name;
+    $loc_types .= "is";
+}
+$loc_sql = "SELECT DISTINCT outlet_name_address FROM meat_sales_records WHERE " . implode(" AND ", $loc_where) . " ORDER BY outlet_name_address ASC";
+$loc_stmt = $mysqli->prepare($loc_sql);
+$available_locations = [];
+if ($loc_stmt) {
+    if (!empty($loc_params)) {
+        $loc_stmt->bind_param($loc_types, ...$loc_params);
+    }
+    $loc_stmt->execute();
+    $loc_res = $loc_stmt->get_result();
+    while ($lr = $loc_res->fetch_assoc()) {
+        $available_locations[] = $lr['outlet_name_address'];
+    }
+    $loc_stmt->close();
 }
 
 include '../../../includes/header.php';
@@ -284,7 +376,7 @@ include '../../../includes/header.php';
         </div>
     </div>
 
-    <!-- GLOBAL REPORTING FILTERS (Month, Year, Date, Category) -->
+    <!-- GLOBAL REPORTING FILTERS (Month, Year, Category, Location) -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body bg-light p-3 rounded">
             <form method="GET" class="row g-3 align-items-end" id="filterForm">
@@ -310,22 +402,27 @@ include '../../../includes/header.php';
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-calendar-date me-1"></i>Specific Date</label>
-                    <input type="date" name="date" class="form-control form-control-sm" value="<?= htmlspecialchars($selected_date) ?>" onchange="this.form.submit()">
-                </div>
-                <div class="col-md-3">
                     <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-tags me-1"></i>Meat Category</label>
                     <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="all" <?= ($selected_category === 'all') ? 'selected' : '' ?>>All Meat Categories</option>
                         <option value="Beef" <?= ($selected_category === 'Beef') ? 'selected' : '' ?>>Beef</option>
                         <option value="Mutton" <?= ($selected_category === 'Mutton') ? 'selected' : '' ?>>Mutton</option>
                         <option value="Chicken" <?= ($selected_category === 'Chicken') ? 'selected' : '' ?>>Chicken</option>
-                        <option value="Other" <?= ($selected_category === 'Other') ? 'selected' : '' ?>>Other Meat Types</option>
+                        <option value="Other" <?= ($selected_category === 'Other') ? 'selected' : '' ?>>Others (Secondary Livestock)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Location / Outlet</label>
+                    <select name="location" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="all" <?= ($selected_location === 'all') ? 'selected' : '' ?>>All Registered Locations (<?= count($available_locations) ?>)</option>
+                        <?php foreach ($available_locations as $loc): ?>
+                            <option value="<?= htmlspecialchars($loc) ?>" <?= ($selected_location === $loc) ? 'selected' : '' ?>><?= htmlspecialchars($loc) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-dark flex-grow-1"><i class="bi bi-funnel-fill me-1"></i>Filter</button>
-                    <a href="meat_sales.php" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+                    <a href="meat_sales.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
                 </div>
             </form>
         </div>
@@ -370,7 +467,164 @@ include '../../../includes/header.php';
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-1 small">
                         <span><i class="bi bi-circle-fill text-primary me-1"></i>Mut: <strong><?= number_format($category_breakdown['Mutton']) ?></strong> kg</span>
-                        <span><i class="bi bi-circle-fill text-secondary me-1"></i>Oth: <strong><?= number_format($category_breakdown['Other']) ?></strong> kg</span>
+                        <span><i class="bi bi-circle-fill text-dark me-1"></i>Oth: <strong><?= number_format($category_breakdown['Other']) ?></strong> kg</span>
+                    </div>
+                    <?php if (!empty($other_breakdown)): ?>
+                        <div class="mt-1 pt-1 border-top text-truncate small" style="font-size: 0.75rem;">
+                            <span class="text-muted fw-bold">Others:</span> 
+                            <?php
+                                $detail_tags = [];
+                                foreach ($other_breakdown as $ok => $ov) {
+                                    $detail_tags[] = htmlspecialchars($ok) . ' (' . number_format($ov) . ' kg)';
+                                }
+                                echo implode(', ', $detail_tags);
+                            ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTOMATED SUMMARY DASHBOARD (Real-Time Monthly & Yearly Calculator) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h6 class="mb-0 fw-bold text-dark">
+                    <i class="bi bi-calculator-fill text-danger me-2"></i>Automated Summary Dashboard (Real-Time Aggregations)
+                </h6>
+                <small class="text-muted">Real-time aggregated manual entries to eliminate manual end-of-year calculations.</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <?php if ($selected_location !== 'all'): ?>
+                    <span class="badge bg-danger text-white px-3 py-2">
+                        <i class="bi bi-geo-alt-fill me-1"></i>Location: <?= htmlspecialchars($selected_location) ?>
+                    </span>
+                <?php endif; ?>
+                <ul class="nav nav-pills nav-fill small gap-2" id="meatSummaryTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active py-1 px-3 fw-bold" id="tab-yearly-summary" data-bs-toggle="pill" data-bs-target="#meatYearlyContent" type="button" role="tab">
+                            <i class="bi bi-calendar-check me-1"></i>Yearly Roll-Up
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-1 px-3 fw-bold" id="tab-monthly-summary" data-bs-toggle="pill" data-bs-target="#meatMonthlyContent" type="button" role="tab">
+                            <i class="bi bi-graph-up me-1"></i>Monthly Progression
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+                    <button class="nav-link py-1 px-3 fw-bold" id="tab-monthly-summary" data-bs-toggle="pill" data-bs-target="#meatMonthlyContent" type="button" role="tab">
+                        <i class="bi bi-calendar3 me-1"></i>Monthly Progression
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body p-0">
+            <div class="tab-content" id="meatSummaryTabContent">
+                <!-- Yearly Aggregations -->
+                <div class="tab-pane fade show active p-3" id="meatYearlyContent" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                            <thead class="table-light small text-secondary">
+                                <tr>
+                                    <th>Report Year</th>
+                                    <th class="text-end">Beef (kg)</th>
+                                    <th class="text-end">Mutton (kg)</th>
+                                    <th class="text-end">Chicken (kg)</th>
+                                    <th class="text-end">Others / Secondary (kg)</th>
+                                    <th class="text-end bg-light fw-bold">Total Volume (kg)</th>
+                                    <th class="text-end bg-light text-danger fw-bold">Total Sales (Rs.)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($yearly_summary)): ?>
+                                    <tr><td colspan="7" class="text-center py-3 text-muted">No sales records compiled yet.</td></tr>
+                                <?php else: ?>
+                                    <?php foreach ($yearly_summary as $yr => $ydata): ?>
+                                        <tr>
+                                            <td class="fw-bold text-dark"><i class="bi bi-calendar-event me-1 text-danger"></i>Year <?= $yr ?></td>
+                                            <td class="text-end font-monospace"><?= number_format($ydata['types']['Beef'] ?? 0, 2) ?></td>
+                                            <td class="text-end font-monospace"><?= number_format($ydata['types']['Mutton'] ?? 0, 2) ?></td>
+                                            <td class="text-end font-monospace"><?= number_format($ydata['types']['Chicken'] ?? 0, 2) ?></td>
+                                            <td class="text-end font-monospace">
+                                                <?php 
+                                                    $other_sum = 0;
+                                                    $other_sub_parts = [];
+                                                    foreach ($ydata['types'] as $tname => $tkg) {
+                                                        if (!in_array($tname, ['Beef', 'Mutton', 'Chicken'])) {
+                                                            $other_sum += $tkg;
+                                                            $other_sub_parts[] = htmlspecialchars($tname) . ': ' . number_format($tkg, 1) . 'kg';
+                                                        }
+                                                    }
+                                                    echo number_format($other_sum, 2);
+                                                    if (!empty($other_sub_parts)) {
+                                                        echo '<br><small class="text-muted">(' . implode(', ', $other_sub_parts) . ')</small>';
+                                                    }
+                                                ?>
+                                            </td>
+                                            <td class="text-end fw-bold text-primary font-monospace bg-light"><?= number_format($ydata['total_kg'], 2) ?></td>
+                                            <td class="text-end fw-bold text-danger font-monospace bg-light">Rs. <?= number_format($ydata['total_amount'], 2) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Monthly Progression Aggregations -->
+                <div class="tab-pane fade p-3" id="meatMonthlyContent" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                            <thead class="table-light small text-secondary">
+                                <tr>
+                                    <th>Period (Month & Year)</th>
+                                    <th class="text-end">Beef (kg)</th>
+                                    <th class="text-end">Mutton (kg)</th>
+                                    <th class="text-end">Chicken (kg)</th>
+                                    <th class="text-end">Others / Secondary (kg)</th>
+                                    <th class="text-end bg-light fw-bold">Monthly Volume (kg)</th>
+                                    <th class="text-end bg-light text-danger fw-bold">Monthly Sales (Rs.)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($monthly_summary)): ?>
+                                    <tr><td colspan="7" class="text-center py-3 text-muted">No monthly breakdown data available.</td></tr>
+                                <?php else: ?>
+                                    <?php foreach ($monthly_summary as $mkey => $mdata): ?>
+                                        <tr>
+                                            <td class="fw-bold text-dark">
+                                                <i class="bi bi-clock-history me-1 text-primary"></i>
+                                                <?= ($months_map[$mdata['month']] ?? 'Month ' . $mdata['month']) . ' ' . $mdata['year'] ?>
+                                            </td>
+                                            <td class="text-end font-monospace"><?= number_format($mdata['types']['Beef'] ?? 0, 2) ?></td>
+                                            <td class="text-end font-monospace"><?= number_format($mdata['types']['Mutton'] ?? 0, 2) ?></td>
+                                            <td class="text-end font-monospace"><?= number_format($mdata['types']['Chicken'] ?? 0, 2) ?></td>
+                                            <td class="text-end font-monospace">
+                                                <?php 
+                                                    $m_other_sum = 0;
+                                                    $m_other_sub_parts = [];
+                                                    foreach ($mdata['types'] as $mtname => $mtkg) {
+                                                        if (!in_array($mtname, ['Beef', 'Mutton', 'Chicken'])) {
+                                                            $m_other_sum += $mtkg;
+                                                            $m_other_sub_parts[] = htmlspecialchars($mtname) . ': ' . number_format($mtkg, 1) . 'kg';
+                                                        }
+                                                    }
+                                                    echo number_format($m_other_sum, 2);
+                                                    if (!empty($m_other_sub_parts)) {
+                                                        echo '<br><small class="text-muted">(' . implode(', ', $m_other_sub_parts) . ')</small>';
+                                                    }
+                                                ?>
+                                            </td>
+                                            <td class="text-end fw-bold text-primary font-monospace bg-light"><?= number_format($mdata['total_kg'], 2) ?></td>
+                                            <td class="text-end fw-bold text-danger font-monospace bg-light">Rs. <?= number_format($mdata['total_amount'], 2) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -385,7 +639,10 @@ include '../../../includes/header.php';
                 <span class="badge bg-secondary ms-2"><?= count($meat_records) ?> entries</span>
             </h5>
             <div class="small text-muted">
-                Period: <strong><?= (!empty($selected_date) ? 'Date: ' . date('d M Y', strtotime($selected_date)) . ' | ' : '') . ($selected_month !== 'all' ? $months_map[$selected_month] . ' ' : '') . ($selected_year === 'all' ? 'All Years' : $selected_year) ?></strong>
+                Period: <strong><?= ($selected_month !== 'all' ? $months_map[$selected_month] . ' ' : '') . ($selected_year === 'all' ? 'All Years' : $selected_year) ?></strong>
+                <?php if ($selected_location !== 'all'): ?>
+                    | Location: <strong class="text-danger"><?= htmlspecialchars($selected_location) ?></strong>
+                <?php endif; ?>
             </div>
         </div>
         <div class="card-body p-0">
@@ -394,7 +651,6 @@ include '../../../includes/header.php';
                     <thead class="table-light text-secondary small text-uppercase">
                         <tr>
                             <th class="ps-3">#</th>
-                            <th>Date</th>
                             <th>Period</th>
                             <th>Category</th>
                             <th class="text-end">Sales Volume (kg)</th>
@@ -408,7 +664,7 @@ include '../../../includes/header.php';
                     <tbody>
                         <?php if (empty($meat_records)): ?>
                             <tr>
-                                <td colspan="10" class="text-center py-5 text-muted">
+                                <td colspan="9" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
                                     No meat sales records found for the selected period and criteria.
                                 </td>
@@ -425,13 +681,6 @@ include '../../../includes/header.php';
                                 <tr>
                                     <td class="ps-3 fw-bold text-muted"><?= $idx + 1 ?></td>
                                     <td>
-                                        <?php if (!empty($r['record_date'])): ?>
-                                            <span class="fw-semibold text-dark"><i class="bi bi-calendar3 me-1 text-secondary"></i><?= date('d M Y', strtotime($r['record_date'])) ?></span>
-                                        <?php else: ?>
-                                            <span class="text-muted">—</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
                                         <span class="fw-bold"><?= $r['report_year'] ?></span>
                                         <?php if (!empty($r['report_month']) && isset($months_map[$r['report_month']])): ?>
                                             <span class="badge bg-light text-dark border ms-1"><?= substr($months_map[$r['report_month']], 0, 3) ?></span>
@@ -440,9 +689,13 @@ include '../../../includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <span class="badge <?= $cat_badge ?> px-2 py-1"><?= htmlspecialchars($r['meat_type']) ?></span>
-                                        <?php if ($r['meat_type'] === 'Other' && !empty($r['other_meat_name'])): ?>
-                                            <small class="text-muted d-block">(<?= htmlspecialchars($r['other_meat_name']) ?>)</small>
+                                        <?php if ($r['meat_type'] === 'Other'): ?>
+                                            <span class="badge bg-dark px-2 py-1">
+                                                <i class="bi bi-tag-fill me-1 text-warning"></i><?= htmlspecialchars(!empty($r['other_meat_name']) ? $r['other_meat_name'] : 'Others') ?>
+                                            </span>
+                                            <small class="text-muted d-block small">Secondary Livestock</small>
+                                        <?php else: ?>
+                                            <span class="badge <?= $cat_badge ?> px-2 py-1"><?= htmlspecialchars($r['meat_type']) ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end fw-bold text-primary font-monospace">
@@ -465,7 +718,6 @@ include '../../../includes/header.php';
                                         <div class="btn-group btn-group-sm">
                                             <button type="button" class="btn btn-outline-primary btn-edit-meat" 
                                                 data-id="<?= $r['id'] ?>"
-                                                data-date="<?= htmlspecialchars($r['record_date'] ?? '') ?>"
                                                 data-year="<?= $r['report_year'] ?>"
                                                 data-month="<?= $r['report_month'] ?? '' ?>"
                                                 data-type="<?= htmlspecialchars($r['meat_type']) ?>"
@@ -507,19 +759,15 @@ include '../../../includes/header.php';
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="meat_sales.php" id="addMeatForm">
+            <form method="POST" action="meat_sales.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" id="addMeatForm">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Date of Sale <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="add_record_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Report Year <span class="text-danger">*</span></label>
                             <input type="number" name="report_year" id="add_report_year" class="form-control" value="<?= date('Y') ?>" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="add_report_month" class="form-select">
                                 <option value="">Annual Aggregate (Full Year)</option>
@@ -555,7 +803,7 @@ include '../../../includes/header.php';
                             <div class="col-3">
                                 <input type="radio" class="btn-check" name="meat_type" id="add_type_other" value="Other" autocomplete="off">
                                 <label class="btn btn-outline-dark w-100 fw-bold py-2" for="add_type_other">
-                                    <i class="bi bi-plus-circle-dotted d-block fs-5"></i>Other
+                                    <i class="bi bi-plus-circle-dotted d-block fs-5"></i>Others
                                 </label>
                             </div>
                         </div>
@@ -563,8 +811,13 @@ include '../../../includes/header.php';
 
                     <!-- Custom other meat name input -->
                     <div class="mb-3 d-none" id="add_other_meat_wrapper">
-                        <label class="form-label small fw-bold text-dark">Specify Other Meat Type <span class="text-danger">*</span></label>
-                        <input type="text" name="other_meat_name" id="add_other_meat_name" class="form-control" placeholder="e.g. Pork, Turkey, Quail, Rabbit">
+                        <div class="p-3 bg-white border border-danger rounded shadow-sm">
+                            <label class="form-label small fw-bold text-dark mb-1">
+                                <i class="bi bi-pencil-square text-danger me-1"></i>Specify Secondary Livestock Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="other_meat_name" id="add_other_meat_name" class="form-control" placeholder="e.g. Pig, Rabbit, Quail, Turkey">
+                            <small class="text-muted">Explicitly record secondary livestock so specific sales are not lost under a generic label.</small>
+                        </div>
                     </div>
 
                     <!-- Value per Kilo and Total Sales Amount Manual Entry Fields -->
@@ -599,7 +852,12 @@ include '../../../includes/header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Outlet / Market Address</label>
-                            <input type="text" name="outlet_name_address" class="form-control" placeholder="e.g. Town Center Meat Stall, No. 45 Main Street">
+                            <input type="text" name="outlet_name_address" id="add_outlet_name_address" class="form-control" list="meat_outlets_list" placeholder="e.g. Town Center Meat Stall, No. 45 Main Street">
+                            <datalist id="meat_outlets_list">
+                                <?php foreach ($available_locations as $loc): ?>
+                                    <option value="<?= htmlspecialchars($loc) ?>">
+                                <?php endforeach; ?>
+                            </datalist>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contact Telephone</label>
@@ -631,20 +889,16 @@ include '../../../includes/header.php';
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="meat_sales.php" id="editMeatForm">
+            <form method="POST" action="meat_sales.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" id="editMeatForm">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_meat_id">
                 <div class="modal-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Date of Sale <span class="text-danger">*</span></label>
-                            <input type="date" name="record_date" id="edit_record_date" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Report Year <span class="text-danger">*</span></label>
                             <input type="number" name="report_year" id="edit_report_year" class="form-control" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="edit_report_month" class="form-select">
                                 <option value="">Annual Aggregate (Full Year)</option>
@@ -673,15 +927,20 @@ include '../../../includes/header.php';
                             </div>
                             <div class="col-3">
                                 <input type="radio" class="btn-check" name="meat_type" id="edit_type_other" value="Other" autocomplete="off">
-                                <label class="btn btn-outline-dark w-100 fw-bold py-2" for="edit_type_other">Other</label>
+                                <label class="btn btn-outline-dark w-100 fw-bold py-2" for="edit_type_other">Others</label>
                             </div>
                         </div>
                     </div>
 
                     <!-- Custom other meat name input -->
                     <div class="mb-3 d-none" id="edit_other_meat_wrapper">
-                        <label class="form-label small fw-bold text-dark">Specify Other Meat Type <span class="text-danger">*</span></label>
-                        <input type="text" name="other_meat_name" id="edit_other_meat_name" class="form-control" placeholder="e.g. Pork, Turkey, Quail">
+                        <div class="p-3 bg-white border border-primary rounded shadow-sm">
+                            <label class="form-label small fw-bold text-dark mb-1">
+                                <i class="bi bi-pencil-square text-primary me-1"></i>Specify Secondary Livestock Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="other_meat_name" id="edit_other_meat_name" class="form-control" placeholder="e.g. Pig, Rabbit, Quail, Turkey">
+                            <small class="text-muted">Explicit livestock category name.</small>
+                        </div>
                     </div>
 
                     <!-- Value per Kilo and Total Sales Amount -->
@@ -714,7 +973,7 @@ include '../../../includes/header.php';
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Outlet / Market Address</label>
-                            <input type="text" name="outlet_name_address" id="edit_outlet_name_address" class="form-control">
+                            <input type="text" name="outlet_name_address" id="edit_outlet_name_address" class="form-control" list="meat_outlets_list">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contact Telephone</label>
@@ -744,7 +1003,7 @@ include '../../../includes/header.php';
                 <i class="bi bi-exclamation-triangle-fill text-danger fs-1 mb-2 d-block"></i>
                 <h5 class="fw-bold mb-2">Delete Meat Record?</h5>
                 <p class="text-muted small mb-3" id="deleteMeatDesc"></p>
-                <form method="POST" action="meat_sales.php">
+                <form method="POST" action="meat_sales.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" id="deleteMeatId">
                     <div class="d-flex gap-2 justify-content-center">
@@ -762,29 +1021,6 @@ ob_start();
 ?>
 <script>
 $(document).ready(function() {
-    // Auto-sync year & month when date changes
-    $("#add_record_date").on("change", function() {
-        const val = $(this).val();
-        if (val) {
-            const parts = val.split('-');
-            if (parts.length === 3) {
-                $("#add_report_year").val(parts[0]);
-                $("#add_report_month").val(parseInt(parts[1], 10));
-            }
-        }
-    });
-
-    $("#edit_record_date").on("change", function() {
-        const val = $(this).val();
-        if (val) {
-            const parts = val.split('-');
-            if (parts.length === 3) {
-                $("#edit_report_year").val(parts[0]);
-                $("#edit_report_month").val(parseInt(parts[1], 10));
-            }
-        }
-    });
-
     // Dynamic calculation helper for Add modal
     function calculateAddTotal() {
         const vol = parseFloat($("#add_sales_volume").val()) || 0;
@@ -795,14 +1031,29 @@ $(document).ready(function() {
     }
     $("#add_sales_volume, #add_value_per_kilo").on("input", calculateAddTotal);
 
-    // Toggle Other Meat input in Add modal
-    $('input[name="meat_type"]').on("change", function() {
+    // Toggle Others input in Add modal
+    $('#addMeatForm input[name="meat_type"]').on("change", function() {
         if ($("#add_type_other").is(":checked")) {
-            $("#add_other_meat_wrapper").removeClass("d-none");
-            $("#add_other_meat_name").prop("required", true);
+            $("#add_other_meat_wrapper").removeClass("d-none").hide().slideDown(200);
+            $("#add_other_meat_name").prop("required", true).focus();
         } else {
-            $("#add_other_meat_wrapper").addClass("d-none");
-            $("#add_other_meat_name").prop("required", false);
+            $("#add_other_meat_wrapper").slideUp(150, function() {
+                $(this).addClass("d-none");
+            });
+            $("#add_other_meat_name").prop("required", false).val("");
+        }
+    });
+
+    // Toggle Others input in Edit modal
+    $('#editMeatForm input[name="meat_type"]').on("change", function() {
+        if ($("#edit_type_other").is(":checked")) {
+            $("#edit_other_meat_wrapper").removeClass("d-none").hide().slideDown(200);
+            $("#edit_other_meat_name").prop("required", true).focus();
+        } else {
+            $("#edit_other_meat_wrapper").slideUp(150, function() {
+                $(this).addClass("d-none");
+            });
+            $("#edit_other_meat_name").prop("required", false);
         }
     });
 
@@ -820,18 +1071,17 @@ $(document).ready(function() {
     $(".btn-edit-meat").on("click", function() {
         const btn = $(this);
         $("#edit_meat_id").val(btn.data("id"));
-        $("#edit_record_date").val(btn.data("date") || "");
         $("#edit_report_year").val(btn.data("year"));
         $("#edit_report_month").val(btn.data("month"));
         
         const type = btn.data("type");
-        $(`input[name="meat_type"][value="${type}"]`).prop("checked", true);
+        $(`#editMeatForm input[name="meat_type"][value="${type}"]`).prop("checked", true);
         
         if (type === "Other") {
-            $("#edit_other_meat_wrapper").removeClass("d-none");
+            $("#edit_other_meat_wrapper").removeClass("d-none").show();
             $("#edit_other_meat_name").val(btn.data("othertype")).prop("required", true);
         } else {
-            $("#edit_other_meat_wrapper").addClass("d-none");
+            $("#edit_other_meat_wrapper").addClass("d-none").hide();
             $("#edit_other_meat_name").val("").prop("required", false);
         }
 
