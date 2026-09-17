@@ -440,11 +440,8 @@ unset($_SESSION['login_error']); // Clear errors on reload
     <!-- Top Government Header Banner -->
     <header class="top-gov-bar d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-2">
-            <?php if (file_exists('assets/img/logo.png')): ?>
-                <img src="assets/img/logo.png" alt="Emblem" style="height: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-            <?php endif; ?>
             <span class="gov-emblem-text text-uppercase">
-                Democratic Socialist Republic of Sri Lanka
+                Department of Animal Production and Health - Eastern Province
             </span>
         </div>
         <div class="d-flex align-items-center gap-3">
@@ -457,7 +454,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
 
             <!-- Logo & Brand Title -->
             <div class="login-logo-container">
-                <img src="assets/img/animal_health_logo.png" alt="Department of Animal Production and Health" class="login-logo-img">
+                <img src="assets/img/Government Department of Animal Production and Health – Eastern Province, Sri Lanka(black).png" alt="Department of Animal Production and Health" class="login-logo-img">
             </div>
 
             <div class="text-center">
@@ -493,10 +490,10 @@ unset($_SESSION['login_error']); // Clear errors on reload
                             <option value="additional_provincial_director">2. Additional Provincial Director</option>
                             <option value="subject_matter_specialist">3. Subject Matter Specialist</option>
                             <option value="deputy_director_hq_1">4. Deputy Director - H/Q-1</option>
-                            <option value="administrator">5. Administrator</option>
-                            <option value="accounts_branch">6. Accounts Branch</option>
-                            <option value="deputy_director_hq_2">7. Deputy Director - H/Q-2</option>
-                            <option value="deputy_director_district">8. Deputy Director - District</option>
+                            <option value="deputy_director_hq_2">5. Deputy Director - H/Q-2</option>
+                            <option value="deputy_director_district">6. Deputy Director - District</option>
+                            <option value="administrator">7. Administrator</option>
+                            <option value="accounts_branch">8. Accounts Branch</option>
                             <option value="range_veterinary_officer">9. Range Veterinary Officer</option>
                             <option value="training_centers">10. Training Centers</option>
                             <option value="regional_farms">11. Regional Farms</option>

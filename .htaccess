@@ -1,0 +1,55 @@
+# ==============================================================================
+# DAPH EP MIS - ROOT APACHE CONFIGURATION
+# ==============================================================================
+
+# 1. Disable Directory Indexing across the entire site
+Options -Indexes
+
+# 2. Block direct web access to sensitive environment files, Git, and dumps
+<FilesMatch "^\.env|\.git|\.gitignore|server_db_constants\.php|\.(sql|sql\.gz|log|xlsx|csv|txt|docx|md)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 3. HTTP Security Headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking in iframes
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Prevent MIME-type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Referrer policy to protect internal URLs
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Restrict unneeded browser hardware features
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Enforce HTTPS (Enable once SSL certificate is active on live server)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+# 4. PHP Session Security Directives (when running via mod_php)
+<IfModule mod_php.c>
+    php_flag session.cookie_httponly on
+    php_flag session.use_only_cookies on
+    php_flag session.use_strict_mode on
+    php_value session.cookie_samesite "Lax"
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag session.cookie_httponly on
+    php_flag session.use_only_cookies on
+    php_flag session.use_strict_mode on
+    php_value session.cookie_samesite "Lax"
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag session.cookie_httponly on
+    php_flag session.use_only_cookies on
+    php_flag session.use_strict_mode on
+    php_value session.cookie_samesite "Lax"
+</IfModule>

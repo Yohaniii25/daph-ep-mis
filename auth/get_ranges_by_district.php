@@ -1,5 +1,8 @@
 <?php
-require_once '../config/db_connect.php';
+require_once __DIR__ . '/../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 $district_id = isset($_GET['district_id']) ? intval($_GET['district_id']) : 0;
 $ranges = [];

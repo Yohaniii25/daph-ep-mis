@@ -37,11 +37,7 @@ if (!isset($animal_pop_data)) {
                                     <option value="Pig">Pig / Swine</option>
                                 </optgroup>
                                 <optgroup label="Poultry Species" id="targetOptgroupPoultry">
-                                    <option value="Chicken">Chicken / Poultry Birds</option>
-                                    <option value="Broiler">Broiler</option>
-                                    <option value="Layer">Layer</option>
-                                    <option value="Backyard Poultry">Backyard Poultry</option>
-                                    <option value="Duck">Duck / Geese</option>
+                                    <option value="Chicken">Poultry Birds</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -58,42 +54,36 @@ if (!isset($animal_pop_data)) {
                             <small class="text-muted">Synchronized automatically with Range Statistics Census.</small>
                         </div>
 
-                        <!-- Livestock Specific Targets -->
+                        <!-- Livestock & Poultry Annual Targets -->
                         <div class="col-12" id="livestockTargetsGroup">
                             <div class="p-3 rounded mb-1" style="background-color: #fdf8f6; border: 1px solid #fed7aa;">
-                                <div class="small fw-bold text-dark mb-2">
-                                    <i class="bi bi-shield-fill text-danger me-1"></i> Livestock Vaccination Targets (Annual)
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="small fw-bold text-dark">
+                                        <i class="bi bi-shield-fill text-danger me-1"></i> Livestock & Poultry Vaccination Targets (Annual)
+                                    </div>
+                                    <span class="badge bg-light text-muted border small">Annual Disease Plan</span>
                                 </div>
                                 <div class="row g-3">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3" id="col_target_fmd">
                                         <label class="form-label small fw-semibold text-dark">FMD Target</label>
                                         <input type="number" name="target_fmd" id="target_fmd_input" class="form-control form-control-sm border-secondary" min="0" value="0">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3" id="col_target_bq">
                                         <label class="form-label small fw-semibold text-dark">BQ Target</label>
                                         <input type="number" name="target_bq" id="target_bq_input" class="form-control form-control-sm border-secondary" min="0" value="0">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3" id="col_target_hs">
                                         <label class="form-label small fw-semibold text-dark">HS Target</label>
                                         <input type="number" name="target_hs" id="target_hs_input" class="form-control form-control-sm border-secondary" min="0" value="0">
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Poultry Specific Target -->
-                        <div class="col-12 d-none" id="poultryTargetsGroup">
-                            <div class="p-3 rounded mb-1" style="background-color: #fefce8; border: 1px solid #fef08a;">
-                                <div class="small fw-bold text-dark mb-2">
-                                    <i class="bi bi-egg-fill text-warning me-1"></i> Poultry Vaccination Target (Annual)
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-semibold text-dark">Annual Poultry Target Doses</label>
+                                    <div class="col-md-3" id="col_target_poultry">
+                                        <label class="form-label small fw-semibold text-dark">
+                                            <i class="bi bi-egg-fill text-warning me-1"></i>Poultry Target Doses
+                                        </label>
                                         <input type="number" name="target_poultry_doses" id="target_poultry_input" class="form-control form-control-sm border-secondary" min="0" value="0">
-                                        <small class="text-muted">Total annual vaccine doses planned across poultry diseases.</small>
                                     </div>
                                 </div>
+                                <small class="text-muted d-block mt-2">Annual vaccine dose targets planned for the selected species in this range.</small>
                             </div>
                         </div>
 
@@ -147,35 +137,31 @@ const rangeAnimalPopulationMap = <?= json_encode($animal_pop_data) ?>;
 document.addEventListener('DOMContentLoaded', function() {
     const spSelect = document.getElementById('target_animal_type');
     const popDisplay = document.getElementById('target_species_pop_display');
-    const livestockGroup = document.getElementById('livestockTargetsGroup');
-    const poultryGroup = document.getElementById('poultryTargetsGroup');
+    const fmdInput = document.getElementById('target_fmd_input');
+    const bqInput = document.getElementById('target_bq_input');
+    const hsInput = document.getElementById('target_hs_input');
+    const poultryInput = document.getElementById('target_poultry_input');
 
     if (spSelect) {
         spSelect.addEventListener('change', function() {
             const sp = this.value;
-            // Lookup population count with smart alias handling
+            // Lookup population count
             let count = 0;
-            if (rangeAnimalPopulationMap) {
-                if (rangeAnimalPopulationMap[sp] !== undefined) {
-                    count = rangeAnimalPopulationMap[sp];
-                } else if (['Broiler', 'Layer', 'Backyard Poultry', 'Duck'].includes(sp) && rangeAnimalPopulationMap['Chicken'] !== undefined) {
-                    count = rangeAnimalPopulationMap['Chicken'];
-                } else if (sp === 'Sheep' && rangeAnimalPopulationMap['Goat'] !== undefined) {
-                    count = rangeAnimalPopulationMap['Goat'];
-                }
+            if (rangeAnimalPopulationMap && rangeAnimalPopulationMap[sp] !== undefined) {
+                count = rangeAnimalPopulationMap[sp];
             }
             if (popDisplay) {
                 popDisplay.value = count;
             }
 
-            // Toggle target groups
-            if (['Chicken', 'Broiler', 'Layer', 'Backyard Poultry', 'Duck'].includes(sp)) {
-                livestockGroup.classList.add('d-none');
-                poultryGroup.classList.remove('d-none');
-            } else {
-                livestockGroup.classList.remove('d-none');
-                poultryGroup.classList.add('d-none');
+            // Visual styling emphasis depending on category
+            const isPoultry = (sp === 'Chicken');
+            if (poultryInput) {
+                poultryInput.closest('.col-md-3').classList.toggle('opacity-50', !isPoultry);
             }
+            if (fmdInput) fmdInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
+            if (bqInput) bqInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
+            if (hsInput) hsInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
         });
     }
 });

@@ -9,12 +9,40 @@ Project: Department of Animal Production & Health (DAPH) Eastern Province MIS
 --------------------------------------------------------------------------------
 TABLE OF CONTENTS
 --------------------------------------------------------------------------------
+0. Urgent Pre-Deployment Action: Sensitive Data Leak Prevention
 1. Optimal Project File Structure & Architecture
 2. Environment Configuration & Database Credentials (.env)
 3. PHP Error Reporting & Secure Logging
 4. File & Folder Permissions (Linux / Apache / Nginx)
 5. Security Headers & Session Hardening
 6. Pre-Launch Operational Checklist & Database Maintenance
+
+
+================================================================================
+0. URGENT PRE-DEPLOYMENT ACTION: SENSITIVE DATA LEAK PREVENTION
+================================================================================
+
+CRITICAL SECURITY HAZARD IN DOCUMENT ROOT:
+Currently, database dumps, spreadsheets, and developer notes are located directly 
+inside the public web root (c:\xampp\htdocs\daph-ep-mis\):
+  - daph.sql, sltdigi2_daph.sql, human_populations.sql
+  - server_db_constants.php (contains raw live database passwords!)
+  - DAPH_LMS_User_Credentials.xlsx
+  - developer.txt, scanreport.txt
+  - Provincial_System_Scope_SLT.docx / .pdf
+
+In a production web server (Apache/Nginx), ANY anonymous visitor can download 
+these files directly via URLs such as:
+  https://your-domain.gov.lk/daph.sql
+  https://your-domain.gov.lk/DAPH_LMS_User_Credentials.xlsx
+  https://your-domain.gov.lk/server_db_constants.php
+
+Immediate Steps Required:
+1. Delete or move all *.sql, *.xlsx, and *.docx files completely out of the 
+   public document root.
+2. Delete `server_db_constants.php` from git and replace it with `.env`.
+3. If live credentials in `server_db_constants.php` have been committed to GitHub, 
+   immediately change the MySQL database password on the live server.
 
 
 ================================================================================
@@ -25,68 +53,108 @@ Recommended Directory Layout:
 -----------------------------
 
 daph-ep-mis/
-├── .env                              <-- Environment variables (Git-ignored)
+├── .env                              <-- Environment variables (Git-ignored, chmod 640)
 ├── .env.example                      <-- Template with placeholders for deployment
-├── .gitignore                        <-- Git ignore rules
+├── .gitignore                        <-- Git ignore rules (protects credentials & logs)
 ├── .htaccess                         <-- Apache root configuration & security headers
 ├── index.php                         <-- Public portal login landing page
-├── dashboard.php                     <-- Central authenticated routing router
-├── config/
+├── dashboard.php                     <-- Post-login routing gateway
+│
+├── config/                           <-- System Configuration
 │   ├── bootstrap.php                 <-- Single bootstrap entry (sessions, env, constants)
-│   ├── constants.php                 <-- Site metadata & application enums
+│   ├── constants.php                 <-- Site metadata, roles, and application enums
 │   └── db_connect.php                <-- Centralized MySQLi connection using .env
-├── includes/
-│   ├── auth.php                      <-- Role validation & session guard middleware
-│   ├── helpers.php                   <-- Sanitization, CSRF tokens, formatters
-│   ├── notification_helper.php       <-- In-app notification dispatcher
-│   ├── approval_helper.php           <-- Workflow & staging approvals
-│   └── templates/                    <-- Reusable UI layouts
-│       ├── header.php
-│       ├── sidebar.php
-│       └── footer.php
-├── app/                              <-- Core Business Logic Layer (Services & Repositories)
+│
+├── app/                              <-- Business Logic & Backend Services Layer
 │   ├── Services/
 │   │   ├── EmployeeService.php       <-- Centralized employee onboarding & validation logic
 │   │   └── TransferService.php       <-- Station transfer staging, approval, and notifications
-│   └── Repositories/
-│       ├── UserRepository.php
-│       └── OfficeRepository.php
-├── pages/                            <-- Presentation / View Layer
+│   ├── Repositories/
+│   │   ├── UserRepository.php
+│   │   └── OfficeRepository.php
+│   └── Middleware/
+│       └── RoleMiddleware.php        <-- Access control and permission guards
+│
+├── processors/                       <-- Dedicated Request Handlers (POST / AJAX endpoints)
+│   ├── auth/
+│   │   ├── login_process.php
+│   │   ├── change_password.php
+│   │   └── logout.php
+│   ├── hr/
+│   │   ├── save_employee.php
+│   │   └── process_transfer.php
+│   └── veterinary/
+│       ├── save_counterfoil.php
+│       └── vaccine_balance_crud.php
+│
+├── pages/                            <-- Presentation / View Layer Only
 │   ├── dashboard/                    <-- Executive & role dashboards
 │   └── modules/                      <-- Domain-Specific Module Views
-│       ├── hr/                       <-- HR directory, add/edit modals, transfer management
+│       ├── hr/                       <-- HR directory, add/edit views, transfer management
 │       ├── veterinary/               <-- Range veterinary office views
 │       ├── pd/                       <-- Provincial Director oversight views
 │       ├── sms/                      <-- Subject Matter Specialist views
 │       ├── training/                 <-- Training center views
 │       └── farm/                     <-- Regional farm views
-├── processors/                       <-- Dedicated Request Handlers (POST / AJAX)
-│   ├── hr/
-│   │   ├── save_employee.php
-│   │   └── process_transfer.php
-│   └── veterinary/
-├── storage/                          <-- Internal files not directly served
-│   ├── logs/                         <-- Application & error logs
-│   └── uploads/                      <-- User uploaded files (docs, avatars)
-└── assets/                           <-- Static assets served to the browser
-    ├── css/
-    ├── js/
-    └── img/
+│
+├── includes/                         <-- Shared UI Layouts & Components
+│   ├── header.php                    # Navigation, CSS links, page open tags
+│   ├── sidebar.php                   # Role-based sidebar menu
+│   ├── footer.php                    # Scripts, closing tags
+│   ├── notification_helper.php       # In-app notification dispatcher
+│   ├── approval_helper.php           # Workflow & staging approvals
+│   └── modals/                       # Reusable Bootstrap modal dialogs
+│                                     # (Relocated from misnamed "models/" folders)
+│
+├── storage/                          <-- Server-Writable Storage (Never run PHP from here)
+│   ├── logs/                         <-- Application & PHP error logs (*.log)
+│   ├── backups/                      <-- Database backups (strictly protected)
+│   └── uploads/                      <-- User uploaded avatars & documents
+│
+└── assets/                           <-- Static Assets Served to Browser
+    ├── css/                          <-- Bootstrap & custom stylesheets
+    ├── js/                           <-- DataTables, SweetAlert, custom scripts
+    └── img/                          <-- Logos, badges, static icons
 
 Key Architectural Guidelines:
 -----------------------------
 1. Central Bootstrap Initializer (config/bootstrap.php):
    Avoid scattering `session_start()` and database includes with deep relative 
-   paths (e.g., `../../../../config/db_connect.php`). Instead, define `APP_ROOT`:
+   paths (e.g., `../../../../config/db_connect.php`). Define `APP_ROOT` once:
    
+   ```php
+   <?php
+   // config/bootstrap.php
    define('APP_ROOT', dirname(__DIR__));
+
+   // Load .env
+   if (file_exists(APP_ROOT . '/.env')) {
+       $env = parse_ini_file(APP_ROOT . '/.env');
+       foreach ($env as $key => $val) {
+           $_ENV[$key] = $val;
+       }
+   }
+
+   define('BASE_URL', $_ENV['APP_URL'] ?? '/daph-ep-mis/');
+
    require_once APP_ROOT . '/config/constants.php';
    require_once APP_ROOT . '/config/db_connect.php';
+   ```
 
-2. Consolidate Duplicate Business Logic:
+2. Standardize Static Asset Paths:
+   Replace fragile dynamic relative path logic (`str_repeat('../', $diff)`) with 
+   the centralized `BASE_URL`:
+   `<link href="<?= BASE_URL ?>assets/css/bootstrap.min.css" rel="stylesheet">`
+
+3. Separate UI Modals from Data Models:
+   Files inside `pages/modules/veterinary/models/` are actually Bootstrap HTML modals. 
+   Move them to `includes/modals/` or keep them cleanly marked as `views/modals/` 
+   so backend developers do not confuse them with database entities.
+
+4. Consolidate Duplicate Business Logic:
    Avoid writing the exact same SQL queries for employee onboarding across 
    separate module processors (`hr`, `pd`, `veterinary`, `sms`, `training`, `farm`).
-   Centralize common employee persistence and validation into a shared service or helper.
+   Centralize common employee persistence and validation into `app/Services/EmployeeService.php`.
 
 
 ================================================================================
@@ -95,12 +163,12 @@ Key Architectural Guidelines:
 
 Never commit database passwords or sensitive API keys into source control.
 
-Step 1: Create a .env file at the project root
----------------------------------------------
+Step 1: Create a .env.example (Safe to commit to Git)
+---------------------------------------------------
 # Application Environment
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://mis.daph.ep.gov.lk
+APP_URL=https://mis.daph.ep.gov.lk/
 
 # Database Credentials
 DB_HOST=localhost
@@ -112,65 +180,86 @@ DB_PASS=p@$$w0rd_S3cur3_2026
 # Session Security
 SESSION_LIFETIME=14400
 
-Step 2: Add .env to .gitignore
-------------------------------
+Step 2: Add .env and Temporary Files to .gitignore
+-------------------------------------------------
 Ensure the root .gitignore contains:
 .env
 /storage/logs/*.log
 /storage/uploads/*
 !/storage/uploads/.gitkeep
+*.sql
+*.xlsx
+*.docx
+server_db_constants.php
 
 Step 3: Safe Environment Loader in config/db_connect.php
 --------------------------------------------------------
+```php
 <?php
 require_once __DIR__ . '/constants.php';
 
-if (file_exists(__DIR__ . '/../.env')) {
-    $env = parse_ini_file(__DIR__ . '/../.env');
-    $db_host = $env['DB_HOST'] ?? 'localhost';
-    $db_user = $env['DB_USER'] ?? 'root';
-    $db_pass = $env['DB_PASS'] ?? '';
-    $db_name = $env['DB_NAME'] ?? 'daph';
-} else {
-    $db_host = DB_HOST;
-    $db_user = DB_USER;
-    $db_pass = DB_PASS;
-    $db_name = DB_NAME;
-}
+$db_host = $_ENV['DB_HOST'] ?? DB_HOST;
+$db_user = $_ENV['DB_USER'] ?? DB_USER;
+$db_pass = $_ENV['DB_PASS'] ?? DB_PASS;
+$db_name = $_ENV['DB_NAME'] ?? DB_NAME;
 
 $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name);
+
 if ($mysqli->connect_error) {
     error_log("Database connection failure: " . $mysqli->connect_error);
-    die("A temporary database error occurred. Please contact the administrator.");
+    // Never output raw connection errors (passwords/paths) to the live screen
+    die("A temporary system error occurred. Please contact technical support.");
 }
-$mysqli->set_charset("utf8mb4");
-?>
+
+$mysqli->set_charset("utf8mb4"); // Critical for Sinhala/Tamil characters
+```
+
+Step 4: Least-Privilege Database Account
+----------------------------------------
+Do not connect using MySQL `root` in production. Create a dedicated application user:
+```sql
+CREATE USER 'daph_app_user'@'localhost' IDENTIFIED BY 'STRONG_RANDOM_PASSWORD';
+GRANT SELECT, INSERT, UPDATE, DELETE ON daph_mis_prod.* TO 'daph_app_user'@'localhost';
+FLUSH PRIVILEGES;
+```
 
 
 ================================================================================
 3. PHP ERROR REPORTING & SECURE LOGGING
 ================================================================================
 
-In production, never display raw PHP errors or database stack traces to end users.
+In production, never display raw PHP errors, warnings, or database stack traces to 
+end users. Stack traces reveal table names, SQL syntax, and server directory paths.
 
-1. Remove Debugging Directives:
-   Remove all instances of `ini_set('display_errors', 1);` from operational code.
+1. Server Level: php.ini Directives (Recommended)
+-------------------------------------------------
+```ini
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+error_log = /var/www/daph-ep-mis/storage/logs/php_errors.log
+```
 
-2. Centralized Error Handling in config/bootstrap.php:
-   <?php
-   if (defined('DEBUG') && DEBUG === true) {
-       ini_set('display_errors', '1');
-       ini_set('display_startup_errors', '1');
-       error_reporting(E_ALL);
-   } else {
-       // Production Mode: Suppress browser output and write to private log file
-       ini_set('display_errors', '0');
-       ini_set('display_startup_errors', '0');
-       ini_set('log_errors', '1');
-       ini_set('error_log', dirname(__DIR__) . '/storage/logs/php_errors.log');
-       error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
-   }
-   ?>
+2. Application Level: Centralized Error Handling in config/bootstrap.php
+-----------------------------------------------------------------------
+```php
+<?php
+$is_debug = filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+if ($is_debug) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+} else {
+    // Production Mode: Suppress browser output and write to private log file
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    ini_set('log_errors', '1');
+    ini_set('error_log', APP_ROOT . '/storage/logs/php_errors.log');
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+}
+```
 
 
 ================================================================================
@@ -183,86 +272,130 @@ Directory / File Type            Permissions  Owner:Group        Purpose
 -------------------------------  -----------  -----------------  -----------------------------------
 Standard PHP scripts & files     644          deployer:www-data  Readable by web server, writable by deployer
 Standard directories             755          deployer:www-data  Traversible and readable
-.env configuration file          600 or 640   deployer:www-data  Strictly restricted from web access
+.env configuration file          640 or 600   deployer:www-data  Strictly restricted from public access
 Uploads directory (storage/uploads) 775       www-data:www-data  Writable for avatars/docs, execution disabled
 Logs directory (storage/logs)    775          www-data:www-data  Writable for application log files
 
-Uploads Security (.htaccess inside storage/uploads/):
------------------------------------------------------
-Prevent uploaded files from executing as executable PHP scripts:
+Shell Setup Commands (Ubuntu/Apache):
+------------------------------------
+```bash
+cd /var/www/daph-ep-mis
+sudo chown -R deployer:www-data .
+sudo find . -type d -exec chmod 755 {} \;
+sudo find . -type f -exec chmod 644 {} \;
+sudo chmod 640 .env
+sudo chmod -R 775 storage/logs storage/uploads
+```
 
-<FilesMatch "\.(php|phtml|php5|php7|php8|phar|inc)$">
+Uploads Execution Blocker (storage/uploads/.htaccess):
+-----------------------------------------------------
+Prevent uploaded avatars and documents from executing as PHP scripts:
+```apache
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phps|phar|inc|pl|cgi)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
 Options -Indexes -ExecCGI
+```
 
 
 ================================================================================
 5. SECURITY HEADERS & SESSION HARDENING
 ================================================================================
 
-1. Session Cookie Security:
-   Always configure session attributes prior to calling session_start():
+1. Session Cookie Security (Before session_start()):
+---------------------------------------------------
+Always configure session attributes prior to calling `session_start()`:
+```php
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.use_strict_mode', '1');
 
-   if (session_status() === PHP_SESSION_NONE) {
-       ini_set('session.use_only_cookies', '1');
-       ini_set('session.use_strict_mode', '1');
+    $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+                || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
 
-       $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
-
-       session_set_cookie_params([
-           'lifetime' => 14400,        // 4 hours expiration
-           'path'     => '/',
-           'domain'   => '',
-           'secure'   => $is_https,    // Transmit cookie only over HTTPS
-           'httponly' => true,         // Disallow JavaScript access (mitigates XSS cookie theft)
-           'samesite' => 'Lax'         // Mitigates Cross-Site Request Forgery (CSRF)
-       ]);
-       session_start();
-   }
+    session_set_cookie_params([
+        'lifetime' => 14400,        // 4 hours expiration
+        'path'     => '/',
+        'domain'   => '',
+        'secure'   => $is_https,    // Transmit cookie only over HTTPS
+        'httponly' => true,         // Mitigate XSS session cookie theft
+        'samesite' => 'Lax'         // Mitigate Cross-Site Request Forgery (CSRF)
+    ]);
+    session_start();
+}
+```
 
 2. Session Fixation Defense:
-   Regenerate the session ID immediately upon successful login:
-   session_regenerate_id(true);
+----------------------------
+Regenerate the session ID immediately upon successful login in `auth/login_process.php`:
+```php
+session_regenerate_id(true);
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['user_category'] = $user_category;
+```
 
-3. HTTP Security Headers:
-   Add to central header.php, bootstrap.php, or the root .htaccess:
+3. Production HTTP Security Headers (.htaccess in Root):
+-------------------------------------------------------
+```apache
+<IfModule mod_headers.c>
+    # Prevent clickjacking in iframes
+    Header always set X-Frame-Options "SAMEORIGIN"
 
-   header("X-Frame-Options: SAMEORIGIN");
-   header("X-Content-Type-Options: nosniff");
-   header("X-XSS-Protection: 1; mode=block");
-   header("Referrer-Policy: strict-origin-when-cross-origin");
+    # Prevent MIME-sniffing
+    Header always set X-Content-Type-Options "nosniff"
 
-   if ($is_https) {
-       header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
-   }
+    # Referrer policy to protect internal URL structures
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Restrict unneeded browser hardware features
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Enforce HTTPS (Enable once SSL certificate is active)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+# Disable directory browsing across the entire site
+Options -Indexes
+```
 
 
 ================================================================================
 6. PRE-LAUNCH OPERATIONAL CHECKLIST
 ================================================================================
 
+[ ] Purge Sensitive Root Files:
+    Remove all *.sql, *.xlsx, and server_db_constants.php from the public web root.
+
 [ ] Database Least-Privilege Account:
     Replace `root` with a dedicated production MySQL user granted only:
     GRANT SELECT, INSERT, UPDATE, DELETE ON daph_mis_prod.* TO 'daph_app_user'@'localhost';
 
+[ ] Environment Configuration (.env):
+    Create production .env (chmod 640), confirm .env is present in .gitignore.
+
+[ ] Error Reporting Disabled:
+    Verify `display_errors = Off` in php.ini and confirm logs write to `storage/logs/php_errors.log`.
+
+[ ] Storage Upload Protection:
+    Verify `storage/uploads/.htaccess` blocks script execution (.php, .phar, etc.).
+
 [ ] Disable Directory Indexing:
-    Add `Options -Indexes` in the root .htaccess to prevent users from browsing folder contents.
+    Confirm `Options -Indexes` is active in the root .htaccess.
 
 [ ] SSL / HTTPS Enforcement:
-    Install valid SSL certificates (e.g., Let's Encrypt / Certbot) and redirect all HTTP traffic to HTTPS.
+    Install valid SSL certificates (e.g., Let's Encrypt / Certbot) and redirect HTTP to HTTPS.
+
+[ ] Session Hardening:
+    Confirm `httponly=true`, `secure=true` (over HTTPS), `samesite=Lax`, and `session_regenerate_id(true)`.
 
 [ ] Automated Daily Database Backups:
-    Configure a daily cron job to dump and compress the database:
+    Configure a daily cron job to dump and compress the database to an offsite/private directory:
     0 2 * * * mysqldump -u daph_app_user -p'PASSWORD' daph_mis_prod | gzip > /backups/db/daph_$(date +\%F).sql.gz
 
 [ ] Asset Cache Busting:
     Append version parameters to CSS/JS tags (e.g. `bootstrap.min.css?v=1.0.1`) 
     so users immediately receive updated assets upon new deployments.
-
-[ ] Check Unneeded Scratch & Test Scripts:
-    Remove any temporary migration scripts, test files, and raw SQL dumps from the live web root.
 
 ================================================================================
 END OF GUIDE

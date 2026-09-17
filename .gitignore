@@ -1,0 +1,21 @@
+# Environment variables & secrets
+.env
+server_db_constants.php
+
+# Database dumps & exports
+*.sql
+*.sql.gz
+*.xlsx
+*.csv
+
+# Logs & temporary files
+*.log
+storage/logs/*.log
+scanreport.txt
+developer.txt
+
+# Uploaded content (keep directory structure with .gitkeep)
+assets/uploads/profile_images/*
+assets/uploads/receipts/*
+assets/uploads/code_of_conduct/*
+!assets/uploads/**/.gitkeep
