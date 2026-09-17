@@ -7,7 +7,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon'
     exit();
 }
 
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 $range_name = $_SESSION['range_name'] ?? 'Eastern Province Range';
 
 // --- MOCK DATA FOR THE DASHBOARD (REPLACE WITH SQL SUMS LATER) ---

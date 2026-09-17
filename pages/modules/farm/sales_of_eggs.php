@@ -1,7 +1,10 @@
 <?php
 // pages/modules/farm/sales_of_eggs.php -> Daily Egg Sales Management Module (Revamped UI/UX)
 require_once '../../../includes/header.php';
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 if ($_SESSION['role'] !== 'farms_dd') {
     die("Access denied");

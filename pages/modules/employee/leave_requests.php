@@ -1,6 +1,9 @@
 <?php
 session_start();
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 $emp_roles = ['employee', 'livestock_development_officer', 'development_officer', 'driver', 'dispensary_assistant', 'department_laborer', 'night_watcher'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $emp_roles)) {

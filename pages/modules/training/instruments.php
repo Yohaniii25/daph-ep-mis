@@ -1,7 +1,10 @@
 <?php
 // pages/modules/training/instruments.php -> Scientific & Training Instruments Registry (Training Centre)
 require_once '../../../includes/header.php';
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 $allowed_roles = ['training_officer', 'administrator', 'provincial_director', 'district_dd'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {

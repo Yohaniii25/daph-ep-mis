@@ -1,7 +1,10 @@
 ﻿<?php
 require_once '../../../includes/header.php';
 if (!in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) die("Access denied");
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 // Fetch the absolute count of active distinct batches registered in the warehouse system
 $total_batches_query = "SELECT COUNT(id) AS active_batches_count FROM `vaccine_batches` WHERE `is_active` = 1";

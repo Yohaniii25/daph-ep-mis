@@ -1,7 +1,10 @@
 <?php
 // pages/modules/farm/employee_managment.php -> Regional Farm Staff & Officer Registry
 require_once '../../../includes/header.php';
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 if ($_SESSION['role'] !== 'farms_dd') {
     die("Access denied");

@@ -15,7 +15,11 @@ if (empty($range_id)) {
     die('<div class="alert alert-danger text-center p-5 m-5">Error: Account not assigned to a Veterinary Range.</div>');
 }
 
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
+
 
 // 2. FETCH OFFICE & RANGE NAMES
 $range_name = 'Unknown Range';

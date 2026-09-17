@@ -1,7 +1,10 @@
 <?php
 // pages/modules/farm/parent_stock_operations.php -> Daily Egg Collection & Annex 01 Register Module
 require_once '../../../includes/header.php';
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 if ($_SESSION['role'] !== 'farms_dd') {
     die("Access denied");

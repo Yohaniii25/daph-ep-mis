@@ -9,7 +9,10 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
     exit();
 }
 
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
 

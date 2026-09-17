@@ -1,6 +1,9 @@
 <?php
 session_start();
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms', 'livestock_officer', 'provincial_director', 'district_director'])) {
     header("Location: ../../../index.php");
@@ -8,7 +11,8 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_
 }
 
 $user_id = $_SESSION['user_id'] ?? null;
-$range_id = $_SESSION['range_id'] ?? null;
+$requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
+$range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 
 $range_name = 'All Ranges / General';
 $district_name = 'Eastern Province';
@@ -406,7 +410,7 @@ include '../../../includes/header.php';
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb mb-0 py-2 px-3 bg-white rounded shadow-sm">
             <li class="breadcrumb-item"><a href="../../../dashboard.php" class="text-decoration-none">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="range_statistics.php?range_id=<?= $range_id ?? 1 ?>" class="text-decoration-none">Range Statistics</a></li>
+            <li class="breadcrumb-item"><a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="text-decoration-none">Range Statistics</a></li>
             <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">Milk Collection Details</li>
         </ol>
     </nav>
@@ -431,9 +435,9 @@ include '../../../includes/header.php';
                 Consolidated registry of Milk Collecting Centers, Processing Facilities, and Sales Outlets subdivided strictly by <strong>Cow</strong>, <strong>Buffalo</strong>, and <strong>Goat</strong> milk.
             </p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="range_statistics.php?range_id=<?= $range_id ?? 1 ?>" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Back to Hub
+        <div class="d-flex align-items-center gap-2">
+            <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-light text-dark border fw-bold btn-sm shadow-sm d-flex align-items-center">
+                <i class="bi bi-arrow-left-circle me-1"></i> Range Statistics
             </a>
             <?php if ($active_tab === 'collecting'): ?>
                 <button type="button" class="btn btn-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addCollectingModal">

@@ -1,6 +1,9 @@
 <?php
 session_start();
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms', 'livestock_officer', 'provincial_director', 'district_director'])) {
     header("Location: ../../../index.php");
@@ -8,7 +11,8 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_
 }
 
 $user_id = $_SESSION['user_id'] ?? null;
-$range_id = $_SESSION['range_id'] ?? null;
+$requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
+$range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 
 $range_name = 'All Ranges / General';
 $district_name = 'Eastern Province';
@@ -245,7 +249,7 @@ include '../../../includes/header.php';
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb mb-0 py-2 px-3 bg-white rounded shadow-sm">
             <li class="breadcrumb-item"><a href="../../../dashboard.php" class="text-decoration-none">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="range_statistics.php?range_id=<?= $range_id ?? 1 ?>" class="text-decoration-none">Range Statistics</a></li>
+            <li class="breadcrumb-item"><a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="text-decoration-none">Range Statistics</a></li>
             <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">Meat Sales Details</li>
         </ol>
     </nav>
@@ -270,11 +274,11 @@ include '../../../includes/header.php';
                 <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District).
             </p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="range_statistics.php?range_id=<?= $range_id ?? 1 ?>" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Back to Hub
+        <div class="d-flex align-items-center gap-2">
+            <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-light text-dark border fw-bold btn-sm shadow-sm d-flex align-items-center">
+                <i class="bi bi-arrow-left-circle me-1"></i> Range Statistics
             </a>
-            <button type="button" class="btn btn-danger text-white fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addMeatModal">
+            <button type="button" class="btn btn-danger text-white fw-bold shadow-sm btn-sm" data-bs-toggle="modal" data-bs-target="#addMeatModal">
                 <i class="bi bi-plus-circle me-1"></i> Record Meat Sales
             </button>
         </div>
@@ -284,6 +288,9 @@ include '../../../includes/header.php';
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body bg-light p-3 rounded">
             <form method="GET" class="row g-3 align-items-end" id="filterForm">
+                <?php if ($requested_range_id): ?>
+                    <input type="hidden" name="range_id" value="<?= $requested_range_id ?>">
+                <?php endif; ?>
                 <div class="col-md-2">
                     <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-calendar-check me-1"></i>Year</label>
                     <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">

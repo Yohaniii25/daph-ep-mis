@@ -4,6 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once __DIR__ . '/../../../config/db_connect.php';
 
+/** @var mysqli $mysqli */
+global $mysqli;
+
 $allowed_roles = [
     'veterinary_surgeon',
     'district_dd',

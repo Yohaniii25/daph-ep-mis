@@ -5,7 +5,10 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon'
     exit();
 }
 
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 $range_id = $_SESSION['range_id'] ?? null;
 $range_name = "Your Range";

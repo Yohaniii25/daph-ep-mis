@@ -1,7 +1,10 @@
 <?php
 // pages/modules/farm/accounts_register.php -> Farm Accounts & Sub-Modules Financial Integration Register
 require_once '../../../includes/header.php';
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 if (!isset($_SESSION['role'])) {
     header("Location: ../../../index.php");

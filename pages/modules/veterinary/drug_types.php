@@ -1,7 +1,10 @@
 ﻿<?php
 require_once '../../../includes/header.php';
 if (!in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) die("Access denied");
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 // Fetch live counts for metric card fallback tracking dynamically
 $count_query = "SELECT COUNT(*) AS total_types FROM `drug_types`";

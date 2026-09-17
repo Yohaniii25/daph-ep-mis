@@ -1,6 +1,9 @@
 <?php
 session_start();
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 $vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $vs_roles)) {

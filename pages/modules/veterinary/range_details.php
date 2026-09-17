@@ -1,6 +1,9 @@
 <?php
 session_start();
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 require_once __DIR__ . '/../district/processors/db_migration.php';
 
 ensure_quick_action_assignments_table($mysqli);

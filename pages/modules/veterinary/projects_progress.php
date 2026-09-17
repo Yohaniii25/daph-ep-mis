@@ -11,7 +11,10 @@ if (empty($range_id)) {
     die('<div class="alert alert-danger text-center p-5 m-5">Error: Account not assigned to a Range.</div>');
 }
 
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 $range_name = 'Unknown Range';
 $stmt = $mysqli->prepare("SELECT name FROM veterinary_ranges WHERE id = ?");

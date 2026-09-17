@@ -1,7 +1,10 @@
 ﻿<?php
 require_once '../../../includes/header.php';
 if ($_SESSION['role'] !== 'sms') die("Access denied");
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 // Dynamic metrics extraction using your actual column names
 $metric_sql = "SELECT 

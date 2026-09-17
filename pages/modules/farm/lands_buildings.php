@@ -1,7 +1,10 @@
 <?php
 // pages/modules/farm/lands_buildings.php -> Regional Farm Lands & Buildings Asset Registry
 require_once '../../../includes/header.php';
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 
 if ($_SESSION['role'] !== 'farms_dd') {

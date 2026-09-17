@@ -7,6 +7,9 @@
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/notification_helper.php';
 
+/** @var mysqli $mysqli */
+global $mysqli;
+
 $current_user_id = intval($_SESSION['user_id'] ?? 0);
 $type_counts = get_notification_type_counts($mysqli, $current_user_id);
 $initial_notifications = get_filtered_notifications($mysqli, $current_user_id, 'all', false, 1000);

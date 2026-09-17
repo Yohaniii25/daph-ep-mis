@@ -1,14 +1,24 @@
 <?php
 session_start();
-require_once '../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
 
-if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) {
+/** @var mysqli $mysqli */
+global $mysqli;
+
+
+$allowed_roles = [
+    'veterinary_surgeon'
+
+];
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     header("Location: ../../../index.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'] ?? null;
-$range_id = $_SESSION['range_id'] ?? null;
+$requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
+$range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 
 $range_name = 'Your Range';
 $district_name = 'Your District';
@@ -229,8 +239,11 @@ require_once '../../../includes/header.php';
                 <p class="text-muted small mb-0">Record and track feed mills and production metrics for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
 
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
+                    <?php if ($requested_range_id): ?>
+                        <input type="hidden" name="range_id" value="<?= $requested_range_id ?>">
+                    <?php endif; ?>
                     <label class="small fw-bold text-muted mb-0">Year:</label>
                     <select name="year" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 105px;">
                         <option value="all" <?= ($selected_year === 'all') ? 'selected' : '' ?>>All Years</option>
@@ -250,6 +263,9 @@ require_once '../../../includes/header.php';
                         <?php endforeach; ?>
                     </select>
                 </form>
+                <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-light text-dark border fw-bold btn-sm shadow-sm">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Range Statistics
+                </a>
             </div>
         </div>
 
@@ -304,7 +320,7 @@ require_once '../../../includes/header.php';
                                 </button>
                             </div>
                             <div class="col-md-3">
-                                <a href="range_statistics.php" class="btn btn-outline-secondary w-100 py-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 105px;">
+                                <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-outline-secondary w-100 py-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 105px;">
                                     <i class="bi bi-arrow-left-circle fs-3 mb-1"></i>
                                     <span class="small fw-bold text-uppercase">Back to Statistics</span>
                                 </a>
