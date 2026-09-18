@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once __DIR__ . '/../../../config/db_connect.php';
 
@@ -166,7 +166,6 @@ require_once '../../../includes/header.php';
                         <label class="form-label fw-bold mb-1">Strategic Pillar Category Group</label>
                         <select name="strategy_pillar" class="form-select form-select-sm border-secondary" required>
                             <option value="" selected disabled>-- Select Strategic Pillar Blueprint --</option>
-                            <option value="Disease Prevention and Prophylaxis control">Disease Prevention & Control</option>
                             <option value="Livestock Breeding Infrastructure Maximization">Livestock Breeding Maximization</option>
                             <option value="Dairy Production Extension Schemes">Dairy Production Extension</option>
                             <option value="Institutional Capacity and Staff Deployment">Institutional Capacity</option>
@@ -216,7 +215,6 @@ require_once '../../../includes/header.php';
                         <label class="form-label fw-bold mb-1">Strategic Pillar Category Group</label>
                         <select name="strategy_pillar" id="edit_strategy_pillar" class="form-select form-select-sm border-secondary" required>
                             <option value="" disabled>-- Select Strategic Pillar --</option>
-                            <option value="Disease Prevention and Prophylaxis control">Disease Prevention & Control</option>
                             <option value="Livestock Breeding Infrastructure Maximization">Livestock Breeding Maximization</option>
                             <option value="Dairy Production Extension Schemes">Dairy Production Extension</option>
                             <option value="Institutional Capacity and Staff Deployment">Institutional Capacity</option>

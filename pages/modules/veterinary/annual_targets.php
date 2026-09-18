@@ -6,13 +6,25 @@ require_once __DIR__ . '/../../../config/db_connect.php';
 global $mysqli;
 
 // 1. Session and Role Guard
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+$allowed_roles = [
+    'veterinary_surgeon',
+    'government_veterinary_surgeon',
+    'additional_veterinary_surgeon',
+    'deputy_director_hq_1',
+    'district_dd',
+    'deputy_director_district',
+    'provincial_director',
+    'admin',
+    'super_admin'
+];
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     header("Location: ../../../../index.php");
     exit();
 }
 
 if (!isset($_SESSION['full_name'])) {
-    $_SESSION['full_name'] = $_SESSION['username'] ?? 'Veterinary Surgeon';
+    $_SESSION['full_name'] = $_SESSION['username'] ?? 'Officer';
 }
 
 $full_name   = $_SESSION['full_name'];
@@ -20,7 +32,20 @@ $range_id    = $_SESSION['range_id'] ?? null;
 $district_id = $_SESSION['district_id'] ?? null;
 
 if (empty($range_id)) {
-    die('<div class="alert alert-danger text-center p-5 m-5">Error: Your account is not assigned to any Veterinary Range.</div>');
+    if ($district_id) {
+        $r_stmt = $mysqli->prepare("SELECT id FROM veterinary_ranges WHERE district_id = ? LIMIT 1");
+        $r_stmt->bind_param("i", $district_id);
+        $r_stmt->execute();
+        if ($r_row = $r_stmt->get_result()->fetch_assoc()) {
+            $range_id = $r_row['id'];
+        }
+        $r_stmt->close();
+    } else {
+        $r_res = $mysqli->query("SELECT id FROM veterinary_ranges LIMIT 1");
+        if ($r_res && $r_row = $r_res->fetch_assoc()) {
+            $range_id = $r_row['id'];
+        }
+    }
 }
 
 // 2. Fallback Definitions

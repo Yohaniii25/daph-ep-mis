@@ -1,6 +1,11 @@
 <?php
-session_start();
-require_once '../../../../config/db_connect.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'sms') {
     die("Access denied");

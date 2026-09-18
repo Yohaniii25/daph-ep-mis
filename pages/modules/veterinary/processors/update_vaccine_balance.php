@@ -1,8 +1,16 @@
 <?php
 session_start();
-require_once '../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon' || !isset($_SESSION['user_id'])) {
+/** @var mysqli $mysqli */
+global $mysqli;
+
+$allowed_roles = [
+    'veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon',
+    'district_dd', 'deputy_director_district', 'sms', 'provincial_director', 'administrator'
+];
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true) || !isset($_SESSION['user_id'])) {
     header("Location: ../../../../index.php");
     exit();
 }
@@ -20,11 +28,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $used_doses = intval($_POST['used_doses'] ?? 0);
     $spoilt_damaged_doses = intval($_POST['spoilt_damaged_doses'] ?? 0);
     $transferred_doses = intval($_POST['transferred_doses'] ?? 0);
-    $closing_balance = intval($_POST['closing_balance'] ?? 0);
+    $closing_balance = $opening_balance + $received_doses - $used_doses - $spoilt_damaged_doses - $transferred_doses;
+    if ($closing_balance < 0) $closing_balance = 0;
     
     $batch_no = !empty($_POST['batch_no']) ? trim($_POST['batch_no']) : null;
     $expiry_date = !empty($_POST['expiry_date']) ? trim($_POST['expiry_date']) : null;
     $remarks = !empty($_POST['remarks']) ? trim($_POST['remarks']) : null;
+
+    $post_range_id = intval($_POST['range_id'] ?? 0);
+    $session_range_id = intval($_SESSION['range_id'] ?? 0);
+    $range_id = ($post_range_id > 0) ? $post_range_id : $session_range_id;
 
     if (empty($id) || empty($vaccine_name) || empty($report_month)) {
         $_SESSION['msg'] = "Error: Invalid inputs entered.";
@@ -33,16 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Secure range verify
-    $range_id = $_SESSION['range_id'] ?? null;
     if (empty($range_id)) {
         $user_stmt = $mysqli->prepare("SELECT range_id FROM users WHERE id = ?");
         if ($user_stmt) {
             $user_stmt->bind_param("i", $user_id);
             $user_stmt->execute();
             $user_res = $user_stmt->get_result()->fetch_assoc();
-            if ($user_res) {
-                $range_id = $user_res['range_id'];
+            if ($user_res && !empty($user_res['range_id'])) {
+                $range_id = intval($user_res['range_id']);
             }
             $user_stmt->close();
         }

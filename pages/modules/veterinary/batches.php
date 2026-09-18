@@ -1,12 +1,22 @@
-﻿<?php
+<?php
+session_start();
 require_once '../../../includes/header.php';
-if (!in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) die("Access denied");
+
+$allowed_roles = [
+    'veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon',
+    'sms', 'district_dd', 'deputy_director_district', 'provincial_director', 'administrator'
+];
+
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles, true)) {
+    die("Access denied");
+}
+
 require_once __DIR__ . '/../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
 
-// Fetch the absolute count of active distinct batches registered in the warehouse system
+// Fetch the count of active distinct batches registered
 $total_batches_query = "SELECT COUNT(id) AS active_batches_count FROM `vaccine_batches` WHERE `is_active` = 1";
 $total_batches_res = $mysqli->query($total_batches_query);
 $active_batches_count = 0;
@@ -15,8 +25,6 @@ if ($total_batches_res) {
     $active_batches_count = $row['active_batches_count'] ?? 0;
 }
 ?>
-
-<?php  ?>
 
 <style>
     .metric-card-custom {
@@ -35,8 +43,15 @@ if ($total_batches_res) {
 <link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
-
-        <h2 class="mb-4">Immunization - Vaccine Batches Register</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="mb-1 fw-bold" style="color: #370709;">Vaccine Batches Register</h3>
+                <p class="text-muted small mb-0">Centralized tracking of vaccine inventory batch codes, active status, and expiry schedules.</p>
+            </div>
+            <a href="vaccine_balance.php" class="btn btn-sm btn-secondary shadow-sm text-nowrap">
+                <i class="bi bi-arrow-left me-1"></i>Back to Vaccine Balances
+            </a>
+        </div>
 
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
@@ -51,15 +66,27 @@ if ($total_batches_res) {
 
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-header bg-light border-0 py-3">
-                <h5 class="m-0 fw-bold text-dark">Quick Actions</h5>
+                <h6 class="m-0 fw-bold text-dark"><i class="bi bi-grid-3x3-gap-fill me-2 text-danger"></i>Quick Actions</h6>
             </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-success w-100 py-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
-                            <i class="bi bi-box-seam fs-5"></i><br>
+                        <button class="btn w-100 py-3 text-light fw-bold shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
+                            <i class="bi bi-box-seam fs-5 text-warning"></i><br>
                             Add New Batch
                         </button>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="vaccine_balance.php" class="btn btn-outline-dark w-100 py-3 fw-bold shadow-sm">
+                            <i class="bi bi-box-seam-fill fs-5 text-primary"></i><br>
+                            Vaccine Balances
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="drug_maintenance.php" class="btn btn-outline-secondary w-100 py-3 fw-bold shadow-sm">
+                            <i class="bi bi-capsule fs-5 text-danger"></i><br>
+                            Drug Maintenance
+                        </a>
                     </div>
                 </div>
             </div>
@@ -67,26 +94,28 @@ if ($total_batches_res) {
 
         <div class="card border-0 shadow-sm rounded-3 mb-5">
             <div class="card-header bg-white py-3 border-0">
-                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-bookmark-star me-2 text-success"></i>Registered Vaccine Stock Batches</h5>
+                <h6 class="m-0 fw-bold text-dark"><i class="bi bi-bookmark-star me-2 text-success"></i>Registered Vaccine Stock Batches</h6>
             </div>
             <div class="card-body">
-                <table id="batchTable" class="table table-striped align-middle row-border" style="width:100%">
+                <table id="batchTable" class="table table-striped align-middle row-border small" style="width:100%">
                     <thead class="table-light">
                         <tr>
                             <th style="width: 8%;">ID</th>
-                            <th style="width: 30%;">Batch Identity Code</th>
-                            <th style="width: 15%;">Status</th>
-                            <th style="width: 27%;">Remarks / Log Notes</th>
-                            <th style="width: 20%;">Date Registered</th>
-                            <th style="width: 10%;" class="text-end">Actions</th>
+                            <th style="width: 25%;">Batch Identity Code</th>
+                            <th style="width: 15%;">Expiration Date</th>
+                            <th style="width: 12%;">Status</th>
+                            <th style="width: 20%;">Remarks / Log Notes</th>
+                            <th style="width: 15%;">Date Registered</th>
+                            <th style="width: 8%;" class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $batch_sql = "SELECT id, batch_number, is_active, remarks, created_at FROM `vaccine_batches` ORDER BY id DESC";
+                        $batch_sql = "SELECT id, batch_number, is_active, remarks, expiry_date, created_at FROM `vaccine_batches` ORDER BY id DESC";
                         $res = $mysqli->query($batch_sql);
                         if ($res && $res->num_rows > 0):
                             while ($row = $res->fetch_assoc()):
+                                $formatted_expiry = !empty($row['expiry_date']) ? date('Y-m-d', strtotime($row['expiry_date'])) : 'N/A';
                         ?>
                                 <tr>
                                     <td class="fw-bold text-secondary">#<?= $row['id'] ?></td>
@@ -94,6 +123,11 @@ if ($total_batches_res) {
                                         <div class="fw-bold text-dark">
                                             <i class="bi bi-qr-code-scan me-2 text-muted"></i><?= htmlspecialchars($row['batch_number']) ?>
                                         </div>
+                                    </td>
+                                    <td>
+                                        <span class="small fw-semibold <?= $formatted_expiry !== 'N/A' ? 'text-danger font-monospace' : 'text-muted' ?>">
+                                            <i class="bi bi-calendar-event me-1"></i><?= $formatted_expiry ?>
+                                        </span>
                                     </td>
                                     <td>
                                         <?php if ($row['is_active'] == 1): ?>
@@ -122,6 +156,7 @@ if ($total_batches_res) {
                                                 data-id="<?= $row['id'] ?>"
                                                 data-batch="<?= htmlspecialchars($row['batch_number'], ENT_QUOTES) ?>"
                                                 data-status="<?= $row['is_active'] ?>"
+                                                data-expiry="<?= !empty($row['expiry_date']) ? date('Y-m-d', strtotime($row['expiry_date'])) : '' ?>"
                                                 data-remarks="<?= htmlspecialchars($row['remarks'], ENT_QUOTES) ?>"
                                                 data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
                                                 <i class="bi bi-pencil"></i>
@@ -147,8 +182,7 @@ if ($total_batches_res) {
 
 <?php include './models/vaccine_batch_modal.php'; ?>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
@@ -168,6 +202,7 @@ if ($total_batches_res) {
             $('#batchId').val($(this).data('id'));
             $('#batchNumber').val($(this).data('batch'));
             $('#is_active').val($(this).data('status'));
+            $('#batchExpiryDate').val($(this).data('expiry') || '');
             $('#remarks').val($(this).data('remarks'));
 
             $('#modalTitle').html('<i class="bi bi-pencil-square me-2 text-warning"></i>Modify Master Batch Details');
@@ -178,10 +213,11 @@ if ($total_batches_res) {
         $('#addVaccineBatchModal').on('hidden.bs.modal', function() {
             $('#modalAction').val('create');
             $('#batchId').val('');
+            $('#batchExpiryDate').val('');
             $('#batchForm')[0].reset();
 
             $('#modalTitle').html('<i class="bi bi-box-seam me-2"></i>Register New Vaccine Stock Batch');
-            $('#submitBtn').removeClass('btn-warning').addClass('btn-success').text('Save Configuration');
+            $('#submitBtn').removeClass('btn-warning').addClass('btn-success').text('Save Batch');
         });
 
         // Delete Alert Confirmation Click Handler
@@ -216,7 +252,7 @@ if ($total_batches_res) {
                 icon: 'success',
                 title: 'Operation Successful',
                 text: msg || 'Success!',
-                confirmButtonColor: '#370709'
+                confirmButtonColor: '#820100'
             });
             window.history.replaceState({}, document.title, window.location.pathname);
         } else if (status === 'error' || status === 'db_error') {
@@ -224,7 +260,7 @@ if ($total_batches_res) {
                 icon: 'error',
                 title: 'Operation Failed',
                 text: msg || 'An error occurred.',
-                confirmButtonColor: '#370709'
+                confirmButtonColor: '#820100'
             });
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -232,22 +268,16 @@ if ($total_batches_res) {
         $('#batchTable').DataTable({
             "order": [[0, "desc"]],
             "dom": '<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
-            "language": {
-                "search": "_INPUT_",
-                "searchPlaceholder": "Search batches register..."
-            },
             "buttons": [
                 {
                     extend: 'csv',
                     text: '<i class="bi bi-filetype-csv"></i> CSV',
-                    className: 'btn btn-sm btn-success shadow-sm me-1 rounded',
-                    titleAttr: 'Export Filtered CSV'
+                    className: 'btn btn-sm btn-success shadow-sm me-1 rounded'
                 },
                 {
                     extend: 'pdf',
                     text: '<i class="bi bi-file-earmark-pdf"></i> PDF',
-                    className: 'btn btn-sm btn-danger shadow-sm me-1 rounded',
-                    title: 'Registered Master Vaccine Batches Ledger'
+                    className: 'btn btn-sm btn-danger shadow-sm me-1 rounded'
                 },
                 {
                     extend: 'print',
@@ -259,6 +289,4 @@ if ($total_batches_res) {
     });
 </script>
 
-<?php
-require_once '../../../includes/footer.php';
-?>
+<?php require_once '../../../includes/footer.php'; ?>

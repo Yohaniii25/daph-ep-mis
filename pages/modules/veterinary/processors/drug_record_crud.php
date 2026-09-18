@@ -1,10 +1,15 @@
 <?php
-session_start();
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) {
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms', 'district_dd', 'admin', 'super_admin'])) {
     die("Access denied: Invalid authentication clearance profile.");
 }
 
-require_once '../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 

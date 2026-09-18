@@ -47,15 +47,24 @@ if ($range_id > 0 && isset($mysqli)) {
         $pop_stmt->close();
     }
 }
+
+// Query active batches for batch select dropdown and auto expiry
+$active_batches_list = [];
+if (isset($mysqli)) {
+    $ab_res = $mysqli->query("SELECT id, batch_number, expiry_date FROM vaccine_batches WHERE is_active = 1 ORDER BY id DESC");
+    if ($ab_res) {
+        $active_batches_list = $ab_res->fetch_all(MYSQLI_ASSOC);
+    }
+}
 ?>
 
-<!-- Modal: Log / Edit Vaccination Session -->
+<!-- Modal: Log / Edit Vaccination Program -->
 <div class="modal fade" id="modalVaccinationSession" tabindex="-1" aria-labelledby="modalVaccinationSessionLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header text-light py-2" style="background: linear-gradient(135deg, #370709 0%, #820100 100%);">
                 <h6 class="modal-title fw-bold" id="modalVaccinationSessionLabel">
-                    <i class="bi bi-shield-plus me-2"></i> <span id="vaxSessionModalTitle">Log Manual Vaccination Session</span>
+                    <i class="bi bi-shield-plus me-2"></i> <span id="vaxSessionModalTitle">Log Manual Vaccination Program</span>
                 </h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -66,13 +75,13 @@ if ($range_id > 0 && isset($mysqli)) {
                     <input type="hidden" name="range_id" value="<?= htmlspecialchars($range_id) ?>">
 
                     <div class="row g-3">
-                        <!-- Date of Session -->
+                        <!-- Vaccination Program Date (Renamed from Session Date) -->
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-dark">
-                                <i class="bi bi-calendar-check me-1 text-danger"></i> Session Date <span class="text-danger">*</span>
+                                <i class="bi bi-calendar-check me-1 text-danger"></i> Vaccination Program Date <span class="text-danger">*</span>
                             </label>
                             <input type="date" name="session_date" id="vax_session_date" class="form-control form-control-sm border-secondary" value="<?= date('Y-m-d') ?>" required>
-                            <small class="text-muted">Exact calendar date the vaccination activity occurred.</small>
+                            <small class="text-muted">Exact calendar date the vaccination program occurred.</small>
                         </div>
 
                         <!-- Target Category Selector -->
@@ -129,7 +138,6 @@ if ($range_id > 0 && isset($mysqli)) {
                                     <option value="Chicken" data-pop="<?= intval($animal_pop_data['Chicken'] ?? 0) ?>">
                                         Poultry Birds (Pop: <?= number_format($animal_pop_data['Chicken'] ?? 0) ?>)
                                     </option>
-
                                 </optgroup>
                             </select>
                         </div>
@@ -157,13 +165,12 @@ if ($range_id > 0 && isset($mysqli)) {
                             <input type="text" name="custom_vaccine_name" id="vax_session_custom_vaccine" class="form-control form-control-sm border-secondary mt-1 d-none" placeholder="Enter custom vaccine name">
                         </div>
 
-                        <!-- Assigned Personnel / Vaccinator -->
+                        <!-- Assigned Personnel / Vaccinators (Multi-Select Feature) -->
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-dark">
-                                <i class="bi bi-person-badge-fill me-1 text-danger"></i> Assigned Personnel / Vaccinator <span class="text-danger">*</span>
+                                <i class="bi bi-people-fill me-1 text-danger"></i> Assigned Personnel / Vaccinators (Multi-Select) <span class="text-danger">*</span>
                             </label>
-                            <select name="vaccinator_id" id="vax_session_vaccinator_id" class="form-select form-select-sm border-secondary">
-                                <option value="" selected>-- Select Registered Vaccinator or Manual Entry --</option>
+                            <select name="vaccinator_ids[]" id="vax_session_vaccinator_ids" class="form-select form-select-sm border-secondary" multiple size="3">
                                 <?php
                                 if (!empty($deployed_staff_records)) {
                                     foreach ($deployed_staff_records as $st_rec) {
@@ -171,9 +178,12 @@ if ($range_id > 0 && isset($mysqli)) {
                                     }
                                 }
                                 ?>
-                                <option value="0">Manual / Other Vaccinator...</option>
                             </select>
-                            <input type="text" name="vaccinator_name" id="vax_session_vaccinator_manual" class="form-control form-control-sm border-secondary mt-1" placeholder="Type personnel / vaccinator name" required>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small class="text-muted" style="font-size: 0.73rem;">Hold Ctrl (Cmd on Mac) to select multiple vaccinators</small>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-secondary" id="btnClearVaccinators" style="font-size: 0.73rem;">Clear selection</button>
+                            </div>
+                            <input type="text" name="vaccinator_name" id="vax_session_vaccinator_manual" class="form-control form-control-sm border-secondary mt-1" placeholder="Selected personnel / manual vaccinator names" required>
                         </div>
 
                         <!-- Exact Number of Animals Vaccinated -->
@@ -181,34 +191,56 @@ if ($range_id > 0 && isset($mysqli)) {
                             <label class="form-label small fw-bold text-dark">
                                 Animals Vaccinated <span class="text-danger">*</span>
                             </label>
-                            <input type="number" name="vaccinated_count" id="vax_session_count" class="form-control form-control-sm border-secondary fw-bold" min="1" required placeholder="e.g. 150">
+                            <input type="number" name="vaccinated_count" id="vax_session_count" class="form-control form-control-sm border-secondary fw-bold text-primary" min="1" required placeholder="e.g. 150">
                             <small class="text-muted">Exact animal head count.</small>
                         </div>
 
-                        <!-- Doses Administered -->
+                        <!-- Doses Administered (Live Auto-Deduction from Balances) -->
                         <div class="col-md-3">
                             <label class="form-label small fw-bold text-dark">
                                 Doses Administered
                             </label>
-                            <input type="number" name="doses_administered" id="vax_session_doses" class="form-control form-control-sm border-secondary" min="0" placeholder="e.g. 150">
-                            <small class="text-muted">Defaults to animal count.</small>
+                            <input type="number" name="doses_administered" id="vax_session_doses" class="form-control form-control-sm border-secondary fw-bold text-success" min="0" placeholder="e.g. 150">
+                            <small class="text-muted">Deducts from live inventory balance.</small>
                         </div>
 
-                        <!-- Batch No -->
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Vaccine Batch No. (Optional)</label>
-                            <input type="text" name="batch_no" id="vax_session_batch_no" class="form-control form-control-sm border-secondary" placeholder="e.g. BATCH-2026-FMD-04">
+                        <!-- Batch No with Auto-Populate Expiration Date -->
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-dark">
+                                <i class="bi bi-box-seam me-1 text-danger"></i> Vaccine Batch
+                            </label>
+                            <select id="vax_session_batch_select" class="form-select form-select-sm border-secondary">
+                                <option value="">-- Select Active Batch --</option>
+                                <?php foreach ($active_batches_list as $ab): 
+                                    $exp_text = !empty($ab['expiry_date']) ? date('Y-m-d', strtotime($ab['expiry_date'])) : '';
+                                ?>
+                                    <option value="<?= htmlspecialchars($ab['batch_number']) ?>" data-expiry="<?= $exp_text ?>">
+                                        <?= htmlspecialchars($ab['batch_number']) ?><?= $exp_text ? " (Exp: {$exp_text})" : '' ?>
+                                    </option>
+                                <?php endforeach; ?>
+                                <option value="custom">Other / Manual Batch...</option>
+                            </select>
+                            <input type="text" name="batch_no" id="vax_session_batch_no" class="form-control form-control-sm border-secondary mt-1" placeholder="Batch No.">
+                        </div>
+
+                        <!-- Expiration Auto-Populate Field -->
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-dark">
+                                <i class="bi bi-calendar-event me-1 text-danger"></i> Batch Expiry Date
+                            </label>
+                            <input type="date" name="expiry_date" id="vax_session_batch_expiry" class="form-control form-control-sm border-secondary bg-light" readonly>
+                            <small class="text-muted" style="font-size: 0.72rem;">Auto-populated from batch</small>
                         </div>
 
                         <!-- Location / GN Division -->
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Session Location / Village / GN</label>
+                            <label class="form-label small fw-bold text-dark">Vaccination Program Location / Village / GN</label>
                             <input type="text" name="location_name" id="vax_session_location" class="form-control form-control-sm border-secondary" placeholder="e.g. Farm cluster / GN division">
                         </div>
 
                         <!-- Remarks -->
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-dark">Session Remarks / Operational Notes</label>
+                            <label class="form-label small fw-bold text-dark">Program Remarks / Operational Notes</label>
                             <textarea name="remarks" id="vax_session_remarks" class="form-control form-control-sm border-secondary" rows="2" placeholder="Cold chain observations, booster status, field notes..."></textarea>
                         </div>
                     </div>
@@ -217,7 +249,7 @@ if ($range_id > 0 && isset($mysqli)) {
                 <div class="modal-footer py-2 border-top-0 bg-light">
                     <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm px-4 shadow-sm text-light fw-bold" style="background-color: #820100;" id="btnSubmitVaxSession">
-                        <i class="bi bi-check-circle me-1"></i> Save Vaccination Session
+                        <i class="bi bi-check-circle me-1"></i> Save Vaccination Program
                     </button>
                 </div>
             </form>
@@ -236,10 +268,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const speciesSelect = document.getElementById('vax_session_animal_type');
     const vaxSelect = document.getElementById('vax_session_vaccine_name');
     const customVaxInput = document.getElementById('vax_session_custom_vaccine');
-    const vaccinatorSelect = document.getElementById('vax_session_vaccinator_id');
+    const vaccinatorMultiSelect = document.getElementById('vax_session_vaccinator_ids');
     const vaccinatorManualInput = document.getElementById('vax_session_vaccinator_manual');
+    const btnClearVaccinators = document.getElementById('btnClearVaccinators');
     const countInput = document.getElementById('vax_session_count');
     const dosesInput = document.getElementById('vax_session_doses');
+    const batchSelect = document.getElementById('vax_session_batch_select');
+    const batchInput = document.getElementById('vax_session_batch_no');
+    const batchExpiry = document.getElementById('vax_session_batch_expiry');
 
     const livePopVal = document.getElementById('speciesLivePopVal');
 
@@ -298,14 +334,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (vaccinatorSelect) {
-        vaccinatorSelect.addEventListener('change', function() {
+    // Multi-Vaccinator auto-sync
+    if (vaccinatorMultiSelect) {
+        vaccinatorMultiSelect.addEventListener('change', function() {
+            const selected = Array.from(this.selectedOptions);
+            const names = selected.map(opt => opt.dataset.name || opt.text).filter(Boolean);
+            if (names.length > 0) {
+                vaccinatorManualInput.value = names.join(', ');
+            }
+        });
+    }
+
+    if (btnClearVaccinators && vaccinatorMultiSelect) {
+        btnClearVaccinators.addEventListener('click', function() {
+            Array.from(vaccinatorMultiSelect.options).forEach(opt => opt.selected = false);
+            vaccinatorManualInput.value = '';
+            vaccinatorManualInput.focus();
+        });
+    }
+
+    // Batch Select Auto-Populate Expiry
+    if (batchSelect) {
+        batchSelect.addEventListener('change', function() {
             const selectedOpt = this.options[this.selectedIndex];
-            if (selectedOpt && selectedOpt.dataset && selectedOpt.dataset.name) {
-                vaccinatorManualInput.value = selectedOpt.dataset.name;
-            } else if (this.value === '0') {
-                vaccinatorManualInput.value = '';
-                vaccinatorManualInput.focus();
+            if (this.value === 'custom') {
+                batchInput.value = '';
+                batchInput.focus();
+                batchExpiry.value = '';
+                batchExpiry.removeAttribute('readonly');
+            } else if (this.value) {
+                batchInput.value = this.value;
+                const exp = selectedOpt.dataset.expiry || '';
+                batchExpiry.value = exp;
+                batchExpiry.setAttribute('readonly', 'readonly');
+            } else {
+                batchInput.value = '';
+                batchExpiry.value = '';
             }
         });
     }

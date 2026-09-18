@@ -20,32 +20,36 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label for="drugType" class="form-label fw-semibold text-secondary">Drug Type</label>
+                            <label for="drugType" class="form-label fw-semibold text-secondary">Drug Formulation <span class="text-danger">*</span></label>
                             <select class="form-select text-dark fw-bold" id="drugType" name="drug_type_id" required>
-                                <option value="" selected disabled>-- Choose Type --</option>
+                                <option value="" selected disabled>-- Choose Drug --</option>
                                 <?php
                                 // Fetch all registered drug type records for selection
-                                $type_opts = $mysqli->query("SELECT id, vaccine_name, expiry_date FROM drug_types ORDER BY vaccine_name ASC");
+                                $type_opts = $mysqli->query("SELECT id, vaccine_name, brand_name, chemical_composition, expiry_date FROM drug_types ORDER BY COALESCE(brand_name, vaccine_name) ASC");
                                 while($t_opt = $type_opts->fetch_assoc()):
-                                    $expiry = !empty($t_opt['expiry_date']) ? date('Y-m-d', strtotime($t_opt['expiry_date'])) : 'N/A';
+                                    $brand_display = !empty($t_opt['brand_name']) ? $t_opt['brand_name'] : $t_opt['vaccine_name'];
+                                    $chem_display = !empty($t_opt['chemical_composition']) ? " ({$t_opt['chemical_composition']})" : '';
+                                    $expiry = !empty($t_opt['expiry_date']) ? date('Y-m-d', strtotime($t_opt['expiry_date'])) : '';
                                 ?>
-                                    <option value="<?= (int) $t_opt['id'] ?>" data-expiry="<?= $expiry ?>">
-                                        <?= htmlspecialchars($t_opt['vaccine_name'], ENT_QUOTES) ?>
+                                    <option value="<?= (int) $t_opt['id'] ?>" data-expiry="<?= $expiry ?>" data-brand="<?= htmlspecialchars($t_opt['brand_name'] ?? '') ?>" data-chem="<?= htmlspecialchars($t_opt['chemical_composition'] ?? '') ?>">
+                                        <?= htmlspecialchars($brand_display . $chem_display, ENT_QUOTES) ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>
                         </div>
 
                         <div class="col-md-4">
-                            <label for="vaccineBatchId" class="form-label fw-semibold text-secondary">Target Vaccine Batch</label>
+                            <label for="vaccineBatchId" class="form-label fw-semibold text-secondary">Batch Number <span class="text-danger">*</span></label>
                             <select class="form-select text-dark fw-bold" id="vaccineBatchId" name="vaccine_batch_id" required>
                                 <option value="" selected disabled>-- Choose Batch --</option>
                                 <?php
-                                $batch_opts = $mysqli->query("SELECT id, batch_number FROM vaccine_batches WHERE is_active = 1 ORDER BY id DESC");
+                                $batch_opts = $mysqli->query("SELECT id, batch_number, expiry_date FROM vaccine_batches WHERE is_active = 1 ORDER BY id DESC");
                                 while($opt = $batch_opts->fetch_assoc()):
+                                    $b_expiry = !empty($opt['expiry_date']) ? date('Y-m-d', strtotime($opt['expiry_date'])) : '';
+                                    $label = htmlspecialchars($opt['batch_number']) . ($b_expiry ? " (Exp: {$b_expiry})" : '');
                                 ?>
-                                    <option value="<?= $opt['id'] ?>">
-                                        <?= htmlspecialchars($opt['batch_number']) ?>
+                                    <option value="<?= $opt['id'] ?>" data-expiry="<?= $b_expiry ?>">
+                                        <?= $label ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>

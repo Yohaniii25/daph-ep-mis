@@ -1,10 +1,18 @@
 <?php
 session_start();
-require_once '../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon' || !isset($_SESSION['user_id'])) {
+$allowed_roles = [
+    'veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon',
+    'district_dd', 'deputy_director_district', 'sms', 'provincial_director', 'administrator'
+];
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true) || !isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
     exit();
 }
