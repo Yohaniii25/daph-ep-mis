@@ -356,12 +356,12 @@ require_once '../../../includes/header.php';
     </main>
 </div>
 
-<?php include 'models/add_counterfoil.php'; ?>
-<?php include 'models/edit_counterfoil.php'; ?>
-<?php include 'models/view_counterfoil.php'; ?>
-<?php include 'models/modal_issue_counterfoil_leaf.php'; ?>
-<?php include 'models/modal_board_of_survey.php'; ?>
-<?php include 'models/modal_inventory_transfer.php'; ?>
+<?php include 'model/add_counterfoil.php'; ?>
+<?php include 'model/edit_counterfoil.php'; ?>
+<?php include 'model/view_counterfoil.php'; ?>
+<?php include 'model/modal_issue_counterfoil_leaf.php'; ?>
+<?php include 'model/modal_board_of_survey.php'; ?>
+<?php include 'model/modal_inventory_transfer.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -902,9 +902,136 @@ require_once '../../../includes/header.php';
         modal.show();
     }
 
+    // Global Farmer NIC lookup function for Issue Counterfoil Leaf modal
+    window.lookupLeafFarmerNIC = function() {
+        var nic = $('#leaf_farmer_nic').val() ? $('#leaf_farmer_nic').val().trim() : '';
+        if (!nic) {
+            $('#leaf_nic_status_badge').hide();
+            $('#leaf_animal_counts_container').slideUp();
+            return;
+        }
+
+        $('#leaf_nic_status_badge')
+            .removeClass('bg-success text-white bg-warning text-dark bg-danger')
+            .addClass('bg-secondary-subtle text-secondary')
+            .html('<span class="spinner-border spinner-border-sm me-1"></span>Verifying...')
+            .show();
+
+        $.ajax({
+            url: 'processors/get_farmer_by_nic.php',
+            type: 'GET',
+            data: { nic: nic },
+            dataType: 'json',
+            success: function(resp) {
+                if (resp.success && resp.found && resp.farmer) {
+                    var f = resp.farmer;
+                    var frnText = f.farm_registration_no ? ' | FRN: ' + f.farm_registration_no : '';
+                    var srcTitle = f.source || 'Animal Health Farm Registration';
+                    $('#leaf_nic_status_badge')
+                        .removeClass('bg-secondary-subtle text-secondary bg-warning text-dark bg-danger')
+                        .addClass('bg-success-subtle text-success border border-success-subtle fw-semibold')
+                        .html('<i class="bi bi-shield-fill-check me-1"></i>Pulled from ' + srcTitle + ': ' + (f.full_name || '') + frnText);
+
+                    // Auto-fill fields
+                    $('#leaf_farmer_name').val(f.full_name || '');
+                    $('#leaf_farm_registration_no').val(f.farm_registration_no || '');
+                    $('#leaf_location_address').val(f.location_address || '');
+
+                    // Safe format animal counts breakdown
+                    var animals = f.animal_counts || {};
+                    var c_cattle = (animals.cattle !== undefined) ? animals.cattle : (f.cattle_count || 0);
+                    var c_buffalo = (animals.buffalo !== undefined) ? animals.buffalo : (f.buffalo_count || 0);
+                    var c_goat = (animals.goat !== undefined) ? animals.goat : (f.goat_count || 0);
+                    var c_swine = (animals.swine !== undefined) ? animals.swine : (f.swine_count || 0);
+                    var c_poultry = (animals.poultry !== undefined) ? animals.poultry : (f.poultry_count || 0);
+                    var totalAnimals = f.total_animal_count || (c_cattle + c_buffalo + c_goat + c_swine + c_poultry);
+
+                    var summaryText = "Cattle: " + c_cattle + ", Buffalo: " + c_buffalo + ", Goat: " + c_goat + ", Swine: " + c_swine + ", Poultry: " + c_poultry + " (Total: " + totalAnimals + ")";
+                    $('#leaf_animal_counts_summary').val(summaryText);
+
+                    var badges = '' +
+                        '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Cattle: <strong>' + c_cattle + '</strong></span>' +
+                        '<span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Buffalo: <strong>' + c_buffalo + '</strong></span>' +
+                        '<span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Goat: <strong>' + c_goat + '</strong></span>' +
+                        '<span class="badge bg-secondary-subtle text-secondary border px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Swine: <strong>' + c_swine + '</strong></span>' +
+                        '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Poultry: <strong>' + c_poultry + '</strong></span>' +
+                        '<span class="badge bg-dark text-white px-3 py-2"><i class="bi bi-calculator me-1"></i>Total Livestock: <strong>' + totalAnimals + '</strong></span>';
+
+                    $('#leaf_animal_badges').html(badges);
+                    $('#leaf_animal_counts_container').slideDown();
+                } else {
+                    $('#leaf_nic_status_badge')
+                        .removeClass('bg-secondary-subtle text-secondary bg-success text-white')
+                        .addClass('bg-warning-subtle text-dark border border-warning-subtle')
+                        .html('<i class="bi bi-exclamation-triangle me-1"></i>Unregistered NIC in Farm Registration (Enter Details Manually)');
+                    $('#leaf_animal_counts_container').slideUp();
+                    $('#leaf_animal_counts_summary').val('');
+                }
+            },
+            error: function() {
+                $('#leaf_nic_status_badge')
+                    .removeClass('bg-secondary-subtle text-secondary')
+                    .addClass('bg-danger text-white')
+                    .text('Lookup error');
+            }
+        });
+    };
+
     $(document).ready(function() {
         setupCounterfoilTypeAutocomplete('#add_counterfoil_type', '#add_counterfoil_type_suggestions', 'processors/get_counterfoil_types.php');
         setupCounterfoilTypeAutocomplete('#edit_counterfoil_type', '#edit_counterfoil_type_suggestions', 'processors/get_counterfoil_types.php');
+
+        // Leaf Farmer NIC Auto-Pull Event Bindings
+        var leafNicTimer = null;
+        $(document).on('input', '#leaf_farmer_nic', function() {
+            clearTimeout(leafNicTimer);
+            leafNicTimer = setTimeout(window.lookupLeafFarmerNIC, 250);
+        });
+        $(document).on('blur change', '#leaf_farmer_nic', function() {
+            window.lookupLeafFarmerNIC();
+        });
+        $(document).on('keypress', '#leaf_farmer_nic', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                window.lookupLeafFarmerNIC();
+            }
+        });
+        $(document).on('click', '#btn_lookup_leaf_nic', function() {
+            window.lookupLeafFarmerNIC();
+        });
+
+        // Form submission for Issue Leaf
+        $(document).on('submit', '#formIssueCounterfoilLeaf', function(e) {
+            e.preventDefault();
+            var submitBtn = $('#btn_submit_issue_leaf');
+            submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Processing...');
+
+            $.ajax({
+                url: 'processors/save_counterfoil_leaf_issue.php',
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(res) {
+                    submitBtn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Issue Certificate');
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Certificate / Leaf Issued',
+                            text: res.message,
+                            confirmButtonColor: '#1e3c72'
+                        }).then(function() {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                },
+                error: function(xhr, status, err) {
+                    submitBtn.prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Issue Certificate');
+                    Swal.fire('Processing Failed', 'Server error: ' + err, 'error');
+                }
+            });
+        });
 
         $('#add_counterfoil_type').on('input change', function() {
             updateModulePreview('#add_counterfoil_type', '#add_cf_module_preview');

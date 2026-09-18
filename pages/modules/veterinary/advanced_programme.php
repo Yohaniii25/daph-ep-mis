@@ -157,8 +157,8 @@ require_once '../../../includes/header.php';
 <!-- ============================================================ -->
 <!-- INCLUDED MODALS -->
 <!-- ============================================================ -->
-<?php include 'models/add_advanced_programme.php'; ?>
-<?php include 'models/edit_advanced_programme.php'; ?>
+<?php include 'model/add_advanced_programme.php'; ?>
+<?php include 'model/edit_advanced_programme.php'; ?>
 
 <?php require_once '../../../includes/footer.php'; ?>
 

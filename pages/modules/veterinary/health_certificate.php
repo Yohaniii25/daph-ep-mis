@@ -255,8 +255,8 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Modals -->
-<?php include 'models/add_health_certificate_modal.php'; ?>
-<?php include 'models/edit_health_certificate_modal.php'; ?>
+<?php include 'model/add_health_certificate_modal.php'; ?>
+<?php include 'model/edit_health_certificate_modal.php'; ?>
 
 <?php
 $pageScripts = '

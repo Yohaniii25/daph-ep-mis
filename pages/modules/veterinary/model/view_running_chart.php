@@ -1,5 +1,5 @@
 <?php
-// pages/modules/veterinary/models/view_running_chart.php
+// pages/modules/veterinary/model/view_running_chart.php
 ?>
 <div class="modal fade" id="viewRunningChartModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">

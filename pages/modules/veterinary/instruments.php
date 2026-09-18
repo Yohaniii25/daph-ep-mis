@@ -141,11 +141,11 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- include modal -->
-<?php include 'models/add_instrument.php'; ?>
-<?php include 'models/edit_instrument.php'; ?>
-<?php include 'models/view_instrument.php'; ?>
-<?php include 'models/modal_board_of_survey.php'; ?>
-<?php include 'models/modal_inventory_transfer.php'; ?>
+<?php include 'model/add_instrument.php'; ?>
+<?php include 'model/edit_instrument.php'; ?>
+<?php include 'model/view_instrument.php'; ?>
+<?php include 'model/modal_board_of_survey.php'; ?>
+<?php include 'model/modal_inventory_transfer.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

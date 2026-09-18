@@ -350,14 +350,14 @@ require_once '../../../includes/header.php';
     </main>
 </div>
 
-<?php include 'models/add_land_property.php'; ?>
-<?php include 'models/edit_land_property.php'; ?>
-<?php include 'models/view_land_property.php'; ?>
+<?php include 'model/add_land_property.php'; ?>
+<?php include 'model/edit_land_property.php'; ?>
+<?php include 'model/view_land_property.php'; ?>
 
-<?php include 'models/add_building_inventory.php'; ?>
-<?php include 'models/edit_building_inventory.php'; ?>
-<?php include 'models/view_building_inventory.php'; ?>
-<?php include 'models/modal_board_of_survey.php'; ?>
+<?php include 'model/add_building_inventory.php'; ?>
+<?php include 'model/edit_building_inventory.php'; ?>
+<?php include 'model/view_building_inventory.php'; ?>
+<?php include 'model/modal_board_of_survey.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

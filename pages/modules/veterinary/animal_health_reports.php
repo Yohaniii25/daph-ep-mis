@@ -184,7 +184,7 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
-        <?php include 'models/add_health_record.php'; ?>
+        <?php include 'model/add_health_record.php'; ?>
     </main>
 </div>
 

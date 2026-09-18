@@ -200,10 +200,10 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Add Crop Returns Modal -->
-<?php include 'models/add_crop_return.php'; ?>
+<?php include 'model/add_crop_return.php'; ?>
 
 <!-- Edit Crop Returns Modal -->
-<?php include 'models/edit_crop_return.php'; ?>
+<?php include 'model/edit_crop_return.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

@@ -248,8 +248,8 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Modals -->
-<?php include 'models/add_cattle_voucher_modal.php'; ?>
-<?php include 'models/edit_cattle_voucher_modal.php'; ?>
+<?php include 'model/add_cattle_voucher_modal.php'; ?>
+<?php include 'model/edit_cattle_voucher_modal.php'; ?>
 
 <?php
 $pageScripts = '

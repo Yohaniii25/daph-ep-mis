@@ -298,7 +298,7 @@ require_once '../../../includes/header.php';
     </main>
 </div>
 
-<?php include './models/drug_record_modal.php'; ?>
+<?php include './model/drug_record_modal.php'; ?>
 
 <?php
 $pageScripts = '

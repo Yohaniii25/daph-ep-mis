@@ -259,9 +259,9 @@ require_once '../../../includes/header.php';
     </main>
 </div>
 
-<?php include 'models/add_employee.php'; ?>
-<?php include 'models/edit_employee.php'; ?>
-<?php include 'models/transfer_modal.php'; ?>
+<?php include 'model/add_employee.php'; ?>
+<?php include 'model/edit_employee.php'; ?>
+<?php include 'model/transfer_modal.php'; ?>
 
 <!-- View Employee Details Modal -->
 <div class="modal fade" id="viewEmployeeModal" tabindex="-1" aria-hidden="true">

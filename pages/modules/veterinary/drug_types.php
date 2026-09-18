@@ -154,7 +154,7 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
     </main>
 </div>
 
-<?php include './models/drug_type_modal.php'; ?>
+<?php include './model/drug_type_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

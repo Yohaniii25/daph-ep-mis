@@ -180,7 +180,7 @@ if ($total_batches_res) {
     </main>
 </div>
 
-<?php include './models/vaccine_batch_modal.php'; ?>
+<?php include './model/vaccine_batch_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

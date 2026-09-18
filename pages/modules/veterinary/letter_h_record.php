@@ -195,10 +195,10 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Add Modal -->
-<?php include 'models/add_h_record_modal.php'; ?>
+<?php include 'model/add_h_record_modal.php'; ?>
 
 <!-- Edit Modal -->
-<?php include 'models/edit_h_record_modal.php'; ?>
+<?php include 'model/edit_h_record_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

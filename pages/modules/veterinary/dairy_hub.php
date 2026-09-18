@@ -106,7 +106,7 @@ require_once '../../../includes/header.php';
     </main>
 </div>
 
-<?php include 'models/add_dairy_record_modal.php'; ?>
+<?php include 'model/add_dairy_record_modal.php'; ?>
 
 <link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 

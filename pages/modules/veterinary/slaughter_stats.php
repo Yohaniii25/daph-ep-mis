@@ -136,7 +136,7 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
-        <?php include 'models/add_slaughter_record_modal.php'; ?>
+        <?php include 'model/add_slaughter_record_modal.php'; ?>
     </main>
 </div>
 

@@ -194,6 +194,6 @@ require_once '../../../includes/header.php';
 
         <?php
 
-        include 'models/add_health_record.php';
+        include 'model/add_health_record.php';
         ?>
     <?php require_once '../../../includes/footer.php'; ?>

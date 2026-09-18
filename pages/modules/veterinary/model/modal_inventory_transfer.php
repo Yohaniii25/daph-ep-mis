@@ -1,6 +1,6 @@
 <?php
 /**
- * pages/modules/veterinary/models/modal_inventory_transfer.php
+ * pages/modules/veterinary/model/modal_inventory_transfer.php
  * Inter-Unit Inventory Item Transfer Request Modal
  */
 

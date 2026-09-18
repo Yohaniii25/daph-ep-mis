@@ -140,11 +140,11 @@ require_once '../../../includes/header.php';
     </main>
 </div>
 
-<?php include 'models/add_machinery_item.php'; ?>
-<?php include 'models/edit_machinery.php'; ?>
-<?php include 'models/view_machinery.php'; ?>
-<?php include 'models/modal_board_of_survey.php'; ?>
-<?php include 'models/modal_inventory_transfer.php'; ?>
+<?php include 'model/add_machinery_item.php'; ?>
+<?php include 'model/edit_machinery.php'; ?>
+<?php include 'model/view_machinery.php'; ?>
+<?php include 'model/modal_board_of_survey.php'; ?>
+<?php include 'model/modal_inventory_transfer.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

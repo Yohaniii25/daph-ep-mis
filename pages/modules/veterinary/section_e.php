@@ -237,10 +237,10 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
-        <?php include 'models/add_production_record_modal.php'; ?>
-        <?php include 'models/edit_production_record_modal.php'; ?>
-        <?php include 'models/add_category_modal.php'; ?>
-        <?php include 'models/add_subcategory_modal.php'; ?>
+        <?php include 'model/add_production_record_modal.php'; ?>
+        <?php include 'model/edit_production_record_modal.php'; ?>
+        <?php include 'model/add_category_modal.php'; ?>
+        <?php include 'model/add_subcategory_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

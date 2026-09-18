@@ -248,8 +248,8 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Modals -->
-<?php include 'models/add_ear_tag_modal.php'; ?>
-<?php include 'models/edit_ear_tag_modal.php'; ?>
+<?php include 'model/add_ear_tag_modal.php'; ?>
+<?php include 'model/edit_ear_tag_modal.php'; ?>
 
 <?php
 $pageScripts = '

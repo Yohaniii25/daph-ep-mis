@@ -829,15 +829,15 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Included Modals -->
-<?php include 'models/add_vehicle.php'; ?>
-<?php include 'models/edit_vehicle.php'; ?>
-<?php include 'models/view_vehicle.php'; ?>
-<?php include 'models/add_repair_vehicle.php'; ?>
-<?php include 'models/edit_vehicle_repair.php'; ?>
-<?php include 'models/view_vehicle_repair.php'; ?>
-<?php include 'models/add_running_chart.php'; ?>
-<?php include 'models/edit_running_chart.php'; ?>
-<?php include 'models/view_running_chart.php'; ?>
+<?php include 'model/add_vehicle.php'; ?>
+<?php include 'model/edit_vehicle.php'; ?>
+<?php include 'model/view_vehicle.php'; ?>
+<?php include 'model/add_repair_vehicle.php'; ?>
+<?php include 'model/edit_vehicle_repair.php'; ?>
+<?php include 'model/view_vehicle_repair.php'; ?>
+<?php include 'model/add_running_chart.php'; ?>
+<?php include 'model/edit_running_chart.php'; ?>
+<?php include 'model/view_running_chart.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

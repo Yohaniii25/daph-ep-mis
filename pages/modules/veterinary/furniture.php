@@ -143,11 +143,11 @@ require_once '../../../includes/header.php';
     </main>
 </div>
 
-<?php include 'models/add_furniture.php'; ?>
-<?php include 'models/edit_furniture.php'; ?>
-<?php include 'models/view_furniture.php'; ?>
-<?php include 'models/modal_board_of_survey.php'; ?>
-<?php include 'models/modal_inventory_transfer.php'; ?>
+<?php include 'model/add_furniture.php'; ?>
+<?php include 'model/edit_furniture.php'; ?>
+<?php include 'model/view_furniture.php'; ?>
+<?php include 'model/modal_board_of_survey.php'; ?>
+<?php include 'model/modal_inventory_transfer.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

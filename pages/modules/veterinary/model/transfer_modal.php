@@ -1,6 +1,6 @@
 <?php
 /**
- * pages/modules/veterinary/models/transfer_modal.php
+ * pages/modules/veterinary/model/transfer_modal.php
  * Transfer Request Modal for Veterinary Surgeons
  */
 ?>

@@ -924,10 +924,10 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Modals -->
-<?php include 'models/modal_vaccination_session.php'; ?>
-<?php include 'models/vaccination_staff.php'; ?>
-<?php include 'models/add_animal_population.php'; ?>
-<?php include 'models/add_target_modal.php'; ?>
+<?php include 'model/modal_vaccination_session.php'; ?>
+<?php include 'model/vaccination_staff.php'; ?>
+<?php include 'model/add_animal_population.php'; ?>
+<?php include 'model/add_target_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

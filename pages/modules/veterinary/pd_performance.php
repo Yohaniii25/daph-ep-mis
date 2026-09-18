@@ -244,8 +244,8 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Modals -->
-<?php include 'models/add_pd_performance_modal.php'; ?>
-<?php include 'models/edit_pd_performance_modal.php'; ?>
+<?php include 'model/add_pd_performance_modal.php'; ?>
+<?php include 'model/edit_pd_performance_modal.php'; ?>
 
 <?php
 $pageScripts = '

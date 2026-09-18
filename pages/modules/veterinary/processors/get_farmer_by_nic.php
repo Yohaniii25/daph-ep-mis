@@ -15,13 +15,9 @@ if (!headers_sent()) {
     header('Content-Type: application/json');
 }
 
-$allowed_roles = [
-    'veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 
-    'district_dd', 'provincial_director', 'deputy_director_district', 'administrator', 'sms'
-];
-
-if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], $allowed_roles)) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
+// Check authentication: allow any authenticated session in system
+if (empty($_SESSION['logged_in']) && empty($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized access. Please log in.']);
     exit();
 }
 
@@ -34,18 +30,24 @@ if (empty($nic)) {
 // Normalize NIC: strip spaces, hyphens
 $clean_nic = preg_replace('/[^0-9a-zA-Z]/', '', $nic);
 
-// Query `farmers` table
+// Query `farmers` table with case-insensitive matching on NIC, cleaned NIC, and FRN
 $stmt = $mysqli->prepare("
     SELECT id, nic_no, full_name, farm_registration_no, location_address, contact_no,
            cattle_count, buffalo_count, goat_count, swine_count, poultry_count, total_animal_count
     FROM farmers
-    WHERE (REPLACE(REPLACE(nic_no, ' ', ''), '-', '') = ? OR nic_no = ?) 
-      AND is_active = 1
+    WHERE (
+        LOWER(REPLACE(REPLACE(nic_no, ' ', ''), '-', '')) = LOWER(?) 
+        OR LOWER(nic_no) = LOWER(?)
+        OR LOWER(farm_registration_no) = LOWER(?)
+        OR nic_no LIKE CONCAT('%', ?, '%')
+    )
+    AND (is_active = 1 OR is_active IS NULL)
+    ORDER BY (LOWER(nic_no) = LOWER(?)) DESC, id DESC
     LIMIT 1
 ");
 
 if ($stmt) {
-    $stmt->bind_param("ss", $clean_nic, $nic);
+    $stmt->bind_param("sssss", $clean_nic, $nic, $nic, $clean_nic, $nic);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($farmer = $res->fetch_assoc()) {
