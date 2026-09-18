@@ -319,17 +319,21 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/sms/my_diary.php">
                             <i class="bi bi-journal-bookmark me-2"></i> Diary and Advanced Programme
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['immunization.php', 'vaccine_types.php']) ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/sms/immunization.php">
-                            <i class="bi bi-shield-plus me-2"></i> Immunization
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['vaccination_targets.php', 'annual_targets.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccination_targets.php">
+                            <i class="bi bi-shield-check me-2"></i> Vaccination & Targets
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'vaccine_balance.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccine_balance.php">
+                            <i class="bi bi-box-seam me-2"></i> Vaccine Balances
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_maintenance.php' || basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_types.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/drug_maintenance.php">
+                            <i class="bi bi-capsule-pill me-2"></i> Drug Maintenance
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'mobile_clinics.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/mobile_clinics.php">
                             <i class="bi bi-truck me-2"></i> Mobile Clinics
-                        </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_maintenance.php') ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/sms/drug_maintenance.php">
-                            <i class="bi bi-prescription2 me-2"></i> Drug Maintenance
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'outbreak_report.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/sms/outbreak_report.php">
@@ -455,9 +459,17 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/district/revenue_management.php">
                             <i class="bi bi-currency-exchange me-2"></i> Revenue Management
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'district_revenue_summary.php') ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/district/district_revenue_summary.php">
-                            <i class="bi bi-bar-chart-line me-2"></i> District Revenue Summary
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['vaccination_targets.php', 'annual_targets.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccination_targets.php">
+                            <i class="bi bi-shield-check me-2"></i> Vaccination & Targets
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'vaccine_balance.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccine_balance.php">
+                            <i class="bi bi-box-seam me-2"></i> Vaccine Balances
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_maintenance.php' || basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_types.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/drug_maintenance.php">
+                            <i class="bi bi-capsule-pill me-2"></i> Drug Maintenance
                         </a>
                     <?php endif; ?>
                     <?php if ($is_veterinary_surgeon): ?>
@@ -473,6 +485,18 @@ $current_view_param = $_GET['view'] ?? '';
                          <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'training/ahfbc') !== false || in_array($current_file, ['training_register.php', 'training_utilization.php'])) ? 'active' : '' ?>"
                               href="<?= $base_path ?>pages/modules/veterinary/range_summary.php">
                             <i class="bi bi-geo-alt me-2"></i> Range Summary
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['vaccination_targets.php', 'annual_targets.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccination_targets.php">
+                            <i class="bi bi-shield-check me-2"></i> Vaccination & Targets
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'vaccine_balance.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccine_balance.php">
+                            <i class="bi bi-box-seam me-2"></i> Vaccine Balances
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_maintenance.php' || basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'drug_types.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/drug_maintenance.php">
+                            <i class="bi bi-capsule-pill me-2"></i> Drug Maintenance
                         </a>
 
                     <?php endif; ?>

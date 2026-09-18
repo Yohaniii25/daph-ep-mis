@@ -13,7 +13,10 @@ if (!isset($_SESSION['logged_in']) || empty($_SESSION['user_id'])) {
     exit();
 }
 
-require_once '../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 $user_id   = (int)$_SESSION['user_id'];
 $user_role = $_SESSION['role'] ?? '';

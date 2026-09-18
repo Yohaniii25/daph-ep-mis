@@ -19,18 +19,37 @@ $allowed_animals = ['Cattle', 'Dairy Cows', 'Buffalo', 'Goats', 'Poultry', 'othe
                     <input type="hidden" name="action" id="modalAction" value="create">
                     <input type="hidden" name="id" id="typeId" value="">
                     
-                    <div class="mb-4">
-                        <label for="drugName" class="form-label fw-semibold text-secondary mb-2">Drug Name / Formulation <span class="text-danger">*</span></label>
-                        <div class="input-group shadow-sm rounded">
-                            <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-capsule"></i></span>
-                            <input type="text" class="form-control ps-2 text-dark fw-medium" name="vaccine_name" id="drugName" required placeholder="e.g., Oxytetracycline 20%, Vitamin B-Complex, Albendazole Bolus">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="brandName" class="form-label fw-semibold text-secondary mb-1">Brand Name <span class="text-danger">*</span></label>
+                            <div class="input-group shadow-sm rounded">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-tag-fill"></i></span>
+                                <input type="text" class="form-control ps-2 text-dark fw-medium" name="brand_name" id="brandName" required placeholder="e.g., Alben-W, Terramycin, Bio-Dox">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="chemComp" class="form-label fw-semibold text-secondary mb-1">Chemical Composition <span class="text-danger">*</span></label>
+                            <div class="input-group shadow-sm rounded">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-prescription2"></i></span>
+                                <input type="text" class="form-control ps-2 text-dark fw-medium" name="chemical_composition" id="chemComp" required placeholder="e.g., Albendazole 2.5%, Oxytetracycline 20%">
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-4">
-                        <label for="expiry_date" class="form-label fw-semibold text-secondary mb-2">Expiry Date</label>
-                        <div class="input-group shadow-sm rounded">
-                            <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-calendar"></i></span>
-                            <input type="date" class="form-control ps-2 text-dark fw-medium" name="expiry_date" id="expiry_date">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            <label for="drugName" class="form-label fw-semibold text-secondary mb-1">Drug Name / Formulation Display</label>
+                            <div class="input-group shadow-sm rounded">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-capsule"></i></span>
+                                <input type="text" class="form-control ps-2 text-dark fw-medium" name="vaccine_name" id="drugName" placeholder="Auto-generated if left blank: Brand (Composition)">
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="expiry_date" class="form-label fw-semibold text-secondary mb-1">Expiry Date</label>
+                            <div class="input-group shadow-sm rounded">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-calendar"></i></span>
+                                <input type="date" class="form-control ps-2 text-dark fw-medium" name="expiry_date" id="expiry_date">
+                            </div>
                         </div>
                     </div>
 

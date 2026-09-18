@@ -1,25 +1,49 @@
-﻿<?php
+<?php
 session_start();
 require_once __DIR__ . '/../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
 
-if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms'])) {
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms', 'district_dd', 'admin', 'super_admin'])) {
     header("Location: ../../../index.php");
     exit();
 }
 
-// Extract base operational keys from the live user session wrapper
 $user_id = $_SESSION['user_id'] ?? null;
-$range_id = $_SESSION['range_id'] ?? null;
+$user_role = $_SESSION['role'] ?? '';
+$user_district_id = $_SESSION['district_id'] ?? null;
+$is_supervisory = in_array($user_role, ['district_dd', 'sms', 'admin', 'super_admin']);
 
-$range_name = 'Your Range';
-$district_name = 'Your District';
+// Supervisory range switching or session range
+$range_id = $_SESSION['range_id'] ?? null;
+if ($is_supervisory && isset($_GET['range_id']) && !empty($_GET['range_id'])) {
+    $range_id = intval($_GET['range_id']);
+}
+
+// Fetch ranges for supervisory selector
+$supervisory_ranges = [];
+if ($is_supervisory) {
+    if (!empty($user_district_id)) {
+        $r_stmt = $mysqli->prepare("SELECT id, name FROM veterinary_ranges WHERE district_id = ? ORDER BY name ASC");
+        $r_stmt->bind_param("i", $user_district_id);
+        $r_stmt->execute();
+        $supervisory_ranges = $r_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $r_stmt->close();
+    } else {
+        $supervisory_ranges = $mysqli->query("SELECT id, name FROM veterinary_ranges ORDER BY name ASC")->fetch_all(MYSQLI_ASSOC);
+    }
+    if (empty($range_id) && !empty($supervisory_ranges)) {
+        $range_id = $supervisory_ranges[0]['id'];
+    }
+}
+
+$range_name = 'All Ranges';
+$district_name = 'All Districts';
 $iframe_url = '';
 
 // Step 1: Query the user's data profile if it's missing from the active session context
-if (empty($range_id) && !empty($user_id)) {
+if (empty($range_id) && !empty($user_id) && !$is_supervisory) {
     $user_query = $mysqli->prepare("SELECT range_id FROM users WHERE id = ?");
     if ($user_query) {
         $user_query->bind_param("i", $user_id);
@@ -90,7 +114,6 @@ if ($stats_res && $row = $stats_res->fetch_assoc()) {
 }
 
 require_once '../../../includes/header.php';
-
 ?>
 
 <link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
@@ -99,16 +122,28 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 <link rel="stylesheet" href="../../../assets/css/veterinary.css">
 
-
-        
-        <div class="mb-4 d-flex justify-content-between align-items-center">
+        <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Drug Maintenance</h2>
+                <h2 class="h4 fw-bold mb-1" style="color: #370709;">Therapeutic Drug Maintenance</h2>
                 <p class="text-muted small mb-0">Manage and track drug ledger balances for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
-            <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
-                <i class="bi bi-arrow-left me-2"></i>Back
-            </a>
+            <div class="d-flex align-items-center gap-2">
+                <?php if ($is_supervisory && !empty($supervisory_ranges)): ?>
+                    <form method="GET" class="d-flex align-items-center gap-2">
+                        <label class="small fw-semibold text-secondary text-nowrap"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Select Range:</label>
+                        <select name="range_id" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()">
+                            <?php foreach ($supervisory_ranges as $sr): ?>
+                                <option value="<?= $sr['id'] ?>" <?= $range_id == $sr['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($sr['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                <?php endif; ?>
+                <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+            </div>
         </div>
 
         <div class="row g-4 mb-4">
@@ -175,15 +210,17 @@ require_once '../../../includes/header.php';
         </div>
 
         <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header bg-white py-3 border-0">
-                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-shield-plus me-2 text-success"></i>Drugs Balance Report</h5>
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-shield-plus me-2 text-success"></i>Drugs Inventory Balance Report</h5>
+                <span class="badge bg-light text-secondary border px-3 py-2">Range: <?= htmlspecialchars($range_name) ?></span>
             </div>
             <div class="card-body">
                 <table id="drugTable" class="table table-bordered table-striped align-middle row-border" style="width:100%">
                     <thead class="table-light text-center align-middle">
                         <tr>
                             <th>Log Date</th>
-                            <th>Drug Name</th>
+                            <th>Brand Name</th>
+                            <th>Chemical Composition</th>
                             <th>Batch No</th>
                             <th>Date of Expiry</th>
                             <th>Opening Balance</th>
@@ -197,9 +234,11 @@ require_once '../../../includes/header.php';
                     <tbody>
                         <?php
                         $ledger_query = "SELECT r.*, 
+                                         COALESCE(t.brand_name, t.vaccine_name) AS brand_name, 
+                                         COALESCE(t.chemical_composition, '—') AS chemical_composition, 
                                          COALESCE(t.vaccine_name, 'Unknown Type') AS vaccine_name, 
                                          COALESCE(b.batch_number, 'Unknown Batch') AS batch_number, 
-                                         COALESCE(t.expiry_date, 'N/A') AS expiry_date,
+                                         COALESCE(b.expiry_date, t.expiry_date, 'N/A') AS expiry_date,
                                          (r.starter_count_month + r.during_month_received - r.used_doses_count - r.doses_damaged) AS balance_end_month 
                                          FROM `drug_records` r
                                          LEFT JOIN `drug_types` t ON r.drug_type_id = t.id
@@ -211,11 +250,14 @@ require_once '../../../includes/header.php';
                         }
                         if ($res->num_rows > 0):
                             while ($row = $res->fetch_assoc()):
-                                $formatted_expiry = !empty($row['expiry_date']) ? date('Y-m-d', strtotime($row['expiry_date'])) : 'N/A';
+                                $formatted_expiry = (!empty($row['expiry_date']) && $row['expiry_date'] !== 'N/A') ? date('Y-m-d', strtotime($row['expiry_date'])) : 'N/A';
+                                $brand = !empty($row['brand_name']) ? $row['brand_name'] : $row['vaccine_name'];
+                                $chem = !empty($row['chemical_composition']) ? $row['chemical_composition'] : '—';
                         ?>
                                 <tr>
                                     <td class="text-center font-monospace small"><?= htmlspecialchars($row['log_date']) ?></td>
-                                    <td class="fw-bold text-dark"><?= htmlspecialchars($row['vaccine_name']) ?></td>
+                                    <td class="fw-bold text-dark"><span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><?= htmlspecialchars($brand) ?></span></td>
+                                    <td class="fw-semibold text-secondary small"><i class="bi bi-prescription2 me-1"></i><?= htmlspecialchars($chem) ?></td>
                                     <td class="text-center"><span class="badge bg-dark font-monospace"><?= htmlspecialchars($row['batch_number']) ?></span></td>
                                     <td class="text-center small fw-semibold text-danger"><?= $formatted_expiry ?></td>
                                     <td class="text-center font-monospace"><?= number_format($row['starter_count_month']) ?></td>
@@ -378,10 +420,13 @@ $pageScripts = '
         });
 
         // Expiry date viewer sync logic
-        $(document).on(\'change\', \'#drugType\', function() {
-            const selectedExpiry = $(this).find(\':selected\').data(\'expiry\');
-            $(\'#drugExpiryDisplay\').text(selectedExpiry ? selectedExpiry : \'None selected\');
-        });
+        function syncExpiryDisplay() {
+            const batchExpiry = $(\'#vaccineBatchId\').find(\':selected\').data(\'expiry\');
+            const drugExpiry = $(\'#drugType\').find(\':selected\').data(\'expiry\');
+            const selectedExpiry = batchExpiry || drugExpiry || \'None selected\';
+            $(\'#drugExpiryDisplay\').text(selectedExpiry);
+        }
+        $(document).on(\'change\', \'#drugType, #vaccineBatchId\', syncExpiryDisplay);
 
         // Dynamic Balance Calculation Engine
         $(document).on(\'input\', \'.calc-trigger\', function() {
