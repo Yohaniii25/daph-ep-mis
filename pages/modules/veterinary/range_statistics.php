@@ -208,11 +208,12 @@ if ($stmt_meat) {
     $res_meat = $stmt_meat->get_result();
     while ($rm = $res_meat->fetch_assoc()) {
         $m_type = $rm['meat_type'];
+        $m_display_type = ($m_type === 'Chicken') ? 'Poultry' : $m_type;
         $m_kg = floatval($rm['total_kg']);
         $m_rev = floatval($rm['total_revenue']);
         $meat_summary['total_kg'] += $m_kg;
         $meat_summary['total_revenue'] += $m_rev;
-        $meat_summary['categories'][$m_type] = ($meat_summary['categories'][$m_type] ?? 0) + $m_kg;
+        $meat_summary['categories'][$m_display_type] = ($meat_summary['categories'][$m_display_type] ?? 0) + $m_kg;
         if ($m_type === 'Other' && !empty($rm['other_meat_name'])) {
             $oname = trim($rm['other_meat_name']);
             $meat_summary['others_detail'][$oname] = ($meat_summary['others_detail'][$oname] ?? 0) + $m_kg;
@@ -404,7 +405,7 @@ require_once '../../../includes/header.php';
                                             <label class="form-check-label small" for="animSheep">Sheep</label>
                                         </div>
                                         <div class="form-check mb-1">
-                                            <input class="form-check-input animal-option" type="checkbox" value="Chicken" id="animChicken" checked>
+                                            <input class="form-check-input animal-option" type="checkbox" value="Poultry" id="animChicken" checked>
                                             <label class="form-check-label small" for="animChicken">Poultry</label>
                                         </div>
                                         <div class="form-check mb-1">
@@ -573,7 +574,7 @@ require_once '../../../includes/header.php';
                                     <span>Mutton: <strong><?= number_format($meat_summary['categories']['Mutton'] ?? 0) ?></strong> kg</span>
                                 </div>
                                 <div class="d-flex justify-content-between mt-1">
-                                    <span>Chicken: <strong><?= number_format($meat_summary['categories']['Chicken'] ?? 0) ?></strong> kg</span>
+                                    <span>Poultry: <strong><?= number_format($meat_summary['categories']['Poultry'] ?? 0) ?></strong> kg</span>
                                     <span>Others: <strong><?= number_format($meat_summary['categories']['Other'] ?? 0) ?></strong> kg</span>
                                 </div>
                             </div>
@@ -659,7 +660,7 @@ require_once '../../../includes/header.php';
                                 <td><span class="badge bg-danger-subtle text-danger fw-bold">Wholesale & Retail</span></td>
                                 <td><strong class="text-danger fs-6"><?= number_format($meat_summary['total_kg'], 1) ?></strong> kg (Rs. <?= number_format($meat_summary['total_revenue'], 2) ?>)</td>
                                 <td>
-                                    Beef: <?= number_format($meat_summary['categories']['Beef'] ?? 0) ?> kg | Mutton: <?= number_format($meat_summary['categories']['Mutton'] ?? 0) ?> kg | Chicken: <?= number_format($meat_summary['categories']['Chicken'] ?? 0) ?> kg
+                                    Beef: <?= number_format($meat_summary['categories']['Beef'] ?? 0) ?> kg | Mutton: <?= number_format($meat_summary['categories']['Mutton'] ?? 0) ?> kg | Poultry: <?= number_format($meat_summary['categories']['Poultry'] ?? 0) ?> kg
                                     <?php if (!empty($meat_summary['others_detail'])): ?>
                                         | <span class="fw-bold">Others:</span> <?= implode(', ', array_map(fn($k, $v) => htmlspecialchars($k) . ' (' . number_format($v) . ' kg)', array_keys($meat_summary['others_detail']), $meat_summary['others_detail'])) ?>
                                     <?php endif; ?>

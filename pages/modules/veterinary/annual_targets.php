@@ -140,20 +140,14 @@ require_once '../../../includes/header.php';
                 <div class="row g-3">
                     <div class="col-md-3">
                         <a href="vaccination_targets.php" class="btn w-100 py-3" style="background-color: #820100; color: #fff; border-color: #820100;">
-                            <i class="bi bi-people-fill fs-3"></i><br>
+                            <i class="bi bi-shield-check fs-3"></i><br>
                             Vaccination Targets
                         </a>
                     </div>
                     <div class="col-md-3">
                         <a href="production_activities.php" class="btn w-100 py-3" style="background-color: #370709; color: #fff; border-color: #370709;">
-                            <i class="bi bi-building-fill fs-3"></i><br>
+                            <i class="bi bi-calendar-check fs-3"></i><br>
                             Production Activities Plan
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="strategic_indicators.php" class="btn w-100 py-3" style="background-color: #b08723; color: #fff; border-color: #b08723;">
-                            <i class="bi bi-car-front-fill fs-3"></i><br>
-                            Strategic Indicators
                         </a>
                     </div>
                 </div>

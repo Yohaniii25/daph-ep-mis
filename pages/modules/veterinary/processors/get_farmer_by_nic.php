@@ -80,8 +80,16 @@ if ($stmt) {
                 'goat_count' => intval($farmer['goat_count']),
                 'swine_count' => intval($farmer['swine_count']),
                 'poultry_count' => intval($farmer['poultry_count']),
+                'animal_counts' => [
+                    'cattle' => intval($farmer['cattle_count']),
+                    'buffalo' => intval($farmer['buffalo_count']),
+                    'goat' => intval($farmer['goat_count']),
+                    'swine' => intval($farmer['swine_count']),
+                    'poultry' => intval($farmer['poultry_count']),
+                ],
                 'total_animal_count' => $total_cnt,
-                'animal_summary' => "Total {$total_cnt} Head ({$breakdown_text})"
+                'animal_summary' => "Total {$total_cnt} Head ({$breakdown_text})",
+                'source' => 'Animal Health Farm Registration'
             ]
         ]);
         exit();
@@ -104,6 +112,7 @@ if ($f_stmt) {
     if ($prev = $f_res->fetch_assoc()) {
         $f_stmt->close();
         $total_cnt = intval($prev['animal_details_male']) + intval($prev['animal_details_female']);
+        $sp = strtolower($prev['species'] ?? '');
         echo json_encode([
             'success' => true,
             'found' => true,
@@ -114,13 +123,21 @@ if ($f_stmt) {
                 'farm_registration_no' => $prev['farm_registration_no'],
                 'location_address' => $prev['applicant_name_address'],
                 'contact_no' => '',
-                'cattle_count' => 0,
-                'buffalo_count' => 0,
-                'goat_count' => 0,
-                'swine_count' => 0,
-                'poultry_count' => 0,
+                'cattle_count' => (strpos($sp, 'cattle') !== false || strpos($sp, 'cow') !== false) ? $total_cnt : 0,
+                'buffalo_count' => (strpos($sp, 'buffalo') !== false) ? $total_cnt : 0,
+                'goat_count' => (strpos($sp, 'goat') !== false) ? $total_cnt : 0,
+                'swine_count' => (strpos($sp, 'pig') !== false || strpos($sp, 'swine') !== false) ? $total_cnt : 0,
+                'poultry_count' => (strpos($sp, 'poultry') !== false || strpos($sp, 'chicken') !== false) ? $total_cnt : 0,
+                'animal_counts' => [
+                    'cattle' => (strpos($sp, 'cattle') !== false || strpos($sp, 'cow') !== false) ? $total_cnt : 0,
+                    'buffalo' => (strpos($sp, 'buffalo') !== false) ? $total_cnt : 0,
+                    'goat' => (strpos($sp, 'goat') !== false) ? $total_cnt : 0,
+                    'swine' => (strpos($sp, 'pig') !== false || strpos($sp, 'swine') !== false) ? $total_cnt : 0,
+                    'poultry' => (strpos($sp, 'poultry') !== false || strpos($sp, 'chicken') !== false) ? $total_cnt : 0,
+                ],
                 'total_animal_count' => $total_cnt,
-                'animal_summary' => "Past Cert Total: {$total_cnt} ({$prev['species']})"
+                'animal_summary' => "Past Cert Total: {$total_cnt} ({$prev['species']})",
+                'source' => 'Animal Health Certificate Log'
             ]
         ]);
         exit();

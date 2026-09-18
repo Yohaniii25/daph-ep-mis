@@ -267,6 +267,9 @@ require_once '../../../includes/header.php';
             <button class="btn btn-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#addRepairModal">
                 <i class="bi bi-wrench-adjustable me-1"></i>Log Repair Work
             </button>
+            <a href="counter_foilage.php?filter=vehicle" class="btn btn-outline-warning text-dark shadow-sm fw-medium" title="Access Fuel Order Counterfoil Registry">
+                <i class="bi bi-journal-bookmark-fill text-warning me-1"></i>Fuel Order Books
+            </a>
             <a href="office_details.php" class="btn btn-secondary shadow-sm">
                 <i class="bi bi-arrow-left me-1"></i>Back
             </a>

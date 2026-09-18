@@ -39,7 +39,19 @@ if ($range_id <= 0) {
     exit();
 }
 
-$placeholders = implode(',', array_fill(0, count($animals), '?'));
+// Map animals for DB query (convert 'Poultry' to 'Chicken' since DB enum uses Chicken)
+$db_animals = [];
+foreach ($animals as $animal) {
+    if ($animal === 'Poultry') {
+        $db_animals[] = 'Chicken';
+        $db_animals[] = 'Poultry';
+    } else {
+        $db_animals[] = $animal;
+    }
+}
+$db_animals = array_values(array_unique($db_animals));
+
+$placeholders = implode(',', array_fill(0, count($db_animals), '?'));
 
 if ($pop_type === 'Total Population') {
     $sql = "
@@ -68,7 +80,7 @@ if ($stmt) {
         $bind_params[] = $pop_type;
     }
 
-    foreach ($animals as $animal) {
+    foreach ($db_animals as $animal) {
         $bind_types .= 's';
         $bind_params[] = $animal;
     }
@@ -77,12 +89,18 @@ if ($stmt) {
     $stmt->execute();
     $result = $stmt->get_result();
 
-    $output_rows = [];
+    $output_map = [];
     while ($row = $result->fetch_assoc()) {
+        $type = ($row['animal_type'] === 'Chicken') ? 'Poultry' : $row['animal_type'];
+        $output_map[$type] = ($output_map[$type] ?? 0) + intval($row['total_count']);
+    }
+
+    $output_rows = [];
+    foreach ($output_map as $type => $cnt) {
         $output_rows[] = [
             'year' => $year,
-            'animal_type' => $row['animal_type'],
-            'count' => intval($row['total_count'])
+            'animal_type' => $type,
+            'count' => $cnt
         ];
     }
 

@@ -54,6 +54,7 @@ require_once '../../../includes/header.php';
                 <button class="btn text-light shadow-sm" style="background-color: #003ddc;" data-bs-toggle="modal" data-bs-target="#addInstrumentModal">
                     <i class="bi bi-plus-circle-fill me-2"></i>Add Instrument Record
                 </button>
+                <a href="counter_foilage.php?filter=inventory" class="btn btn-outline-primary shadow-sm fw-medium" title="Issue & Receive Order Counterfoils"><i class="bi bi-journal-check me-1"></i>Issue/Receive Orders</a>
                 <a href="office_details.php" class="btn btn-secondary shadow-sm">
                     <i class="bi bi-arrow-left me-1"></i>Back
                 </a>

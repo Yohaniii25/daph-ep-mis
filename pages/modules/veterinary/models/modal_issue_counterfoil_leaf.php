@@ -34,8 +34,41 @@
                                         Source Counterfoil Book <span class="text-danger">*</span>
                                     </label>
                                     <select name="counterfoil_id" id="leaf_counterfoil_id" class="form-select" required>
-                                        <option value="" disabled selected>-- Select Registered Counterfoil Book --</option>
+                                        <option value="" disabled selected>-- Select Authorized Farmer Book --</option>
                                         <?php
+                                        if (!function_exists('isFarmerRelatedBook')) {
+                                            function isFarmerRelatedBook($type) {
+                                                $clean = strtolower(preg_replace('/[^a-z0-9]/i', '', $type));
+                                                $valid_keys = [
+                                                    'airegister',
+                                                    'animaltransport',
+                                                    'aicertificatebook',
+                                                    'aicertificate',
+                                                    'cashreceiptbook',
+                                                    'cashreceipt',
+                                                    'certificateforslaughterofbuffalo',
+                                                    'healthcertificate',
+                                                    'ownershipvoucher',
+                                                    'registerofcattlebranded',
+                                                    'cattlebranded',
+                                                    'registerforanimalidentificationschedule08',
+                                                    'registerforanimalidentification',
+                                                    'schedule08',
+                                                    'pivschedule08',
+                                                    'arvregister',
+                                                    'animalbirthcontrolregister',
+                                                    'produceregister'
+                                                ];
+                                                foreach ($valid_keys as $vk) {
+                                                    if ($clean === $vk || strpos($clean, $vk) !== false || strpos($vk, $clean) !== false) {
+                                                        return true;
+                                                    }
+                                                }
+                                                return false;
+                                            }
+                                        }
+
+                                        $matching_books = [];
                                         if (!empty($range_id)) {
                                             $b_stmt = $mysqli->prepare("SELECT id, counterfoil_type, book_serial_no, page_count, available_quantity FROM counterfoil_assets WHERE range_id = ? AND is_active = 1 ORDER BY counterfoil_type ASC, id DESC");
                                             if ($b_stmt) {
@@ -43,18 +76,37 @@
                                                 $b_stmt->execute();
                                                 $b_res = $b_stmt->get_result();
                                                 while ($bk = $b_res->fetch_assoc()) {
-                                                    $label = htmlspecialchars($bk['counterfoil_type']);
-                                                    if (!empty($bk['book_serial_no'])) $label .= " (Serial Range: " . htmlspecialchars($bk['book_serial_no']) . ")";
-                                                    if (!empty($bk['page_count'])) $label .= " - " . htmlspecialchars($bk['page_count']);
-                                                    $label .= " [Available: " . intval($bk['available_quantity']) . "]";
-                                                    echo "<option value=\"{$bk['id']}\">{$label}</option>";
+                                                    if (isFarmerRelatedBook($bk['counterfoil_type'])) {
+                                                        $matching_books[] = $bk;
+                                                    }
                                                 }
                                                 $b_stmt->close();
                                             }
                                         }
+
+                                        if (!empty($matching_books)) {
+                                            echo '<optgroup label="Authorized Farmer Counterfoil Books in Custody">';
+                                            foreach ($matching_books as $bk) {
+                                                $label = htmlspecialchars($bk['counterfoil_type']);
+                                                if (!empty($bk['book_serial_no'])) $label .= " (Serial: " . htmlspecialchars($bk['book_serial_no']) . ")";
+                                                if (!empty($bk['page_count'])) $label .= " - " . htmlspecialchars($bk['page_count']) . " Leaves";
+                                                $label .= " [Available: " . intval($bk['available_quantity']) . "]";
+                                                echo "<option value=\"{$bk['id']}\" data-type=\"" . htmlspecialchars($bk['counterfoil_type']) . "\">{$label}</option>";
+                                            }
+                                            echo '</optgroup>';
+                                        } else {
+                                            echo '<option value="" disabled>No farmer-related counterfoil books currently registered in custody</option>';
+                                        }
                                         ?>
                                     </select>
-                                    <small class="text-muted" style="font-size: 11px;">Select the physical counterfoil book in custody</small>
+                                    <div class="mt-1 d-flex align-items-center gap-1">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2" style="font-size: 11px;">
+                                            <i class="bi bi-shield-check me-1"></i>Restricted View: Limited to 12 Authorized Farmer Book Types
+                                        </span>
+                                    </div>
+                                    <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                                        Only displays AI Register, Animal Transport, AI cert, Cash receipt, Slaughter cert, Health cert, Ownership voucher, Cattle branded, Animal ID (Schedule 08), ARV, Animal birth control, &amp; Produce register.
+                                    </small>
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label small fw-bold text-dark">
@@ -195,30 +247,42 @@ $(document).ready(function() {
             success: function(resp) {
                 if (resp.success && resp.found && resp.farmer) {
                     var f = resp.farmer;
-                    $('#leaf_nic_status_badge').removeClass('bg-secondary-subtle text-secondary bg-warning text-dark bg-danger').addClass('bg-success-subtle text-success border border-success-subtle').html('<i class="bi bi-check-circle-fill me-1"></i>Linked: ' + f.full_name);
+                    var frnText = f.farm_registration_no ? ' | FRN: ' + f.farm_registration_no : '';
+                    var srcTitle = f.source || 'Animal Health Farm Registration';
+                    $('#leaf_nic_status_badge')
+                        .removeClass('bg-secondary-subtle text-secondary bg-warning text-dark bg-danger')
+                        .addClass('bg-success-subtle text-success border border-success-subtle fw-semibold')
+                        .html('<i class="bi bi-shield-fill-check me-1"></i>Pulled from ' + srcTitle + ': ' + (f.full_name || '') + frnText);
 
                     // Auto-fill fields
                     $('#leaf_farmer_name').val(f.full_name || '');
                     $('#leaf_farm_registration_no').val(f.farm_registration_no || '');
                     $('#leaf_location_address').val(f.location_address || '');
 
-                    // Format animal counts breakdown
-                    var animals = f.animal_counts;
-                    var summaryText = "Cattle: " + animals.cattle + ", Buffalo: " + animals.buffalo + ", Goat: " + animals.goat + ", Swine: " + animals.swine + ", Poultry: " + animals.poultry + " (Total: " + f.total_animal_count + ")";
+                    // Safe format animal counts breakdown
+                    var animals = f.animal_counts || {};
+                    var c_cattle = (animals.cattle !== undefined) ? animals.cattle : (f.cattle_count || 0);
+                    var c_buffalo = (animals.buffalo !== undefined) ? animals.buffalo : (f.buffalo_count || 0);
+                    var c_goat = (animals.goat !== undefined) ? animals.goat : (f.goat_count || 0);
+                    var c_swine = (animals.swine !== undefined) ? animals.swine : (f.swine_count || 0);
+                    var c_poultry = (animals.poultry !== undefined) ? animals.poultry : (f.poultry_count || 0);
+                    var totalAnimals = f.total_animal_count || (c_cattle + c_buffalo + c_goat + c_swine + c_poultry);
+
+                    var summaryText = "Cattle: " + c_cattle + ", Buffalo: " + c_buffalo + ", Goat: " + c_goat + ", Swine: " + c_swine + ", Poultry: " + c_poultry + " (Total: " + totalAnimals + ")";
                     $('#leaf_animal_counts_summary').val(summaryText);
 
                     var badges = '' +
-                        '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Cattle: <strong>' + animals.cattle + '</strong></span>' +
-                        '<span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Buffalo: <strong>' + animals.buffalo + '</strong></span>' +
-                        '<span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Goat: <strong>' + animals.goat + '</strong></span>' +
-                        '<span class="badge bg-secondary-subtle text-secondary border px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Swine: <strong>' + animals.swine + '</strong></span>' +
-                        '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Poultry: <strong>' + animals.poultry + '</strong></span>' +
-                        '<span class="badge bg-dark text-white px-3 py-2"><i class="bi bi-calculator me-1"></i>Total Livestock: <strong>' + f.total_animal_count + '</strong></span>';
+                        '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Cattle: <strong>' + c_cattle + '</strong></span>' +
+                        '<span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Buffalo: <strong>' + c_buffalo + '</strong></span>' +
+                        '<span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Goat: <strong>' + c_goat + '</strong></span>' +
+                        '<span class="badge bg-secondary-subtle text-secondary border px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Swine: <strong>' + c_swine + '</strong></span>' +
+                        '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>Poultry: <strong>' + c_poultry + '</strong></span>' +
+                        '<span class="badge bg-dark text-white px-3 py-2"><i class="bi bi-calculator me-1"></i>Total Livestock: <strong>' + totalAnimals + '</strong></span>';
 
                     $('#leaf_animal_badges').html(badges);
                     $('#leaf_animal_counts_container').slideDown();
                 } else {
-                    $('#leaf_nic_status_badge').removeClass('bg-secondary-subtle text-secondary bg-success text-white').addClass('bg-warning-subtle text-dark border border-warning-subtle').html('<i class="bi bi-exclamation-triangle me-1"></i>Unregistered NIC (Enter Details Manually)');
+                    $('#leaf_nic_status_badge').removeClass('bg-secondary-subtle text-secondary bg-success text-white').addClass('bg-warning-subtle text-dark border border-warning-subtle').html('<i class="bi bi-exclamation-triangle me-1"></i>Unregistered NIC in Farm Registration (Enter Details Manually)');
                     $('#leaf_animal_counts_container').slideUp();
                     $('#leaf_animal_counts_summary').val('');
                 }

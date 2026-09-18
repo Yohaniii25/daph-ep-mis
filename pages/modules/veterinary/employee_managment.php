@@ -173,6 +173,9 @@ require_once '../../../includes/header.php';
                 <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                     <i class="bi bi-person-plus-fill me-2"></i>Add New Officer
                 </button>
+                <a href="counter_foilage.php?filter=hr" class="btn btn-outline-info text-dark shadow-sm fw-medium" title="Access Employee Travel Warrants & Registers">
+                    <i class="bi bi-ticket-perforated-fill text-info me-1"></i>Travel Warrants
+                </a>
                 <a href="office_details.php" class="btn btn-secondary shadow-sm">
                     <i class="bi bi-arrow-left me-2"></i>Back
                 </a>

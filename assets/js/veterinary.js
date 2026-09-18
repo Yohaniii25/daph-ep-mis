@@ -267,7 +267,8 @@ document.addEventListener("DOMContentLoaded", function () {
         } else if (selected.length === totalOptions) {
             btn.textContent = `All Animals Selected (${totalOptions})`;
         } else {
-            btn.textContent = selected.join(', ');
+            const displaySelected = selected.map(s => s === 'Chicken' ? 'Poultry' : s);
+            btn.textContent = displaySelected.join(', ');
         }
     }
 
@@ -297,7 +298,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const processedTableRows = data.map(item => [
                     item.year,
-                    item.animal_type,
+                    item.animal_type === 'Chicken' ? 'Poultry' : item.animal_type,
                     item.count.toLocaleString(),
                     runningTotalSum.toLocaleString()
                 ]);
@@ -341,7 +342,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
 
-                const chartLabels = data.map(item => item.animal_type);
+                const chartLabels = data.map(item => item.animal_type === 'Chicken' ? 'Poultry' : item.animal_type);
                 const chartValues = data.map(item => item.count);
 
                 const animalCanvasEl = document.getElementById('animalPopulationPieChart');

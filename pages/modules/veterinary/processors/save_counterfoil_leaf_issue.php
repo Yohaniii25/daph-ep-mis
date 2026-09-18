@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../includes/counterfoil_module_helper.php';
 
 header('Content-Type: application/json');
 
@@ -55,6 +56,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $counterfoil_type = $cf_data['counterfoil_type'];
     if (!$district_id) $district_id = $cf_data['district_id'];
     if (!$range_id) $range_id = $cf_data['range_id'];
+
+    // Enforce Farmer Book Restriction: Only 12 authorized book types can be issued to farmers
+    if (!isFarmerRelatedBook($counterfoil_type)) {
+        echo json_encode([
+            'success' => false,
+            'message' => "Restricted Book Type: '{$counterfoil_type}' is categorized for internal/operational tracking and cannot be issued as an individual farmer certificate."
+        ]);
+        exit();
+    }
 
     // Insert into counterfoil_leaf_issues
     $sql = "INSERT INTO counterfoil_leaf_issues 

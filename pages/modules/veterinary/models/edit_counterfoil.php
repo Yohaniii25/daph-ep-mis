@@ -44,6 +44,7 @@
                                                required>
                                     </div>
                                     <div id="edit_counterfoil_type_suggestions" class="dropdown-menu w-100 shadow border-0 mt-1 py-1" style="display: none; position: absolute; z-index: 1060; max-height: 220px; overflow-y: auto;"></div>
+                                    <div id="edit_cf_module_preview" class="mt-2" style="display: none;"></div>
                                     <small class="text-muted" style="font-size: 11px;">
                                         <i class="bi bi-magic me-1 text-primary"></i>Auto-suggests from saved &amp; baseline book categories. Custom types allowed.
                                     </small>

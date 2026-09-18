@@ -54,6 +54,9 @@ require_once '../../../includes/header.php';
                 <button class="btn text-white shadow-sm" style="background-color: #a07174;" data-bs-toggle="modal" data-bs-target="#addFurnitureModal">
                     <i class="bi bi-plus-circle-fill me-2"></i>Register New Furniture Asset
                 </button>
+                <a href="counter_foilage.php?filter=inventory" class="btn btn-outline-primary shadow-sm fw-medium" title="Issue & Receive Order Counterfoils">
+                    <i class="bi bi-journal-check me-1"></i>Issue/Receive Orders
+                </a>
                 <a href="office_details.php" class="btn btn-secondary shadow-sm">
                     <i class="bi bi-arrow-left me-1"></i>Back
                 </a>
