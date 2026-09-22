@@ -64,47 +64,6 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
-<style>
-.cf-nav-tabs {
-    border-bottom: 2px solid #e9ecef;
-    margin-bottom: 1.5rem;
-    gap: 0.5rem;
-}
-.cf-nav-tabs .nav-link {
-    border: none;
-    border-bottom: 3px solid transparent;
-    color: #6c757d;
-    font-weight: 600;
-    padding: 0.75rem 1.25rem;
-    border-radius: 0;
-    transition: all 0.2s ease-in-out;
-    background: transparent;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.cf-nav-tabs .nav-link:hover {
-    color: #e67e22;
-    border-bottom-color: rgba(230, 126, 34, 0.4);
-}
-.cf-nav-tabs .nav-link.active {
-    color: #e67e22;
-    background: transparent;
-    border-bottom-color: #e67e22;
-}
-.cf-nav-tabs .nav-link.active .badge-tab {
-    background-color: #e67e22 !important;
-    color: #fff !important;
-}
-.cf-nav-tabs .nav-link .badge-tab {
-    font-size: 11px;
-    padding: 0.25rem 0.55rem;
-    border-radius: 20px;
-    background-color: #f1f3f5;
-    color: #495057;
-    transition: all 0.2s ease-in-out;
-}
-</style>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>

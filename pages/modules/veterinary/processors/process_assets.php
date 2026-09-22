@@ -1,6 +1,9 @@
 <?php
 session_start();
-require_once '../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 // Security Check
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['range_id'])) {

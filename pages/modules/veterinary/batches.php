@@ -26,18 +26,6 @@ if ($total_batches_res) {
 }
 ?>
 
-<style>
-    .metric-card-custom {
-        border-radius: 16px !important;
-        background-color: #ffffff;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
-        transition: all 0.25s ease-in-out;
-    }
-
-    .metric-card-custom:hover {
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
-    }
-</style>
 
 <link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">

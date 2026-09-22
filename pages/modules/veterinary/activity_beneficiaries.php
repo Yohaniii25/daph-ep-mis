@@ -93,43 +93,6 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
-<style>
-    .gov-card {
-        border: none !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-    }
-    .kpi-card {
-        border-radius: 12px;
-        background: #ffffff;
-        border-left: 4px solid #820100;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    }
-    .photo-thumb {
-        width: 48px;
-        height: 48px;
-        object-fit: cover;
-        border-radius: 8px;
-        border: 2px solid #ddd;
-        cursor: pointer;
-        transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    .photo-thumb:hover {
-        transform: scale(1.1);
-        border-color: #820100;
-    }
-    .badge-funding {
-        background-color: #370709;
-        color: #ffffff;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-</style>
 
 <div class="container-fluid px-4 py-3">
 

@@ -237,31 +237,6 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
 
-<style>
-.nav-tabs .nav-link {
-    color: #495057;
-    font-weight: 600;
-    font-size: 0.9rem;
-    padding: 0.65rem 1.25rem;
-    border-top: 3px solid transparent;
-}
-.nav-tabs .nav-link.active {
-    color: #820100;
-    border-top: 3px solid #820100;
-    background-color: #fff;
-}
-.nav-tabs .nav-link:hover:not(.active) {
-    border-top-color: #d4c7b7;
-}
-.section-badge-header {
-    background: linear-gradient(135deg, #370709 0%, #820100 100%);
-    color: #fff;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-</style>
 
 <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
     <div>

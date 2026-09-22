@@ -96,44 +96,6 @@ $movable_assets = $mov_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 require_once '../../../includes/header.php';
 ?>
 
-<style>
-    .btn-brand-maroon {
-        background-color: #370709;
-        color: #fff;
-        border-color: #370709;
-        transition: all 0.2s ease-in-out;
-    }
-
-    .btn-brand-maroon:hover {
-        background-color: #250406;
-        color: #fff;
-        border-color: #250406;
-        transform: translateY(-2px);
-    }
-
-    .btn-brand-rose {
-        background-color: #a07174;
-        color: #fff;
-        border-color: #a07174;
-        transition: all 0.2s ease-in-out;
-    }
-
-    .btn-brand-rose:hover {
-        background-color: #8c5d60;
-        color: #fff;
-        border-color: #8c5d60;
-        transform: translateY(-2px);
-    }
-
-    .action-btn-custom {
-        transition: all 0.2s ease-in-out;
-    }
-
-    .action-btn-custom:hover {
-        transform: translateY(-2px);
-    }
-</style>
-
         <div class="mb-4 d-flex justify-content-between align-items-center">
             <div>
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Office Inventory & HR Registry</h2>

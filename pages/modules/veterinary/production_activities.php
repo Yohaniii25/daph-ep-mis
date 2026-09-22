@@ -104,48 +104,6 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
-<style>
-    .gov-card {
-        border: none !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-    }
-    .kpi-card {
-        border-radius: 12px;
-        background: #ffffff;
-        border-left: 4px solid #820100;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    }
-    .badge-funding {
-        background-color: #370709;
-        color: #ffffff;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-    .badge-variance-surplus {
-        background-color: #d1e7dd;
-        color: #0f5132;
-        border: 1px solid #a3cfbb;
-        font-weight: bold;
-    }
-    .badge-variance-deficit {
-        background-color: #f8d7da;
-        color: #842029;
-        border: 1px solid #f5c2c7;
-        font-weight: bold;
-    }
-    .badge-variance-balanced {
-        background-color: #e2e3e5;
-        color: #41464b;
-        border: 1px solid #d3d6d8;
-        font-weight: bold;
-    }
-</style>
 
 <div class="container-fluid px-4 py-3">
 

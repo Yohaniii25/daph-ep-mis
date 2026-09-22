@@ -213,37 +213,6 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
-<style>
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    #printableSummaryReport, #printableSummaryReport * {
-        visibility: visible;
-    }
-    #printableSummaryReport {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-    .no-print {
-        display: none !important;
-    }
-}
-.stat-card-gold {
-    background: linear-gradient(135deg, #b08723 0%, #8c6814 100%);
-    color: #ffffff;
-}
-.stat-card-dark {
-    background: linear-gradient(135deg, #212529 0%, #343a40 100%);
-    color: #ffffff;
-}
-.suggestion-item:hover {
-    background-color: #f8f9fa;
-    color: #b08723;
-}
-</style>
 
 <div class="container-fluid px-4 py-4">
 

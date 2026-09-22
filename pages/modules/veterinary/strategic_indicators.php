@@ -47,17 +47,6 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
 
-<style>
-    .gov-card {
-        border: none !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
-    }
-    .dt-buttons .btn {
-        border-radius: 6px !important;
-        margin-right: 6px !important;
-    }
-</style>
 
 <div class="mb-4 d-flex justify-content-between align-items-center">
     <div>

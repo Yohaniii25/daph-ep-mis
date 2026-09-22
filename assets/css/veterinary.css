@@ -1,9 +1,90 @@
+/**
+ * assets/css/veterinary.css
+ * Dedicated Stylesheet for Veterinary Surgeon / Range Module
+ * DAPH - Eastern Province MIS
+ */
+
+:root {
+    --daph-maroon: #820100;
+    --daph-dark-maroon: #370709;
+    --daph-deep-maroon: #250406;
+    --daph-rose: #a07174;
+    --daph-gold: #b08723;
+    --daph-sand: #d4c7b7;
+}
+
+/* =========================================================================
+   1. Common Cards, Badges & KPI Components
+   ========================================================================= */
 .gov-card {
     border: none !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
 
+.kpi-card {
+    border-radius: 12px;
+    background: #ffffff;
+    border-left: 4px solid var(--daph-maroon);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.metric-card-custom {
+    border-radius: 16px !important;
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.25s ease-in-out;
+}
+
+.metric-card-custom:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+.badge-funding {
+    background-color: var(--daph-dark-maroon);
+    color: #ffffff;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.badge-auto-calc {
+    font-size: 0.7rem;
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    background-color: #e0e7ff;
+    color: #3730a3;
+}
+
+.badge-variance-surplus {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #a3cfbb;
+    font-weight: bold;
+}
+
+.badge-variance-deficit {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+    font-weight: bold;
+}
+
+.badge-variance-balanced {
+    background-color: #e2e3e5;
+    color: #41464b;
+    border: 1px solid #d3d6d8;
+    font-weight: bold;
+}
+
+/* =========================================================================
+   2. Range Profile, Map & Custom Dropdowns (range_details.php)
+   ========================================================================= */
 .map-frame-wrapper {
     position: relative;
     width: 100%;
@@ -77,4 +158,532 @@
 
 .animal-dropdown-menu.show {
     display: block;
+}
+
+/* =========================================================================
+   3. Range Summary Dashboard (range_summary.php)
+   ========================================================================= */
+.rs-hero {
+    background: linear-gradient(135deg, var(--daph-maroon) 0%, var(--daph-dark-maroon) 60%, #1a0304 100%);
+    border-radius: 16px;
+    padding: 1.6rem 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.rs-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.rs-hero .badge-range {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.rs-tab-nav {
+    background: #fff;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 1.25rem;
+    border: 1px solid #f0f0f0;
+}
+
+.rs-tab-nav .nav-link {
+    border-radius: 8px !important;
+    color: #555 !important;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 8px 16px;
+    border: none !important;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.rs-tab-nav .nav-link:hover {
+    background: #fdf0f0 !important;
+    color: var(--daph-maroon) !important;
+}
+
+.rs-tab-nav .nav-link.active {
+    background: linear-gradient(135deg, var(--daph-maroon), var(--daph-dark-maroon)) !important;
+    color: #fff !important;
+    box-shadow: 0 3px 10px rgba(130, 1, 0, 0.35);
+    font-weight: 600;
+}
+
+.rs-tab-nav .nav-link.active i {
+    color: #fff !important;
+}
+
+.rs-tab-nav .nav-link i {
+    color: var(--daph-maroon);
+    font-size: 1rem;
+    transition: color 0.18s;
+}
+
+.rs-tab-pane {
+    min-height: 320px;
+}
+
+.rs-spinner-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    gap: 12px;
+}
+
+.rs-spinner-wrap .spinner-border {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 0.22em;
+    color: var(--daph-maroon);
+}
+
+.rs-stat-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.9);
+    gap: 6px;
+}
+
+/* =========================================================================
+   4. Office Details & Brand Buttons (office_details.php)
+   ========================================================================= */
+.btn-brand-maroon {
+    background-color: var(--daph-dark-maroon);
+    color: #fff;
+    border-color: var(--daph-dark-maroon);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-brand-maroon:hover {
+    background-color: var(--daph-deep-maroon);
+    color: #fff;
+    border-color: var(--daph-deep-maroon);
+    transform: translateY(-2px);
+}
+
+.btn-brand-rose {
+    background-color: var(--daph-rose);
+    color: #fff;
+    border-color: var(--daph-rose);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-brand-rose:hover {
+    background-color: #8c5d60;
+    color: #fff;
+    border-color: #8c5d60;
+    transform: translateY(-2px);
+}
+
+.action-btn-custom {
+    transition: all 0.2s ease-in-out;
+}
+
+.action-btn-custom:hover {
+    transform: translateY(-2px);
+}
+
+/* =========================================================================
+   5. Employee Management & Soft Badges (employee_managment.php)
+   ========================================================================= */
+.bg-success-soft {
+    background-color: #e8fadf;
+    color: #198754;
+}
+
+.bg-warning-soft {
+    background-color: #fff9e6;
+    color: #b78103;
+}
+
+.bg-danger-soft {
+    background-color: #fbe9eb;
+    color: #dc3545;
+}
+
+.dataTables_filter input {
+    border-radius: 20px;
+    padding-left: 15px;
+    border: 1px solid #ddd;
+}
+
+/* =========================================================================
+   6. Counterfoil Registry & Navigation Tabs (counter_foilage.php)
+   ========================================================================= */
+.cf-nav-tabs {
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+}
+
+.cf-nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #6c757d;
+    font-weight: 600;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0;
+    transition: all 0.2s ease-in-out;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cf-nav-tabs .nav-link:hover {
+    color: #e67e22;
+    border-bottom-color: rgba(230, 126, 34, 0.4);
+}
+
+.cf-nav-tabs .nav-link.active {
+    color: #e67e22;
+    background: transparent;
+    border-bottom-color: #e67e22;
+}
+
+.cf-nav-tabs .nav-link.active .badge-tab {
+    background-color: #e67e22 !important;
+    color: #fff !important;
+}
+
+.cf-nav-tabs .nav-link .badge-tab {
+    font-size: 11px;
+    padding: 0.25rem 0.55rem;
+    border-radius: 20px;
+    background-color: #f1f3f5;
+    color: #495057;
+    transition: all 0.2s ease-in-out;
+}
+
+/* =========================================================================
+   7. Pasture & Fodder Management (pasture.php)
+   ========================================================================= */
+.card-header-gradient {
+    background: linear-gradient(135deg, var(--daph-dark-maroon) 0%, #680d12 100%);
+    color: #ffffff;
+}
+
+.pasture-tab-nav .nav-link {
+    font-weight: 600;
+    color: #495057;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease-in-out;
+}
+
+.pasture-tab-nav .nav-link.active {
+    color: var(--daph-dark-maroon) !important;
+    background-color: #ffffff;
+    border-bottom: 3px solid var(--daph-dark-maroon) !important;
+}
+
+.pasture-tab-nav .nav-link:hover:not(.active) {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+.border-pasture {
+    border-left: 4px solid #3b82f6 !important;
+}
+
+.border-fodder {
+    border-left: 4px solid #10b981 !important;
+}
+
+.table-nested-header th {
+    vertical-align: middle !important;
+    text-align: center !important;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* =========================================================================
+   8. Activity Beneficiaries & Media (activity_beneficiaries.php)
+   ========================================================================= */
+.photo-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.photo-thumb:hover {
+    transform: scale(1.1);
+    border-color: var(--daph-maroon);
+}
+
+/* =========================================================================
+   9. Therapeutic Drug Classifications & Toggles (drug_types.php)
+   ========================================================================= */
+.animal-toggle-btn.active {
+    background-color: #cfe2ff !important;
+    border-color: #0d6efd !important;
+    color: #084298 !important;
+    font-weight: 500;
+}
+
+.animal-toggle-btn.active .check-icon {
+    display: inline !important;
+}
+
+.animal-toggle-btn.active .bi-tag {
+    display: none;
+}
+
+/* =========================================================================
+   10. Vaccination Targets & Programs (vaccination_targets.php)
+   ========================================================================= */
+#vaxModuleTabs.nav-tabs .nav-link,
+.vax-nav-tabs .nav-link {
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.65rem 1.25rem;
+    border-top: 3px solid transparent;
+}
+
+#vaxModuleTabs.nav-tabs .nav-link.active,
+.vax-nav-tabs .nav-link.active {
+    color: var(--daph-maroon);
+    border-top: 3px solid var(--daph-maroon);
+    background-color: #fff;
+}
+
+#vaxModuleTabs.nav-tabs .nav-link:hover:not(.active),
+.vax-nav-tabs .nav-link:hover:not(.active) {
+    border-top-color: var(--daph-sand);
+}
+
+.section-badge-header {
+    background: linear-gradient(135deg, var(--daph-dark-maroon) 0%, var(--daph-maroon) 100%);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* =========================================================================
+   11. Strategic Action Indicators (strategic_indicators.php)
+   ========================================================================= */
+.dt-buttons .btn {
+    border-radius: 6px !important;
+    margin-right: 6px !important;
+}
+
+/* =========================================================================
+   12. Livestock Societies Org Chart & Timeline (annual_livestock_societies.php)
+   ========================================================================= */
+.org-tree-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    overflow-x: auto;
+    padding: 25px 15px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.org-tier {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 16px;
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.org-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    padding: 14px 16px;
+    min-width: 230px;
+    max-width: 280px;
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+}
+
+.org-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.org-card.president-card {
+    border-top: 5px solid var(--daph-maroon);
+    background: linear-gradient(180deg, #fffefe 0%, #ffffff 100%);
+    box-shadow: 0 6px 16px rgba(130, 1, 0, 0.12);
+    min-width: 270px;
+}
+
+.org-card.officer-card {
+    border-top: 4px solid #0d6efd;
+}
+
+.org-card.treasurer-card {
+    border-top: 4px solid #198754;
+}
+
+.org-card.member-card {
+    border-top: 4px solid #64748b;
+    min-width: 210px;
+}
+
+.org-role-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+}
+
+.org-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px auto;
+    font-size: 1.25rem;
+}
+
+.org-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.org-card-meta {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.org-connector-v {
+    width: 2px;
+    height: 26px;
+    background: #cbd5e1;
+    margin: -10px auto 16px auto;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 28px;
+    margin-bottom: 22px;
+    border-left: 2px solid #e2e8f0;
+}
+
+.timeline-item:last-child {
+    border-left-color: transparent;
+    margin-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -7px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #198754;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.3);
+}
+
+/* =========================================================================
+   13. Vehicles & Fleet Management (vehicles.php)
+   ========================================================================= */
+.stat-card-gold {
+    background: linear-gradient(135deg, var(--daph-gold) 0%, #8c6814 100%);
+    color: #ffffff;
+}
+
+.stat-card-dark {
+    background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+    color: #ffffff;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+    color: var(--daph-gold);
+}
+
+/* =========================================================================
+   14. Scoped Print Utilities
+   ========================================================================= */
+@media print {
+    body:has(#orgchart_print_area) * {
+        visibility: hidden;
+    }
+    body:has(#orgchart_print_area) #orgchart_print_area,
+    body:has(#orgchart_print_area) #orgchart_print_area * {
+        visibility: visible;
+    }
+    body:has(#orgchart_print_area) #orgchart_print_area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    body:has(#printableSummaryReport) * {
+        visibility: hidden;
+    }
+    body:has(#printableSummaryReport) #printableSummaryReport,
+    body:has(#printableSummaryReport) #printableSummaryReport * {
+        visibility: visible;
+    }
+    body:has(#printableSummaryReport) #printableSummaryReport {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .no-print {
+        display: none !important;
+    }
 }

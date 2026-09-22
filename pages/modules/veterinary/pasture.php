@@ -464,51 +464,6 @@ require_once __DIR__ . '/../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 <link rel="stylesheet" href="../../../assets/css/veterinary.css">
 
-<style>
-    .card-header-gradient {
-        background: linear-gradient(135deg, #370709 0%, #680d12 100%);
-        color: #ffffff;
-    }
-    .pasture-tab-nav .nav-link {
-        font-weight: 600;
-        color: #495057;
-        padding: 0.75rem 1.25rem;
-        border-radius: 8px 8px 0 0;
-        transition: all 0.2s ease-in-out;
-    }
-    .pasture-tab-nav .nav-link.active {
-        color: #370709 !important;
-        background-color: #ffffff;
-        border-bottom: 3px solid #370709 !important;
-    }
-    .pasture-tab-nav .nav-link:hover:not(.active) {
-        background-color: #f1f5f9;
-        color: #0f172a;
-    }
-    .badge-auto-calc {
-        font-size: 0.7rem;
-        padding: 0.2em 0.5em;
-        border-radius: 4px;
-        background-color: #e0e7ff;
-        color: #3730a3;
-    }
-    .border-pasture {
-        border-left: 4px solid #3b82f6 !important;
-    }
-    .border-fodder {
-        border-left: 4px solid #10b981 !important;
-    }
-    .table-nested-header th {
-        vertical-align: middle !important;
-        text-align: center !important;
-        font-size: 0.82rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        background-color: #ffffff !important;
-        color: #000000 !important;
-    }
-</style>
 
         <!-- PAGE BANNER / TITLE CARD -->
         <div class="card shadow-sm border-0 mb-4 overflow-hidden">

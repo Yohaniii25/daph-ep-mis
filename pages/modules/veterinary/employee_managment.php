@@ -638,28 +638,5 @@ require_once '../../../includes/header.php';
     <?php endif; ?>
 </script>
 
-<style>
-    /* Styling for a modern soft-badge look */
-    .bg-success-soft {
-        background-color: #e8fadf;
-        color: #198754;
-    }
-
-    .bg-warning-soft {
-        background-color: #fff9e6;
-        color: #b78103;
-    }
-
-    .bg-danger-soft {
-        background-color: #fbe9eb;
-        color: #dc3545;
-    }
-
-    .dataTables_filter input {
-        border-radius: 20px;
-        padding-left: 15px;
-        border: 1px solid #ddd;
-    }
-</style>
 
 <?php require_once '../../../includes/footer.php'; ?>
