@@ -5,14 +5,24 @@ require_once __DIR__ . '/../../../config/db_connect.php';
 /** @var mysqli $mysqli */
 global $mysqli;
 
+$allowed_roles = [
+    'veterinary_surgeon',
+    'provincial_director',
+    'admin',
+    'super_admin'
+];
+
 // Session and Role Guard
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     header("HTTP/1.1 403 Forbidden");
     echo json_encode(["error" => "Unauthorized"]);
     exit();
 }
 
-$range_id = $_SESSION['range_id'] ?? null;
+$range_id = isset($_GET['range_id']) && intval($_GET['range_id']) > 0 
+    ? intval($_GET['range_id']) 
+    : ($_SESSION['range_id'] ?? null);
+
 if (empty($range_id)) {
     echo json_encode([]);
     exit();

@@ -179,23 +179,23 @@ are transparent, error-tolerant, and easy to complete.
 5. PRIORITIZED PRE-LAUNCH IMPLEMENTATION ROADMAP
 ================================================================================
 
-PHASE 1: Immediate High-Impact Fixes (1 - 2 Days)
+PHASE 1: Immediate High-Impact Fixes (Completed / In Progress)
 ------------------------------------------------
-[ ] 1. Add "Skip to main content" link in includes/header.php.
-[ ] 2. Inject global :focus-visible styling in assets/css/style.css.
+[X] 1. Add "Skip to main content" link in includes/header.php.
+[X] 2. Inject global :focus-visible styling in assets/css/style.css.
 [ ] 3. Add aria-label attributes to all icon-only buttons across tables and headers.
-[ ] 4. Add tabindex="0" and aria-label to all .table-responsive wrappers.
+[X] 4. Add tabindex="0" and aria-label to all .table-responsive wrappers (automated via footer.php).
 
 PHASE 2: Form & Modal Hardening (2 - 3 Days)
 --------------------------------------------
 [ ] 5. Audit all <label for=""> and input id bindings across modal forms.
 [ ] 6. Ensure required fields have aria-required="true" and aria-hidden="true" on asterisks.
 [ ] 7. Add aria-describedby to auto-calculated availability boxes and datalist inputs.
-[ ] 8. Enforce modal focus restoration upon close.
+[X] 8. Enforce modal focus restoration upon close (automated globally in footer.php).
 
 PHASE 3: Assistive Tech & Visual Polish (1 - 2 Days)
 ---------------------------------------------------
-[ ] 9. Add aria-live="polite" live alert region for real-time notification badge updates.
+[X] 9. Add aria-live="polite" live alert region for real-time notification badge updates.
 [ ] 10. Calibrate badge and button text contrast ratios to meet WCAG AA (4.5:1).
 [ ] 11. Increase small fonts (< 12px) to readable 12px - 14px standards.
 [ ] 12. Standardize contextual <title> tags across all module headers.

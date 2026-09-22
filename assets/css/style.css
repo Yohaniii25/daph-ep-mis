@@ -85,3 +85,41 @@
     flex-shrink: 0;
 }
 
+/* =========================================================================
+   Accessibility & WCAG 2.1 Focus-Visible Styling (Phase 1 Roadmap)
+   ========================================================================= */
+:focus-visible {
+    outline: 2.5px solid #820100 !important;
+    outline-offset: 2px !important;
+}
+
+a:focus-visible, 
+button:focus-visible, 
+input:focus-visible, 
+select:focus-visible, 
+textarea:focus-visible {
+    box-shadow: 0 0 0 3px rgba(130, 1, 0, 0.25) !important;
+    border-color: #820100 !important;
+}
+
+/* Ensure skip-link is cleanly hidden off-screen until focused */
+.skip-main-link {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 10000;
+    transform: translateY(-160%);
+    transition: transform 0.2s ease-in-out;
+}
+
+.skip-main-link:focus,
+.skip-main-link:focus-visible {
+    transform: translateY(0);
+}
+
+/* Accessible scrollable table region focus styling */
+.table-responsive:focus-visible {
+    outline: 2px dashed #820100 !important;
+    outline-offset: -2px;
+}
+

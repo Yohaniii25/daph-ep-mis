@@ -166,6 +166,14 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
 
 <body>
 
+    <!-- Accessibility: Skip to Main Content Link (WCAG 2.4.1) -->
+    <a href="#mainContent" class="btn btn-dark fw-semibold shadow skip-main-link">
+        Skip to main content
+    </a>
+
+    <!-- Accessibility: Screen Reader Live Region for Dynamic Alerts (WCAG 4.1.3) -->
+    <div id="liveAlertsRegion" aria-live="polite" aria-atomic="true" class="visually-hidden"></div>
+
     <!-- Top Bar -->
     <div class="top-bar d-flex align-items-center justify-content-between">
         <button class="btn btn-link text-dark p-0 me-3" id="sidebarToggle" style="font-size: 1.8rem;">
@@ -342,4 +350,4 @@ $header_notifications = get_user_notifications($mysqli, $header_user_id, 7);
 
 
         <div id="layoutSidenav_content">
-            <main class="container-fluid px-4 py-3">
+            <main id="mainContent" class="container-fluid px-4 py-3" tabindex="-1">

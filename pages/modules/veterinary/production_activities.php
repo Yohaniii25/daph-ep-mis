@@ -330,6 +330,7 @@ require_once '../../../includes/header.php';
                             <th class="text-center">Yearly Variance</th>
                             <th class="text-center">Completion Rate</th>
                             <th class="text-center" style="width: 140px;">Beneficiary Tracking</th>
+                            <th class="text-center" style="width: 105px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -397,6 +398,30 @@ require_once '../../../includes/header.php';
                                             <i class="bi bi-people-fill me-1"></i> Beneficiaries
                                             <span class="badge bg-light text-dark ms-1"><?= $ben_count ?></span>
                                         </a>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group" aria-label="Activity Actions">
+                                            <button type="button" class="btn btn-outline-primary btn-sm btn-edit-activity" 
+                                                title="Edit Activity"
+                                                data-id="<?= $row['id'] ?>"
+                                                data-range-id="<?= $row['range_id'] ?>"
+                                                data-year="<?= $row['year'] ?>"
+                                                data-activity-name="<?= htmlspecialchars($row['activity_name'], ENT_QUOTES) ?>"
+                                                data-funding-source="<?= htmlspecialchars($row['funding_source'] ?? '', ENT_QUOTES) ?>"
+                                                data-animal-category="<?= htmlspecialchars($row['animal_category'] ?? '', ENT_QUOTES) ?>"
+                                                data-animal-category-other="<?= htmlspecialchars($row['animal_category_other'] ?? '', ENT_QUOTES) ?>"
+                                                data-target-quantity="<?= $target ?>"
+                                                data-achieved-quantity="<?= $achieved ?>">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm btn-delete-activity" 
+                                                title="Delete Activity"
+                                                data-id="<?= $row['id'] ?>"
+                                                data-name="<?= htmlspecialchars($row['activity_name'], ENT_QUOTES) ?>"
+                                                data-beneficiaries="<?= $ben_count ?>">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -502,6 +527,110 @@ require_once '../../../includes/header.php';
     </div>
 </div>
 
+<!-- Modal: Edit Production Activity Target -->
+<div class="modal fade" id="editActivityModal" tabindex="-1" aria-labelledby="editActivityLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-light py-2" style="background-color: #370709;">
+                <h6 class="modal-title" id="editActivityLabel"><i class="bi bi-pencil-square me-2"></i> Edit Production Activity Target</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="processors/update_production_activity.php" method="POST" id="editActivityForm">
+                <div class="modal-body p-3 small">
+                    <input type="hidden" name="id" id="edit_id" value="">
+                    <input type="hidden" name="year" id="edit_year" value="<?= htmlspecialchars($selected_year) ?>">
+                    
+                    <!-- Range Selector in Edit Modal -->
+                    <?php if ($is_supervisory && !empty($available_ranges)): ?>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold mb-1">Assigned Veterinary Range <span class="text-danger">*</span></label>
+                            <select name="range_id" id="edit_range_id" class="form-select form-select-sm border-secondary" required>
+                                <option value="" disabled>-- Select Veterinary Range --</option>
+                                <?php foreach ($available_ranges as $r): ?>
+                                    <option value="<?= $r['id'] ?>">
+                                        <?= htmlspecialchars($r['name']) ?> Range
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php else: ?>
+                        <input type="hidden" name="range_id" id="edit_range_id" value="<?= htmlspecialchars($selected_range_id ?: ($session_range_id ?? 0)) ?>">
+                    <?php endif; ?>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold mb-1">Activity Name / Metric Title <span class="text-danger">*</span></label>
+                        <input type="text" name="activity_name" id="edit_activity_name" class="form-control form-control-sm border-secondary" placeholder="e.g. Pasture Development, Silage Production, Dairy Model Unit" required>
+                    </div>
+
+                    <!-- Mandatory Funding Source Field -->
+                    <div class="mb-2">
+                        <label class="form-label fw-bold mb-1">Funding Source <span class="text-danger">*</span></label>
+                        <select name="funding_source" id="editFundingSourceSelect" class="form-select form-select-sm border-secondary" required onchange="toggleEditOtherFunding(this.value)">
+                            <option value="" disabled>-- Select Funding Source --</option>
+                            <option value="PSDG">PSDG (Provincial Specific Development Grant)</option>
+                            <option value="Line Ministry">Line Ministry</option>
+                            <option value="NGOs">NGOs / International Grants</option>
+                            <option value="Provincial Council">Provincial Council</option>
+                            <option value="CBG">CBG (Criteria Based Grant)</option>
+                            <option value="Other">Other (Specify Source)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2" id="editOtherFundingWrapper" style="display: none;">
+                        <label class="form-label fw-bold mb-1">Specify Other Funding Source <span class="text-danger">*</span></label>
+                        <input type="text" id="editOtherFundingInput" name="funding_source_other" class="form-control form-control-sm border-secondary" placeholder="e.g. FAO, UNDP, Private Sponsor">
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold mb-1">Animal Category <span class="text-danger">*</span></label>
+                            <select id="editAnimalCategorySelect" name="animal_category" class="form-select form-select-sm border-secondary" required onchange="toggleEditOtherCategoryInput(this.value)">
+                                <option value="" disabled>-- Select Option --</option>
+                                <option value="Cow">Cow</option>
+                                <option value="Buffalo">Buffalo</option>
+                                <option value="Goat">Goat</option>
+                                <option value="Chicken">Chicken</option>
+                                <option value="Pig">Pig</option>
+                                <option value="Other">Other Species</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold mb-1">If "Other" (Specify Species)</label>
+                            <input type="text" id="editOtherCategoryInput" name="animal_category_other" class="form-control form-control-sm border-secondary" placeholder="e.g. Rabbit, Sheep, Quail" disabled>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold mb-1">Target Quantity Limit <span class="text-danger">*</span></label>
+                            <input type="number" name="target_quantity" id="edit_target_quantity" class="form-control form-control-sm border-secondary" min="0" value="0" required oninput="calculateEditMetrics()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold mb-1">Achieved Quantity (To Date) <span class="text-danger">*</span></label>
+                            <input type="number" name="achieved_quantity" id="edit_achieved_quantity" class="form-control form-control-sm border-secondary" min="0" value="0" required oninput="calculateEditMetrics()">
+                        </div>
+                    </div>
+
+                    <!-- Live Dynamic Preview of Completion Rate & Variance -->
+                    <div class="card bg-light border p-2 mb-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small text-muted fw-semibold">Updated Dynamic Rate:</span>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-secondary" id="edit_preview_rate">Rate: 0%</span>
+                                <span class="badge bg-secondary" id="edit_preview_variance">Variance: 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer py-2 border-top-0">
+                    <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn text-light btn-sm px-4 shadow-sm fw-bold" style="background-color: #820100;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -510,6 +639,7 @@ require_once '../../../includes/header.php';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(document).ready(function() {
@@ -522,25 +652,132 @@ $(document).ready(function() {
                 extend: 'csv',
                 text: '<i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV',
                 className: 'btn btn-sm btn-success fw-bold me-1',
-                exportOptions: { columns: ':not(:last-child)' }
+                exportOptions: { columns: ':not(:nth-last-child(-n+2))' }
             },
             {
                 extend: 'excel',
                 text: '<i class="bi bi-file-earmark-excel me-1"></i> Export Excel',
                 className: 'btn btn-sm btn-primary fw-bold me-1',
-                exportOptions: { columns: ':not(:last-child)' }
+                exportOptions: { columns: ':not(:nth-last-child(-n+2))' }
             },
             {
                 extend: 'print',
                 text: '<i class="bi bi-printer me-1"></i> Print',
                 className: 'btn btn-sm btn-secondary fw-bold me-1',
-                exportOptions: { columns: ':not(:last-child)' }
+                exportOptions: { columns: ':not(:nth-last-child(-n+2))' }
             }
         ],
         language: {
             search: "_INPUT_",
             searchPlaceholder: "Filter production metrics..."
         }
+    });
+
+    // Edit Activity button click handler
+    $(document).on('click', '.btn-edit-activity', function() {
+        const btn = $(this);
+        $('#edit_id').val(btn.data('id'));
+        $('#edit_year').val(btn.data('year'));
+        $('#edit_range_id').val(btn.data('range-id'));
+        $('#edit_activity_name').val(btn.data('activity-name'));
+
+        const funding = btn.data('funding-source') || '';
+        const standardFunding = ['PSDG', 'Line Ministry', 'NGOs', 'Provincial Council', 'CBG'];
+        if (standardFunding.includes(funding)) {
+            $('#editFundingSourceSelect').val(funding);
+            $('#editOtherFundingWrapper').hide();
+            $('#editOtherFundingInput').prop('required', false).val('');
+        } else if (funding) {
+            $('#editFundingSourceSelect').val('Other');
+            $('#editOtherFundingWrapper').show();
+            $('#editOtherFundingInput').prop('required', true).val(funding);
+        } else {
+            $('#editFundingSourceSelect').val('');
+            $('#editOtherFundingWrapper').hide();
+            $('#editOtherFundingInput').prop('required', false).val('');
+        }
+
+        const category = btn.data('animal-category') || '';
+        const categoryOther = btn.data('animal-category-other') || '';
+        if (category === 'Other') {
+            $('#editAnimalCategorySelect').val('Other');
+            $('#editOtherCategoryInput').prop('disabled', false).prop('required', true).val(categoryOther);
+        } else {
+            $('#editAnimalCategorySelect').val(category);
+            $('#editOtherCategoryInput').prop('disabled', true).prop('required', false).val('');
+        }
+
+        $('#edit_target_quantity').val(btn.data('target-quantity'));
+        $('#edit_achieved_quantity').val(btn.data('achieved-quantity'));
+        calculateEditMetrics();
+
+        const modal = new bootstrap.Modal(document.getElementById('editActivityModal'));
+        modal.show();
+    });
+
+    // Delete Activity button click handler
+    $(document).on('click', '.btn-delete-activity', function() {
+        const id = $(this).data('id');
+        const name = $(this).data('name') || 'this activity';
+        const beneficiaries = parseInt($(this).data('beneficiaries')) || 0;
+
+        if (beneficiaries > 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Cannot Delete Activity',
+                text: 'This activity "' + name + '" has ' + beneficiaries + ' enrolled beneficiary record(s). Please remove or reassign the beneficiaries first.',
+                confirmButtonColor: '#370709'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Delete Activity Target?',
+            text: 'Are you sure you want to delete "' + name + '"? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'processors/delete_production_activity.php',
+                    type: 'POST',
+                    data: { id: id },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: response.message,
+                                timer: 1800,
+                                showConfirmButton: false
+                            }).then(function() {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Cannot Delete',
+                                text: response.message,
+                                confirmButtonColor: '#370709'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Server Error',
+                            text: 'Failed to communicate with the server. Please try again.',
+                            confirmButtonColor: '#370709'
+                        });
+                    }
+                });
+            }
+        });
     });
 });
 
@@ -577,6 +814,61 @@ function toggleOtherCategoryInput(value) {
         otherInput.disabled = true;
         otherInput.required = false;
         otherInput.value = '';
+    }
+}
+
+function toggleEditOtherFunding(value) {
+    const wrapper = document.getElementById('editOtherFundingWrapper');
+    const input   = document.getElementById('editOtherFundingInput');
+    if (value === 'Other') {
+        wrapper.style.display = 'block';
+        input.required = true;
+        input.focus();
+    } else {
+        wrapper.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
+}
+
+function toggleEditOtherCategoryInput(value) {
+    const otherInput = document.getElementById('editOtherCategoryInput');
+    if (value === 'Other') {
+        otherInput.disabled = false;
+        otherInput.required = true;
+        otherInput.focus();
+    } else {
+        otherInput.disabled = true;
+        otherInput.required = false;
+        otherInput.value = '';
+    }
+}
+
+function calculateEditMetrics() {
+    const target = parseInt($('#edit_target_quantity').val()) || 0;
+    const achieved = parseInt($('#edit_achieved_quantity').val()) || 0;
+    const variance = achieved - target;
+    const rate = (target > 0) ? ((achieved / target) * 100).toFixed(1) : 0;
+
+    const rateBadge = $('#edit_preview_rate');
+    rateBadge.text('Rate: ' + rate + '%');
+    rateBadge.removeClass('bg-success bg-primary bg-warning bg-secondary text-dark text-white');
+    if (rate >= 100) {
+        rateBadge.addClass('bg-success text-white');
+    } else if (rate >= 50) {
+        rateBadge.addClass('bg-primary text-white');
+    } else {
+        rateBadge.addClass('bg-warning text-dark');
+    }
+
+    const varBadge = $('#edit_preview_variance');
+    varBadge.removeClass('bg-success bg-danger bg-secondary text-white');
+    if (variance > 0) {
+        varBadge.addClass('bg-success text-white').text('Variance: +' + variance.toLocaleString() + ' (Surplus)');
+    } else if (variance < 0) {
+        varBadge.addClass('bg-danger text-white').text('Variance: ' + variance.toLocaleString() + ' (Deficit)');
+    } else {
+        varBadge.addClass('bg-secondary text-white').text('Variance: 0 (Balanced)');
     }
 }
 </script>

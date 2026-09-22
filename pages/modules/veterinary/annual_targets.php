@@ -28,7 +28,7 @@ if (!isset($_SESSION['full_name'])) {
 }
 
 $full_name   = $_SESSION['full_name'];
-$range_id    = $_SESSION['range_id'] ?? null;
+$range_id    = isset($_GET['range_id']) && intval($_GET['range_id']) > 0 ? intval($_GET['range_id']) : ($_SESSION['range_id'] ?? null);
 $district_id = $_SESSION['district_id'] ?? null;
 
 if (empty($range_id)) {
@@ -190,28 +190,33 @@ require_once '../../../includes/header.php';
                             </div>
                         </div>
 
-                        <div class="row g-4 mb-4">
-                            <div class="col-12 col-lg-5 d-flex justify-content-center align-items-center position-relative">
-                                <div style="position: relative; width: 100%; max-width: 320px; height: 320px;">
-                                    <canvas id="productionActivityPieChart"></canvas>
-                                </div>
+                        <!-- 1. Production Activities Bar Graph (Top) -->
+                        <div class="mb-4 p-3 bg-white rounded-3 shadow-xs border" style="border-color: #e2e8f0 !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                                <span class="small fw-bold text-dark text-uppercase tracking-wider">
+                                    <i class="bi bi-bar-chart-steps me-1 text-danger"></i> Targets vs Achievements Comparison
+                                </span>
+                                <span class="badge bg-light text-muted border small" id="chartTotalSummaryBadge">Total Target: 0</span>
                             </div>
-                            <div class="col-12 col-lg-7">
-                                <div class="table-responsive">
-                                    <table id="productionActivityTable" class="table table-striped table-hover table-bordered align-middle w-100 m-0">
-                                        <thead class="table-light text-secondary small">
-                                            <tr>
-                                                <th>Activity Name</th>
-                                                <th>Category</th>
-                                                <th class="text-right">Target Quantity</th>
-                                                <th class="text-right">Achieved Quantity</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div style="position: relative; width: 100%; height: 380px;">
+                                <canvas id="productionActivityBarChart"></canvas>
                             </div>
+                        </div>
+
+                        <!-- 2. Detailed Data Table (Under Graph) -->
+                        <div class="table-responsive">
+                            <table id="productionActivityTable" class="table table-striped table-hover table-bordered align-middle w-100 m-0">
+                                <thead class="table-light text-secondary small">
+                                    <tr>
+                                        <th>Activity Name</th>
+                                        <th>Category</th>
+                                        <th class="text-end">Target Quantity</th>
+                                        <th class="text-end">Achieved Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
                         </div>
 
                     </div>
@@ -232,36 +237,7 @@ require_once '../../../includes/header.php';
 <script>
     $(document).ready(function() {
         let productionActivityTableInstance = null;
-        let productionPieChartInstance = null;
-
-        // Register Center Text Plugin Layout Rules for Chart.js
-        if (typeof Chart !== 'undefined' && !Chart.registry.plugins.get('centerTotalText')) {
-            const centerTotalTextPlugin = {
-                id: 'centerTotalText',
-                afterDraw: function(chart) {
-                    if (chart.config.options.plugins.centerTotalText) {
-                        const ctx = chart.ctx;
-                        const chartArea = chart.chartArea;
-                        const configOptions = chart.config.options.plugins.centerTotalText;
-
-                        ctx.save();
-                        ctx.font = "bold 11px system-ui, sans-serif";
-                        ctx.fillStyle = "#64748b";
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        const centerX = (chartArea.left + chartArea.right) / 2;
-                        const centerY = (chartArea.top + chartArea.bottom) / 2;
-                        ctx.fillText(configOptions.text.toUpperCase(), centerX, centerY - 10);
-
-                        ctx.font = "bold 20px system-ui, sans-serif";
-                        ctx.fillStyle = "#370709"; // Maroon Accent Indicator Text
-                        ctx.fillText(configOptions.value.toLocaleString(), centerX, centerY + 12);
-                        ctx.restore();
-                    }
-                }
-            };
-            Chart.register(centerTotalTextPlugin);
-        }
+        let productionBarChartInstance = null;
 
         function fetchProductionTargetsData() {
             const targetYear = $('#filterYearProduction').val();
@@ -269,22 +245,32 @@ require_once '../../../includes/header.php';
 
             const urlParams = new URLSearchParams({
                 year: targetYear,
-                animal_category: targetCategory
+                animal_category: targetCategory,
+                range_id: <?= json_encode($range_id) ?>
             });
 
             fetch(`get_production_activity_targets.php?${urlParams.toString()}`)
                 .then(response => response.json())
                 .then(data => {
                     let runningTotalSum = 0;
-                    data.forEach(item => {
-                        runningTotalSum += item.target_quantity;
-                    });
+                    let runningAchievedSum = 0;
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            runningTotalSum += (item.target_quantity || 0);
+                            runningAchievedSum += (item.achieved_quantity || 0);
+                        });
+                    } else {
+                        data = [];
+                    }
+
+                    // Update summary badge
+                    $('#chartTotalSummaryBadge').text(`Total Target: ${runningTotalSum.toLocaleString()} | Total Achieved: ${runningAchievedSum.toLocaleString()}`);
 
                     const processedTableRows = data.map(item => [
                         item.activity_name,
                         `<span class="badge text-dark" style="background-color: #d4c7b7;">${item.animal_category}</span>`,
-                        item.target_quantity.toLocaleString(),
-                        item.achieved_quantity.toLocaleString()
+                        `<span class="fw-semibold">${Number(item.target_quantity).toLocaleString()}</span>`,
+                        `<span class="fw-semibold text-success">${Number(item.achieved_quantity).toLocaleString()}</span>`
                     ]);
 
                     if (productionActivityTableInstance) {
@@ -293,52 +279,120 @@ require_once '../../../includes/header.php';
                         productionActivityTableInstance = $('#productionActivityTable').DataTable({
                             data: processedTableRows,
                             responsive: true,
-                            pageLength: 5,
+                            pageLength: 10,
                             lengthChange: false,
                             ordering: false,
                             language: {
                                 search: "_INPUT_",
-                                searchPlaceholder: "Search records..."
-                            }
+                                searchPlaceholder: "Search activities..."
+                            },
+                            columnDefs: [
+                                { targets: [2, 3], className: 'text-end' }
+                            ]
                         });
                     }
 
                     const chartLabels = data.map(item => item.activity_name);
-                    const chartValues = data.map(item => item.target_quantity);
+                    const chartTargets = data.map(item => item.target_quantity);
+                    const chartAchieved = data.map(item => item.achieved_quantity);
 
-                    if (productionPieChartInstance) {
-                        productionPieChartInstance.data.labels = chartLabels;
-                        productionPieChartInstance.data.datasets[0].data = chartValues;
-                        productionPieChartInstance.options.plugins.centerTotalText.text = targetCategory + ' Targets';
-                        productionPieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
-                        productionPieChartInstance.update();
+                    if (productionBarChartInstance) {
+                        productionBarChartInstance.data.labels = chartLabels;
+                        productionBarChartInstance.data.datasets[0].data = chartTargets;
+                        productionBarChartInstance.data.datasets[1].data = chartAchieved;
+                        productionBarChartInstance.update();
                     } else {
-                        const ctxCanvas = document.getElementById('productionActivityPieChart').getContext('2d');
-                        productionPieChartInstance = new Chart(ctxCanvas, {
-                            type: 'doughnut',
+                        const ctxCanvas = document.getElementById('productionActivityBarChart').getContext('2d');
+                        productionBarChartInstance = new Chart(ctxCanvas, {
+                            type: 'bar',
                             data: {
                                 labels: chartLabels,
-                                datasets: [{
-                                    data: chartValues,
-                                    backgroundColor: ['#370709', '#820100', '#a07174', '#94a3b8', '#f59e0b', '#10b981', '#1e3a8a', '#10b981'],
-                                    borderWidth: 2,
-                                    borderColor: '#ffffff'
-                                }]
+                                datasets: [
+                                    {
+                                        label: 'Target Quantity',
+                                        data: chartTargets,
+                                        backgroundColor: 'rgba(130, 1, 0, 0.85)',
+                                        borderColor: '#820100',
+                                        borderWidth: 1.5,
+                                        borderRadius: 6,
+                                        barPercentage: 0.65,
+                                        categoryPercentage: 0.7
+                                    },
+                                    {
+                                        label: 'Achieved Quantity',
+                                        data: chartAchieved,
+                                        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                                        borderColor: '#10b981',
+                                        borderWidth: 1.5,
+                                        borderRadius: 6,
+                                        barPercentage: 0.65,
+                                        categoryPercentage: 0.7
+                                    }
+                                ]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
-                                cutout: '70%',
+                                interaction: {
+                                    mode: 'index',
+                                    intersect: false
+                                },
                                 plugins: {
                                     legend: {
-                                        position: 'bottom',
+                                        position: 'top',
+                                        align: 'end',
                                         labels: {
-                                            boxWidth: 12
+                                            boxWidth: 14,
+                                            boxHeight: 14,
+                                            font: {
+                                                weight: '600',
+                                                size: 12
+                                            },
+                                            color: '#334155'
                                         }
                                     },
-                                    centerTotalText: {
-                                        text: targetCategory + ' Targets',
-                                        value: runningTotalSum
+                                    tooltip: {
+                                        backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                                        titleFont: { weight: 'bold', size: 13 },
+                                        bodyFont: { size: 12 },
+                                        padding: 10,
+                                        cornerRadius: 8,
+                                        callbacks: {
+                                            label: function(context) {
+                                                return context.dataset.label + ': ' + Number(context.raw).toLocaleString();
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            font: {
+                                                weight: '600',
+                                                size: 11
+                                            },
+                                            color: '#475569',
+                                            maxRotation: 35,
+                                            minRotation: 0
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: '#f1f5f9'
+                                        },
+                                        ticks: {
+                                            font: {
+                                                size: 11
+                                            },
+                                            color: '#64748b',
+                                            callback: function(value) {
+                                                return Number(value).toLocaleString();
+                                            }
+                                        }
                                     }
                                 }
                             }

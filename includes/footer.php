@@ -106,6 +106,10 @@
 
         function syncNotificationBadges(unreadCount) {
             const count = parseInt(unreadCount) || 0;
+            const liveMsg = count > 0 ? ('You have ' + count + ' unread notifications') : 'No new notifications';
+            const liveRegion = document.getElementById('liveAlertsRegion');
+            if (liveRegion) liveRegion.textContent = liveMsg;
+
             if (count > 0) {
                 $('#notificationBadge').removeClass('d-none').text(count > 99 ? '99+' : count);
                 $('#notificationHeaderBadge').removeClass('d-none').text(count + ' New');
@@ -367,6 +371,39 @@
                     }
                 }
             });
+        });
+
+        // =====================================================================
+        // Accessibility (WCAG 2.1 Level AA) Global Enhancements
+        // =====================================================================
+
+        // 1. Modal Focus Trapping & Restoration (WCAG 2.4.3)
+        let lastActiveModalTrigger = null;
+        $(document).on('show.bs.modal', function(e) {
+            lastActiveModalTrigger = e.relatedTarget || document.activeElement;
+        });
+        $(document).on('hidden.bs.modal', function() {
+            if (lastActiveModalTrigger && typeof lastActiveModalTrigger.focus === 'function') {
+                lastActiveModalTrigger.focus();
+                lastActiveModalTrigger = null;
+            }
+        });
+
+        // 2. Keyboard-Navigable Table Scroll Regions (WCAG 2.1.1)
+        function makeTablesAccessible() {
+            document.querySelectorAll('.table-responsive').forEach(function(el) {
+                if (!el.hasAttribute('tabindex')) {
+                    el.setAttribute('tabindex', '0');
+                    el.setAttribute('role', 'region');
+                    const table = el.querySelector('table');
+                    const tableTitle = (table && (table.getAttribute('aria-label') || table.getAttribute('id') || (table.querySelector('caption') ? table.querySelector('caption').textContent : null))) || 'Data table';
+                    el.setAttribute('aria-label', tableTitle + ', scrollable horizontally with arrow keys');
+                }
+            });
+        }
+        makeTablesAccessible();
+        $(document).ajaxComplete(function() {
+            makeTablesAccessible();
         });
     </script>
     <?php if (!empty($pageScripts)) echo $pageScripts; ?>
