@@ -217,13 +217,6 @@ $all_quick_actions = [
         'color' => '#e65100',
         'link'  => 'animal_breeding.php' . ($range_id ? '?range_id=' . $range_id : '')
     ],
-    'livestock_production' => [
-        'id' => 8,
-        'title' => 'Livestock Production',
-        'icon'  => 'bi-person-bounding-box',
-        'color' => '#455a64',
-        'link'  => 'livestock_production.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
     'dairy_hub' => [
         'id' => 9,
         'title' => 'Dairy Hub',

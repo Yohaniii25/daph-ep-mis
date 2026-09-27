@@ -321,7 +321,6 @@ require_once '../../../includes/header.php';
                         <tr>
                             <th>Activity / Metric Title</th>
                             <th>Funding Source</th>
-                            <th>Animal Category</th>
                             <?php if ($is_supervisory): ?>
                                 <th>Range / District</th>
                             <?php endif; ?>
@@ -337,7 +336,6 @@ require_once '../../../includes/header.php';
                         <?php if (!empty($activities_list)): ?>
                             <?php foreach ($activities_list as $row): ?>
                                 <?php
-                                $category  = ($row['animal_category'] === 'Other') ? $row['animal_category_other'] : ($row['animal_category'] ?? 'General');
                                 $target    = intval($row['target_quantity']);
                                 $achieved  = intval($row['achieved_quantity']);
                                 $funding   = $row['funding_source'] ?? 'PSDG';
@@ -355,11 +353,6 @@ require_once '../../../includes/header.php';
                                     <td>
                                         <span class="badge badge-funding px-2 py-1">
                                             <i class="bi bi-wallet2 me-1"></i><?= htmlspecialchars($funding) ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-secondary border">
-                                            <?= htmlspecialchars($category) ?>
                                         </span>
                                     </td>
                                     <?php if ($is_supervisory): ?>
@@ -408,8 +401,6 @@ require_once '../../../includes/header.php';
                                                 data-year="<?= $row['year'] ?>"
                                                 data-activity-name="<?= htmlspecialchars($row['activity_name'], ENT_QUOTES) ?>"
                                                 data-funding-source="<?= htmlspecialchars($row['funding_source'] ?? '', ENT_QUOTES) ?>"
-                                                data-animal-category="<?= htmlspecialchars($row['animal_category'] ?? '', ENT_QUOTES) ?>"
-                                                data-animal-category-other="<?= htmlspecialchars($row['animal_category_other'] ?? '', ENT_QUOTES) ?>"
                                                 data-target-quantity="<?= $target ?>"
                                                 data-achieved-quantity="<?= $achieved ?>">
                                                 <i class="bi bi-pencil-square"></i>
@@ -487,34 +478,11 @@ require_once '../../../includes/header.php';
                         <input type="text" id="otherFundingInput" name="funding_source_other" class="form-control form-control-sm border-secondary" placeholder="e.g. FAO, UNDP, Private Sponsor">
                     </div>
 
-                    <div class="row g-2 mb-2">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">Animal Category <span class="text-danger">*</span></label>
-                            <select id="animalCategorySelect" name="animal_category" class="form-select form-select-sm border-secondary" required onchange="toggleOtherCategoryInput(this.value)">
-                                <option value="" selected disabled>-- Select Option --</option>
-                                <option value="Cow">Cow</option>
-                                <option value="Buffalo">Buffalo</option>
-                                <option value="Goat">Goat</option>
-                                <option value="Chicken">Chicken</option>
-                                <option value="Pig">Pig</option>
-                                <option value="Other">Other Species</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">If "Other" (Specify Species)</label>
-                            <input type="text" id="otherCategoryInput" name="animal_category_other" class="form-control form-control-sm border-secondary" placeholder="e.g. Rabbit, Sheep, Quail" disabled>
-                        </div>
-                    </div>
+                    <input type="hidden" name="target_quantity" value="0">
 
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">Target Quantity Limit <span class="text-danger">*</span></label>
-                            <input type="number" name="target_quantity" class="form-control form-control-sm border-secondary" min="0" value="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">Achieved Quantity (To Date) <span class="text-danger">*</span></label>
-                            <input type="number" name="achieved_quantity" class="form-control form-control-sm border-secondary" min="0" value="0" required>
-                        </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold mb-1">Achieved Quantity (To Date) <span class="text-danger">*</span></label>
+                        <input type="number" name="achieved_quantity" class="form-control form-control-sm border-secondary" min="0" value="0" required>
                     </div>
 
                 </div>
@@ -580,34 +548,11 @@ require_once '../../../includes/header.php';
                         <input type="text" id="editOtherFundingInput" name="funding_source_other" class="form-control form-control-sm border-secondary" placeholder="e.g. FAO, UNDP, Private Sponsor">
                     </div>
 
-                    <div class="row g-2 mb-2">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">Animal Category <span class="text-danger">*</span></label>
-                            <select id="editAnimalCategorySelect" name="animal_category" class="form-select form-select-sm border-secondary" required onchange="toggleEditOtherCategoryInput(this.value)">
-                                <option value="" disabled>-- Select Option --</option>
-                                <option value="Cow">Cow</option>
-                                <option value="Buffalo">Buffalo</option>
-                                <option value="Goat">Goat</option>
-                                <option value="Chicken">Chicken</option>
-                                <option value="Pig">Pig</option>
-                                <option value="Other">Other Species</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">If "Other" (Specify Species)</label>
-                            <input type="text" id="editOtherCategoryInput" name="animal_category_other" class="form-control form-control-sm border-secondary" placeholder="e.g. Rabbit, Sheep, Quail" disabled>
-                        </div>
-                    </div>
+                    <input type="hidden" name="target_quantity" id="edit_target_quantity" value="0">
 
-                    <div class="row g-2 mb-2">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">Target Quantity Limit <span class="text-danger">*</span></label>
-                            <input type="number" name="target_quantity" id="edit_target_quantity" class="form-control form-control-sm border-secondary" min="0" value="0" required oninput="calculateEditMetrics()">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">Achieved Quantity (To Date) <span class="text-danger">*</span></label>
-                            <input type="number" name="achieved_quantity" id="edit_achieved_quantity" class="form-control form-control-sm border-secondary" min="0" value="0" required oninput="calculateEditMetrics()">
-                        </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold mb-1">Achieved Quantity (To Date) <span class="text-danger">*</span></label>
+                        <input type="number" name="achieved_quantity" id="edit_achieved_quantity" class="form-control form-control-sm border-secondary" min="0" value="0" required oninput="calculateEditMetrics()">
                     </div>
 
                     <!-- Live Dynamic Preview of Completion Rate & Variance -->
@@ -695,16 +640,6 @@ $(document).ready(function() {
             $('#editFundingSourceSelect').val('');
             $('#editOtherFundingWrapper').hide();
             $('#editOtherFundingInput').prop('required', false).val('');
-        }
-
-        const category = btn.data('animal-category') || '';
-        const categoryOther = btn.data('animal-category-other') || '';
-        if (category === 'Other') {
-            $('#editAnimalCategorySelect').val('Other');
-            $('#editOtherCategoryInput').prop('disabled', false).prop('required', true).val(categoryOther);
-        } else {
-            $('#editAnimalCategorySelect').val(category);
-            $('#editOtherCategoryInput').prop('disabled', true).prop('required', false).val('');
         }
 
         $('#edit_target_quantity').val(btn.data('target-quantity'));
@@ -804,19 +739,6 @@ function toggleOtherFunding(value) {
     }
 }
 
-function toggleOtherCategoryInput(value) {
-    const otherInput = document.getElementById('otherCategoryInput');
-    if (value === 'Other') {
-        otherInput.disabled = false;
-        otherInput.required = true;
-        otherInput.focus();
-    } else {
-        otherInput.disabled = true;
-        otherInput.required = false;
-        otherInput.value = '';
-    }
-}
-
 function toggleEditOtherFunding(value) {
     const wrapper = document.getElementById('editOtherFundingWrapper');
     const input   = document.getElementById('editOtherFundingInput');
@@ -828,19 +750,6 @@ function toggleEditOtherFunding(value) {
         wrapper.style.display = 'none';
         input.required = false;
         input.value = '';
-    }
-}
-
-function toggleEditOtherCategoryInput(value) {
-    const otherInput = document.getElementById('editOtherCategoryInput');
-    if (value === 'Other') {
-        otherInput.disabled = false;
-        otherInput.required = true;
-        otherInput.focus();
-    } else {
-        otherInput.disabled = true;
-        otherInput.required = false;
-        otherInput.value = '';
     }
 }
 
