@@ -7,7 +7,7 @@
             </div>
             <form id="deployStaffForm" action="processors/save_vaccinator_deployment.php" method="POST">
                 <div class="modal-body p-3">
-                    <input type="hidden" name="vaccination_target_id" value="<?= htmlspecialchars($vax_targets['id']) ?>">
+                    <input type="hidden" name="vaccination_target_id" value="<?= htmlspecialchars($vax_targets['id'] ?? '') ?>">
                     <input type="hidden" name="year" value="<?= htmlspecialchars($selected_year) ?>">
                     <input type="hidden" name="id" id="deploy_staff_id" value="">
 

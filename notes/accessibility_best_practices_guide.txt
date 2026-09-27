@@ -242,3 +242,16 @@ D. Accessible Icon-Only Action Button:
 ================================================================================
 End of Accessibility & Inclusive Design Recommendations
 ================================================================================
+
+
+Task: Global Standardization of "Back" Button UI
+
+Hi Antigravity, we currently have inconsistent CSS styling for the "Back" buttons across different pages in the application. Please standardize all of them globally to ensure a unified user experience.
+
+Reference Style: Use the exact CSS styling, classes, and hover behavior of the "Back" button currently located on the pages/modules/veterinary/monthly-annual-reports.php page as the single source of truth.
+
+Global Implementation: Audit the system and update all existing "Back" buttons across every module to match this exact reference style.
+
+Code Refactoring: Please extract this styling into a unified global CSS class (e.g., .btn-global-back) or a reusable UI component so that any newly added "Back" buttons in the future will automatically inherit this standardized design.
+
+scroll

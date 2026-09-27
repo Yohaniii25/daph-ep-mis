@@ -226,6 +226,86 @@ foreach ($vax_targets_map as $sp => $vt) {
     }
 }
 
+// Specific 5 Poultry Vaccines Configuration & Live Progress
+$poultry_vaccine_keys = [
+    'Newcastle Disease (ND / Ranikhet)',
+    'Infectious Bursal Disease (IBD / Gumboro)',
+    'Fowl Pox Vaccine',
+    'Marek\'s Disease Vaccine',
+    'Infectious Bronchitis (IB)'
+];
+
+$chicken_target_rec = $vax_targets_map['Chicken'] ?? [];
+$raw_pt_json = $chicken_target_rec['poultry_targets_json'] ?? '';
+$pt_decoded = [];
+if (!empty($raw_pt_json)) {
+    $tmp_dec = json_decode($raw_pt_json, true);
+    if (is_array($tmp_dec)) {
+        $pt_decoded = $tmp_dec;
+    }
+}
+
+$poultry_matrix_data = [];
+$poultry_matrix_sum_target = 0;
+$poultry_matrix_sum_achieved = 0;
+
+foreach ($poultry_vaccine_keys as $pvk) {
+    // Resolve configured target
+    $p_target = 0;
+    if (isset($pt_decoded[$pvk])) {
+        $p_target = intval($pt_decoded[$pvk]);
+    } elseif ($pvk === 'Newcastle Disease (ND / Ranikhet)') {
+        $p_target = intval(($pt_decoded['Ranikhet Primary'] ?? 0) + ($pt_decoded['Ranikhet Booster'] ?? 0) + ($pt_decoded['Ranikhet'] ?? 0) + ($pt_decoded['ND'] ?? 0));
+    } elseif ($pvk === 'Infectious Bursal Disease (IBD / Gumboro)') {
+        $p_target = intval(($pt_decoded['Gumboro'] ?? 0) + ($pt_decoded['IBD'] ?? 0) + ($pt_decoded['Infectious Bursal Disease'] ?? 0));
+    } elseif ($pvk === 'Fowl Pox Vaccine') {
+        $p_target = intval($pt_decoded['Fowl Pox'] ?? 0);
+    } elseif ($pvk === 'Marek\'s Disease Vaccine') {
+        $p_target = intval(($pt_decoded['Marek\'s'] ?? 0) + ($pt_decoded['Marek'] ?? 0));
+    } elseif ($pvk === 'Infectious Bronchitis (IB)') {
+        $p_target = intval(($pt_decoded['IB'] ?? 0) + ($pt_decoded['Infectious Bronchitis'] ?? 0));
+    }
+
+    // Resolve actual achieved doses from session logs
+    $p_achieved = 0;
+    foreach ($poultry_vax_breakdown as $vx => $cnt) {
+        $matched = false;
+        if ($vx === $pvk) {
+            $matched = true;
+        } elseif ($pvk === 'Newcastle Disease (ND / Ranikhet)' && (stripos($vx, 'Newcastle') !== false || stripos($vx, 'Ranikhet') !== false || stripos($vx, 'ND') !== false)) {
+            $matched = true;
+        } elseif ($pvk === 'Infectious Bursal Disease (IBD / Gumboro)' && (stripos($vx, 'Gumboro') !== false || stripos($vx, 'IBD') !== false || stripos($vx, 'Bursal') !== false)) {
+            $matched = true;
+        } elseif ($pvk === 'Fowl Pox Vaccine' && stripos($vx, 'Fowl Pox') !== false) {
+            $matched = true;
+        } elseif ($pvk === 'Marek\'s Disease Vaccine' && stripos($vx, 'Marek') !== false) {
+            $matched = true;
+        } elseif ($pvk === 'Infectious Bronchitis (IB)' && (stripos($vx, 'Bronchitis') !== false || $vx === 'IB')) {
+            $matched = true;
+        }
+        if ($matched) {
+            $p_achieved += intval($cnt);
+        }
+    }
+
+    $poultry_matrix_sum_target += $p_target;
+    $poultry_matrix_sum_achieved += $p_achieved;
+    $p_pct = ($p_target > 0) ? min(100, round(($p_achieved / $p_target) * 100, 1)) : ($p_achieved > 0 ? 100 : 0);
+    $p_balance = max(0, $p_target - $p_achieved);
+
+    $poultry_matrix_data[$pvk] = [
+        'vaccine_name' => $pvk,
+        'target'       => $p_target,
+        'achieved'     => $p_achieved,
+        'rate'         => $p_pct,
+        'balance'      => $p_balance
+    ];
+}
+
+if ($total_poultry_target === 0 && $poultry_matrix_sum_target > 0) {
+    $total_poultry_target = $poultry_matrix_sum_target;
+}
+
 // Completion Percentages
 $livestock_pct = ($total_livestock_target > 0) ? min(100, round(($total_livestock_achieved / $total_livestock_target) * 100, 1)) : ($total_livestock_achieved > 0 ? 100 : 0);
 $poultry_pct   = ($total_poultry_target > 0) ? min(100, round(($total_poultry_achieved / $total_poultry_target) * 100, 1)) : ($total_poultry_achieved > 0 ? 100 : 0);
@@ -595,6 +675,7 @@ require_once '../../../includes/header.php';
                                     ' data-bq="' . intval($vt['target_bq'] ?? 0) . '"' .
                                     ' data-hs="' . intval($vt['target_hs'] ?? 0) . '"' .
                                     ' data-poultry="' . intval($vt['target_poultry_doses'] ?? 0) . '"' .
+                                    ' data-poultry-json="' . htmlspecialchars($vt['poultry_targets_json'] ?? '', ENT_QUOTES) . '"' .
                                     ' data-ldo-count="' . intval($vt['available_ldo_count'] ?? 0) . '"' .
                                     ' data-ldo-target="' . intval($vt['allocated_ldo_target'] ?? 0) . '"' .
                                     ' data-man-days="' . intval($vt['allocated_man_days'] ?? 0) . '"' .
@@ -605,6 +686,130 @@ require_once '../../../includes/header.php';
                             }
                             ?>
                         </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1B. Poultry Target Configurations & Deployment Matrix -->
+        <div class="card gov-card mb-4 shadow-sm border-0">
+            <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: #370709;">
+                        <i class="bi bi-egg-fill me-2 text-warning"></i>Poultry Target Configurations & Deployment Matrix
+                    </h5>
+                    <p class="text-muted small mb-0">Configured annual targets, live achievements, and field deployment specifically for poultry flock vaccinations.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2">
+                        <i class="bi bi-shield-check me-1 text-warning"></i>Flock Population: <strong><?= number_format($animal_pop_data['Chicken'] ?? 0) ?></strong> birds
+                    </span>
+                    <button class="btn btn-sm btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addPoultryTargetModal" id="btnConfigurePoultryMatrix">
+                        <i class="bi bi-plus-circle me-1"></i> Configure Poultry Targets
+                    </button>
+                </div>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <div class="row mb-3">
+                    <div class="col-md-4 ms-auto">
+                        <input type="text" id="poultryMatrixFilter" class="form-control form-control-sm border-secondary" placeholder="Search poultry vaccine targets...">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="poultryMatrixTable" class="table table-striped table-hover table-bordered align-middle small bg-white text-dark m-0">
+                        <thead style="background-color: #fef3c7; color: #78350f;">
+                            <tr>
+                                <th style="min-width: 250px;">Target Poultry Vaccine</th>
+                                <th class="text-center">Annual Target Doses</th>
+                                <th class="text-center">Achieved Doses</th>
+                                <th class="text-center" style="min-width: 140px;">Coverage Rate</th>
+                                <th class="text-center">Remaining Balance</th>
+                                <th class="text-center">Available LDO</th>
+                                <th class="text-center">Allocated LDO Target</th>
+                                <th class="text-center">Assigned Vaccinator</th>
+                                <th class="text-center">Allocated Man-Days</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $p_assigned_vaccinator_id = intval($chicken_target_rec['assigned_vaccinator_id'] ?? 0);
+                            $p_assigned_vaccinator_text = '<span class="text-muted small">Not Assigned</span>';
+                            if ($p_assigned_vaccinator_id > 0 && isset($assigned_vaccinator_lookup[$p_assigned_vaccinator_id])) {
+                                $p_assigned_vaccinator_text = '<span class="fw-bold text-success">' . $assigned_vaccinator_lookup[$p_assigned_vaccinator_id] . '</span>';
+                            }
+                            $p_ldo_count = intval($chicken_target_rec['available_ldo_count'] ?? 0);
+                            $p_ldo_target = intval($chicken_target_rec['allocated_ldo_target'] ?? 0);
+                            $p_man_days = intval($chicken_target_rec['allocated_man_days'] ?? 0);
+
+                            foreach ($poultry_matrix_data as $pv_item):
+                                $pv_name = $pv_item['vaccine_name'];
+                                $pv_target = $pv_item['target'];
+                                $pv_achieved = $pv_item['achieved'];
+                                $pv_rate = $pv_item['rate'];
+                                $pv_balance = $pv_item['balance'];
+
+                                $rate_badge_class = ($pv_rate >= 100) ? 'bg-success' : (($pv_rate >= 50) ? 'bg-primary' : (($pv_rate > 0) ? 'bg-warning text-dark' : 'bg-secondary'));
+                            ?>
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="bi bi-egg-fill me-2 text-warning"></i><?= htmlspecialchars($pv_name) ?>
+                                    </td>
+                                    <td class="text-center fw-bold">
+                                        <span class="badge bg-light text-dark border fs-6"><?= number_format($pv_target) ?></span>
+                                    </td>
+                                    <td class="text-center fw-bold text-success">
+                                        <?= number_format($pv_achieved) ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px; max-width: 80px;">
+                                                <div class="progress-bar <?= ($pv_rate >= 100) ? 'bg-success' : 'bg-warning' ?>" role="progressbar" style="width: <?= $pv_rate ?>%;" aria-valuenow="<?= $pv_rate ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <span class="badge <?= $rate_badge_class ?>"><?= $pv_rate ?>%</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center fw-semibold <?= $pv_balance > 0 ? 'text-danger' : 'text-muted' ?>">
+                                        <?= number_format($pv_balance) ?>
+                                    </td>
+                                    <td class="text-center"><?= number_format($p_ldo_count) ?></td>
+                                    <td class="text-center"><?= number_format($p_ldo_target) ?></td>
+                                    <td class="text-center"><?= $p_assigned_vaccinator_text ?></td>
+                                    <td class="text-center"><?= number_format($p_man_days) ?></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-xs btn-outline-warning text-dark edit-poultry-matrix-btn" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#addPoultryTargetModal"
+                                            data-vax-name="<?= htmlspecialchars($pv_name) ?>"
+                                            data-target="<?= $pv_target ?>"
+                                            title="Configure Poultry Targets">
+                                            <i class="bi bi-pencil-square me-1"></i>Configure
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                        <tfoot style="background-color: #fffbeb;">
+                            <tr class="fw-bold">
+                                <td><i class="bi bi-calculator me-2 text-danger"></i>Total Poultry Herd Targets</td>
+                                <td class="text-center text-dark fs-6"><?= number_format($total_poultry_target) ?></td>
+                                <td class="text-center text-success fs-6"><?= number_format($total_poultry_achieved) ?></td>
+                                <td class="text-center">
+                                    <span class="badge bg-dark"><?= $poultry_pct ?>%</span>
+                                </td>
+                                <td class="text-center text-danger"><?= number_format(max(0, $total_poultry_target - $total_poultry_achieved)) ?></td>
+                                <td class="text-center"><?= number_format($p_ldo_count) ?></td>
+                                <td class="text-center"><?= number_format($p_ldo_target) ?></td>
+                                <td class="text-center"><?= $p_assigned_vaccinator_text ?></td>
+                                <td class="text-center"><?= number_format($p_man_days) ?></td>
+                                <td class="text-center">
+                                    <button class="btn btn-xs btn-dark" data-bs-toggle="modal" data-bs-target="#addPoultryTargetModal">
+                                        <i class="bi bi-gear-fill me-1"></i>Configure All
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -1112,6 +1317,17 @@ require_once '../../../includes/header.php';
             combinedMatrixTable.search(this.value).draw();
         });
 
+        const poultryMatrixTable = $('#poultryMatrixTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            ordering: false,
+            lengthChange: false
+        });
+
+        $('#poultryMatrixFilter').on('keyup', function() {
+            poultryMatrixTable.search(this.value).draw();
+        });
+
         $('#casualVaccinatorsTable').DataTable({
             responsive: true,
             pageLength: 10
@@ -1149,7 +1365,42 @@ require_once '../../../includes/header.php';
             $modal.find('input[name="allocated_man_days"]').val(dataset.manDays);
             $modal.find('select[name="assigned_vaccinator_id"]').val(dataset.assignedVaccinator || '');
 
+            // If poultry, prefill individual vaccine fields in addTargetModal
+            if (dataset.species === 'Chicken' && dataset.poultryJson) {
+                try {
+                    const pJson = typeof dataset.poultryJson === 'string' ? JSON.parse(dataset.poultryJson) : dataset.poultryJson;
+                    if (pJson && typeof pJson === 'object') {
+                        for (const [vName, vQty] of Object.entries(pJson)) {
+                            const $fld = $modal.find(`input[name="poultry_targets[${vName}]"]`);
+                            if ($fld.length) {
+                                $fld.val(vQty);
+                            }
+                        }
+                    }
+                } catch(err) {
+                    console.warn("Could not parse poultryJson", err);
+                }
+            }
+
             const bsModal = new bootstrap.Modal(document.getElementById('addTargetModal'));
+            bsModal.show();
+        });
+
+        // Edit poultry matrix button behavior: opens addPoultryTargetModal and focuses on selected vaccine
+        $(document).on('click', '.edit-poultry-matrix-btn', function(e) {
+            e.preventDefault();
+            const vaxName = $(this).data('vax-name');
+            const targetQty = $(this).data('target');
+            const $m = $('#addPoultryTargetModal');
+
+            if (vaxName) {
+                const targetInput = $m.find(`input[name="poultry_targets[${vaxName}]"]`);
+                if (targetInput.length) {
+                    setTimeout(() => targetInput.focus().select(), 400);
+                }
+            }
+
+            const bsModal = new bootstrap.Modal(document.getElementById('addPoultryTargetModal'));
             bsModal.show();
         });
 
@@ -1162,6 +1413,7 @@ require_once '../../../includes/header.php';
             $modal.find('input[name="target_bq"]').val(0);
             $modal.find('input[name="target_hs"]').val(0);
             $modal.find('input[name="target_poultry_doses"]').val(0);
+            $modal.find('.poultry-sub-calc').val(0);
             $modal.find('input[name="available_ldo_count"]').val(0);
             $modal.find('input[name="allocated_ldo_target"]').val(0);
             $modal.find('input[name="allocated_man_days"]').val(0);

@@ -6,10 +6,14 @@ if (!isset($selected_year)) {
     $selected_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
 }
 
-// Load centralized poultry vaccine list
-$poultry_vaccines_cfg = file_exists(__DIR__ . '/../config/poultry_vaccines.php') 
-    ? require __DIR__ . '/../config/poultry_vaccines.php' 
-    : ['Newcastle Disease (ND / Ranikhet)', 'Infectious Bursal Disease (IBD / Gumboro)', 'Fowl Pox Vaccine', 'Marek\'s Disease Vaccine', 'Infectious Bronchitis (IB)'];
+// Direct integrated poultry vaccines list
+$poultry_vaccines = [
+    'Newcastle Disease (ND / Ranikhet)',
+    'Infectious Bursal Disease (IBD / Gumboro)',
+    'Fowl Pox Vaccine',
+    'Marek\'s Disease Vaccine',
+    'Infectious Bronchitis (IB)'
+];
 
 // Livestock species and vaccines
 $livestock_species = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Pig'];
@@ -155,10 +159,12 @@ if (isset($mysqli)) {
                                     <option value="BQ">BQ (Black Quarter)</option>
                                     <option value="Other">Other Livestock Vaccine...</option>
                                 </optgroup>
-                                <optgroup label="Poultry Vaccines (Configurable)" id="vaxGroupPoultry">
-                                    <?php foreach ($poultry_vaccines_cfg as $pv): ?>
-                                        <option value="<?= htmlspecialchars($pv) ?>"><?= htmlspecialchars($pv) ?></option>
-                                    <?php endforeach; ?>
+                                <optgroup label="Poultry Vaccines" id="vaxGroupPoultry">
+                                    <option value="Newcastle Disease (ND / Ranikhet)">Newcastle Disease (ND / Ranikhet)</option>
+                                    <option value="Infectious Bursal Disease (IBD / Gumboro)">Infectious Bursal Disease (IBD / Gumboro)</option>
+                                    <option value="Fowl Pox Vaccine">Fowl Pox Vaccine</option>
+                                    <option value="Marek's Disease Vaccine">Marek's Disease Vaccine</option>
+                                    <option value="Infectious Bronchitis (IB)">Infectious Bronchitis (IB)</option>
                                     <option value="Other">Other Poultry Vaccine...</option>
                                 </optgroup>
                             </select>

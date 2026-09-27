@@ -132,27 +132,110 @@ require_once '../../../includes/header.php';
                 <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
             <?php endif; ?>
         </div>
+        <!-- Quick Actions & Target Modules Section -->
+        <style>
+            .target-action-card {
+                transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+                position: relative;
+                overflow: hidden;
+            }
+            .target-action-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%);
+                pointer-events: none;
+            }
+            .target-action-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+                filter: brightness(1.06);
+                color: #fff !important;
+            }
+            .target-action-card:active {
+                transform: translateY(-1px);
+            }
+            .target-action-card i {
+                transition: transform 0.25s ease;
+            }
+            .target-action-card:hover i {
+                transform: scale(1.12);
+            }
+        </style>
+
+        <?php
+        $range_param  = $range_id ? '&range_id=' . $range_id : '';
+        $range_qparam = $range_id ? '?range_id=' . $range_id : '';
+
+        $target_buttons = [
+            [
+                'title' => 'Animal Health',
+                'icon'  => 'bi-shield-check',
+                'color' => '#820100',
+                'link'  => 'vaccination_targets.php?year=' . $selected_year . $range_param
+            ],
+            [
+                'title' => 'Animal Breeding',
+                'icon'  => 'bi-gender-ambiguous',
+                'color' => '#a07174',
+                'link'  => 'animal_breeding.php?year=' . $selected_year . $range_param
+            ],
+            [
+                'title' => 'Extension Services',
+                'icon'  => 'bi-people-fill',
+                'color' => '#185dbd',
+                'link'  => 'training.php' . $range_qparam
+            ],
+            [
+                'title' => 'Special Projects',
+                'icon'  => 'bi-stars',
+                'color' => '#b08723',
+                'link'  => 'projects_progress.php?type=Special' . $range_param
+            ],
+            [
+                'title' => 'Line Ministry Projects',
+                'icon'  => 'bi-building-fill-gear',
+                'color' => '#ca340fff',
+                'link'  => 'projects_progress.php?type=LMP' . $range_param
+            ],
+            [
+                'title' => 'Other Projects',
+                'icon'  => 'bi-folder-fill',
+                'color' => '#475569',
+                'link'  => 'projects_progress.php?type=Other' . $range_param
+            ],
+            [
+                'title' => 'Production Activities Plan',
+                'icon'  => 'bi-calendar-check',
+                'color' => '#370709',
+                'link'  => 'production_activities.php?year=' . $selected_year . $range_param
+            ]
+        ];
+        ?>
+
         <div class="card gov-card mb-4">
-            <div class="card-header bg-white py-3 border-0">
-                <h6 class="mb-0 fw-bold" style="color: #370709;"><i class="bi bi-lightning-charge-fill me-2"></i>Quick Actions</h6>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <a href="vaccination_targets.php" class="btn w-100 py-3" style="background-color: #820100; color: #fff; border-color: #820100;">
-                            <i class="bi bi-shield-check fs-3"></i><br>
-                            Vaccination Targets
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="production_activities.php" class="btn w-100 py-3" style="background-color: #370709; color: #fff; border-color: #370709;">
-                            <i class="bi bi-calendar-check fs-3"></i><br>
-                            Production Activities Plan
-                        </a>
-                    </div>
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0 fw-bold" style="color: #370709;"><i class="bi bi-grid-fill me-2"></i>Annual Target Categories & Quick Actions</h6>
+                    <small class="text-muted">Direct access to target management modules, performance plans, and development projects</small>
                 </div>
             </div>
-
+            <div class="card-body pt-1">
+                <div class="row row-cols-2 row-cols-md-4 g-3">
+                    <?php foreach ($target_buttons as $btn): ?>
+                        <div class="col">
+                            <a href="<?= htmlspecialchars($btn['link']) ?>" class="btn w-100 p-3 text-light border-0 target-action-card d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background-color: <?= $btn['color'] ?>; min-height: 110px; border-radius: 10px;">
+                                <i class="bi <?= $btn['icon'] ?> fs-2 mb-1"></i>
+                                <span class="text-center text-white"><?= htmlspecialchars($btn['title']) ?></span>
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </div>
 
         <!-- SECTION – PRODUCTION ACTIVITY TARGETS DATA VISUALIZATION -->

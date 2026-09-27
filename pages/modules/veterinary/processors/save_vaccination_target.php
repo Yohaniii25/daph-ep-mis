@@ -6,7 +6,8 @@ require_once __DIR__ . '/../../../config/db_connect.php';
 global $mysqli;
 
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['role']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'district_dd', 'sms', 'admin', 'super_admin', 'deputy_director_district', 'provincial_director'];
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     header("Location: ../vaccination_targets.php?status=error&msg=Unauthorized");
     exit();
 }
@@ -114,6 +115,6 @@ try {
     $_SESSION['msg_type'] = "danger";
 }
 
-header("Location: ../vaccination_targets.php?year=" . $year . "&tab=targets");
+header("Location: ../vaccination_targets.php?year=" . $year . "&tab=targets" . ($range_id ? "&range_id=" . $range_id : ""));
 $mysqli->close();
 exit();
