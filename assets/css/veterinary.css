@@ -686,4 +686,361 @@
     .no-print {
         display: none !important;
     }
+    .print-only {
+        display: block !important;
+    }
+}
+
+.print-only {
+    display: none;
+}
+
+/* =========================================================================
+   15. Crop Returns & Tabbed Summaries
+   ========================================================================= */
+.input-table-num {
+    font-family: monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.input-table-num:focus {
+    border-color: #820100;
+    box-shadow: 0 0 0 0.2rem rgba(130, 1, 0, 0.15);
+}
+
+.badge-auto-pull {
+    font-size: 0.68rem;
+    letter-spacing: 0.3px;
+}
+
+.nav-pills-daph .nav-link {
+    font-weight: 600;
+    color: #495057;
+    padding: 0.65rem 1.25rem;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+}
+
+.nav-pills-daph .nav-link:hover {
+    background-color: #e9ecef;
+    color: #820100;
+}
+
+.nav-pills-daph .nav-link.active {
+    background-color: #820100 !important;
+    color: #ffffff !important;
+    border-color: #820100 !important;
+    box-shadow: 0 3px 6px rgba(130, 1, 0, 0.25);
+}
+
+.table-ytd {
+    background-color: #fef8f8 !important;
+    font-weight: 700;
+    color: #820100;
+}
+
+.table-midyear {
+    background-color: #f0f7ff !important;
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+/* =========================================================================
+   16. Section E Production Balances (section_e.php)
+   ========================================================================= */
+.cat-card-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #820100;
+    cursor: pointer;
+}
+
+.cat-icon-badge {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background-color: #820100;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+/* =========================================================================
+   17. Section E: Production Balances & Tabbed UI (section_e.php)
+   ========================================================================= */
+.tabs-scroller {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+}
+
+.tabs-scroller::-webkit-scrollbar {
+    height: 6px;
+}
+
+.tabs-scroller::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.nav-pills-section-e {
+    flex-wrap: nowrap;
+    gap: 6px;
+}
+
+.nav-pills-section-e .nav-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-pills-section-e .nav-link:hover {
+    background-color: #f1f5f9;
+    color: #820100;
+    border-color: #cbd5e1;
+}
+
+.nav-pills-section-e .nav-link.active {
+    background-color: #820100 !important;
+    color: #ffffff !important;
+    border-color: #820100 !important;
+    box-shadow: 0 3px 8px rgba(130, 1, 0, 0.25);
+}
+
+.nav-pills-section-e .nav-link .badge-tab-count {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.08);
+    color: inherit;
+}
+
+.nav-pills-section-e .nav-link.active .badge-tab-count {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.cat-badge-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #820100;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.cat-header-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fdf8f8 100%);
+    border-left: 4px solid #820100 !important;
+}
+
+.table-period-sum {
+    background-color: #fef2f2 !important;
+    color: #820100;
+    font-weight: 700;
+}
+
+.table-active-month {
+    background-color: #f0fdf4 !important;
+    border-left: 2px solid #22c55e !important;
+    border-right: 2px solid #22c55e !important;
+}
+
+.badge-unit {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.semen-balance-row {
+    background-color: #fffbeb !important;
+    border: 1px solid #fde68a !important;
+}
+
+.semen-balance-row strong {
+    color: #92400e;
+}
+
+.stat-pill {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    transition: transform 0.15s ease-in-out;
+}
+
+.stat-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.btn-period-preset {
+    font-size: 0.78rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.btn-period-preset.active {
+    background-color: #820100 !important;
+    border-color: #820100 !important;
+    color: #ffffff !important;
+}
+
+@media print {
+    body:has(#printableSectionEReport) * {
+        visibility: hidden;
+    }
+    body:has(#printableSectionEReport) #printableSectionEReport,
+    body:has(#printableSectionEReport) #printableSectionEReport * {
+        visibility: visible;
+    }
+    body:has(#printableSectionEReport) #printableSectionEReport {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: block !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+}
+
+/* =========================================================================
+   18. Letter 'H' Account (Cash Settlement in Bank) (letter_h_record.php)
+   ========================================================================= */
+.nav-pills-letter-h {
+    flex-wrap: nowrap;
+    gap: 8px;
+}
+
+.nav-pills-letter-h .nav-link {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #475569;
+    padding: 0.65rem 1.25rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-pills-letter-h .nav-link:hover {
+    background-color: #f1f5f9;
+    color: #820100;
+    border-color: #cbd5e1;
+}
+
+.nav-pills-letter-h .nav-link.active {
+    background-color: #820100 !important;
+    color: #ffffff !important;
+    border-color: #820100 !important;
+    box-shadow: 0 3px 8px rgba(130, 1, 0, 0.25);
+}
+
+.nav-pills-letter-h .nav-link .badge-tab-count {
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.08);
+    color: inherit;
+}
+
+.nav-pills-letter-h .nav-link.active .badge-tab-count {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.table-period-total {
+    background-color: #fef2f2 !important;
+    color: #820100;
+    font-weight: 700;
+}
+
+.table-active-entry {
+    background-color: #f0fdf4 !important;
+    border-left: 2px solid #22c55e !important;
+    border-right: 2px solid #22c55e !important;
+}
+
+.input-currency {
+    font-family: monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.input-currency:focus {
+    border-color: #820100;
+    box-shadow: 0 0 0 0.2rem rgba(130, 1, 0, 0.15);
+}
+
+.grand-total-banner {
+    background: linear-gradient(135deg, #370709 0%, #820100 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 16px 24px;
+}
+
+@media print {
+    body:has(#printableLetterHReport) * {
+        visibility: hidden;
+    }
+    body:has(#printableLetterHReport) #printableLetterHReport,
+    body:has(#printableLetterHReport) #printableLetterHReport * {
+        visibility: visible;
+    }
+    body:has(#printableLetterHReport) #printableLetterHReport {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: block !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+}
+
+.btn-delete-item {
+    cursor: pointer;
+    line-height: 1;
+    transition: transform 0.15s ease-in-out;
+}
+
+.btn-delete-item:hover {
+    transform: scale(1.15);
+}
+
+.btn-delete-item:hover i {
+    color: #dc3545 !important;
+    opacity: 1 !important;
 }

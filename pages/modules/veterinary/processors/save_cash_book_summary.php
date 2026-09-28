@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
@@ -67,10 +67,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $district_id, $range_id, $report_year, $report_month, $item_name,
             $quantity_sold, $unit_price, $total_amount, $amount_deposited, $user_id
         );
+        $from_month = intval($_POST['from_month'] ?? 1);
+        $to_month = intval($_POST['to_month'] ?? 12);
+        $active_tab = preg_replace('/[^a-zA-Z0-9_\-]/', '', $_POST['active_tab'] ?? '');
+        $redirect_query = "?status=success&year=" . urlencode($report_year) . "&from_month=" . urlencode($from_month) . "&to_month=" . urlencode($to_month);
+        if (!empty($active_tab)) {
+            $redirect_query .= "&tab=" . urlencode($active_tab);
+        }
+
         if ($stmt->execute()) {
             $_SESSION['msg'] = "Cash Book record saved successfully.";
             $_SESSION['msg_type'] = "success";
-            header("Location: ../cash_book_summary.php?status=success");
+            header("Location: ../cash_book_summary.php" . $redirect_query);
             exit();
         } else {
             $_SESSION['msg'] = "Database error: " . $stmt->error;

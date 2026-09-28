@@ -63,10 +63,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $quantity_sold, $unit_price, $total_amount, $amount_deposited,
             $id, $range_id
         );
+        $from_month = intval($_POST['from_month'] ?? 1);
+        $to_month = intval($_POST['to_month'] ?? 12);
+        $active_tab = preg_replace('/[^a-zA-Z0-9_\-]/', '', $_POST['active_tab'] ?? '');
+        $redirect_query = "?status=success&year=" . urlencode($report_year) . "&from_month=" . urlencode($from_month) . "&to_month=" . urlencode($to_month);
+        if (!empty($active_tab)) {
+            $redirect_query .= "&tab=" . urlencode($active_tab);
+        }
+
         if ($stmt->execute()) {
             $_SESSION['msg'] = "Cash Book record updated successfully.";
             $_SESSION['msg_type'] = "success";
-            header("Location: ../cash_book_summary.php?status=success");
+            header("Location: ../cash_book_summary.php" . $redirect_query);
         } else {
             $_SESSION['msg'] = "Database error: " . $stmt->error;
             $_SESSION['msg_type'] = "danger";

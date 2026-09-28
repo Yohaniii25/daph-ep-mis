@@ -16,40 +16,30 @@
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Report Month</label>
                             <select name="report_month" id="edit_report_month" class="form-select form-select-sm" required>
-                                <option value="" disabled>-- Select Month --</option>
-                                <option value="1">January</option>
-                                <option value="2">February</option>
-                                <option value="3">March</option>
-                                <option value="4">April</option>
-                                <option value="5">May</option>
-                                <option value="6">June</option>
-                                <option value="7">July</option>
-                                <option value="8">August</option>
-                                <option value="9">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
+                                <?php for ($m = 1; $m <= 12; $m++): ?>
+                                    <option value="<?= $m ?>"><?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
+                                <?php endfor; ?>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label small fw-bold">Item Name</label>
-                            <input type="text" name="item_name" id="edit_item_name" class="form-control form-control-sm" required>
+                            <input type="text" name="item_name" id="edit_item_name" class="form-control form-control-sm fw-bold bg-light" readonly required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Balance from Previous Month</label>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Balance Previous Month</label>
                             <input type="number" id="edit_prev_bal" name="balance_previous_month" class="form-control form-control-sm" min="0" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Received During Current Month</label>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Current Month Received</label>
                             <input type="number" id="edit_received" name="received_current_month" class="form-control form-control-sm" min="0" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Issued During Current Month</label>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Current Month Issued</label>
                             <input type="number" id="edit_issued" name="issued_current_month" class="form-control form-control-sm" min="0" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Balance at End of Month (Manual Entry)</label>
-                            <input type="number" id="edit_current_bal" name="balance_current_month" class="form-control form-control-sm" min="0" required>
+                            <label class="form-label small fw-bold">Calculated Balance</label>
+                            <input type="number" id="edit_current_bal" name="balance_current_month" class="form-control form-control-sm bg-light fw-bold" readonly required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Remarks</label>
@@ -65,3 +55,19 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function recalcEditModal() {
+        const prev = parseInt(document.getElementById('edit_prev_bal').value) || 0;
+        const rec = parseInt(document.getElementById('edit_received').value) || 0;
+        const iss = parseInt(document.getElementById('edit_issued').value) || 0;
+        document.getElementById('edit_current_bal').value = prev + rec - iss;
+    }
+    const prevEl = document.getElementById('edit_prev_bal');
+    const recEl = document.getElementById('edit_received');
+    const issEl = document.getElementById('edit_issued');
+    if (prevEl) prevEl.addEventListener('input', recalcEditModal);
+    if (recEl) recEl.addEventListener('input', recalcEditModal);
+    if (issEl) issEl.addEventListener('input', recalcEditModal);
+});
+</script>
