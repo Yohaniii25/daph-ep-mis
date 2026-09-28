@@ -617,11 +617,11 @@ $active_record_count = ($current_view === 'officers') ? count($vs_list) : count(
                         </a>
                     </div>
 
-                    <!-- 5. Animal Breeding -->
+                    <!-- 5. Breeding and Production -->
                     <div class="col">
                         <a href="?view=breeding&range_id=<?= $selected_range_id ?>" class="btn-range-action <?= $current_view === 'breeding' ? 'active' : '' ?>" style="background: linear-gradient(145deg, #e65100, #f57c00);">
                             <i class="bi bi-activity"></i>
-                            <span class="text-center">Animal Breeding</span>
+                            <span class="text-center">Breeding and Production</span>
                         </a>
                     </div>
 

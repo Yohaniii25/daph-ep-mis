@@ -283,7 +283,7 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
             <div class="col-xl-2 col-md-4 col-sm-6">
                 <div class="card border-0 shadow-sm h-100 p-4">
-                    <h6 class="text-muted mb-3 font-semibold tracking-wider">Animal Breeding</h6>
+                    <h6 class="text-muted mb-3 font-semibold tracking-wider">Breeding & Production</h6>
                     <h2 class="text-warning mb-2 fw-bold"><?= $stats['breeding'] ?></h2>
                     <small class="text-success fw-medium"><i class="bi bi-arrow-up"></i> Total entries</small>
                 </div>

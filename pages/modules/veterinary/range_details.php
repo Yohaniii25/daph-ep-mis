@@ -212,7 +212,7 @@ $all_quick_actions = [
     ],
     'animal_breeding' => [
         'id' => 7,
-        'title' => 'Animal Breeding',
+        'title' => 'Breeding and Production',
         'icon'  => 'bi-file-earmark-text-fill',
         'color' => '#e65100',
         'link'  => 'animal_breeding.php' . ($range_id ? '?range_id=' . $range_id : '')

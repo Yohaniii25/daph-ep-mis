@@ -66,24 +66,24 @@ $b_stmt->bind_param("i", $activity_id);
 $b_stmt->execute();
 $beneficiaries_res = $b_stmt->get_result();
 
-$total_beneficiaries   = 0;
-$total_project_cost    = 0.0;
-$total_dept_amount     = 0.0;
-$total_beneficiary_amt = 0.0;
-$total_work_done_sum   = 0;
-$beneficiaries_list    = [];
+$total_beneficiaries        = 0;
+$total_project_cost         = 0.0;
+$total_contributions_logged = 0;
+$total_photos_logged        = 0;
+$beneficiaries_list         = [];
 
 while ($b_row = $beneficiaries_res->fetch_assoc()) {
     $beneficiaries_list[] = $b_row;
     $total_beneficiaries++;
-    $total_project_cost    += floatval($b_row['total_cost']);
-    $total_dept_amount     += floatval($b_row['dept_contribution_amount']);
-    $total_beneficiary_amt += floatval($b_row['beneficiary_contribution_amount']);
-    $total_work_done_sum   += intval($b_row['work_done_percentage']);
+    $total_project_cost += floatval($b_row['total_cost']);
+    if (!empty(trim($b_row['dept_contribution'] ?? '')) || !empty(trim($b_row['beneficiary_contribution'] ?? ''))) {
+        $total_contributions_logged++;
+    }
+    if (!empty($b_row['photo_1']) || !empty($b_row['photo_2'])) {
+        $total_photos_logged++;
+    }
 }
 $b_stmt->close();
-
-$avg_work_done = ($total_beneficiaries > 0) ? round($total_work_done_sum / $total_beneficiaries, 1) : 0;
 
 require_once '../../../includes/header.php';
 ?>
@@ -196,11 +196,11 @@ require_once '../../../includes/header.php';
             <div class="card kpi-card h-100 p-3" style="border-left-color: #0d6efd;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase">Total Project Cost</div>
-                        <div class="fs-4 fw-bold text-primary mt-1">LKR <?= number_format($total_project_cost, 2) ?></div>
+                        <div class="text-muted small fw-semibold text-uppercase">Contributions Logged</div>
+                        <div class="fs-4 fw-bold text-primary mt-1"><?= number_format($total_contributions_logged) ?> / <?= number_format($total_beneficiaries) ?></div>
                     </div>
                     <div class="rounded-circle p-3 text-white bg-primary">
-                        <i class="bi bi-cash-stack fs-4"></i>
+                        <i class="bi bi-diagram-3 fs-4"></i>
                     </div>
                 </div>
             </div>
@@ -209,11 +209,11 @@ require_once '../../../includes/header.php';
             <div class="card kpi-card h-100 p-3" style="border-left-color: #198754;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase">Dept. Contribution</div>
-                        <div class="fs-4 fw-bold text-success mt-1">LKR <?= number_format($total_dept_amount, 2) ?></div>
+                        <div class="text-muted small fw-semibold text-uppercase">Est. Subsidy Value</div>
+                        <div class="fs-4 fw-bold text-success mt-1">LKR <?= number_format($total_project_cost, 2) ?></div>
                     </div>
                     <div class="rounded-circle p-3 text-white bg-success">
-                        <i class="bi bi-bank fs-4"></i>
+                        <i class="bi bi-cash-stack fs-4"></i>
                     </div>
                 </div>
             </div>
@@ -222,11 +222,11 @@ require_once '../../../includes/header.php';
             <div class="card kpi-card h-100 p-3" style="border-left-color: #fd7e14;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase">Avg Work Done %</div>
-                        <div class="fs-4 fw-bold text-warning mt-1"><?= $avg_work_done ?>%</div>
+                        <div class="text-muted small fw-semibold text-uppercase">Physical Verifications</div>
+                        <div class="fs-4 fw-bold text-warning mt-1"><?= number_format($total_photos_logged) ?> / <?= number_format($total_beneficiaries) ?></div>
                     </div>
                     <div class="rounded-circle p-3 text-white bg-warning">
-                        <i class="bi bi-graph-up-arrow fs-4"></i>
+                        <i class="bi bi-camera fs-4"></i>
                     </div>
                 </div>
             </div>
@@ -240,7 +240,7 @@ require_once '../../../includes/header.php';
                 <h5 class="fw-bold mb-1" style="color: #370709;">
                     <i class="bi bi-card-checklist me-2 text-danger"></i>Assigned Beneficiary Register
                 </h5>
-                <p class="text-muted small mb-0">Record of farmers/beneficiaries, GPS coordinates, financial breakdowns, and verification images.</p>
+                <p class="text-muted small mb-0">Record of enrolled beneficiaries, farm details, contact info, activity-specific subsidy contributions, and physical verification photos.</p>
             </div>
         </div>
         <div class="card-body px-4 pb-4">
@@ -248,11 +248,10 @@ require_once '../../../includes/header.php';
                 <table id="beneficiariesTable" class="table table-striped table-hover table-bordered align-middle small bg-white text-dark m-0 w-100">
                     <thead style="background-color: #d4c7b7; color: #370709;">
                         <tr>
-                            <th>Beneficiary & Farm</th>
-                            <th>Contact & Address</th>
+                            <th>Beneficiary & Farm Identification</th>
+                            <th>Contact & Physical Address</th>
                             <th class="text-center">GPS Location</th>
-                            <th>Financial Breakdown (LKR / %)</th>
-                            <th class="text-center" style="min-width: 130px;">Work Done %</th>
+                            <th>Activity-Specific Contribution Tracking</th>
                             <th class="text-center">Verification Photos</th>
                             <th class="text-center" style="width: 100px;">Actions</th>
                         </tr>
@@ -260,21 +259,24 @@ require_once '../../../includes/header.php';
                     <tbody>
                         <?php if (!empty($beneficiaries_list)): ?>
                             <?php foreach ($beneficiaries_list as $b): ?>
-                                <?php
-                                $work_pct = intval($b['work_done_percentage']);
-                                $milestone_cls = ($work_pct >= 100) ? 'bg-success' : (($work_pct >= 50) ? 'bg-primary' : 'bg-warning text-dark');
-                                $milestone_status = ($work_pct >= 100) ? 'Completed' : (($work_pct > 0) ? 'In Progress' : 'Not Started');
-                                ?>
                                 <tr>
                                     <td>
-                                        <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($b['name']) ?></div>
-                                        <div class="text-muted small"><i class="bi bi-postcard me-1"></i>Reg: <strong><?= htmlspecialchars($b['farm_reg_no']) ?></strong></div>
-                                        <div class="text-secondary small"><i class="bi bi-person-vcard me-1"></i>NIC: <?= htmlspecialchars($b['nic']) ?></div>
+                                        <div class="fw-bold text-dark fs-6 mb-1">
+                                            <i class="bi bi-person-circle text-danger me-1"></i><?= htmlspecialchars($b['name']) ?>
+                                        </div>
+                                        <div class="text-muted small mb-1">
+                                            <i class="bi bi-postcard-fill me-1 text-secondary"></i>Farm Reg: <span class="badge bg-light text-dark border fw-bold"><?= htmlspecialchars($b['farm_reg_no']) ?></span>
+                                        </div>
+                                        <div class="text-secondary small">
+                                            <i class="bi bi-person-vcard me-1"></i>NIC: <strong><?= htmlspecialchars($b['nic']) ?></strong>
+                                        </div>
                                     </td>
                                     <td>
-                                        <div><i class="bi bi-telephone-fill me-1 text-success"></i><?= htmlspecialchars($b['phone']) ?></div>
-                                        <div class="text-muted small text-truncate" style="max-width: 200px;" title="<?= htmlspecialchars($b['address']) ?>">
-                                            <i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($b['address']) ?>
+                                        <div class="fw-semibold text-dark mb-1">
+                                            <i class="bi bi-telephone-fill me-1 text-success"></i><?= htmlspecialchars($b['phone']) ?>
+                                        </div>
+                                        <div class="text-muted small" title="<?= htmlspecialchars($b['address']) ?>">
+                                            <i class="bi bi-geo-alt-fill me-1 text-danger"></i><?= htmlspecialchars($b['address']) ?>
                                         </div>
                                     </td>
                                     <td class="text-center">
@@ -287,26 +289,23 @@ require_once '../../../includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <div class="small">
-                                            <span class="text-muted">Total Cost:</span> <strong>LKR <?= number_format($b['total_cost'], 2) ?></strong>
-                                        </div>
-                                        <div class="small text-success">
-                                            <span>Dept:</span> <?= number_format($b['dept_contribution_pct'], 1) ?>% (LKR <?= number_format($b['dept_contribution_amount'], 2) ?>)
-                                        </div>
-                                        <div class="small text-primary">
-                                            <span>Farmer:</span> <?= number_format($b['beneficiary_contribution_pct'], 1) ?>% (LKR <?= number_format($b['beneficiary_contribution_amount'], 2) ?>)
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <div class="progress w-100" style="height: 8px; border-radius: 4px;">
-                                                <div class="progress-bar <?= $milestone_cls ?>" role="progressbar" style="width: <?= min(100, $work_pct) ?>%;"></div>
+                                        <div class="p-2 rounded border bg-light-subtle mb-1">
+                                            <div class="fw-bold text-success small mb-1">
+                                                <i class="bi bi-building-check me-1"></i>Department Contribution:
                                             </div>
-                                            <span class="fw-bold font-monospace small"><?= $work_pct ?>%</span>
+                                            <div class="text-dark small" style="white-space: pre-wrap;"><?= !empty($b['dept_contribution']) ? htmlspecialchars($b['dept_contribution']) : '<span class="text-muted fst-italic">No specific department contribution recorded</span>' ?></div>
                                         </div>
-                                        <div class="text-center">
-                                            <span class="badge <?= $milestone_cls ?> rounded-pill" style="font-size: 0.72rem;"><?= $milestone_status ?></span>
+                                        <div class="p-2 rounded border bg-light-subtle">
+                                            <div class="fw-bold text-primary small mb-1">
+                                                <i class="bi bi-person-gear me-1"></i>Beneficiary Contribution:
+                                            </div>
+                                            <div class="text-dark small" style="white-space: pre-wrap;"><?= !empty($b['beneficiary_contribution']) ? htmlspecialchars($b['beneficiary_contribution']) : '<span class="text-muted fst-italic">No specific beneficiary contribution recorded</span>' ?></div>
                                         </div>
+                                        <?php if (floatval($b['total_cost']) > 0): ?>
+                                            <div class="small text-muted mt-1">
+                                                <i class="bi bi-tag-fill me-1 text-secondary"></i>Est. Unit Value: <strong>LKR <?= number_format($b['total_cost'], 2) ?></strong>
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
@@ -330,12 +329,9 @@ require_once '../../../includes/header.php';
                                             data-phone="<?= htmlspecialchars($b['phone'], ENT_QUOTES) ?>"
                                             data-address="<?= htmlspecialchars($b['address'], ENT_QUOTES) ?>"
                                             data-gps_location="<?= htmlspecialchars($b['gps_location'], ENT_QUOTES) ?>"
+                                            data-dept_contribution="<?= htmlspecialchars($b['dept_contribution'] ?? '', ENT_QUOTES) ?>"
+                                            data-beneficiary_contribution="<?= htmlspecialchars($b['beneficiary_contribution'] ?? '', ENT_QUOTES) ?>"
                                             data-total_cost="<?= $b['total_cost'] ?>"
-                                            data-dept_pct="<?= $b['dept_contribution_pct'] ?>"
-                                            data-dept_amount="<?= $b['dept_contribution_amount'] ?>"
-                                            data-ben_pct="<?= $b['beneficiary_contribution_pct'] ?>"
-                                            data-ben_amount="<?= $b['beneficiary_contribution_amount'] ?>"
-                                            data-work_pct="<?= $b['work_done_percentage'] ?>"
                                             title="Edit Beneficiary">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
@@ -362,7 +358,7 @@ require_once '../../../includes/header.php';
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header text-light py-2" style="background-color: #370709;">
-                <h6 class="modal-title" id="addBeneficiaryLabel"><i class="bi bi-person-plus-fill me-2"></i> Enroll Beneficiary in Activity</h6>
+                <h6 class="modal-title" id="addBeneficiaryLabel"><i class="bi bi-person-plus-fill me-2"></i> Enroll Beneficiary & Activity Contribution Tracking</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="processors/beneficiary_crud.php" method="POST" enctype="multipart/form-data">
@@ -370,7 +366,14 @@ require_once '../../../includes/header.php';
                 <input type="hidden" name="activity_id" value="<?= $activity_id ?>">
 
                 <div class="modal-body p-4 small">
-                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary"><i class="bi bi-person-badge me-1"></i> Personal & Farm Identification</h6>
+                    <!-- 1. Beneficiary Enrollment Details -->
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-person-vcard-fill me-1 text-danger"></i> Beneficiary Enrollment Information
+                        </h6>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Required Details</span>
+                    </div>
+
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold mb-1">Beneficiary Full Name <span class="text-danger">*</span></label>
@@ -381,16 +384,16 @@ require_once '../../../includes/header.php';
                             <input type="text" name="farm_reg_no" class="form-control form-control-sm border-secondary" placeholder="e.g. FRN-AMP-2026-0042" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">National Identity Card (NIC) <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold mb-1">Identification Card Number (NIC) <span class="text-danger">*</span></label>
                             <input type="text" name="nic" class="form-control form-control-sm border-secondary" placeholder="e.g. 198512345678 or 851234567V" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold mb-1">Contact Phone Number <span class="text-danger">*</span></label>
-                            <input type="text" name="phone" class="form-control form-control-sm border-secondary" placeholder="e.g. 0771234567" required>
+                            <input type="tel" name="phone" class="form-control form-control-sm border-secondary" placeholder="e.g. 0771234567" required>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label fw-bold mb-1">Residential / Farm Physical Address <span class="text-danger">*</span></label>
-                            <input type="text" name="address" class="form-control form-control-sm border-secondary" placeholder="e.g. No. 45, Main Street, Akkaraipattu" required>
+                            <textarea name="address" rows="2" class="form-control form-control-sm border-secondary" placeholder="e.g. No. 45, Main Road, Akkaraipattu" required></textarea>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold mb-1">GPS Location Coordinates</label>
@@ -400,57 +403,62 @@ require_once '../../../includes/header.php';
                                     <i class="bi bi-crosshair"></i>
                                 </button>
                             </div>
+                            <small class="text-muted">Latitude, Longitude</small>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary"><i class="bi bi-cash-coin me-1"></i> Financial Contribution Breakdown</h6>
+                    <!-- 2. Activity-Specific Contribution Tracking -->
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-2">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-diagram-3-fill me-1 text-primary"></i> Activity-Specific Contribution Tracking (Project Subsidies)
+                        </h6>
+                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Manual Activity Recording</span>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        Record the specific activity descriptions provided by the Department and the Beneficiary to accurately reflect what each party is contributing toward the subsidy (percentage calculations removed).
+                    </p>
+
                     <div class="p-3 bg-light rounded-3 border mb-3">
-                        <div class="row g-2 mb-2">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1">Total Project / Unit Cost (LKR)</label>
-                                <input type="number" step="0.01" min="0" id="add_total_cost" name="total_cost" class="form-control form-control-sm border-secondary" value="0.00" oninput="calcContributions('add')">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1 text-success">
+                                    <i class="bi bi-building-check me-1"></i> Department Contribution <span class="text-danger">*</span>
+                                </label>
+                                <textarea name="dept_contribution" rows="3" class="form-control form-control-sm border-success" placeholder="Describe specific items, livestock, or services provided by the department (e.g. 50 Day-Old Chicks, 50kg Starter Feed, Vaccination, Brooder Lamps, Technical Guidance)..." required></textarea>
+                                <div class="form-text small text-muted">Specific materials, inputs, or clinical assistance provided by the department.</div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1 text-success">Department Contribution (%)</label>
-                                <input type="number" step="0.1" min="0" max="100" id="add_dept_pct" name="dept_contribution_pct" class="form-control form-control-sm border-success" value="50" oninput="calcFromDeptPct('add')">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1 text-primary">
+                                    <i class="bi bi-person-fill-gear me-1"></i> Beneficiary Contribution <span class="text-danger">*</span>
+                                </label>
+                                <textarea name="beneficiary_contribution" rows="3" class="form-control form-control-sm border-primary" placeholder="Describe specific items, labor, or facilities provided by beneficiary (e.g. Night shelter poultry shed construction, brooding setup, drinkers/feeders, daily labor, water & electricity)..." required></textarea>
+                                <div class="form-text small text-muted">Specific infrastructure, labor, equipment, or co-funding provided by the farmer.</div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1 text-success">Department Amount (LKR)</label>
-                                <input type="number" step="0.01" min="0" id="add_dept_amount" name="dept_contribution_amount" class="form-control form-control-sm border-success" value="0.00" oninput="calcFromDeptAmt('add')">
-                            </div>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-md-4">
-                                <small class="text-muted">Auto-computed breakdown ensures both percentage and exact LKR figures are captured.</small>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1 text-primary">Beneficiary Contribution (%)</label>
-                                <input type="number" step="0.1" min="0" max="100" id="add_ben_pct" name="beneficiary_contribution_pct" class="form-control form-control-sm border-primary" value="50" oninput="calcFromBenPct('add')">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1 text-primary">Beneficiary Amount (LKR)</label>
-                                <input type="number" step="0.01" min="0" id="add_ben_amount" name="beneficiary_contribution_amount" class="form-control form-control-sm border-primary" value="0.00" oninput="calcFromBenAmt('add')">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1 text-secondary">
+                                    <i class="bi bi-tag me-1"></i> Estimated Total Project / Unit Cost (LKR)
+                                </label>
+                                <input type="number" step="0.01" min="0" name="total_cost" class="form-control form-control-sm border-secondary" value="0.00" placeholder="0.00">
+                                <div class="form-text small text-muted">Optional estimated total monetary value of the subsidized unit.</div>
                             </div>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary"><i class="bi bi-speedometer2 me-1"></i> Milestone Progress & Physical Verification</h6>
-                    <div class="row g-2 mb-3">
+                    <!-- 3. Physical Verification -->
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary">
+                        <i class="bi bi-camera me-1"></i> Physical Verification
+                    </h6>
+                    <input type="hidden" name="work_done_percentage" value="50">
+                    <div class="row g-3 mb-2">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">Milestone "Work Done Percentage" (0 - 100%)</label>
-                            <div class="d-flex align-items-center gap-2">
-                                <input type="range" class="form-range flex-grow-1" min="0" max="100" id="add_work_range" value="0" oninput="syncWorkInput('add', this.value)">
-                                <input type="number" min="0" max="100" id="add_work_done" name="work_done_percentage" class="form-control form-control-sm border-secondary text-center fw-bold" style="width: 75px;" value="0" oninput="syncWorkRange('add', this.value)">
-                                <span class="fw-bold">%</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label fw-bold mb-1">Physical Verification Photo 1</label>
                             <input type="file" name="photo_1" class="form-control form-control-sm border-secondary" accept="image/*">
+                            <div class="form-text small text-muted">Upload site, beneficiary handover, or preparation photo.</div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold mb-1">Physical Verification Photo 2</label>
                             <input type="file" name="photo_2" class="form-control form-control-sm border-secondary" accept="image/*">
+                            <div class="form-text small text-muted">Upload facility setup, livestock, or inputs receipt photo.</div>
                         </div>
                     </div>
                 </div>
@@ -469,7 +477,7 @@ require_once '../../../includes/header.php';
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header text-light py-2" style="background-color: #370709;">
-                <h6 class="modal-title" id="editBeneficiaryLabel"><i class="bi bi-pencil-square me-2"></i> Update Beneficiary Record</h6>
+                <h6 class="modal-title" id="editBeneficiaryLabel"><i class="bi bi-pencil-square me-2"></i> Update Beneficiary Record & Contributions</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="processors/beneficiary_crud.php" method="POST" enctype="multipart/form-data">
@@ -478,7 +486,14 @@ require_once '../../../includes/header.php';
                 <input type="hidden" name="id" id="edit_id">
 
                 <div class="modal-body p-4 small">
-                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary"><i class="bi bi-person-badge me-1"></i> Personal & Farm Identification</h6>
+                    <!-- 1. Beneficiary Enrollment Details -->
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-person-vcard-fill me-1 text-danger"></i> Beneficiary Enrollment Information
+                        </h6>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Required Details</span>
+                    </div>
+
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold mb-1">Beneficiary Full Name <span class="text-danger">*</span></label>
@@ -489,16 +504,16 @@ require_once '../../../includes/header.php';
                             <input type="text" name="farm_reg_no" id="edit_farm_reg_no" class="form-control form-control-sm border-secondary" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">National Identity Card (NIC) <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold mb-1">Identification Card Number (NIC) <span class="text-danger">*</span></label>
                             <input type="text" name="nic" id="edit_nic" class="form-control form-control-sm border-secondary" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold mb-1">Contact Phone Number <span class="text-danger">*</span></label>
-                            <input type="text" name="phone" id="edit_phone" class="form-control form-control-sm border-secondary" required>
+                            <input type="tel" name="phone" id="edit_phone" class="form-control form-control-sm border-secondary" required>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label fw-bold mb-1">Residential / Farm Physical Address <span class="text-danger">*</span></label>
-                            <input type="text" name="address" id="edit_address" class="form-control form-control-sm border-secondary" required>
+                            <textarea name="address" id="edit_address" rows="2" class="form-control form-control-sm border-secondary" required></textarea>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold mb-1">GPS Location Coordinates</label>
@@ -508,57 +523,62 @@ require_once '../../../includes/header.php';
                                     <i class="bi bi-crosshair"></i>
                                 </button>
                             </div>
+                            <small class="text-muted">Latitude, Longitude</small>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary"><i class="bi bi-cash-coin me-1"></i> Financial Contribution Breakdown</h6>
+                    <!-- 2. Activity-Specific Contribution Tracking -->
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-2">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-diagram-3-fill me-1 text-primary"></i> Activity-Specific Contribution Tracking (Project Subsidies)
+                        </h6>
+                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Manual Activity Recording</span>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        Record the specific activity descriptions provided by the Department and the Beneficiary to accurately reflect what each party is contributing toward the subsidy.
+                    </p>
+
                     <div class="p-3 bg-light rounded-3 border mb-3">
-                        <div class="row g-2 mb-2">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1">Total Project / Unit Cost (LKR)</label>
-                                <input type="number" step="0.01" min="0" id="edit_total_cost" name="total_cost" class="form-control form-control-sm border-secondary" oninput="calcContributions('edit')">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1 text-success">
+                                    <i class="bi bi-building-check me-1"></i> Department Contribution <span class="text-danger">*</span>
+                                </label>
+                                <textarea name="dept_contribution" id="edit_dept_contribution" rows="3" class="form-control form-control-sm border-success" placeholder="Describe specific items, livestock, or services provided by the department..." required></textarea>
+                                <div class="form-text small text-muted">Specific materials, inputs, or clinical assistance provided by the department.</div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1 text-success">Department Contribution (%)</label>
-                                <input type="number" step="0.1" min="0" max="100" id="edit_dept_pct" name="dept_contribution_pct" class="form-control form-control-sm border-success" oninput="calcFromDeptPct('edit')">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1 text-primary">
+                                    <i class="bi bi-person-fill-gear me-1"></i> Beneficiary Contribution <span class="text-danger">*</span>
+                                </label>
+                                <textarea name="beneficiary_contribution" id="edit_beneficiary_contribution" rows="3" class="form-control form-control-sm border-primary" placeholder="Describe specific items, labor, or facilities provided by beneficiary..." required></textarea>
+                                <div class="form-text small text-muted">Specific infrastructure, labor, equipment, or co-funding provided by the farmer.</div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1 text-success">Department Amount (LKR)</label>
-                                <input type="number" step="0.01" min="0" id="edit_dept_amount" name="dept_contribution_amount" class="form-control form-control-sm border-success" oninput="calcFromDeptAmt('edit')">
-                            </div>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-md-4">
-                                <small class="text-muted">Dynamic tracking updates percentages and exact amounts synchronously.</small>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1 text-primary">Beneficiary Contribution (%)</label>
-                                <input type="number" step="0.1" min="0" max="100" id="edit_ben_pct" name="beneficiary_contribution_pct" class="form-control form-control-sm border-primary" oninput="calcFromBenPct('edit')">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold mb-1 text-primary">Beneficiary Amount (LKR)</label>
-                                <input type="number" step="0.01" min="0" id="edit_ben_amount" name="beneficiary_contribution_amount" class="form-control form-control-sm border-primary" oninput="calcFromBenAmt('edit')">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold mb-1 text-secondary">
+                                    <i class="bi bi-tag me-1"></i> Estimated Total Project / Unit Cost (LKR)
+                                </label>
+                                <input type="number" step="0.01" min="0" name="total_cost" id="edit_total_cost" class="form-control form-control-sm border-secondary" value="0.00" placeholder="0.00">
+                                <div class="form-text small text-muted">Optional estimated total monetary value of the subsidized unit.</div>
                             </div>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary"><i class="bi bi-speedometer2 me-1"></i> Milestone Progress & Physical Verification</h6>
-                    <div class="row g-2 mb-3">
+                    <!-- 3. Physical Verification -->
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-secondary">
+                        <i class="bi bi-camera me-1"></i> Physical Verification
+                    </h6>
+                    <input type="hidden" name="work_done_percentage" id="edit_work_done" value="50">
+                    <div class="row g-3 mb-2">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold mb-1">Milestone "Work Done Percentage" (0 - 100%)</label>
-                            <div class="d-flex align-items-center gap-2">
-                                <input type="range" class="form-range flex-grow-1" min="0" max="100" id="edit_work_range" oninput="syncWorkInput('edit', this.value)">
-                                <input type="number" min="0" max="100" id="edit_work_done" name="work_done_percentage" class="form-control form-control-sm border-secondary text-center fw-bold" style="width: 75px;" oninput="syncWorkRange('edit', this.value)">
-                                <span class="fw-bold">%</span>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label fw-bold mb-1">Replace Photo 1 (Optional)</label>
                             <input type="file" name="photo_1" class="form-control form-control-sm border-secondary" accept="image/*">
+                            <div class="form-text small text-muted">Upload replacement for Photo 1 if updating.</div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label fw-bold mb-1">Replace Photo 2 (Optional)</label>
                             <input type="file" name="photo_2" class="form-control form-control-sm border-secondary" accept="image/*">
+                            <div class="form-text small text-muted">Upload replacement for Photo 2 if updating.</div>
                         </div>
                     </div>
                 </div>
@@ -608,19 +628,19 @@ $(document).ready(function() {
                 extend: 'csv',
                 text: '<i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV',
                 className: 'btn btn-sm btn-success fw-bold me-1',
-                exportOptions: { columns: [0, 1, 2, 3, 4] }
+                exportOptions: { columns: [0, 1, 2, 3] }
             },
             {
                 extend: 'excel',
                 text: '<i class="bi bi-file-earmark-excel me-1"></i> Export Excel',
                 className: 'btn btn-sm btn-primary fw-bold me-1',
-                exportOptions: { columns: [0, 1, 2, 3, 4] }
+                exportOptions: { columns: [0, 1, 2, 3] }
             },
             {
                 extend: 'print',
                 text: '<i class="bi bi-printer me-1"></i> Print',
                 className: 'btn btn-sm btn-secondary fw-bold me-1',
-                exportOptions: { columns: [0, 1, 2, 3, 4] }
+                exportOptions: { columns: [0, 1, 2, 3] }
             }
         ],
         language: {
@@ -639,15 +659,9 @@ $(document).ready(function() {
         $('#edit_phone').val(btn.data('phone'));
         $('#edit_address').val(btn.data('address'));
         $('#edit_gps').val(btn.data('gps_location'));
+        $('#edit_dept_contribution').val(btn.data('dept_contribution'));
+        $('#edit_beneficiary_contribution').val(btn.data('beneficiary_contribution'));
         $('#edit_total_cost').val(btn.data('total_cost'));
-        $('#edit_dept_pct').val(btn.data('dept_pct'));
-        $('#edit_dept_amount').val(btn.data('dept_amount'));
-        $('#edit_ben_pct').val(btn.data('ben_pct'));
-        $('#edit_ben_amount').val(btn.data('ben_amount'));
-
-        const workPct = btn.data('work_pct');
-        $('#edit_work_done').val(workPct);
-        $('#edit_work_range').val(workPct);
 
         $('#editBeneficiaryModal').modal('show');
     });
@@ -671,85 +685,6 @@ $(document).ready(function() {
         });
     });
 });
-
-// Dynamic Financial Calculation Handlers
-function calcContributions(prefix) {
-    const total = parseFloat($(`#${prefix}_total_cost`).val()) || 0;
-    const deptPct = parseFloat($(`#${prefix}_dept_pct`).val()) || 0;
-    const benPct = Math.max(0, 100 - deptPct);
-    $(`#${prefix}_ben_pct`).val(benPct.toFixed(1));
-
-    $(`#${prefix}_dept_amount`).val(((deptPct / 100) * total).toFixed(2));
-    $(`#${prefix}_ben_amount`).val(((benPct / 100) * total).toFixed(2));
-}
-
-function calcFromDeptPct(prefix) {
-    const total = parseFloat($(`#${prefix}_total_cost`).val()) || 0;
-    let deptPct = parseFloat($(`#${prefix}_dept_pct`).val()) || 0;
-    if (deptPct > 100) deptPct = 100;
-    if (deptPct < 0) deptPct = 0;
-    $(`#${prefix}_dept_pct`).val(deptPct);
-
-    const benPct = Math.max(0, 100 - deptPct);
-    $(`#${prefix}_ben_pct`).val(benPct.toFixed(1));
-
-    if (total > 0) {
-        $(`#${prefix}_dept_amount`).val(((deptPct / 100) * total).toFixed(2));
-        $(`#${prefix}_ben_amount`).val(((benPct / 100) * total).toFixed(2));
-    }
-}
-
-function calcFromBenPct(prefix) {
-    const total = parseFloat($(`#${prefix}_total_cost`).val()) || 0;
-    let benPct = parseFloat($(`#${prefix}_ben_pct`).val()) || 0;
-    if (benPct > 100) benPct = 100;
-    if (benPct < 0) benPct = 0;
-    $(`#${prefix}_ben_pct`).val(benPct);
-
-    const deptPct = Math.max(0, 100 - benPct);
-    $(`#${prefix}_dept_pct`).val(deptPct.toFixed(1));
-
-    if (total > 0) {
-        $(`#${prefix}_dept_amount`).val(((deptPct / 100) * total).toFixed(2));
-        $(`#${prefix}_ben_amount`).val(((benPct / 100) * total).toFixed(2));
-    }
-}
-
-function calcFromDeptAmt(prefix) {
-    const total = parseFloat($(`#${prefix}_total_cost`).val()) || 0;
-    const deptAmt = parseFloat($(`#${prefix}_dept_amount`).val()) || 0;
-    if (total > 0) {
-        const deptPct = Math.min(100, Math.max(0, (deptAmt / total) * 100));
-        const benPct = Math.max(0, 100 - deptPct);
-        const benAmt = Math.max(0, total - deptAmt);
-
-        $(`#${prefix}_dept_pct`).val(deptPct.toFixed(1));
-        $(`#${prefix}_ben_pct`).val(benPct.toFixed(1));
-        $(`#${prefix}_ben_amount`).val(benAmt.toFixed(2));
-    }
-}
-
-function calcFromBenAmt(prefix) {
-    const total = parseFloat($(`#${prefix}_total_cost`).val()) || 0;
-    const benAmt = parseFloat($(`#${prefix}_ben_amount`).val()) || 0;
-    if (total > 0) {
-        const benPct = Math.min(100, Math.max(0, (benAmt / total) * 100));
-        const deptPct = Math.max(0, 100 - benPct);
-        const deptAmt = Math.max(0, total - benAmt);
-
-        $(`#${prefix}_ben_pct`).val(benPct.toFixed(1));
-        $(`#${prefix}_dept_pct`).val(deptPct.toFixed(1));
-        $(`#${prefix}_dept_amount`).val(deptAmt.toFixed(2));
-    }
-}
-
-// Milestone work done sync
-function syncWorkInput(prefix, val) {
-    $(`#${prefix}_work_done`).val(val);
-}
-function syncWorkRange(prefix, val) {
-    $(`#${prefix}_work_range`).val(val);
-}
 
 // GPS Fetch Helper
 function getCurrentGPS(targetInputId) {

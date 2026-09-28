@@ -74,12 +74,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone                         = trim($_POST['phone'] ?? '');
     $address                       = trim($_POST['address'] ?? '');
     $gps_location                  = trim($_POST['gps_location'] ?? '');
+    $dept_contribution             = trim($_POST['dept_contribution'] ?? '');
+    $beneficiary_contribution      = trim($_POST['beneficiary_contribution'] ?? '');
     $total_cost                    = floatval($_POST['total_cost'] ?? 0);
-    $dept_contribution_pct         = floatval($_POST['dept_contribution_pct'] ?? 0);
+    $dept_contribution_pct         = 0.0;
     $dept_contribution_amount      = floatval($_POST['dept_contribution_amount'] ?? 0);
-    $beneficiary_contribution_pct  = floatval($_POST['beneficiary_contribution_pct'] ?? 0);
+    $beneficiary_contribution_pct  = 0.0;
     $beneficiary_contribution_amount = floatval($_POST['beneficiary_contribution_amount'] ?? 0);
-    $work_done_percentage          = max(0, min(100, intval($_POST['work_done_percentage'] ?? 0)));
+    $work_done_percentage          = intval($_POST['work_done_percentage'] ?? 50);
+    if ($work_done_percentage <= 0) {
+        $work_done_percentage = 50;
+    }
     $id                            = intval($_POST['id'] ?? 0);
 
     // Validation
@@ -91,26 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($name) || empty($farm_reg_no) || empty($nic) || empty($phone) || empty($address)) {
-        $_SESSION['msg'] = "Validation Error: Name, Farm Reg No, NIC, Phone, and Address are required.";
+        $_SESSION['msg'] = "Validation Error: Name, Farm Registration Number, NIC, Phone Number, and Physical Address are all required.";
         $_SESSION['msg_type'] = "danger";
         header("Location: ../activity_beneficiaries.php?activity_id=" . $activity_id);
         exit();
-    }
-
-    // Auto-calculate exact amounts if percentages provided, or vice-versa
-    if ($total_cost > 0) {
-        if ($dept_contribution_amount <= 0 && $dept_contribution_pct > 0) {
-            $dept_contribution_amount = round(($dept_contribution_pct / 100) * $total_cost, 2);
-        }
-        if ($beneficiary_contribution_amount <= 0 && $beneficiary_contribution_pct > 0) {
-            $beneficiary_contribution_amount = round(($beneficiary_contribution_pct / 100) * $total_cost, 2);
-        }
-        if ($dept_contribution_pct <= 0 && $dept_contribution_amount > 0) {
-            $dept_contribution_pct = round(($dept_contribution_amount / $total_cost) * 100, 2);
-        }
-        if ($beneficiary_contribution_pct <= 0 && $beneficiary_contribution_amount > 0) {
-            $beneficiary_contribution_pct = round(($beneficiary_contribution_amount / $total_cost) * 100, 2);
-        }
     }
 
     if ($action === 'create') {
@@ -127,13 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $mysqli->prepare("
             INSERT INTO activity_beneficiaries 
-            (activity_id, name, farm_reg_no, nic, phone, address, gps_location, total_cost, dept_contribution_pct, dept_contribution_amount, beneficiary_contribution_pct, beneficiary_contribution_amount, work_done_percentage, photo_1, photo_2)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (activity_id, name, farm_reg_no, nic, phone, address, gps_location, dept_contribution, beneficiary_contribution, total_cost, dept_contribution_pct, dept_contribution_amount, beneficiary_contribution_pct, beneficiary_contribution_amount, work_done_percentage, photo_1, photo_2)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         if ($stmt) {
             $stmt->bind_param(
-                "issssssdddddiss",
+                "issssssssdddddiss",
                 $activity_id,
                 $name,
                 $farm_reg_no,
@@ -141,6 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $phone,
                 $address,
                 $gps_location,
+                $dept_contribution,
+                $beneficiary_contribution,
                 $total_cost,
                 $dept_contribution_pct,
                 $dept_contribution_amount,
@@ -152,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
 
             if ($stmt->execute()) {
-                $_SESSION['msg'] = "Beneficiary enrolled successfully with milestone progress.";
+                $_SESSION['msg'] = "Beneficiary enrolled successfully with contribution tracking and milestone progress.";
                 $_SESSION['msg_type'] = "success";
             } else {
                 $_SESSION['msg'] = "Database Error: " . htmlspecialchars($stmt->error);
@@ -204,6 +195,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 phone = ?, 
                 address = ?, 
                 gps_location = ?, 
+                dept_contribution = ?, 
+                beneficiary_contribution = ?, 
                 total_cost = ?, 
                 dept_contribution_pct = ?, 
                 dept_contribution_amount = ?, 
@@ -217,13 +210,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt) {
             $stmt->bind_param(
-                "ssssssdddddissii",
+                "ssssssssdddddissii",
                 $name,
                 $farm_reg_no,
                 $nic,
                 $phone,
                 $address,
                 $gps_location,
+                $dept_contribution,
+                $beneficiary_contribution,
                 $total_cost,
                 $dept_contribution_pct,
                 $dept_contribution_amount,
@@ -237,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
 
             if ($stmt->execute()) {
-                $_SESSION['msg'] = "Beneficiary record and milestone tracking updated successfully.";
+                $_SESSION['msg'] = "Beneficiary record and contribution details updated successfully.";
                 $_SESSION['msg_type'] = "success";
             } else {
                 $_SESSION['msg'] = "Database Update Error: " . htmlspecialchars($stmt->error);

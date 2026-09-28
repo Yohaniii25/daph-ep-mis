@@ -103,7 +103,7 @@ $quick_actions_list = [
     ],
     'animal_breeding' => [
         'id' => 7,
-        'title' => 'Animal Breeding',
+        'title' => 'Breeding and Production',
         'icon' => 'bi-file-earmark-text-fill',
         'color' => '#e65100',
         'desc' => 'Artificial insemination & pedigree records',

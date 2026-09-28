@@ -143,7 +143,7 @@ require_once __DIR__ . '/../../config/constants.php';
                     <div class="col-md-3">
                         <a href="<?= BASE_PATH ?>pages/modules/veterinary/animal_breeding.php" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i class="bi bi-egg fs-4"></i><br>
-                            <span style="color:white">Animal Breeding</span>
+                            <span style="color:white">Breeding & Production</span>
                         </a>
                     </div>
                     <div class="col-md-3">

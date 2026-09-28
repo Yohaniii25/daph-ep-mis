@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once __DIR__ . '/../../../config/db_connect.php';
 
@@ -155,7 +155,7 @@ require_once '../../../includes/header.php';
                         <div class="col">
                             <a href="animal_breeding.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #00838f; min-height: 105px;">
                                 <i class="bi bi-file-earmark-medical fs-3 mb-1"></i>
-                                <span class="text-center">Breeding</span>
+                                <span class="text-center">Breeding and Production</span>
                             </a>
                         </div>
 
