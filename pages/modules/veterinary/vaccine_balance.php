@@ -199,7 +199,7 @@ for ($m = 1; $m <= $selected_month; $m++) {
     $current_ytd_used += $monthly_used_totals[$m];
 }
 
-require_once '../../../includes/header.php';
+require_once __DIR__ . '/../../../includes/header.php';
 ?>
 
 <link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
@@ -447,9 +447,13 @@ require_once '../../../includes/header.php';
                                 <td class="text-end font-monospace bg-dark-subtle text-dark fw-bold"><?= number_format($annual_sum) ?></td>
                             </tr>
                         <?php endforeach; ?>
-                        <!-- Grand Totals Row -->
-                        <tr class="table-light fw-bold">
-                            <td colspan="2" class="text-uppercase small text-muted">All Vaccines Total (Used):</td>
+                    <?php endif; ?>
+                </tbody>
+                <?php if (!empty($all_vaccine_names)): ?>
+                    <tfoot class="table-light fw-bold border-top border-2 border-secondary">
+                        <tr>
+                            <th class="text-uppercase small fw-bold text-dark">All Vaccines Total (Used)</th>
+                            <th class="text-center"><span class="badge bg-secondary">Total</span></th>
                             <?php 
                             $tot_mid_year = 0;
                             $tot_annual   = 0;
@@ -457,13 +461,13 @@ require_once '../../../includes/header.php';
                             for ($m = 1; $m <= 6; $m++): 
                                 $tot_mid_year += $monthly_used_totals[$m];
                             ?>
-                                <td class="text-end font-monospace"><?= number_format($monthly_used_totals[$m]) ?></td>
+                                <th class="text-end font-monospace"><?= number_format($monthly_used_totals[$m]) ?></th>
                             <?php endfor; ?>
-                            <td class="text-end font-monospace table-midyear"><?= number_format($tot_mid_year) ?></td>
+                            <th class="text-end font-monospace table-midyear"><?= number_format($tot_mid_year) ?></th>
                             <?php for ($m = 7; $m <= 12; $m++): 
                                 $tot_annual += $monthly_used_totals[$m];
                             ?>
-                                <td class="text-end font-monospace"><?= number_format($monthly_used_totals[$m]) ?></td>
+                                <th class="text-end font-monospace"><?= number_format($monthly_used_totals[$m]) ?></th>
                             <?php endfor; ?>
                             <?php 
                             for ($m = 1; $m <= $selected_month; $m++) {
@@ -471,11 +475,11 @@ require_once '../../../includes/header.php';
                             }
                             $tot_annual += $tot_mid_year;
                             ?>
-                            <td class="text-end font-monospace table-ytd"><?= number_format($tot_ytd) ?></td>
-                            <td class="text-end font-monospace bg-dark-subtle text-dark fw-bold"><?= number_format($tot_annual) ?></td>
+                            <th class="text-end font-monospace table-ytd"><?= number_format($tot_ytd) ?></th>
+                            <th class="text-end font-monospace bg-dark-subtle text-dark fw-bold"><?= number_format($tot_annual) ?></th>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
+                    </tfoot>
+                <?php endif; ?>
             </table>
         </div>
     </div>
@@ -759,6 +763,14 @@ $(document).ready(function() {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
+    // Auto-open Add Modal if routed with action=add or open_modal=1
+    if (urlParams.get('action') === 'add' || urlParams.get('open_modal') === '1') {
+        var addModalEl = document.getElementById('addVaccineBalanceModal');
+        if (addModalEl) {
+            new bootstrap.Modal(addModalEl).show();
+        }
+    }
+
     // Edit Modal Trigger Pre-fill
     $(document).on('click', '.btn-edit-vac', function() {
         var $row = $(this).closest('tr');
@@ -886,4 +898,4 @@ $(document).ready(function() {
 });
 </script>
 
-<?php require_once '../../../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../../includes/footer.php'; ?>

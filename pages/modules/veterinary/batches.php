@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../../includes/header.php';
+require_once __DIR__ . '/../../../includes/header.php';
 
 $allowed_roles = [
     'veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon',
@@ -33,12 +33,17 @@ if ($total_batches_res) {
 
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
-                <h3 class="mb-1 fw-bold" style="color: #370709;">Vaccine Batches Register</h3>
-                <p class="text-muted small mb-0">Centralized tracking of vaccine inventory batch codes, active status, and expiry schedules.</p>
+                <h3 class="mb-1 fw-bold" style="color: #370709;">Batch Management Register</h3>
+                <p class="text-muted small mb-0">Centralized tracking of vaccine & drug inventory batch codes, active status, and expiry schedules.</p>
             </div>
-            <a href="vaccine_balance.php" class="btn btn-sm btn-secondary shadow-sm text-nowrap">
-                <i class="bi bi-arrow-left me-1"></i>Back to Vaccine Balances
-            </a>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn text-light shadow-sm text-nowrap" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Batch
+                </button>
+                <a href="drug_maintenance.php" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Drug Maintenance
+                </a>
+            </div>
         </div>
 
         <div class="row g-4 mb-4">
@@ -61,19 +66,19 @@ if ($total_batches_res) {
                     <div class="col-md-3">
                         <button class="btn w-100 py-3 text-light fw-bold shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
                             <i class="bi bi-box-seam fs-5 text-warning"></i><br>
-                            Add New Batch
+                            Add Batch
                         </button>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="drug_maintenance.php?view=maintenance" class="btn btn-outline-secondary w-100 py-3 fw-bold shadow-sm">
+                            <i class="bi bi-capsule fs-5 text-danger"></i><br>
+                            Drug Maintenance
+                        </a>
                     </div>
                     <div class="col-md-3">
                         <a href="vaccine_balance.php" class="btn btn-outline-dark w-100 py-3 fw-bold shadow-sm">
                             <i class="bi bi-box-seam-fill fs-5 text-primary"></i><br>
                             Vaccine Balances
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="drug_maintenance.php" class="btn btn-outline-secondary w-100 py-3 fw-bold shadow-sm">
-                            <i class="bi bi-capsule fs-5 text-danger"></i><br>
-                            Drug Maintenance
                         </a>
                     </div>
                 </div>
@@ -165,10 +170,8 @@ if ($total_batches_res) {
                 </table>
             </div>
         </div>
-    </main>
-</div>
 
-<?php include './model/vaccine_batch_modal.php'; ?>
+<?php include __DIR__ . '/model/vaccine_batch_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -277,4 +280,4 @@ if ($total_batches_res) {
     });
 </script>
 
-<?php require_once '../../../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../../includes/footer.php'; ?>

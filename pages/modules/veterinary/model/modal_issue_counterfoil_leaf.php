@@ -193,17 +193,100 @@
                         </div>
                     </div>
 
-                    <!-- SECTION 3: Purpose & Remarks -->
-                    <div class="card border-0 shadow-sm rounded-3">
+                    <!-- SECTION 3: Physical Yellow Receipt Leaf Details & Cashbook Revenue Mapping -->
+                    <div class="card border-0 shadow-sm rounded-3 mb-3 border-start border-warning border-4" style="background-color: #fffdf5;">
                         <div class="card-body p-3">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-dark">Purpose of Issuance</label>
-                                    <input type="text" name="purpose" class="form-control" placeholder="e.g. Animal Health Clearance, Transport, AI Service Receipt">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="text-uppercase fw-bold text-dark small mb-0" style="letter-spacing: 0.5px;">
+                                        <i class="bi bi-receipt-cutoff me-1 text-warning"></i> Physical Yellow Receipt Details (GF 172)
+                                    </h6>
+                                    <small class="text-muted" style="font-size: 11px;">Captures client revenue and feeds directly into Cashbook Summary</small>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-dark">Additional Remarks / Officer Notes</label>
-                                    <input type="text" name="remarks" class="form-control" placeholder="e.g. Inspected on-site, fee paid, etc.">
+                                <span id="leaf_category_preview_badge" class="badge bg-warning text-dark border border-warning px-2.5 py-1.5 fw-bold" style="font-size: 11px;">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i>Maps to: <span id="leaf_mapped_cat_text">Tab 1: Consultations</span>
+                                </span>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Activity Item / Purpose Preset Selector -->
+                                <div class="col-md-7">
+                                    <label class="form-label small fw-bold text-dark">
+                                        Purpose / Revenue Activity Item <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="leaf_purpose_selector" class="form-select form-select-sm" style="border-radius: 6px;">
+                                        <optgroup label="Tab 1: Consultations & Certificates">
+                                            <option value="Consultation fee for pure breed dog" data-price="150.00" data-tab="tab-consultations" selected>Consultation fee for pure breed dog (Rs. 150.00)</option>
+                                            <option value="Consultation fee for cross breed Pet's" data-price="100.00" data-tab="tab-consultations">Consultation fee for cross breed Pet's (Rs. 100.00)</option>
+                                            <option value="Health certificate" data-price="250.00" data-tab="tab-consultations">Health certificate (Rs. 250.00)</option>
+                                        </optgroup>
+                                        <optgroup label="Tab 2: Poultry Sales & Semen">
+                                            <option value="Day old unsexed backyard chicks" data-price="120.00" data-tab="tab-poultry">Day old unsexed backyard chicks</option>
+                                            <option value="Semen straws for AI services" data-price="200.00" data-tab="tab-poultry">Semen straws for AI services</option>
+                                            <option value="Day Old Cockerels" data-price="80.00" data-tab="tab-poultry">Day Old Cockerels</option>
+                                        </optgroup>
+                                        <optgroup label="Tab 3: Vaccines, Surgeries & Treatments">
+                                            <option value="Wound ress (Wound dress)" data-price="150.00" data-tab="tab-treatments">Wound ress (Wound dress)</option>
+                                            <option value="Ranikhet 1st dose & 2nd Dose" data-price="50.00" data-tab="tab-treatments">Ranikhet 1st dose & 2nd Dose</option>
+                                            <option value="OHE - Dog" data-price="1500.00" data-tab="tab-treatments">OHE - Dog (Rs. 1,500.00)</option>
+                                            <option value="OHE -Cat" data-price="1000.00" data-tab="tab-treatments">OHE -Cat (Rs. 1,000.00)</option>
+                                        </optgroup>
+                                        <optgroup label="Tab 4: Post Mortems">
+                                            <option value="Poultry -Bird post mortems" data-price="100.00" data-tab="tab-post-mortems">Poultry -Bird post mortems</option>
+                                            <option value="Post moturm Rabbit" data-price="150.00" data-tab="tab-post-mortems">Post moturm Rabbit</option>
+                                        </optgroup>
+                                        <option value="__custom__">-- Other / Enter Custom Revenue Description --</option>
+                                    </select>
+                                    
+                                    <!-- Actual Purpose Input (Hidden if using preset, shown if custom) -->
+                                    <input type="text" name="purpose" id="leaf_purpose" class="form-control form-control-sm mt-2 font-monospace fw-bold" value="Consultation fee for pure breed dog" placeholder="Describe specific revenue activity..." required>
+                                    <input type="hidden" name="revenue_item" id="leaf_revenue_item" value="Consultation fee for pure breed dog">
+                                    <input type="hidden" name="category_tab" id="leaf_category_tab" value="tab-consultations">
+                                </div>
+
+                                <!-- Quantity Sold -->
+                                <div class="col-md-2 col-sm-6">
+                                    <label class="form-label small fw-bold text-dark">Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" name="quantity" id="leaf_quantity" class="form-control form-control-sm text-end font-monospace fw-bold" value="1" min="1" step="1" required>
+                                </div>
+
+                                <!-- Unit Price (Rs.) -->
+                                <div class="col-md-3 col-sm-6">
+                                    <label class="form-label small fw-bold text-dark">Unit Price (Rs.)</label>
+                                    <input type="number" name="unit_price" id="leaf_unit_price" class="form-control form-control-sm text-end font-monospace" value="150.00" min="0" step="0.01">
+                                </div>
+
+                                <!-- Total Amount (Rs. / Cts.) -->
+                                <div class="col-md-4 col-sm-6">
+                                    <label class="form-label small fw-bold text-dark">
+                                        Total Amount (Rs.) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white fw-bold">Rs.</span>
+                                        <input type="number" name="amount" id="leaf_amount" class="form-control text-end font-monospace fw-bold fs-6 text-dark" value="150.00" min="0" step="0.01" required>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 10px;">Quantity &times; Unit Price</small>
+                                </div>
+
+                                <!-- Amount Deposited in Bank -->
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label small fw-bold text-dark mb-0">Bank Deposited (Rs.)</label>
+                                        <button type="button" class="btn btn-link btn-xs p-0 text-success text-decoration-none fw-bold" id="btn_leaf_deposit_full" style="font-size: 11px;">
+                                            Deposit in Full
+                                        </button>
+                                    </div>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white fw-bold text-success">Rs.</span>
+                                        <input type="number" name="amount_deposited" id="leaf_amount_deposited" class="form-control text-end font-monospace fw-bold fs-6 text-success" value="150.00" min="0" step="0.01">
+                                    </div>
+                                    <small class="text-muted" style="font-size: 10px;">Amount remitted to government account</small>
+                                </div>
+
+                                <!-- Additional Remarks -->
+                                <div class="col-md-4 col-sm-12">
+                                    <label class="form-label small fw-bold text-dark">Officer Notes / Remarks</label>
+                                    <input type="text" name="remarks" class="form-control form-control-sm" placeholder="e.g. Paid in cash, receipt issued">
                                 </div>
                             </div>
                         </div>
@@ -212,13 +295,14 @@
 
                 <!-- Modal Footer -->
                 <div class="modal-footer bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center">
-                    <div class="small text-muted">
-                        <i class="bi bi-shield-check me-1 text-success"></i>Issued leaf permanently recorded to counterfoil audit history
+                    <div class="small text-muted d-flex align-items-center gap-1">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>Automated Feed: Logs receipt leaf &amp; immediately refreshes Cashbook Summary.</span>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-outline-secondary px-3 fw-semibold rounded-pill" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" id="btn_submit_issue_leaf" class="btn text-white px-4 fw-semibold rounded-pill shadow-sm" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
-                            <i class="bi bi-check2-circle me-1"></i> Issue Certificate
+                            <i class="bi bi-receipt me-1"></i> Issue Receipt Leaf
                         </button>
                     </div>
                 </div>
@@ -226,3 +310,4 @@
         </div>
     </div>
 </div>
+

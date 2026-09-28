@@ -264,13 +264,14 @@ require_once '../../../includes/header.php';
                         <thead class="table-light text-uppercase small">
                             <tr>
                                 <th>Date</th>
-                                <th>Leaf Serial No</th>
+                                <th>Receipt / Leaf No</th>
                                 <th>Book Type</th>
-                                <th>Farmer NIC</th>
-                                <th>Farmer Name &amp; Location</th>
-                                <th>Farm Reg No</th>
-                                <th>Current Animal Counts</th>
-                                <th>Purpose / Remarks</th>
+                                <th>Client / Owner Name</th>
+                                <th>Purpose / Activity Item</th>
+                                <th class="text-end">Amount (Rs.)</th>
+                                <th class="text-end">Deposited (Rs.)</th>
+                                <th class="text-center">Cashbook Category</th>
+                                <th>NIC / Farm Reg</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -281,22 +282,58 @@ require_once '../../../includes/header.php';
                                 $lf_stmt->execute();
                                 $lf_res = $lf_stmt->get_result();
                                 while ($lf = $lf_res->fetch_assoc()):
+                                    $lf_amount = floatval($lf['amount'] ?? 0);
+                                    $lf_deposited = floatval($lf['amount_deposited'] ?? 0);
+                                    $cat_tab = $lf['category_tab'] ?? '';
+                                    if (empty($cat_tab) && !empty($lf['purpose'])) {
+                                        list($cat_tab, ) = map_to_canonical_item($lf['purpose']);
+                                    }
+                                    
+                                    $tab_badge_class = 'bg-secondary';
+                                    $tab_badge_name  = 'General Stream';
+                                    if ($cat_tab === 'tab-consultations') {
+                                        $tab_badge_class = 'bg-primary';
+                                        $tab_badge_name  = 'Tab 1: Consultations';
+                                    } elseif ($cat_tab === 'tab-poultry') {
+                                        $tab_badge_class = 'bg-warning text-dark';
+                                        $tab_badge_name  = 'Tab 2: Poultry & Semen';
+                                    } elseif ($cat_tab === 'tab-treatments') {
+                                        $tab_badge_class = 'bg-success';
+                                        $tab_badge_name  = 'Tab 3: Treatments';
+                                    } elseif ($cat_tab === 'tab-post-mortems') {
+                                        $tab_badge_class = 'bg-danger';
+                                        $tab_badge_name  = 'Tab 4: Post Mortems';
+                                    }
                             ?>
                             <tr>
                                 <td class="text-secondary small fw-medium"><?= htmlspecialchars($lf['issue_date']) ?></td>
                                 <td><span class="font-monospace fw-bold text-dark"><?= htmlspecialchars($lf['leaf_serial_no']) ?></span></td>
                                 <td><span class="badge bg-secondary-subtle text-secondary border"><?= htmlspecialchars($lf['counterfoil_type']) ?></span></td>
-                                <td><span class="font-monospace fw-bold text-primary"><?= htmlspecialchars($lf['farmer_nic']) ?></span></td>
                                 <td>
                                     <div class="fw-bold text-dark"><?= htmlspecialchars($lf['farmer_name']) ?></div>
                                     <small class="text-muted"><?= htmlspecialchars($lf['location_address'] ?: '-') ?></small>
                                 </td>
-                                <td><span class="badge bg-light text-dark border font-monospace"><?= htmlspecialchars($lf['farm_registration_no'] ?: '-') ?></span></td>
-                                <td><small class="text-secondary fw-semibold"><?= htmlspecialchars($lf['animal_counts_summary'] ?: '-') ?></small></td>
                                 <td>
-                                    <div class="text-dark small fw-medium"><?= htmlspecialchars($lf['purpose'] ?: '-') ?></div>
-                                    <?php if (!empty($lf['remarks'])): ?>
-                                        <small class="text-muted"><?= htmlspecialchars($lf['remarks']) ?></small>
+                                    <div class="text-dark small fw-bold"><?= htmlspecialchars($lf['purpose'] ?: '-') ?></div>
+                                    <?php if (!empty($lf['revenue_item']) && $lf['revenue_item'] !== $lf['purpose']): ?>
+                                        <small class="text-muted d-block">Mapped: <?= htmlspecialchars($lf['revenue_item']) ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-end font-monospace fw-bold text-dark fs-6">
+                                    Rs. <?= number_format($lf_amount, 2) ?>
+                                </td>
+                                <td class="text-end font-monospace fw-bold text-success fs-6">
+                                    Rs. <?= number_format($lf_deposited, 2) ?>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge <?= $tab_badge_class ?> rounded-pill px-2.5 py-1.5" style="font-size: 11px;">
+                                        <?= htmlspecialchars($tab_badge_name) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="font-monospace small text-primary d-block"><?= htmlspecialchars($lf['farmer_nic'] ?: '-') ?></span>
+                                    <?php if (!empty($lf['farm_registration_no'])): ?>
+                                        <span class="badge bg-light text-dark border font-monospace" style="font-size:10px;"><?= htmlspecialchars($lf['farm_registration_no']) ?></span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -307,6 +344,7 @@ require_once '../../../includes/header.php';
                             ?>
                         </tbody>
                     </table>
+
                 </div>
             </div>
         </div>
@@ -957,6 +995,46 @@ require_once '../../../includes/header.php';
         });
         $(document).on('click', '#btn_lookup_leaf_nic', function() {
             window.lookupLeafFarmerNIC();
+        });
+
+        // Physical Yellow Receipt Dynamic Calculation & Cashbook Mapping
+        function recalcLeafFinancials() {
+            var qty = parseInt($('#leaf_quantity').val()) || 1;
+            var price = parseFloat($('#leaf_unit_price').val()) || 0;
+            var total = (qty * price).toFixed(2);
+            $('#leaf_amount').val(total);
+            $('#leaf_amount_deposited').val(total);
+        }
+
+        $(document).on('input change', '#leaf_quantity, #leaf_unit_price', function() {
+            recalcLeafFinancials();
+        });
+
+        $(document).on('click', '#btn_leaf_deposit_full', function(e) {
+            e.preventDefault();
+            $('#leaf_amount_deposited').val($('#leaf_amount').val());
+        });
+
+        $(document).on('change', '#leaf_purpose_selector', function() {
+            var val = $(this).val();
+            var sel = $(this).find(':selected');
+            if (val === '__custom__') {
+                $('#leaf_purpose').val('').focus();
+                $('#leaf_revenue_item').val('');
+                $('#leaf_category_tab').val('tab-other');
+                $('#leaf_mapped_cat_text').text('Custom Revenue Stream');
+            } else {
+                var price = sel.data('price') || 0;
+                var tab = sel.data('tab') || 'tab-consultations';
+                var tabName = sel.closest('optgroup').attr('label') || 'Cashbook Stream';
+                
+                $('#leaf_purpose').val(val);
+                $('#leaf_revenue_item').val(val);
+                $('#leaf_unit_price').val(price);
+                $('#leaf_category_tab').val(tab);
+                $('#leaf_mapped_cat_text').text(tabName);
+                recalcLeafFinancials();
+            }
         });
 
         // Form submission for Issue Leaf

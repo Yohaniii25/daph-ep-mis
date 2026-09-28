@@ -66,10 +66,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
+    $amount               = floatval($_POST['amount'] ?? 0.00);
+    $quantity             = intval($_POST['quantity'] ?? 1);
+    if ($quantity <= 0) $quantity = 1;
+    $unit_price           = floatval($_POST['unit_price'] ?? 0.00);
+    if ($unit_price <= 0 && $amount > 0) {
+        $unit_price = round($amount / $quantity, 2);
+    } elseif ($amount <= 0 && $unit_price > 0) {
+        $amount = round($unit_price * $quantity, 2);
+    }
+    $amount_deposited     = isset($_POST['amount_deposited']) ? floatval($_POST['amount_deposited']) : $amount;
+
+    // Automated Category Mapping for Cashbook Summary
+    list($category_tab, $revenue_item) = map_to_canonical_item($purpose);
+
     // Insert into counterfoil_leaf_issues
     $sql = "INSERT INTO counterfoil_leaf_issues 
-            (counterfoil_id, district_id, range_id, counterfoil_type, leaf_serial_no, farmer_nic, farmer_name, farm_registration_no, location_address, animal_counts_summary, issue_date, purpose, remarks, issued_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            (counterfoil_id, district_id, range_id, counterfoil_type, leaf_serial_no, farmer_nic, farmer_name, farm_registration_no, location_address, animal_counts_summary, issue_date, purpose, amount, quantity, unit_price, amount_deposited, revenue_item, category_tab, remarks, issued_by) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) {
@@ -77,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    $stmt->bind_param("iiissssssssssi", 
+    $stmt->bind_param("iiisssssssssdiddsssi", 
         $counterfoil_id, 
         $district_id, 
         $range_id, 
@@ -90,15 +104,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $animal_counts_summary, 
         $issue_date, 
         $purpose, 
+        $amount,
+        $quantity,
+        $unit_price,
+        $amount_deposited,
+        $revenue_item,
+        $category_tab,
         $remarks, 
         $user_id
     );
 
     if ($stmt->execute()) {
-        // If farmer is newly typed, optionally record or keep in farmers registry
+        $leaf_id = $stmt->insert_id;
+        
+        // Auto-Feed into cash_book_summaries table as well for multi-layered persistence
+        if ($amount > 0 && !empty($revenue_item)) {
+            $report_year  = intval(date('Y', strtotime($issue_date)));
+            $report_month = intval(date('n', strtotime($issue_date)));
+            
+            $cb_stmt = $mysqli->prepare("
+                INSERT INTO cash_book_summaries 
+                (district_id, range_id, report_year, report_month, receipt_no, receipt_date, client_name, item_name, quantity_sold, unit_price, total_amount, amount_deposited, leaf_issue_id, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            if ($cb_stmt) {
+                $cb_stmt->bind_param("iiiissssidddii", 
+                    $district_id, 
+                    $range_id, 
+                    $report_year, 
+                    $report_month, 
+                    $leaf_serial_no,
+                    $issue_date,
+                    $farmer_name,
+                    $revenue_item, 
+                    $quantity, 
+                    $unit_price, 
+                    $amount, 
+                    $amount_deposited, 
+                    $leaf_id,
+                    $user_id
+                );
+                $cb_stmt->execute();
+                $cb_stmt->close();
+            }
+        }
+
         echo json_encode([
             'success' => true, 
-            'message' => "Individual Certificate/Leaf (Serial: {$leaf_serial_no}) successfully logged to {$farmer_name} (NIC: {$farmer_nic})."
+            'message' => "Counterfoil receipt leaf #{$leaf_serial_no} logged for {$farmer_name} (Rs. " . number_format($amount, 2) . ") and mapped to Cashbook Summary ({$revenue_item}).",
+            'leaf_id' => $leaf_id,
+            'mapped_category' => $category_tab,
+            'revenue_item' => $revenue_item
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'DB Execute Error: ' . $stmt->error]);
@@ -106,3 +162,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->close();
 }
 exit();
+

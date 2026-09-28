@@ -21,16 +21,41 @@
                 <input type="hidden" name="active_tab" id="add_modal_active_tab" value="<?= htmlspecialchars($active_tab ?? 'tab-consultations') ?>">
 
                 <div class="modal-body p-4">
-                    <div class="alert alert-light border py-2 px-3 small mb-3 text-muted d-flex align-items-center gap-2">
-                        <i class="bi bi-info-circle text-primary fs-5"></i>
-                        <div>
-                            Select the revenue stream from the categorized list below or specify a custom item. Values automatically calculate into the active reporting period.
+                    <div class="alert border py-2 px-3 small mb-3 d-flex align-items-center justify-content-between" style="background-color: #fffdf0; border-color: #fcd34d !important;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-receipt-cutoff text-warning fs-5"></i>
+                            <div>
+                                <span class="fw-bold text-dark">Digital Counterfoil Receipt Voucher (General Form 172)</span>
+                                <span class="d-block text-muted" style="font-size: 11px;">Captures client receipt details and automatically aggregates into Cashbook Summary categories.</span>
+                            </div>
                         </div>
+                        <span class="badge bg-warning text-dark border border-warning px-2 py-1 fw-bold">Audited Receipt</span>
                     </div>
 
                     <div class="row g-3">
+                        <!-- Receipt Serial No and Date -->
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Reporting Year <span class="text-danger">*</span></label>
+                            <label class="form-label small fw-bold text-dark">Receipt / Leaf Serial No. <span class="text-danger">*</span></label>
+                            <input type="text" name="receipt_no" id="add_receipt_no" class="form-control form-control-sm font-monospace fw-bold" placeholder="e.g. CR-26/03/4821" value="CR-<?= date('y/m/') . rand(1000, 9999) ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Receipt Date <span class="text-danger">*</span></label>
+                            <input type="date" name="receipt_date" id="add_receipt_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>" required>
+                        </div>
+
+                        <!-- Owner Name and Client NIC -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Owner Name (Client / Farmer) <span class="text-danger">*</span></label>
+                            <input type="text" name="client_name" id="add_client_name" class="form-control form-control-sm" placeholder="e.g. K. M. Fareed or Dr. Silva" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Client NIC / Contact (Optional)</label>
+                            <input type="text" name="client_nic" id="add_client_nic" class="form-control form-control-sm font-monospace" placeholder="e.g. 198512304561 or 0771234567">
+                        </div>
+
+                        <!-- Reporting Year & Month -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Cashbook Year <span class="text-danger">*</span></label>
                             <select name="report_year" id="add_report_year" class="form-select form-select-sm" required>
                                 <?php
                                 $c_yr = intval(date('Y'));
@@ -40,7 +65,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Reporting Month <span class="text-danger">*</span></label>
+                            <label class="form-label small fw-bold text-dark">Cashbook Month <span class="text-danger">*</span></label>
                             <select name="report_month" id="add_report_month" class="form-select form-select-sm" required>
                                 <option value="" disabled>-- Select Month --</option>
                                 <?php
@@ -62,27 +87,27 @@
                             <select id="add_item_selector" class="form-select form-select-sm" required>
                                 <option value="" disabled selected>-- Select Categorized Item --</option>
                                 <optgroup label="1. Consultations & Certificates">
-                                    <option value="Consultation fee for cross breed Pet's">Consultation fee for cross breed Pet's</option>
-                                    <option value="Consultation fee for pure breed dog">Consultation fee for pure breed dog</option>
-                                    <option value="Health certificate">Health certificate</option>
+                                    <option value="Consultation fee for cross breed Pet's" data-price="100.00">Consultation fee for cross breed Pet's (Rs. 100.00)</option>
+                                    <option value="Consultation fee for pure breed dog" data-price="150.00">Consultation fee for pure breed dog (Rs. 150.00)</option>
+                                    <option value="Health certificate" data-price="250.00">Health certificate (Rs. 250.00)</option>
                                 </optgroup>
                                 <optgroup label="2. Poultry Sales & Semen">
-                                    <option value="Day old unsexed backyard chicks">Day old unsexed backyard chicks</option>
-                                    <option value="Semen straws for AI services">Semen straws for AI services</option>
-                                    <option value="Day Old Cockerels">Day Old Cockerels</option>
+                                    <option value="Day old unsexed backyard chicks" data-price="120.00">Day old unsexed backyard chicks</option>
+                                    <option value="Semen straws for AI services" data-price="200.00">Semen straws for AI services</option>
+                                    <option value="Day Old Cockerels" data-price="80.00">Day Old Cockerels</option>
                                 </optgroup>
                                 <optgroup label="3. Vaccines, Surgeries & Treatments">
-                                    <option value="Wound ress (Wound dress)">Wound ress (Wound dress)</option>
-                                    <option value="Ranikhet 1st dose & 2nd Dose">Ranikhet 1st dose & 2nd Dose</option>
-                                    <option value="OHE - Dog">OHE - Dog</option>
-                                    <option value="OHE -Cat">OHE -Cat</option>
+                                    <option value="Wound ress (Wound dress)" data-price="150.00">Wound ress (Wound dress)</option>
+                                    <option value="Ranikhet 1st dose & 2nd Dose" data-price="50.00">Ranikhet 1st dose & 2nd Dose</option>
+                                    <option value="OHE - Dog" data-price="1500.00">OHE - Dog (Rs. 1,500.00)</option>
+                                    <option value="OHE -Cat" data-price="1000.00">OHE -Cat (Rs. 1,000.00)</option>
                                 </optgroup>
                                 <optgroup label="4. Post Mortems">
-                                    <option value="Poultry -Bird post mortems">Poultry -Bird post mortems</option>
-                                    <option value="Post moturm Rabbit">Post moturm Rabbit</option>
+                                    <option value="Poultry -Bird post mortems" data-price="100.00">Poultry -Bird post mortems</option>
+                                    <option value="Post moturm Rabbit" data-price="150.00">Post moturm Rabbit</option>
                                 </optgroup>
                                 <optgroup label="Other Revenue Streams">
-                                    <option value="__custom__">+ Enter Custom Item Name...</option>
+                                    <option value="__custom__" data-price="0.00">+ Enter Custom Item Name...</option>
                                 </optgroup>
                             </select>
 
@@ -96,14 +121,14 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-dark">Quantity Sold <span class="text-danger">*</span></label>
-                            <input type="number" id="add_qty_sold" name="quantity_sold" class="form-control form-control-sm" value="1" min="0" required>
+                            <label class="form-label small fw-bold text-dark">Quantity Sold / Services <span class="text-danger">*</span></label>
+                            <input type="number" id="add_qty_sold" name="quantity_sold" class="form-control form-control-sm text-end font-monospace fw-bold" value="1" min="1" step="1" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-dark">Unit Price (Rs. / Cts.) <span class="text-danger">*</span></label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-light text-muted">Rs.</span>
-                                <input type="number" id="add_unit_price" name="unit_price" class="form-control form-control-sm" value="0.00" step="0.01" min="0" required>
+                                <input type="number" id="add_unit_price" name="unit_price" class="form-control form-control-sm text-end font-monospace" value="0.00" step="0.01" min="0" required>
                             </div>
                         </div>
 
@@ -111,7 +136,7 @@
                             <label class="form-label small fw-bold text-dark">Total Amount (Rs. / Cts.) <span class="text-danger">*</span></label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-light text-muted">Rs.</span>
-                                <input type="number" id="add_total_amount" name="total_amount" class="form-control form-control-sm bg-light fw-bold text-dark" value="0.00" step="0.01" min="0" required>
+                                <input type="number" id="add_total_amount" name="total_amount" class="form-control form-control-sm bg-light fw-bold text-dark text-end font-monospace fs-6" value="0.00" step="0.01" min="0" required>
                             </div>
                             <span class="text-muted small" style="font-size: 0.75rem;">Calculated automatically: Quantity &times; Unit Price</span>
                         </div>
@@ -119,13 +144,13 @@
                         <div class="col-md-6">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label small fw-bold text-dark mb-0">Amount Deposited (Rs. / Cts.) <span class="text-danger">*</span></label>
-                                <button type="button" class="btn btn-link p-0 text-decoration-none small text-primary" id="btnDepositFullAdd" style="font-size: 0.75rem;">
+                                <button type="button" class="btn btn-link p-0 text-decoration-none small text-success fw-bold" id="btnDepositFullAdd" style="font-size: 0.75rem;">
                                     <i class="bi bi-arrow-down-circle me-1"></i>Deposit in Full
                                 </button>
                             </div>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-light text-muted">Rs.</span>
-                                <input type="number" id="add_amount_deposited" name="amount_deposited" class="form-control form-control-sm fw-bold text-success" value="0.00" step="0.01" min="0" required>
+                                <input type="number" id="add_amount_deposited" name="amount_deposited" class="form-control form-control-sm fw-bold text-success text-end font-monospace fs-6" value="0.00" step="0.01" min="0" required>
                             </div>
                             <span class="text-muted small" style="font-size: 0.75rem;">Amount deposited to Government Bank account</span>
                         </div>
@@ -134,7 +159,7 @@
                 <div class="modal-footer py-2 bg-light border-0">
                     <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm text-light fw-bold shadow-sm" style="background-color: #820100;">
-                        <i class="bi bi-save me-1"></i>Save Cash Book Record
+                        <i class="bi bi-receipt me-1"></i>Issue &amp; Save Receipt
                     </button>
                 </div>
             </form>

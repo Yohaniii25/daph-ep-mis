@@ -27,6 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("Data Validation Error: Crucial record metrics are missing.");
     }
 
+    $default_return = '../drug_maintenance.php?view=maintenance';
+    $return_url = !empty($_POST['return_url']) ? $_POST['return_url'] : (!empty($_GET['return_url']) ? $_GET['return_url'] : $default_return);
+    $separator = (strpos($return_url, '?') !== false) ? '&' : '?';
+
     if ($action === 'create') {
         $stmt = $mysqli->prepare("INSERT INTO `drug_records` 
             (log_date, drug_type_id, vaccine_batch_id, starter_count_month, during_month_received, used_doses_count, doses_damaged) 
@@ -37,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("siiiiii", $log_date, $drug_type_id, $vaccine_batch_id, $starter_count_month, $during_month_received, $used_doses_count, $doses_damaged);
         
         if ($stmt->execute()) {
-            header("Location: ../drug_maintenance.php?status=success&msg=Entry+Logged+Successfully");
+            header("Location: {$return_url}{$separator}status=success&msg=Entry+Logged+Successfully");
             exit();
         } else {
             die("Database Error: Failed to append record trace: " . $mysqli->error);
@@ -59,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("siiiiiii", $log_date, $drug_type_id, $vaccine_batch_id, $starter_count_month, $during_month_received, $used_doses_count, $doses_damaged, $id);
         
         if ($stmt->execute()) {
-            header("Location: ../drug_maintenance.php?status=success&msg=Record+Updated+Successfully");
+            header("Location: {$return_url}{$separator}status=success&msg=Record+Updated+Successfully");
             exit();
         } else {
             die("Database Error: Failed to rewrite modifications: " . $mysqli->error);
@@ -70,6 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     if ($id <= 0) die("Error: Missing targeting parameters.");
 
+    $default_return = '../drug_maintenance.php?view=maintenance';
+    $return_url = !empty($_GET['return_url']) ? $_GET['return_url'] : $default_return;
+    $separator = (strpos($return_url, '?') !== false) ? '&' : '?';
+
     $stmt = $mysqli->prepare("DELETE FROM `drug_records` WHERE id = ?");
     if (!$stmt) {
         die("Database Error: " . $mysqli->error);
@@ -77,12 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("i", $id);
     
     if ($stmt->execute()) {
-        header("Location: ../drug_maintenance.php?status=success&msg=Record+Purged");
+        header("Location: {$return_url}{$separator}status=success&msg=Record+Purged");
         exit();
     } else {
         die("Database Error: Could not clear ledger row: " . $mysqli->error);
     }
 }
 
-header("Location: ../drug_maintenance.php");
+header("Location: ../drug_maintenance.php?view=maintenance");
 exit();

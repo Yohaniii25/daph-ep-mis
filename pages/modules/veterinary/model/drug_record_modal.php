@@ -11,6 +11,7 @@
             <form id="drugRecordForm" action="processors/drug_record_crud.php" method="POST">
                 <input type="hidden" id="drugAction" name="action" value="create">
                 <input type="hidden" id="drugId" name="id" value="">
+                <input type="hidden" id="drugReturnUrl" name="return_url" value="">
 
                 <div class="modal-body p-4">
                     <div class="row g-3">

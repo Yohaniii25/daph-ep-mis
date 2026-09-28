@@ -82,6 +82,20 @@ if (!empty($range_id)) {
 $selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
 $from_month    = isset($_GET['from_month']) ? intval($_GET['from_month']) : 1;
 $to_month      = isset($_GET['to_month']) ? intval($_GET['to_month']) : 3; // Default Q1 (Jan–Mar) or current month
+$selected_date = isset($_GET['date']) ? trim($_GET['date']) : '';
+
+if ($selected_date === 'today') {
+    $selected_date = date('Y-m-d');
+} elseif (!empty($selected_date) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $selected_date)) {
+    $selected_date = '';
+}
+
+if (!empty($selected_date)) {
+    $from_month    = intval(date('n', strtotime($selected_date)));
+    $to_month      = $from_month;
+    $selected_year = intval(date('Y', strtotime($selected_date)));
+}
+
 $active_tab    = isset($_GET['tab']) ? preg_replace('/[^a-zA-Z0-9_\-]/', '', $_GET['tab']) : 'tab-consultations';
 
 if ($from_month < 1 || $from_month > 12) $from_month = 1;
@@ -100,9 +114,13 @@ $month_shorts = [
     9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'
 ];
 
-$range_label = ($from_month === $to_month)
-    ? $month_names[$from_month] . ' ' . $selected_year
-    : $month_names[$from_month] . ' – ' . $month_names[$to_month] . ' ' . $selected_year;
+if (!empty($selected_date)) {
+    $range_label = 'Daily Summary: ' . date('d M Y (D)', strtotime($selected_date));
+} elseif ($from_month === $to_month) {
+    $range_label = $month_names[$from_month] . ' ' . $selected_year;
+} else {
+    $range_label = $month_names[$from_month] . ' – ' . $month_names[$to_month] . ' ' . $selected_year;
+}
 
 // 5. Categorized Data Structure (Mapping for the 4 Required Tabs)
 $tab_categories = [
@@ -202,27 +220,164 @@ function map_to_canonical_item($db_item_name, $tab_categories) {
     return ['tab-other', trim($db_item_name)];
 }
 
-// 6. Fetch and Aggregate Cash Book Records in Selected Date Range
+// 6. Automated Cashbook Generation: Fetch and Dynamically Aggregate Counterfoil Receipts & Summaries
 $raw_records = [];
+$synced_leaf_ids = [];
+$synced_receipt_keys = [];
+
 if (!empty($range_id)) {
-    $sql = "
-        SELECT id, district_id, range_id, report_year, report_month, item_name, 
-               quantity_sold, unit_price, total_amount, amount_deposited, created_at
+    // 6A. PRIMARY DATA SOURCE: Individual Counterfoil Receipt Leaves (Physical Yellow Receipt Leaves GF 172)
+    if (!empty($selected_date)) {
+        $leaf_sql = "
+            SELECT id, counterfoil_id, district_id, range_id, counterfoil_type, leaf_serial_no,
+                   farmer_nic, farmer_name, farm_registration_no, location_address,
+                   issue_date, purpose, amount, quantity, unit_price, amount_deposited,
+                   revenue_item, category_tab, remarks, created_at
+            FROM counterfoil_leaf_issues
+            WHERE range_id = ?
+              AND issue_date = ?
+              AND amount > 0
+            ORDER BY issue_date ASC, id ASC
+        ";
+        $l_stmt = $mysqli->prepare($leaf_sql);
+        if ($l_stmt) {
+            $l_stmt->bind_param("is", $range_id, $selected_date);
+            $l_stmt->execute();
+            $l_res = $l_stmt->get_result();
+            while ($lf = $l_res->fetch_assoc()) {
+                $p_desc = !empty($lf['revenue_item']) ? $lf['revenue_item'] : (!empty($lf['purpose']) ? $lf['purpose'] : "Receipt Leaf");
+                list($tab_key, $canonical_name) = map_to_canonical_item($p_desc, $tab_categories);
+                $l_yr = intval(date('Y', strtotime($lf['issue_date'])));
+                $l_mo = intval(date('n', strtotime($lf['issue_date'])));
+                $leaf_id = intval($lf['id']);
+                $synced_leaf_ids[$leaf_id] = true;
+                if (!empty($lf['leaf_serial_no'])) {
+                    $synced_receipt_keys[trim($lf['leaf_serial_no'])] = true;
+                }
+
+                $raw_records[] = [
+                    'id'               => $leaf_id,
+                    'source'           => 'counterfoil_leaf',
+                    'leaf_id'          => $leaf_id,
+                    'receipt_no'       => $lf['leaf_serial_no'] ?: ('Leaf #' . $leaf_id),
+                    'receipt_date'     => $lf['issue_date'],
+                    'client_name'      => $lf['farmer_name'] ?: 'General Client',
+                    'client_nic'       => $lf['farmer_nic'] ?: '',
+                    'purpose'          => $lf['purpose'] ?: $canonical_name,
+                    'item_name'        => $canonical_name,
+                    'quantity_sold'    => intval($lf['quantity'] ?: 1),
+                    'unit_price'       => floatval($lf['unit_price']),
+                    'total_amount'     => floatval($lf['amount']),
+                    'amount_deposited' => floatval($lf['amount_deposited']),
+                    'report_year'      => $l_yr,
+                    'report_month'     => $l_mo,
+                    'created_at'       => $lf['issue_date']
+                ];
+            }
+            $l_stmt->close();
+        }
+    } else {
+        $leaf_sql = "
+            SELECT id, counterfoil_id, district_id, range_id, counterfoil_type, leaf_serial_no,
+                   farmer_nic, farmer_name, farm_registration_no, location_address,
+                   issue_date, purpose, amount, quantity, unit_price, amount_deposited,
+                   revenue_item, category_tab, remarks, created_at
+            FROM counterfoil_leaf_issues
+            WHERE range_id = ?
+              AND YEAR(issue_date) = ?
+              AND MONTH(issue_date) >= ? AND MONTH(issue_date) <= ?
+              AND amount > 0
+            ORDER BY issue_date ASC, id ASC
+        ";
+        $l_stmt = $mysqli->prepare($leaf_sql);
+        if ($l_stmt) {
+            $l_stmt->bind_param("iiii", $range_id, $selected_year, $from_month, $to_month);
+            $l_stmt->execute();
+            $l_res = $l_stmt->get_result();
+            while ($lf = $l_res->fetch_assoc()) {
+                $p_desc = !empty($lf['revenue_item']) ? $lf['revenue_item'] : (!empty($lf['purpose']) ? $lf['purpose'] : "Receipt Leaf");
+                list($tab_key, $canonical_name) = map_to_canonical_item($p_desc, $tab_categories);
+                $l_yr = intval(date('Y', strtotime($lf['issue_date'])));
+                $l_mo = intval(date('n', strtotime($lf['issue_date'])));
+                $leaf_id = intval($lf['id']);
+                $synced_leaf_ids[$leaf_id] = true;
+                if (!empty($lf['leaf_serial_no'])) {
+                    $synced_receipt_keys[trim($lf['leaf_serial_no'])] = true;
+                }
+
+                $raw_records[] = [
+                    'id'               => $leaf_id,
+                    'source'           => 'counterfoil_leaf',
+                    'leaf_id'          => $leaf_id,
+                    'receipt_no'       => $lf['leaf_serial_no'] ?: ('Leaf #' . $leaf_id),
+                    'receipt_date'     => $lf['issue_date'],
+                    'client_name'      => $lf['farmer_name'] ?: 'General Client',
+                    'client_nic'       => $lf['farmer_nic'] ?: '',
+                    'purpose'          => $lf['purpose'] ?: $canonical_name,
+                    'item_name'        => $canonical_name,
+                    'quantity_sold'    => intval($lf['quantity'] ?: 1),
+                    'unit_price'       => floatval($lf['unit_price']),
+                    'total_amount'     => floatval($lf['amount']),
+                    'amount_deposited' => floatval($lf['amount_deposited']),
+                    'report_year'      => $l_yr,
+                    'report_month'     => $l_mo,
+                    'created_at'       => $lf['issue_date']
+                ];
+            }
+            $l_stmt->close();
+        }
+    }
+
+    // 6B. SECONDARY SOURCE: Legacy summary records in cash_book_summaries not already captured via leaf issues
+    $summary_sql = "
+        SELECT id, district_id, range_id, report_year, report_month, receipt_no, receipt_date, client_name,
+               item_name, quantity_sold, unit_price, total_amount, amount_deposited, leaf_issue_id, created_at
         FROM cash_book_summaries
         WHERE range_id = ?
           AND report_year = ?
           AND report_month >= ? AND report_month <= ?
         ORDER BY report_month ASC, id ASC
     ";
-    $stmt = $mysqli->prepare($sql);
-    if ($stmt) {
-        $stmt->bind_param("iiii", $range_id, $selected_year, $from_month, $to_month);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        while ($r = $res->fetch_assoc()) {
-            $raw_records[] = $r;
+    $s_stmt = $mysqli->prepare($summary_sql);
+    if ($s_stmt) {
+        $s_stmt->bind_param("iiii", $range_id, $selected_year, $from_month, $to_month);
+        $s_stmt->execute();
+        $s_res = $s_stmt->get_result();
+        while ($sb = $s_res->fetch_assoc()) {
+            $linked_leaf = !empty($sb['leaf_issue_id']) ? intval($sb['leaf_issue_id']) : 0;
+            $r_no = !empty($sb['receipt_no']) ? trim($sb['receipt_no']) : '';
+            if ($linked_leaf > 0 && isset($synced_leaf_ids[$linked_leaf])) {
+                continue; // Already processed from counterfoil_leaf_issues
+            }
+            if (!empty($r_no) && isset($synced_receipt_keys[$r_no])) {
+                continue; // Already matched by receipt number
+            }
+
+            if (!empty($selected_date) && !empty($sb['receipt_date']) && $sb['receipt_date'] !== $selected_date) {
+                continue;
+            }
+
+            list($tab_key, $canonical_name) = map_to_canonical_item($sb['item_name'], $tab_categories);
+            $raw_records[] = [
+                'id'               => intval($sb['id']),
+                'source'           => 'cash_book_summary',
+                'leaf_id'          => $linked_leaf,
+                'receipt_no'       => $r_no ?: ('Summary #' . $sb['id']),
+                'receipt_date'     => $sb['receipt_date'] ?: sprintf('%04d-%02d-01', $sb['report_year'], $sb['report_month']),
+                'client_name'      => $sb['client_name'] ?: 'Consolidated Entry',
+                'client_nic'       => '',
+                'purpose'          => $sb['item_name'],
+                'item_name'        => $canonical_name,
+                'quantity_sold'    => intval($sb['quantity_sold']),
+                'unit_price'       => floatval($sb['unit_price']),
+                'total_amount'     => floatval($sb['total_amount']),
+                'amount_deposited' => floatval($sb['amount_deposited']),
+                'report_year'      => intval($sb['report_year']),
+                'report_month'     => intval($sb['report_month']),
+                'created_at'       => $sb['created_at']
+            ];
         }
-        $stmt->close();
+        $s_stmt->close();
     }
 }
 
@@ -510,7 +665,7 @@ require_once '../../../includes/header.php';
             <div class="row g-3 align-items-end mb-3">
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <label class="form-label small fw-bold text-dark mb-1">
-                        <i class="bi bi-calendar-event me-1 text-primary"></i>From: Month / Year
+                        <i class="bi bi-calendar-event me-1 text-primary"></i>From: Month
                     </label>
                     <select name="from_month" id="rangeFromMonth" class="form-select" style="border-radius: 8px;">
                         <?php for ($m = 1; $m <= 12; $m++): ?>
@@ -523,7 +678,7 @@ require_once '../../../includes/header.php';
 
                 <div class="col-lg-3 col-md-4 col-sm-6">
                     <label class="form-label small fw-bold text-dark mb-1">
-                        <i class="bi bi-calendar-check me-1 text-success"></i>To: Month / Year
+                        <i class="bi bi-calendar-check me-1 text-success"></i>To: Month
                     </label>
                     <select name="to_month" id="rangeToMonth" class="form-select" style="border-radius: 8px;">
                         <?php for ($m = 1; $m <= 12; $m++): ?>
@@ -546,27 +701,33 @@ require_once '../../../includes/header.php';
                 </div>
 
                 <div class="col-lg-2 col-md-6 col-sm-6">
-                    <button type="submit" class="btn btn-primary w-100 shadow-sm fw-bold" style="background-color: #820100; border-color: #820100; border-radius: 8px;">
-                        <i class="bi bi-funnel-fill me-1"></i> Apply Filter
-                    </button>
+                    <label class="form-label small fw-bold text-dark mb-1">
+                        <i class="bi bi-calendar-date me-1 text-warning"></i>Specific Day (Optional)
+                    </label>
+                    <input type="date" name="date" id="rangeSingleDate" class="form-control" value="<?= htmlspecialchars($selected_date) ?>" style="border-radius: 8px;">
                 </div>
 
-                <div class="col-lg-2 col-md-6 col-sm-12 text-lg-end">
-                    <button type="button" class="btn btn-outline-dark w-100 shadow-sm" onclick="window.print();" style="border-radius: 8px;">
-                        <i class="bi bi-printer me-1"></i> Print View
+                <div class="col-lg-2 col-md-6 col-sm-6">
+                    <button type="submit" class="btn btn-primary w-100 shadow-sm fw-bold" style="background-color: #820100; border-color: #820100; border-radius: 8px;">
+                        <i class="bi bi-funnel-fill me-1"></i> Apply Filter
                     </button>
                 </div>
             </div>
 
             <!-- Quick Period Interval Presets -->
             <div class="d-flex flex-wrap align-items-center gap-2 pt-2 border-top">
-                <span class="small text-muted fw-bold me-1"><i class="bi bi-clock-history me-1"></i>Quick Range Presets:</span>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= ($from_month === 1 && $to_month === 3) ? 'active fw-bold' : '' ?>" data-from="1" data-to="3">Q1 (Jan – Mar)</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= ($from_month === 4 && $to_month === 6) ? 'active fw-bold' : '' ?>" data-from="4" data-to="6">Q2 (Apr – Jun)</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= ($from_month === 1 && $to_month === 6) ? 'active fw-bold' : '' ?>" data-from="1" data-to="6">Mid-Year (Jan – Jun)</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= ($from_month === 7 && $to_month === 9) ? 'active fw-bold' : '' ?>" data-from="7" data-to="9">Q3 (Jul – Sep)</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= ($from_month === 10 && $to_month === 12) ? 'active fw-bold' : '' ?>" data-from="10" data-to="12">Q4 (Oct – Dec)</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= ($from_month === 1 && $to_month === 12) ? 'active fw-bold' : '' ?>" data-from="1" data-to="12">Full Year (Jan – Dec)</button>
+                <span class="small text-muted fw-bold me-1"><i class="bi bi-clock-history me-1"></i>Quick Presets:</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= ($selected_date === date('Y-m-d')) ? 'active fw-bold' : '' ?>" data-date="<?= date('Y-m-d') ?>"><i class="bi bi-calendar2-check me-1"></i>Today (Daily)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= (empty($selected_date) && $from_month === intval(date('n')) && $to_month === intval(date('n'))) ? 'active fw-bold' : '' ?>" data-from="<?= date('n') ?>" data-to="<?= date('n') ?>"><i class="bi bi-calendar2-month me-1"></i>This Month</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= (empty($selected_date) && $from_month === 1 && $to_month === 3) ? 'active fw-bold' : '' ?>" data-from="1" data-to="3">Q1 (Jan–Mar)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= (empty($selected_date) && $from_month === 4 && $to_month === 6) ? 'active fw-bold' : '' ?>" data-from="4" data-to="6">Q2 (Apr–Jun)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= (empty($selected_date) && $from_month === 1 && $to_month === 6) ? 'active fw-bold' : '' ?>" data-from="1" data-to="6">Mid-Year (Jan–Jun)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= (empty($selected_date) && $from_month === 7 && $to_month === 9) ? 'active fw-bold' : '' ?>" data-from="7" data-to="9">Q3 (Jul–Sep)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= (empty($selected_date) && $from_month === 10 && $to_month === 12) ? 'active fw-bold' : '' ?>" data-from="10" data-to="12">Q4 (Oct–Dec)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-period-preset <?= (empty($selected_date) && $from_month === 1 && $to_month === 12) ? 'active fw-bold' : '' ?>" data-from="1" data-to="12">Full Year (Jan–Dec)</button>
+                <button type="button" class="btn btn-sm btn-outline-dark ms-auto" onclick="window.print();">
+                    <i class="bi bi-printer me-1"></i> Print View
+                </button>
             </div>
         </form>
     </div>
@@ -804,49 +965,47 @@ require_once '../../../includes/header.php';
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-                            </tbody>
 
-                            <tfoot>
                                 <!-- TAB SUBTOTAL CALCULATION ROW -->
-                                <tr class="tr-subtotal">
-                                    <td class="text-uppercase fw-bold">
-                                        <i class="bi bi-calculator me-2"></i>Subtotal: <?= htmlspecialchars($t_info['title']) ?>
+                                <tr class="tr-subtotal" style="background-color: #f1f5f9 !important; font-weight: 700 !important; border-top: 2px solid #cbd5e1 !important;">
+                                    <td class="text-uppercase fw-bold text-dark py-2.5">
+                                        <i class="bi bi-calculator me-2 text-primary"></i>Subtotal: <?= htmlspecialchars($t_info['title']) ?>
                                     </td>
-                                    <td class="text-end font-monospace">
+                                    <td class="text-end font-monospace fw-bold text-dark py-2.5">
                                         <?= number_format($tab_subtotals[$t_key]['quantity_sold']) ?>
                                     </td>
-                                    <td class="text-end text-muted font-monospace">—</td>
-                                    <td class="text-end font-monospace text-dark">
+                                    <td class="text-end text-muted font-monospace py-2.5">—</td>
+                                    <td class="text-end font-monospace fw-bold text-dark py-2.5">
                                         Rs. <?= number_format($tab_subtotals[$t_key]['total_amount'], 2) ?>
                                     </td>
-                                    <td class="text-end font-monospace text-success">
+                                    <td class="text-end font-monospace fw-bold text-success py-2.5">
                                         Rs. <?= number_format($tab_subtotals[$t_key]['amount_deposited'], 2) ?>
                                     </td>
-                                    <td class="text-center no-export">
+                                    <td class="text-center no-export py-2.5">
                                         <span class="badge bg-secondary-subtle text-secondary small">Subtotal</span>
                                     </td>
                                 </tr>
 
                                 <!-- MASTER GRAND TOTAL CALCULATION ROW AT BOTTOM -->
-                                <tr class="tr-master-total">
-                                    <td class="text-uppercase fw-bold">
-                                        <i class="bi bi-shield-lock-fill me-2 text-warning"></i>MASTER TOTAL AMOUNT (All Revenue Streams)
+                                <tr class="tr-master-total" style="background: linear-gradient(90deg, #370709 0%, #820100 100%) !important; background-color: #370709 !important; color: #ffffff !important; border-top: 3px solid #1a0304 !important;">
+                                    <td class="text-uppercase fw-bold text-white py-3">
+                                        <i class="bi bi-shield-lock-fill me-2 text-warning fs-6"></i>MASTER TOTAL AMOUNT (All Revenue Streams)
                                     </td>
-                                    <td class="text-end font-monospace fw-bold">
+                                    <td class="text-end font-monospace fw-bold text-white fs-6 py-3">
                                         <?= number_format($master_grand_total['quantity_sold']) ?>
                                     </td>
-                                    <td class="text-end text-light font-monospace opacity-75">—</td>
-                                    <td class="text-end font-monospace fw-bold text-white fs-6">
+                                    <td class="text-end text-light font-monospace opacity-75 py-3">—</td>
+                                    <td class="text-end font-monospace fw-bold text-white fs-5 py-3">
                                         Rs. <?= number_format($master_grand_total['total_amount'], 2) ?>
                                     </td>
-                                    <td class="text-end font-monospace fw-bold text-warning fs-6">
+                                    <td class="text-end font-monospace fw-bold text-warning fs-5 py-3">
                                         Rs. <?= number_format($master_grand_total['amount_deposited'], 2) ?>
                                     </td>
-                                    <td class="text-center no-export">
-                                        <span class="badge bg-warning text-dark fw-bold small">Master Total</span>
+                                    <td class="text-center no-export py-3">
+                                        <span class="badge bg-warning text-dark fw-bold px-2.5 py-1.5 small shadow-sm">Master Total</span>
                                     </td>
                                 </tr>
-                            </tfoot>
+                            </tbody>
                         </table>
                     </div>
 
@@ -985,29 +1144,27 @@ require_once '../../../includes/header.php';
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
-                        </tbody>
 
-                        <tfoot>
                             <!-- MASTER GRAND TOTAL ROW -->
-                            <tr class="tr-master-total">
-                                <td class="text-uppercase fw-bold">
-                                    <i class="bi bi-shield-lock-fill me-2 text-warning"></i>MASTER TOTAL AMOUNT (All Revenue Streams)
+                            <tr class="tr-master-total" style="background: linear-gradient(90deg, #370709 0%, #820100 100%) !important; background-color: #370709 !important; color: #ffffff !important; border-top: 3px solid #1a0304 !important;">
+                                <td class="text-uppercase fw-bold text-white py-3">
+                                    <i class="bi bi-shield-lock-fill me-2 text-warning fs-6"></i>MASTER TOTAL AMOUNT (All Revenue Streams)
                                 </td>
-                                <td class="text-end font-monospace fw-bold">
+                                <td class="text-end font-monospace fw-bold text-white fs-6 py-3">
                                     <?= number_format($master_grand_total['quantity_sold']) ?>
                                 </td>
-                                <td class="text-end text-light font-monospace opacity-75">—</td>
-                                <td class="text-end font-monospace fw-bold text-white fs-6">
+                                <td class="text-end text-light font-monospace opacity-75 py-3">—</td>
+                                <td class="text-end font-monospace fw-bold text-white fs-5 py-3">
                                     Rs. <?= number_format($master_grand_total['total_amount'], 2) ?>
                                 </td>
-                                <td class="text-end font-monospace fw-bold text-warning fs-6">
+                                <td class="text-end font-monospace fw-bold text-warning fs-5 py-3">
                                     Rs. <?= number_format($master_grand_total['amount_deposited'], 2) ?>
                                 </td>
-                                <td class="text-center no-export">
-                                    <span class="badge bg-warning text-dark fw-bold small">Master Total</span>
+                                <td class="text-center no-export py-3">
+                                    <span class="badge bg-warning text-dark fw-bold px-2.5 py-1.5 small shadow-sm">Master Total</span>
                                 </td>
                             </tr>
-                        </tfoot>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -1058,35 +1215,34 @@ require_once '../../../includes/header.php';
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
-                        </tbody>
-                        <tfoot>
-                            <tr class="tr-subtotal">
-                                <td class="text-uppercase fw-bold">Subtotal: Other Items</td>
-                                <td class="text-end font-monospace"><?= number_format($other_subtotal['quantity_sold']) ?></td>
-                                <td class="text-end text-muted font-monospace">—</td>
-                                <td class="text-end font-monospace text-dark">Rs. <?= number_format($other_subtotal['total_amount'], 2) ?></td>
-                                <td class="text-end font-monospace text-success">Rs. <?= number_format($other_subtotal['amount_deposited'], 2) ?></td>
-                                <td class="text-center no-export">—</td>
+
+                            <tr class="tr-subtotal" style="background-color: #f1f5f9 !important; font-weight: 700 !important; border-top: 2px solid #cbd5e1 !important;">
+                                <td class="text-uppercase fw-bold text-dark py-2.5">Subtotal: Other Items</td>
+                                <td class="text-end font-monospace fw-bold text-dark py-2.5"><?= number_format($other_subtotal['quantity_sold']) ?></td>
+                                <td class="text-end text-muted font-monospace py-2.5">—</td>
+                                <td class="text-end font-monospace fw-bold text-dark py-2.5">Rs. <?= number_format($other_subtotal['total_amount'], 2) ?></td>
+                                <td class="text-end font-monospace fw-bold text-success py-2.5">Rs. <?= number_format($other_subtotal['amount_deposited'], 2) ?></td>
+                                <td class="text-center no-export py-2.5">—</td>
                             </tr>
-                            <tr class="tr-master-total">
-                                <td class="text-uppercase fw-bold">
-                                    <i class="bi bi-shield-lock-fill me-2 text-warning"></i>MASTER TOTAL AMOUNT (All Revenue Streams)
+                            <tr class="tr-master-total" style="background: linear-gradient(90deg, #370709 0%, #820100 100%) !important; background-color: #370709 !important; color: #ffffff !important; border-top: 3px solid #1a0304 !important;">
+                                <td class="text-uppercase fw-bold text-white py-3">
+                                    <i class="bi bi-shield-lock-fill me-2 text-warning fs-6"></i>MASTER TOTAL AMOUNT (All Revenue Streams)
                                 </td>
-                                <td class="text-end font-monospace fw-bold">
+                                <td class="text-end font-monospace fw-bold text-white fs-6 py-3">
                                     <?= number_format($master_grand_total['quantity_sold']) ?>
                                 </td>
-                                <td class="text-end text-light font-monospace opacity-75">—</td>
-                                <td class="text-end font-monospace fw-bold text-white fs-6">
+                                <td class="text-end text-light font-monospace opacity-75 py-3">—</td>
+                                <td class="text-end font-monospace fw-bold text-white fs-5 py-3">
                                     Rs. <?= number_format($master_grand_total['total_amount'], 2) ?>
                                 </td>
-                                <td class="text-end font-monospace fw-bold text-warning fs-6">
+                                <td class="text-end font-monospace fw-bold text-warning fs-5 py-3">
                                     Rs. <?= number_format($master_grand_total['amount_deposited'], 2) ?>
                                 </td>
-                                <td class="text-center no-export">
-                                    <span class="badge bg-warning text-dark fw-bold small">Master Total</span>
+                                <td class="text-center no-export py-3">
+                                    <span class="badge bg-warning text-dark fw-bold px-2.5 py-1.5 small shadow-sm">Master Total</span>
                                 </td>
                             </tr>
-                        </tfoot>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -1151,9 +1307,6 @@ require_once '../../../includes/header.php';
     </div>
 </div>
 
-</main>
-</div>
-
 <!-- Modals -->
 <?php include 'model/add_cash_book_summary_modal.php'; ?>
 <?php include 'model/edit_cash_book_summary_modal.php'; ?>
@@ -1196,10 +1349,17 @@ $(document).ready(function() {
 
     // Quick Period Presets Click Handler
     $('.btn-period-preset').on('click', function() {
+        const specificDate = $(this).data('date');
+        if (specificDate) {
+            $('#rangeSingleDate').val(specificDate);
+            $('#formDateRangeFilter').submit();
+            return;
+        }
+        $('#rangeSingleDate').val('');
         const fromM = $(this).data('from');
         const toM = $(this).data('to');
-        $('#rangeFromMonth').val(fromM);
-        $('#rangeToMonth').val(toM);
+        if (fromM) $('#rangeFromMonth').val(fromM);
+        if (toM) $('#rangeToMonth').val(toM);
         $('#formDateRangeFilter').submit();
     });
 
@@ -1317,6 +1477,7 @@ $(document).ready(function() {
 
         $('#viewItemNameHeading').text(itemName);
         $('#viewItemEntriesPeriod').text('Period: <?= htmlspecialchars($range_label) ?>');
+        $('#viewItemReceiptsCount').html('<i class="bi bi-collection me-1"></i>' + entries.length + (entries.length === 1 ? ' Receipt Logged' : ' Receipts Logged'));
         $('.btn-quick-add-for-item').attr('data-item', itemName);
 
         const $tbody = $('#itemEntriesTbody');
@@ -1329,14 +1490,21 @@ $(document).ready(function() {
         let sumDep = 0;
 
         if (entries.length === 0) {
-            $tbody.append('<tr><td colspan="6" class="text-center text-muted py-3">No individual entries recorded in this period.</td></tr>');
+            $tbody.append('<tr><td colspan="9" class="text-center text-muted py-4">No individual counterfoil receipts recorded for this item in this period.</td></tr>');
         } else {
             entries.forEach(function(rec) {
                 const qty = parseInt(rec.quantity_sold) || 0;
                 const price = parseFloat(rec.unit_price) || 0;
                 const total = parseFloat(rec.total_amount) || 0;
                 const dep = parseFloat(rec.amount_deposited) || 0;
-                const mName = monthNames[rec.report_month] || 'Month ' + rec.report_month;
+                const recDate = rec.receipt_date || (rec.report_year + '-' + String(rec.report_month).padStart(2, '0'));
+                const recNo = rec.receipt_no || ('#' + rec.id);
+                const clientName = rec.client_name || 'General Client';
+                const purpose = rec.purpose || rec.item_name;
+                const isLeaf = (rec.source === 'counterfoil_leaf');
+                const sourceBadge = isLeaf 
+                    ? '<span class="badge bg-warning-subtle text-dark border border-warning" style="font-size:10px;"><i class="bi bi-receipt me-0.5"></i>GF 172 Leaf</span>'
+                    : '<span class="badge bg-secondary-subtle text-secondary" style="font-size:10px;">Summary</span>';
 
                 sumQty += qty;
                 sumTotal += total;
@@ -1344,28 +1512,29 @@ $(document).ready(function() {
 
                 const tr = `
                     <tr id="entry_row_${rec.id}">
-                        <td><strong>${mName}</strong> ${rec.report_year}</td>
-                        <td class="text-end">${qty.toLocaleString()}</td>
-                        <td class="text-end font-monospace">${price.toFixed(2)}</td>
+                        <td><span class="small fw-semibold text-dark">${recDate}</span></td>
+                        <td>
+                            <span class="font-monospace fw-bold text-dark">${recNo}</span>
+                            <div class="mt-0.5">${sourceBadge}</div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">${clientName}</div>
+                            ${rec.client_nic ? `<small class="text-muted font-monospace">${rec.client_nic}</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="small text-dark">${purpose}</span>
+                        </td>
+                        <td class="text-end fw-semibold">${qty.toLocaleString()}</td>
+                        <td class="text-end font-monospace text-muted">${price.toFixed(2)}</td>
                         <td class="text-end font-monospace fw-bold text-dark">Rs. ${total.toFixed(2)}</td>
                         <td class="text-end font-monospace fw-bold text-success">Rs. ${dep.toFixed(2)}</td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-xs btn-outline-primary btn-edit-entry me-1" 
-                                data-id="${rec.id}"
-                                data-year="${rec.report_year}"
-                                data-month="${rec.report_month}"
-                                data-item="${rec.item_name}"
-                                data-qty="${rec.quantity_sold}"
-                                data-price="${rec.unit_price}"
-                                data-total="${rec.total_amount}"
-                                data-deposited="${rec.amount_deposited}"
-                                title="Edit this record">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
+                        <td class="text-center">
                             <button type="button" class="btn btn-xs btn-outline-danger btn-delete-entry" 
                                 data-id="${rec.id}"
-                                data-name="${rec.item_name} (${mName})"
-                                title="Delete this record">
+                                data-source="${rec.source || ''}"
+                                data-leaf-id="${rec.leaf_id || ''}"
+                                data-name="${recNo} (${clientName})"
+                                title="Delete this receipt record">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </td>
@@ -1375,12 +1544,14 @@ $(document).ready(function() {
             });
 
             const footHtml = `
-                <tr class="table-light">
-                    <td>Total for Item</td>
-                    <td class="text-end">${sumQty.toLocaleString()}</td>
-                    <td class="text-end text-muted font-monospace">—</td>
-                    <td class="text-end font-monospace text-dark">Rs. ${sumTotal.toFixed(2)}</td>
-                    <td class="text-end font-monospace text-success">Rs. ${sumDep.toFixed(2)}</td>
+                <tr class="table-light fw-bold" style="border-top: 2px solid #cbd5e1;">
+                    <td colspan="4" class="text-uppercase fw-bold text-dark py-2.5">
+                        <i class="bi bi-calculator me-1 text-primary"></i>Total for ${itemName} (${entries.length} receipts)
+                    </td>
+                    <td class="text-end font-monospace py-2.5">${sumQty.toLocaleString()}</td>
+                    <td class="text-end text-muted font-monospace py-2.5">—</td>
+                    <td class="text-end font-monospace fw-bold text-dark py-2.5">Rs. ${sumTotal.toFixed(2)}</td>
+                    <td class="text-end font-monospace fw-bold text-success py-2.5">Rs. ${sumDep.toFixed(2)}</td>
                     <td></td>
                 </tr>
             `;
@@ -1464,6 +1635,8 @@ $(document).ready(function() {
     // AJAX Delete Confirmation Click Handler
     $(document).on('click', '.btn-delete-entry', function() {
         const recordId = $(this).data('id');
+        const recordSource = $(this).data('source') || '';
+        const recordLeafId = $(this).data('leaf-id') || '';
         const entryName = $(this).data('name') || 'this voucher';
 
         Swal.fire({
@@ -1480,14 +1653,18 @@ $(document).ready(function() {
                 $.ajax({
                     url: 'processors/delete_cash_book_summary.php',
                     type: 'POST',
-                    data: { id: recordId },
+                    data: { 
+                        id: recordId,
+                        source: recordSource,
+                        leaf_id: recordLeafId
+                    },
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Deleted!',
-                                text: 'The voucher record has been removed.',
+                                text: 'The receipt record has been removed.',
                                 timer: 1200,
                                 showConfirmButton: false
                             });
