@@ -1375,3 +1375,144 @@
     background-color: #10b981;
 }
 
+/* =========================================================================
+   POULTRY & VIEW ADDED DETAILS LAYOUT & SPACING ENHANCEMENTS
+   ========================================================================= */
+#viewPoultryPanel,
+#viewRegistryPanel,
+#viewFormPanel {
+    padding-top: 6px;
+    padding-bottom: 24px;
+}
+
+#poultryProgressTracker {
+    margin-bottom: 24px !important;
+}
+
+#viewPoultryPanel .category-content-card {
+    border: 1px solid var(--daph-card-border);
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    margin-bottom: 2rem;
+}
+
+#viewPoultryPanel .category-pane .table {
+    margin-bottom: 0;
+}
+
+#viewPoultryPanel .category-pane .table th,
+#viewPoultryPanel .category-pane .table td {
+    padding: 9px 12px;
+}
+
+#viewPoultryPanel .category-pane .card {
+    border-radius: 10px;
+}
+
+/* View Added Details DataTables Spacing */
+#addedDetailsDataTable_wrapper .dataTables_length,
+#addedDetailsDataTable_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+#addedDetailsDataTable_wrapper .dataTables_info,
+#addedDetailsDataTable_wrapper .dataTables_paginate {
+    margin-top: 1.25rem;
+    padding-top: 0.5rem;
+}
+
+#addedDetailsDataTable_wrapper .dataTables_filter input {
+    border-radius: 8px;
+    padding: 6px 14px;
+    border: 1px solid #cbd5e1;
+    margin-left: 8px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#addedDetailsDataTable_wrapper .dataTables_filter input:focus,
+#poultryDetailsDataTable_wrapper .dataTables_filter input:focus {
+    border-color: var(--daph-maroon);
+    box-shadow: 0 0 0 3px rgba(130, 1, 0, 0.12);
+}
+
+#addedDetailsDataTable_wrapper .dataTables_filter input,
+#poultryDetailsDataTable_wrapper .dataTables_filter input {
+    border-radius: 8px;
+    padding: 6px 14px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#addedDetailsDataTable_wrapper .dataTables_length select,
+#poultryDetailsDataTable_wrapper .dataTables_length select {
+    border-radius: 8px;
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    margin: 0 6px;
+}
+
+#addedDetailsDataTable thead th,
+#poultryDetailsDataTable thead th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    padding: 14px 16px;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+#addedDetailsDataTable tbody td,
+#poultryDetailsDataTable tbody td {
+    padding: 13px 16px;
+    vertical-align: middle;
+}
+
+/* =========================================================================
+   Sub-Navigation Pills for View Added Details (Livestock vs Poultry)
+   ========================================================================= */
+#registrySubTabs .nav-link {
+    color: #495057;
+    background-color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid #dee2e6;
+}
+
+#registrySubTabs .nav-link:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+#registrySubTabs #tab-livestock-registry.active {
+    background: linear-gradient(135deg, #820100 0%, #a01515 100%) !important;
+    color: #ffffff !important;
+    border-color: #820100 !important;
+    box-shadow: 0 4px 12px rgba(130, 1, 0, 0.2) !important;
+}
+
+#registrySubTabs #tab-livestock-registry.active .badge {
+    background-color: #ffffff !important;
+    color: #820100 !important;
+}
+
+#registrySubTabs #tab-poultry-registry.active {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+    color: #ffffff !important;
+    border-color: #b45309 !important;
+    box-shadow: 0 4px 12px rgba(180, 83, 9, 0.2) !important;
+}
+
+#registrySubTabs #tab-poultry-registry.active .badge {
+    background-color: #ffffff !important;
+    color: #b45309 !important;
+}
+
+
+

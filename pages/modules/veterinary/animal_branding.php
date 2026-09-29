@@ -88,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $gn_div = trim($_POST['general']['gn_division'] ?? '');
         $farmer_name = trim($_POST['general']['farmer_name'] ?? '');
         $farmer_addr = trim($_POST['general']['farmer_address'] ?? '');
+        $gps_location = trim($_POST['general']['gps_location'] ?? '');
         $reg_no = trim($_POST['general']['registration_no'] ?? '');
         $phone = trim($_POST['general']['telephone_no'] ?? '');
         $nic = trim($_POST['general']['nic'] ?? '');
@@ -190,12 +191,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $sheep_meat = intval($_POST['sheep']['for_meat'] ?? 0);
         $sheep_tot = $sheep_f + $sheep_m + $sheep_meat;
 
+        $poultry_post = $_POST['poultry'] ?? [];
+        $poultry_json = !empty($poultry_post) ? json_encode($poultry_post, JSON_UNESCAPED_UNICODE) : null;
+
         if ($edit_id) {
             // UPDATE existing database record
             $upd_stmt = $mysqli->prepare("
                 UPDATE `farm_registration_renewals` SET
                     `date_of_registration_renewal` = ?, `province` = ?, `district` = ?, `ds_division` = ?,
-                    `vs_division` = ?, `gn_division` = ?, `farmer_name` = ?, `farmer_address` = ?,
+                    `vs_division` = ?, `gn_division` = ?, `farmer_name` = ?, `farmer_address` = ?, `gps_location` = ?,
                     `registration_no` = ?, `telephone_no` = ?, `nic` = ?, `farm_type` = ?,
                     `mixed_farm_type` = ?, `neat_cattle_data` = ?, `total_neat_cattle` = ?,
                     `buffaloes_data` = ?, `total_buffaloes` = ?, `milk_data` = ?,
@@ -208,14 +212,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     `goat_breeding_male` = ?, `goat_weaners_fattening` = ?, `goat_pre_weaners` = ?,
                     `goat_freq_meat` = ?, `goat_freq_breeding` = ?, `goat_milk_per_day` = ?,
                     `sheep_breeding_female` = ?, `sheep_breeding_male` = ?, `sheep_for_meat` = ?,
-                    `sheep_total_no` = ?
+                    `sheep_total_no` = ?, `poultry_data` = ?
                 WHERE `id` = ?
             ");
             if ($upd_stmt) {
                 $upd_stmt->bind_param(
-                    "ssssssssssssssisisdddddsdsiiiiissiiiiissdiiiii",
+                    "sssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
                     $reg_date, $prov, $dist, $ds_div,
-                    $vs_div, $gn_div, $farmer_name, $farmer_addr,
+                    $vs_div, $gn_div, $farmer_name, $farmer_addr, $gps_location,
                     $reg_no, $phone, $nic, $farm_type,
                     $mixed_type, $neat_cattle_json, $total_neat_cattle,
                     $buffalo_json, $total_buffaloes, $milk_json,
@@ -228,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $goat_m, $goat_w, $goat_p,
                     $goat_freq_meat, $goat_freq_breed, $goat_milk,
                     $sheep_f, $sheep_m, $sheep_meat,
-                    $sheep_tot, $edit_id
+                    $sheep_tot, $poultry_json, $edit_id
                 );
                 $upd_stmt->execute();
                 $upd_stmt->close();
@@ -262,7 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $ins_stmt = $mysqli->prepare("
                 INSERT INTO `farm_registration_renewals` (
                     `range_id`, `district_id`, `date_of_registration_renewal`, `province`, `district`,
-                    `ds_division`, `vs_division`, `gn_division`, `farmer_name`, `farmer_address`,
+                    `ds_division`, `vs_division`, `gn_division`, `farmer_name`, `farmer_address`, `gps_location`,
                     `registration_no`, `telephone_no`, `nic`, `farm_type`, `mixed_farm_type`,
                     `neat_cattle_data`, `total_neat_cattle`, `buffaloes_data`, `total_buffaloes`,
                     `milk_data`, `daily_milk_production`, `fodder_hybrid_napier`, `fodder_sorghum`,
@@ -271,14 +275,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     `swine_pre_weaners`, `swine_freq_meat`, `swine_freq_breeding`, `goat_total_no`,
                     `goat_breeding_female`, `goat_breeding_male`, `goat_weaners_fattening`, `goat_pre_weaners`,
                     `goat_freq_meat`, `goat_freq_breeding`, `goat_milk_per_day`, `sheep_breeding_female`,
-                    `sheep_breeding_male`, `sheep_for_meat`, `sheep_total_no`, `created_by`
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `sheep_breeding_male`, `sheep_for_meat`, `sheep_total_no`, `poultry_data`, `created_by`
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             if ($ins_stmt) {
                 $ins_stmt->bind_param(
-                    "iissssssssssssssisisdddddsdsiiiiissiiiiissdiiiii",
+                    "iisssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
                     $range_context, $district_context, $reg_date, $prov, $dist,
-                    $ds_div, $vs_div, $gn_div, $farmer_name, $farmer_addr,
+                    $ds_div, $vs_div, $gn_div, $farmer_name, $farmer_addr, $gps_location,
                     $reg_no, $phone, $nic, $farm_type, $mixed_type,
                     $neat_cattle_json, $total_neat_cattle, $buffalo_json, $total_buffaloes,
                     $milk_json, $daily_milk_prod, $fod_napier, $fod_sorghum,
@@ -287,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $swine_freq_meat, $swine_freq_breed, $goat_tot, $goat_f,
                     $goat_m, $goat_w, $goat_p, $goat_freq_meat,
                     $goat_freq_breed, $goat_milk, $sheep_f, $sheep_m,
-                    $sheep_meat, $sheep_tot, $user_id
+                    $sheep_meat, $sheep_tot, $poultry_json, $user_id
                 );
                 $ins_stmt->execute();
                 $new_reg_id = $ins_stmt->insert_id;
@@ -360,6 +364,116 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
+    // SAVE / UPDATE POULTRY RECORD
+    if ($action === 'save_poultry_renewal') {
+        $edit_id = !empty($_POST['editing_poultry_record_id']) ? intval($_POST['editing_poultry_record_id']) : null;
+        $range_context = !empty($_POST['range_id']) ? intval($_POST['range_id']) : ($range_id ?: 1);
+        $district_context = $district_id ?: 1;
+
+        $poultry_post = $_POST['poultry'] ?? [];
+        $reg_no = trim($poultry_post['registration_no'] ?? '');
+        $farmer_name = trim($poultry_post['owner_name'] ?? '');
+        $farmer_addr = trim($poultry_post['farm_address'] ?? '');
+        $phone = trim($poultry_post['telephone_no'] ?? '');
+        $nic = trim($poultry_post['owner_nic'] ?? '');
+        $prov = trim($poultry_post['province'] ?? $province_name);
+        $dist = trim($poultry_post['district'] ?? $district_name);
+        $ds_div = trim($poultry_post['ds_division'] ?? '');
+        $vs_div = $range_name;
+        $gn_div = trim($poultry_post['gn_division'] ?? '');
+        $reg_date = date('Y-m-d');
+        $farm_type = 'Poultry';
+        $mixed_type = '';
+        $gps_location = '';
+        $poultry_json = json_encode($poultry_post, JSON_UNESCAPED_UNICODE);
+
+        // Empty livestock defaults
+        $neat_cattle_json = json_encode([]);
+        $total_neat_cattle = 0;
+        $buffalo_json = json_encode([]);
+        $total_buffaloes = 0;
+        $milk_json = json_encode([]);
+        $daily_milk_prod = 0.0;
+        $fod_napier = 0.0;
+        $fod_sorghum = 0.0;
+        $fod_maize = 0.0;
+        $fod_other = 0.0;
+        $fod_other_specify = '';
+        $fod_total = 0.0;
+        $fodder_json = json_encode([]);
+        $swine_tot = 0; $swine_f = 0; $swine_m = 0; $swine_w = 0; $swine_p = 0;
+        $swine_freq_meat = 'Not applicable'; $swine_freq_breed = 'Not applicable';
+        $goat_tot = 0; $goat_f = 0; $goat_m = 0; $goat_w = 0; $goat_p = 0;
+        $goat_freq_meat = 'Not applicable'; $goat_freq_breed = 'Not applicable'; $goat_milk = 0.0;
+        $sheep_f = 0; $sheep_m = 0; $sheep_meat = 0; $sheep_tot = 0;
+
+        if ($edit_id) {
+            $upd_stmt = $mysqli->prepare("
+                UPDATE `farm_registration_renewals` SET
+                    `farmer_name` = ?, `farmer_address` = ?, `registration_no` = ?,
+                    `telephone_no` = ?, `nic` = ?, `farm_type` = ?,
+                    `ds_division` = ?, `gn_division` = ?, `poultry_data` = ?
+                WHERE `id` = ?
+            ");
+            if ($upd_stmt) {
+                $upd_stmt->bind_param("sssssssssi", $farmer_name, $farmer_addr, $reg_no, $phone, $nic, $farm_type, $ds_div, $gn_div, $poultry_json, $edit_id);
+                $upd_stmt->execute();
+                $upd_stmt->close();
+                $alert_status = 'success';
+                $alert_message = "Poultry Registration record #$reg_no updated successfully.";
+            } else {
+                $alert_status = 'danger';
+                $alert_message = "Database error: " . $mysqli->error;
+            }
+        } else {
+            $ins_stmt = $mysqli->prepare("
+                INSERT INTO `farm_registration_renewals` (
+                    `range_id`, `district_id`, `date_of_registration_renewal`, `province`, `district`,
+                    `ds_division`, `vs_division`, `gn_division`, `farmer_name`, `farmer_address`, `gps_location`,
+                    `registration_no`, `telephone_no`, `nic`, `farm_type`, `mixed_farm_type`,
+                    `neat_cattle_data`, `total_neat_cattle`, `buffaloes_data`, `total_buffaloes`,
+                    `milk_data`, `daily_milk_production`, `fodder_hybrid_napier`, `fodder_sorghum`,
+                    `fodder_maize`, `fodder_other`, `fodder_other_specify`, `fodder_total_land_area`, `fodder_data`,
+                    `swine_total_no`, `swine_breeding_female`, `swine_breeding_male`, `swine_weaners_fattening`,
+                    `swine_pre_weaners`, `swine_freq_meat`, `swine_freq_breeding`, `goat_total_no`,
+                    `goat_breeding_female`, `goat_breeding_male`, `goat_weaners_fattening`, `goat_pre_weaners`,
+                    `goat_freq_meat`, `goat_freq_breeding`, `goat_milk_per_day`, `sheep_breeding_female`,
+                    `sheep_breeding_male`, `sheep_for_meat`, `sheep_total_no`, `poultry_data`, `created_by`
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            if ($ins_stmt) {
+                $ins_stmt->bind_param(
+                    "iisssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
+                    $range_context, $district_context, $reg_date, $prov, $dist,
+                    $ds_div, $vs_div, $gn_div, $farmer_name, $farmer_addr, $gps_location,
+                    $reg_no, $phone, $nic, $farm_type, $mixed_type,
+                    $neat_cattle_json, $total_neat_cattle, $buffalo_json, $total_buffaloes,
+                    $milk_json, $daily_milk_prod, $fod_napier, $fod_sorghum,
+                    $fod_maize, $fod_other, $fod_other_specify, $fod_total, $fodder_json,
+                    $swine_tot, $swine_f, $swine_m, $swine_w, $swine_p,
+                    $swine_freq_meat, $swine_freq_breed, $goat_tot, $goat_f,
+                    $goat_m, $goat_w, $goat_p, $goat_freq_meat,
+                    $goat_freq_breed, $goat_milk, $sheep_f, $sheep_m,
+                    $sheep_meat, $sheep_tot, $poultry_json, $user_id
+                );
+                $ins_stmt->execute();
+                $ins_stmt->close();
+                $alert_status = 'success';
+                $alert_message = "Poultry Registration record #$reg_no saved successfully.";
+            } else {
+                $alert_status = 'danger';
+                $alert_message = "Database error: " . $mysqli->error;
+            }
+        }
+
+        // Return JSON for AJAX requests
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => $alert_status, 'message' => $alert_message]);
+            exit();
+        }
+    }
+
     // DELETE RECORD
     if ($action === 'delete_renewal' && !empty($_POST['id'])) {
         $del_id = intval($_POST['id']);
@@ -401,6 +515,21 @@ if ($res) {
     }
 }
 
+// Partition records into Livestock and Poultry for separate registry sub-views
+$livestock_records = [];
+$poultry_records = [];
+foreach ($db_records as $r) {
+    $p_chk = !empty($r['poultry_data']) ? (json_decode($r['poultry_data'], true) ?: []) : [];
+    $is_poultry = ($r['farm_type'] === 'Poultry') || 
+                  (!empty($p_chk['registration_no'])) || 
+                  (isset($r['registration_no']) && preg_match('/^[Pp]/', $r['registration_no']));
+    if ($is_poultry) {
+        $poultry_records[] = $r;
+    } else {
+        $livestock_records[] = $r;
+    }
+}
+
 // Prepare records array for client-side JavaScript binding & dynamic modal rendering
 $records_for_js = [];
 foreach ($db_records as $r) {
@@ -422,6 +551,7 @@ foreach ($db_records as $r) {
         'gn_division' => $r['gn_division'],
         'farmer_name' => $r['farmer_name'],
         'farmer_address' => $r['farmer_address'],
+        'gps_location' => $r['gps_location'] ?? '',
         'telephone_no' => $r['telephone_no'],
         'nic' => $r['nic'],
         'farm_type' => $r['farm_type'],
@@ -457,7 +587,8 @@ foreach ($db_records as $r) {
         'sheep_breeding_female' => (int)$r['sheep_breeding_female'],
         'sheep_breeding_male' => (int)$r['sheep_breeding_male'],
         'sheep_for_meat' => (int)$r['sheep_for_meat'],
-        'sheep_total_no' => (int)$r['sheep_total_no']
+        'sheep_total_no' => (int)$r['sheep_total_no'],
+        'poultry_data' => !empty($r['poultry_data']) ? (json_decode($r['poultry_data'], true) ?: []) : []
     ];
 }
 
@@ -465,6 +596,7 @@ foreach ($db_records as $r) {
 // 4. Server-Side Prepopulation if edit_id is passed via GET
 // -------------------------------------------------------------------------
 $edit_rec = null;
+$poultry_rec = [];
 if (isset($_GET['edit_id']) && is_numeric($_GET['edit_id'])) {
     $target_edit_id = (int)$_GET['edit_id'];
     $stmt_e = $mysqli->prepare("SELECT * FROM `farm_registration_renewals` WHERE `id` = ?");
@@ -473,6 +605,27 @@ if (isset($_GET['edit_id']) && is_numeric($_GET['edit_id'])) {
         $stmt_e->execute();
         $edit_rec = $stmt_e->get_result()->fetch_assoc();
         $stmt_e->close();
+        if ($edit_rec && !empty($edit_rec['poultry_data'])) {
+            $poultry_rec = json_decode($edit_rec['poultry_data'], true) ?: [];
+            if (($edit_rec['farm_type'] ?? '') === 'Poultry') {
+                $_GET['view_poultry'] = 1;
+            }
+        }
+    }
+}
+if (isset($_GET['edit_poultry_id']) && is_numeric($_GET['edit_poultry_id'])) {
+    $target_edit_id = (int)$_GET['edit_poultry_id'];
+    $stmt_e = $mysqli->prepare("SELECT * FROM `farm_registration_renewals` WHERE `id` = ?");
+    if ($stmt_e) {
+        $stmt_e->bind_param("i", $target_edit_id);
+        $stmt_e->execute();
+        $p_edit = $stmt_e->get_result()->fetch_assoc();
+        $stmt_e->close();
+        if ($p_edit && !empty($p_edit['poultry_data'])) {
+            $poultry_rec = json_decode($p_edit['poultry_data'], true) ?: [];
+            $poultry_rec['id'] = $p_edit['id'];
+        }
+        $_GET['view_poultry'] = 1;
     }
 }
 
@@ -548,8 +701,13 @@ require_once '../../../includes/header.php';
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <ul class="nav nav-pills main-view-tabs gap-2" id="mainLivestockViewTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link <?= empty($_GET['view_records']) ? 'active' : '' ?>" id="view-form-tab" data-bs-toggle="pill" data-bs-target="#viewFormPanel" type="button" role="tab" aria-selected="<?= empty($_GET['view_records']) ? 'true' : 'false' ?>">
+                <button class="nav-link <?= (empty($_GET['view_records']) && empty($_GET['view_poultry'])) ? 'active' : '' ?>" id="view-form-tab" data-bs-toggle="pill" data-bs-target="#viewFormPanel" type="button" role="tab" aria-selected="<?= (empty($_GET['view_records']) && empty($_GET['view_poultry'])) ? 'true' : 'false' ?>">
                     <i class="bi bi-pencil-square me-2"></i><span id="formTabTitle">Livestock Registration & Renewal Form</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link <?= !empty($_GET['view_poultry']) ? 'active' : '' ?>" id="view-poultry-tab" data-bs-toggle="pill" data-bs-target="#viewPoultryPanel" type="button" role="tab" aria-selected="<?= !empty($_GET['view_poultry']) ? 'true' : 'false' ?>">
+                    <i class="bi bi-egg-fill me-2 text-warning"></i><span id="poultryMainTabTitle">Poultry Registration & Renewal Form</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -581,7 +739,7 @@ require_once '../../../includes/header.php';
         <!-- ============================================================== -->
         <!-- VIEW 1: REGISTRATION & RENEWAL FORM (VERTICAL TABS / ACCORDION)-->
         <!-- ============================================================== -->
-        <div class="tab-pane fade <?= empty($_GET['view_records']) ? 'show active' : '' ?>" id="viewFormPanel" role="tabpanel" aria-labelledby="view-form-tab">
+        <div class="tab-pane fade <?= (empty($_GET['view_records']) && empty($_GET['view_poultry'])) ? 'show active' : '' ?>" id="viewFormPanel" role="tabpanel" aria-labelledby="view-form-tab">
 
             <!-- Progress Tracker Bar (8 Active Sections) -->
             <div class="category-progress-tracker" id="categoryProgressTracker">
@@ -759,6 +917,17 @@ require_once '../../../includes/header.php';
                                             <div class="mb-3">
                                                 <label class="form-label">GN Division <span class="text-danger">*</span></label>
                                                 <input type="text" name="general[gn_division]" id="gen_gn_division" class="form-control form-control-sm" placeholder="e.g. 241B Orr's Hill" value="<?= htmlspecialchars($edit_rec['gn_division'] ?? '') ?>" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">GPS Location Coordinates</label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white"><i class="bi bi-geo-alt text-danger"></i></span>
+                                                    <input type="text" name="general[gps_location]" id="gen_gps_location" class="form-control" placeholder="e.g. 8.5833, 81.2333" value="<?= htmlspecialchars($edit_rec['gps_location'] ?? '') ?>">
+                                                    <button class="btn btn-outline-secondary" type="button" onclick="getCurrentGPS('gen_gps_location')" title="Fetch My Current Location">
+                                                        <i class="bi bi-crosshair me-1"></i>Current GPS
+                                                    </button>
+                                                </div>
+                                                <small class="text-muted" style="font-size: 0.75rem;">Latitude, Longitude coordinates (optional).</small>
                                             </div>
                                         </div>
 
@@ -1430,123 +1599,1483 @@ require_once '../../../includes/header.php';
         </div>
 
         <!-- ============================================================== -->
-        <!-- VIEW 2: VIEW ADDED DETAILS (DATA GRID & SUMMARY TABLE)         -->
+        <!-- VIEW 2: POULTRY REGISTRATION & RENEWAL FORM                    -->
         <!-- ============================================================== -->
-        <div class="tab-pane fade <?= !empty($_GET['view_records']) ? 'show active' : '' ?>" id="viewRegistryPanel" role="tabpanel" aria-labelledby="view-registry-tab">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="tab-pane fade <?= !empty($_GET['view_poultry']) ? 'show active' : '' ?> py-2" id="viewPoultryPanel" role="tabpanel" aria-labelledby="view-poultry-tab">
+
+            <!-- Progress Tracker Bar (5 Active Sections) -->
+            <div class="category-progress-tracker mb-4" id="poultryProgressTracker" style="margin-bottom: 24px;">
+                <div class="category-progress-segment active" data-index="0" title="1. Farm Ownership & Location"></div>
+                <div class="category-progress-segment" data-index="1" title="2. Flock Information"></div>
+                <div class="category-progress-segment" data-index="2" title="3. Supply Information"></div>
+                <div class="category-progress-segment" data-index="3" title="4. Production Data"></div>
+                <div class="category-progress-segment" data-index="4" title="5. Marketing Details"></div>
+            </div>
+
+            <!-- Master Poultry Form Bound to Database -->
+            <form id="poultryMasterForm" method="POST" action="animal_branding.php" onsubmit="handlePoultryFormSubmitAjax(event);">
+                <input type="hidden" name="action" value="save_poultry_renewal">
+                <input type="hidden" name="range_id" value="<?= htmlspecialchars($range_id ?? '') ?>">
+                <input type="hidden" name="editing_poultry_record_id" id="editingPoultryRecordId" value="<?= htmlspecialchars($poultry_rec['id'] ?? ($edit_rec['id'] ?? '')) ?>">
+
+                <!-- Status Banner when Editing Existing Poultry Record -->
+                <div id="editingPoultryStatusBanner" class="alert alert-warning d-flex justify-content-between align-items-center mb-3 <?= empty($poultry_rec['registration_no']) ? 'd-none' : '' ?>">
                     <div>
-                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-table text-danger me-2"></i>View Added Details - Registered Livestock Farms</h5>
-                        <small class="text-muted">Master live database records for <?= htmlspecialchars($range_name) ?> range.</small>
+                        <i class="bi bi-pencil-square me-2"></i>
+                        Currently Editing Poultry Record: <strong id="editingPoultryRecordNoDisplay"><?= htmlspecialchars($poultry_rec['registration_no'] ?? '') ?></strong>
+                        (Owner: <span id="editingPoultryOwnerDisplay"><?= htmlspecialchars($poultry_rec['owner_name'] ?? '') ?></span>)
                     </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-primary" onclick="switchToNewForm();">
-                            <i class="bi bi-plus-circle me-1"></i>Add New Registration
-                        </button>
-                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-dark" onclick="resetPoultryMasterForm();">
+                        <i class="bi bi-x-circle me-1"></i>Cancel Edit / New Form
+                    </button>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 datatable" id="addedDetailsDataTable">
-                            <thead class="table-light small text-uppercase">
-                                <tr>
-                                    <th class="ps-4">Reg No (9 Digits)</th>
-                                    <th>Renewal Date</th>
-                                    <th>Farmer Name</th>
-                                    <th>NIC / Phone</th>
-                                    <th>DS / GN Division</th>
-                                    <th>Farm Type</th>
-                                    <th class="text-center">Cattle</th>
-                                    <th class="text-center">Buffalo</th>
-                                    <th class="text-center">Milk (L/d)</th>
-                                    <th class="text-center">Pasture (P)</th>
-                                    <th class="text-end pe-4">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="addedDetailsTableBody">
-                                <?php if (empty($db_records)): ?>
-                                <tr>
-                                    <td colspan="11" class="text-center py-5 text-muted">
-                                        <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
-                                        <span class="fw-semibold">No livestock farm registration records found in the database.</span><br>
-                                        <small class="text-muted">Click the button below to register the first farm.</small><br>
-                                        <button type="button" class="btn btn-sm btn-primary mt-3" onclick="switchToNewForm();">
-                                            <i class="bi bi-plus-circle me-1"></i>Register New Farm
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php else: ?>
-                                <?php foreach($db_records as $rec): ?>
-                                <tr id="row_record_<?= $rec['id'] ?>">
-                                    <td class="ps-4">
-                                        <span class="badge bg-light text-dark border font-monospace fw-bold fs-7"><?= htmlspecialchars($rec['registration_no']) ?></span>
-                                    </td>
-                                    <td><small class="text-muted"><?= htmlspecialchars($rec['date_of_registration_renewal']) ?></small></td>
-                                    <td>
-                                        <strong class="d-block text-dark"><?= htmlspecialchars($rec['farmer_name']) ?></strong>
-                                        <small class="text-muted text-truncate d-inline-block" style="max-width: 180px;"><?= htmlspecialchars($rec['farmer_address']) ?></small>
-                                    </td>
-                                    <td>
-                                        <span class="small d-block fw-semibold text-dark"><?= htmlspecialchars($rec['nic']) ?></span>
-                                        <small class="text-muted"><?= htmlspecialchars($rec['telephone_no']) ?></small>
-                                    </td>
-                                    <td>
-                                        <span class="small d-block"><?= htmlspecialchars($rec['ds_division']) ?></span>
-                                        <small class="text-muted"><?= htmlspecialchars($rec['gn_division']) ?></small>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><?= htmlspecialchars($rec['farm_type']) ?></span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-dark rounded-pill"><?= (int)$rec['total_neat_cattle'] ?></span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-warning text-dark rounded-pill"><?= (int)$rec['total_buffaloes'] ?></span>
-                                    </td>
-                                    <td class="text-center font-monospace">
-                                        <?= number_format((float)$rec['daily_milk_production'], 1) ?>
-                                    </td>
-                                    <td class="text-center font-monospace">
-                                        <?= number_format((float)$rec['fodder_total_land_area'], 1) ?>
-                                        <?php
-                                        $f_list = !empty($rec['fodder_data']) ? (json_decode($rec['fodder_data'], true) ?: []) : [];
-                                        if (empty($f_list)) {
-                                            if ((float)$rec['fodder_hybrid_napier'] > 0) $f_list[] = ['item' => 'Hybrid Napier', 'amount' => (float)$rec['fodder_hybrid_napier'], 'other_specify' => ''];
-                                            if ((float)$rec['fodder_sorghum'] > 0) $f_list[] = ['item' => 'Sorghum', 'amount' => (float)$rec['fodder_sorghum'], 'other_specify' => ''];
-                                            if ((float)$rec['fodder_maize'] > 0) $f_list[] = ['item' => 'Maize(fodder)', 'amount' => (float)$rec['fodder_maize'], 'other_specify' => ''];
-                                            if ((float)$rec['fodder_other'] > 0) $f_list[] = ['item' => 'Other', 'amount' => (float)$rec['fodder_other'], 'other_specify' => $rec['fodder_other_specify'] ?? ''];
-                                        }
-                                        if (!empty($f_list)):
-                                        ?>
-                                        <div class="text-start mt-1" style="font-size: 0.72rem; line-height: 1.25;">
-                                            <?php foreach ($f_list as $fItem): ?>
-                                                <div class="text-nowrap text-secondary">
-                                                    • <?= htmlspecialchars($fItem['item'] === 'Other' && !empty($fItem['other_specify']) ? 'Other (' . $fItem['other_specify'] . ')' : $fItem['item']) ?>: <strong><?= number_format((float)$fItem['amount'], 1) ?>P</strong>
+
+                <!-- VERTICAL TABBED INTERFACE LAYOUT -->
+                <div id="poultryVerticalTabsLayoutContainer" class="row g-4">
+
+                    <!-- Left Column: Category Navigation Tabs (Col-lg-3 Col-md-4) -->
+                    <div class="col-lg-3 col-md-4">
+                        <div class="v-tabs-nav">
+                            <div class="v-tabs-header d-flex justify-content-between align-items-center">
+                                <h6>Poultry Sections</h6>
+                                <span class="badge bg-warning-subtle text-dark border border-warning small">5 Sections</span>
+                            </div>
+
+                            <div class="nav flex-column" id="poultryCategoryVerticalTabs" role="tablist" aria-orientation="vertical">
+                                <!-- 1. Farm Ownership & Location -->
+                                <button type="button" class="v-tab-btn active" data-target-pane="pane-p-sec1" data-category-index="0" role="tab" aria-selected="true">
+                                    <span class="tab-num">1</span>
+                                    <i class="bi bi-geo-alt-fill tab-icon text-warning"></i>
+                                    <span class="tab-title">1. Farm Ownership & Location</span>
+                                    <i class="bi bi-chevron-right tab-chevron"></i>
+                                </button>
+
+                                <!-- 2. Flock Information -->
+                                <button type="button" class="v-tab-btn" data-target-pane="pane-p-sec2" data-category-index="1" role="tab" aria-selected="false">
+                                    <span class="tab-num">2</span>
+                                    <i class="bi bi-grid-3x3-gap-fill tab-icon text-warning"></i>
+                                    <span class="tab-title">2. Flock Information</span>
+                                    <i class="bi bi-chevron-right tab-chevron"></i>
+                                </button>
+
+                                <!-- 3. Supply Information -->
+                                <button type="button" class="v-tab-btn" data-target-pane="pane-p-sec3" data-category-index="2" role="tab" aria-selected="false">
+                                    <span class="tab-num">3</span>
+                                    <i class="bi bi-truck tab-icon text-warning"></i>
+                                    <span class="tab-title">3. Supply Information</span>
+                                    <i class="bi bi-chevron-right tab-chevron"></i>
+                                </button>
+
+                                <!-- 4. Production Data -->
+                                <button type="button" class="v-tab-btn" data-target-pane="pane-p-sec4" data-category-index="3" role="tab" aria-selected="false">
+                                    <span class="tab-num">4</span>
+                                    <i class="bi bi-bar-chart-line-fill tab-icon text-warning"></i>
+                                    <span class="tab-title">4. Production Data</span>
+                                    <i class="bi bi-chevron-right tab-chevron"></i>
+                                </button>
+
+                                <!-- 5. Marketing Details -->
+                                <button type="button" class="v-tab-btn" data-target-pane="pane-p-sec5" data-category-index="4" role="tab" aria-selected="false">
+                                    <span class="tab-num">5</span>
+                                    <i class="bi bi-shop tab-icon text-warning"></i>
+                                    <span class="tab-title">5. Marketing Details</span>
+                                    <i class="bi bi-chevron-right tab-chevron"></i>
+                                </button>
+                            </div>
+
+                            <!-- Actions Box -->
+                            <div class="p-3 mt-3 bg-light rounded-3 border text-center">
+                                <span class="small text-muted d-block mb-2">Poultry Form Actions</span>
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetPoultryMasterForm();">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset / New Form
+                                    </button>
+                                    <button type="submit" id="btnSubmitPoultryForm" class="btn btn-sm btn-danger fw-bold" style="background-color: var(--daph-maroon); border-color: var(--daph-maroon);">
+                                        <i class="bi bi-check-circle me-1"></i><span id="btnSubmitPoultryText"><?= empty($poultry_rec['registration_no']) ? 'Save to Database' : 'Update Record in Database' ?></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Category Content Panels (Col-lg-9 Col-md-8) -->
+                    <div class="col-lg-9 col-md-8">
+                        <!-- Persistent Header Card: Poultry Registration Number with Required "P" Prefix -->
+                            <div class="card border-0 shadow-sm mb-4 bg-white rounded-3 border-start border-4 border-warning">
+                                <div class="card-body p-3 p-md-4">
+                                    <div class="row align-items-center g-3">
+                                        <div class="col-md-7">
+                                            <label for="poultry_registration_no" class="form-label fw-bold mb-1 d-flex align-items-center text-dark">
+                                                <i class="bi bi-tag-fill text-warning me-2"></i>Poultry Registration Number
+                                                <span class="badge bg-danger ms-2">Prefix "P" Required</span>
+                                            </label>
+                                            <div class="text-muted small">
+                                                Official poultry farm registration identifier. Must begin with the capital or lowercase prefix <strong>"P"</strong> (e.g. <code>P-00123</code>, <code>P/EP/2026/01</code>).
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-warning-subtle fw-bold text-dark border-warning font-monospace" id="poultryRegPrefixIcon">P</span>
+                                                <input type="text" 
+                                                       name="poultry[registration_no]" 
+                                                       id="poultry_registration_no" 
+                                                       class="form-control font-monospace fw-bold border-warning" 
+                                                       placeholder="e.g. P100245 or P/EP/001" 
+                                                       value="<?= htmlspecialchars($poultry_rec['registration_no'] ?? '') ?>"
+                                                       oninput="validatePoultryRegPrefix(this)"
+                                                       onblur="validatePoultryRegPrefix(this)">
+                                                <button type="button" class="btn btn-outline-warning text-dark btn-sm" onclick="applyPoultryPrefixAuto();" title="Prepend prefix 'P'">
+                                                    <i class="bi bi-plus-lg me-1"></i>Add "P"
+                                                </button>
+                                            </div>
+                                            <div id="poultryRegFeedback" class="small mt-1 text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>Format must begin with "P" (e.g., P-12345).
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                        <div class="category-content-card shadow-sm rounded-4 border mb-5">
+
+
+                            <!-- ============================================================== -->
+                            <!-- SECTION 1: FARM OWNERSHIP AND LOCATION                         -->
+                            <!-- ============================================================== -->
+                            <div class="category-pane" id="pane-p-sec1" style="display: block;">
+                                <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <span class="category-badge-step mb-1" style="background-color: #fef3c7; color: #b45309;">Section 1 of 5</span>
+                                        <h4 class="h5 fw-bold text-dark mb-1">
+                                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>1. Farm Ownership and Location
+                                        </h4>
+                                        <p class="text-muted small mb-0">Owner details, management contact, NIC, ownership type, administrative boundaries, and land usage.</p>
+                                    </div>
+                                    <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
+                                        <i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
+                                    </span>
+                                </div>
+
+                                <div class="p-4 p-md-4">
+
+                                <div class="row g-3">
+                                                    <!-- 1.1 Farm Owner Name -->
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">1.1 Farm Owner Name</label>
+                                                        <input type="text" name="poultry[owner_name]" id="poultry_owner_name" class="form-control form-control-sm" placeholder="Enter owner's full name" value="<?= htmlspecialchars($poultry_rec['owner_name'] ?? '') ?>">
+                                                    </div>
+                                                    <!-- 1.2 Farm Manager Name -->
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">1.2 Farm Manager Name</label>
+                                                        <input type="text" name="poultry[manager_name]" id="poultry_manager_name" class="form-control form-control-sm" placeholder="Enter farm manager name" value="<?= htmlspecialchars($poultry_rec['manager_name'] ?? '') ?>">
+                                                    </div>
+                                                    <!-- 1.3 Farm Address -->
+                                                    <div class="col-12">
+                                                        <label class="form-label small fw-bold">1.3 Farm Address</label>
+                                                        <input type="text" name="poultry[farm_address]" id="poultry_farm_address" class="form-control form-control-sm" placeholder="Full postal address of the poultry farm" value="<?= htmlspecialchars($poultry_rec['farm_address'] ?? '') ?>">
+                                                    </div>
+                                                    <!-- 1.4 Telephone number -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.4 Telephone Number</label>
+                                                        <input type="tel" name="poultry[telephone_no]" id="poultry_telephone_no" class="form-control form-control-sm" placeholder="e.g. 0771234567" value="<?= htmlspecialchars($poultry_rec['telephone_no'] ?? '') ?>">
+                                                    </div>
+                                                    <!-- 1.5 Farm Owner NIC Number -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.5 Farm Owner NIC Number</label>
+                                                        <input type="text" name="poultry[owner_nic]" id="poultry_owner_nic" class="form-control form-control-sm font-monospace" placeholder="e.g. 198012345678 or 801234567V" value="<?= htmlspecialchars($poultry_rec['owner_nic'] ?? '') ?>">
+                                                    </div>
+                                                    <!-- 1.6 Farm Ownership (Dropdown) -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.6 Farm Ownership</label>
+                                                        <select name="poultry[ownership]" id="poultry_ownership" class="form-select form-select-sm">
+                                                            <?php
+                                                            $ownership_options = [
+                                                                'Private / Sole Proprietor',
+                                                                'Partnership',
+                                                                'Private Limited Company (Pvt Ltd)',
+                                                                'Public Listed Company (PLC)',
+                                                                'Cooperative Society',
+                                                                'State / Government',
+                                                                'Other'
+                                                            ];
+                                                            $cur_own = $poultry_rec['ownership'] ?? 'Private / Sole Proprietor';
+                                                            foreach ($ownership_options as $opt):
+                                                            ?>
+                                                            <option value="<?= htmlspecialchars($opt) ?>" <?= ($cur_own === $opt) ? 'selected' : '' ?>><?= htmlspecialchars($opt) ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
+                                                    <!-- 1.7 GN Division -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.7 GN Division</label>
+                                                        <input type="text" name="poultry[gn_division]" id="poultry_gn_division" class="form-control form-control-sm" placeholder="Grama Niladhari Division" value="<?= htmlspecialchars($poultry_rec['gn_division'] ?? '') ?>">
+                                                    </div>
+                                                    <!-- 1.8 DS/Divisional Secretariat (Dropdown) -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.8 DS / Divisional Secretariat</label>
+                                                        <select name="poultry[ds_division]" id="poultry_ds_division" class="form-select form-select-sm">
+                                                            <?php
+                                                            $ds_list = [
+                                                                'Trincomalee Town and Gravets', 'Kuchchaveli', 'Kinniya', 'Muttur', 'Seruvila', 'Kantalai', 'Morawewa', 'Gomarankadawala', 'Padavi Sri Pura', 'Thampalakamam',
+                                                                'Batticaloa', 'Manmunai North', 'Manmunai South & Eruvil Pattu', 'Eravur Pattu', 'Koralai Pattu', 'Porativu Pattu',
+                                                                'Ampara', 'Kalmunai', 'Sammanthurai', 'Akkaraipattu', 'Pothuvil', 'Uhana', 'Damana', 'Dehiattakandiya',
+                                                                'Colombo', 'Kandy', 'Kurunegala', 'Galle', 'Jaffna', 'Anuradhapura', 'Badulla', 'Ratnapura', 'Other'
+                                                            ];
+                                                            $cur_ds = $poultry_rec['ds_division'] ?? ($edit_rec['ds_division'] ?? 'Trincomalee Town and Gravets');
+                                                            foreach ($ds_list as $ds):
+                                                            ?>
+                                                            <option value="<?= htmlspecialchars($ds) ?>" <?= ($cur_ds === $ds) ? 'selected' : '' ?>><?= htmlspecialchars($ds) ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
+                                                    <!-- 1.9 Provincial Directorate (Dropdown) -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.9 Provincial Directorate</label>
+                                                        <select name="poultry[provincial_directorate]" id="poultry_provincial_directorate" class="form-select form-select-sm">
+                                                            <?php
+                                                            $prov_dirs = [
+                                                                'Eastern Provincial Directorate',
+                                                                'Northern Provincial Directorate',
+                                                                'Western Provincial Directorate',
+                                                                'Central Provincial Directorate',
+                                                                'North Western Provincial Directorate',
+                                                                'Southern Provincial Directorate',
+                                                                'North Central Provincial Directorate',
+                                                                'Uva Provincial Directorate',
+                                                                'Sabaragamuwa Provincial Directorate'
+                                                            ];
+                                                            $cur_pdir = $poultry_rec['provincial_directorate'] ?? 'Eastern Provincial Directorate';
+                                                            foreach ($prov_dirs as $pd):
+                                                            ?>
+                                                            <option value="<?= htmlspecialchars($pd) ?>" <?= ($cur_pdir === $pd) ? 'selected' : '' ?>><?= htmlspecialchars($pd) ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
+                                                    <!-- 1.10 Province / District (Dropdown) -->
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">1.10 Province / District</label>
+                                                        <select name="poultry[province_district]" id="poultry_province_district" class="form-select form-select-sm">
+                                                            <optgroup label="Eastern Province">
+                                                                <option value="Eastern / Trincomalee" <?= (($poultry_rec['province_district'] ?? 'Eastern / Trincomalee') === 'Eastern / Trincomalee') ? 'selected' : '' ?>>Eastern / Trincomalee</option>
+                                                                <option value="Eastern / Batticaloa" <?= (($poultry_rec['province_district'] ?? '') === 'Eastern / Batticaloa') ? 'selected' : '' ?>>Eastern / Batticaloa</option>
+                                                                <option value="Eastern / Ampara" <?= (($poultry_rec['province_district'] ?? '') === 'Eastern / Ampara') ? 'selected' : '' ?>>Eastern / Ampara</option>
+                                                            </optgroup>
+                                                            <optgroup label="Western Province">
+                                                                <option value="Western / Colombo" <?= (($poultry_rec['province_district'] ?? '') === 'Western / Colombo') ? 'selected' : '' ?>>Western / Colombo</option>
+                                                                <option value="Western / Gampaha" <?= (($poultry_rec['province_district'] ?? '') === 'Western / Gampaha') ? 'selected' : '' ?>>Western / Gampaha</option>
+                                                                <option value="Western / Kalutara" <?= (($poultry_rec['province_district'] ?? '') === 'Western / Kalutara') ? 'selected' : '' ?>>Western / Kalutara</option>
+                                                            </optgroup>
+                                                            <optgroup label="Central Province">
+                                                                <option value="Central / Kandy" <?= (($poultry_rec['province_district'] ?? '') === 'Central / Kandy') ? 'selected' : '' ?>>Central / Kandy</option>
+                                                                <option value="Central / Matale" <?= (($poultry_rec['province_district'] ?? '') === 'Central / Matale') ? 'selected' : '' ?>>Central / Matale</option>
+                                                                <option value="Central / Nuwara Eliya" <?= (($poultry_rec['province_district'] ?? '') === 'Central / Nuwara Eliya') ? 'selected' : '' ?>>Central / Nuwara Eliya</option>
+                                                            </optgroup>
+                                                            <optgroup label="North Western Province">
+                                                                <option value="North Western / Kurunegala" <?= (($poultry_rec['province_district'] ?? '') === 'North Western / Kurunegala') ? 'selected' : '' ?>>North Western / Kurunegala</option>
+                                                                <option value="North Western / Puttalam" <?= (($poultry_rec['province_district'] ?? '') === 'North Western / Puttalam') ? 'selected' : '' ?>>North Western / Puttalam</option>
+                                                            </optgroup>
+                                                            <optgroup label="Other Districts">
+                                                                <option value="Northern / Jaffna" <?= (($poultry_rec['province_district'] ?? '') === 'Northern / Jaffna') ? 'selected' : '' ?>>Northern / Jaffna</option>
+                                                                <option value="North Central / Anuradhapura" <?= (($poultry_rec['province_district'] ?? '') === 'North Central / Anuradhapura') ? 'selected' : '' ?>>North Central / Anuradhapura</option>
+                                                                <option value="Southern / Galle" <?= (($poultry_rec['province_district'] ?? '') === 'Southern / Galle') ? 'selected' : '' ?>>Southern / Galle</option>
+                                                                <option value="Uva / Badulla" <?= (($poultry_rec['province_district'] ?? '') === 'Uva / Badulla') ? 'selected' : '' ?>>Uva / Badulla</option>
+                                                                <option value="Sabaragamuwa / Ratnapura" <?= (($poultry_rec['province_district'] ?? '') === 'Sabaragamuwa / Ratnapura') ? 'selected' : '' ?>>Sabaragamuwa / Ratnapura</option>
+                                                            </optgroup>
+                                                        </select>
+                                                    </div>
+                                                    <!-- 1.11 Present Land Usage (Dropdown) -->
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold">1.11 Present Land Usage</label>
+                                                        <select name="poultry[present_land_usage]" id="poultry_present_land_usage" class="form-select form-select-sm">
+                                                            <?php
+                                                            $land_usages = [
+                                                                'Dedicated Intensive Poultry Farm',
+                                                                'Mixed Livestock and Poultry Farming',
+                                                                'Backyard / Semi-Intensive Homestead',
+                                                                'Agriculture & Poultry Combined',
+                                                                'Coconut Plantation Intercropping',
+                                                                'Commercial Hatchery & Breeder Facility',
+                                                                'Leased Crown / State Land',
+                                                                'Other'
+                                                            ];
+                                                            $cur_usage = $poultry_rec['present_land_usage'] ?? 'Dedicated Intensive Poultry Farm';
+                                                            foreach ($land_usages as $lu):
+                                                            ?>
+                                                            <option value="<?= htmlspecialchars($lu) ?>" <?= ($cur_usage === $lu) ? 'selected' : '' ?>><?= htmlspecialchars($lu) ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <div class="btn-group btn-group-sm">
-                                            <button type="button" class="btn btn-outline-primary" onclick="showRecordDetailModal(<?= $rec['id'] ?>);" title="View Full Details">
-                                                <i class="bi bi-eye-fill"></i> View
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary" onclick="loadRecordIntoForm(<?= $rec['id'] ?>);" title="Edit / Load into Form">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger" onclick="deleteRecordPrompt(<?= $rec['id'] ?>, '<?= htmlspecialchars($rec['registration_no'], ENT_QUOTES) ?>');" title="Delete Record">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+
+                                </div>
+
+                                <div class="panel-nav-footer">
+                                    <div></div>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetPoultryMasterForm();">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-sm btn-next-category" data-next-pane="pane-p-sec2" data-next-index="1">
+                                            Next: 2. Flock Information<i class="bi bi-arrow-right ms-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ============================================================== -->
+                            <!-- SECTION 2: FLOCK INFORMATION                                   -->
+                            <!-- ============================================================== -->
+                            <div class="category-pane" id="pane-p-sec2" style="display: none;">
+                                <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <span class="category-badge-step mb-1" style="background-color: #fef3c7; color: #b45309;">Section 2 of 5</span>
+                                        <h4 class="h5 fw-bold text-dark mb-1">
+                                            <i class="bi bi-grid-3x3-gap-fill text-warning me-2"></i>2. Flock Information
+                                        </h4>
+                                        <p class="text-muted small mb-0">Poultry population capacity tiers and detailed species headcount and feed breakdown.</p>
+                                    </div>
+                                    <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
+                                        <i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
+                                    </span>
+                                </div>
+
+                                <div class="p-4 p-md-4">
+
+                                <!-- 2.1 Poultry population details (Checkbox Grid) -->
+                                                <div class="mb-4">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <h6 class="fw-bold text-dark mb-0">
+                                                            <i class="bi bi-grid-3x3 me-1 text-primary"></i>2.1 Poultry Population Details (Checkbox Grid)
+                                                        </h6>
+                                                        <span class="badge bg-secondary-subtle text-secondary small">Select applicable population ranges</span>
+                                                    </div>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered align-middle text-center mb-0">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th class="text-start" style="width: 28%;">Bird Category</th>
+                                                                    <th style="width: 18%;">Under 1000</th>
+                                                                    <th style="width: 18%;">1000 - 5000</th>
+                                                                    <th style="width: 18%;">5000 - 10000</th>
+                                                                    <th style="width: 18%;">Over 10000</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                $pop_rows = [
+                                                                    'layers' => 'Layers',
+                                                                    'broilers' => 'Broilers',
+                                                                    'breeder' => 'Breeder (Heavy/Light)'
+                                                                ];
+                                                                $pop_cols = [
+                                                                    'under_1000' => 'Under 1000',
+                                                                    '1000_5000' => '1000 - 5000',
+                                                                    '5000_10000' => '5000 - 10000',
+                                                                    'over_10000' => 'Over 10000'
+                                                                ];
+                                                                foreach ($pop_rows as $row_key => $row_label):
+                                                                ?>
+                                                                <tr>
+                                                                    <td class="text-start fw-semibold bg-light-subtle"><?= $row_label ?></td>
+                                                                    <?php foreach ($pop_cols as $col_key => $col_label): 
+                                                                        $is_checked = !empty($poultry_rec['pop'][$row_key][$col_key]);
+                                                                    ?>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input poultry-check" type="checkbox" name="poultry[pop][<?= $row_key ?>][<?= $col_key ?>]" value="1" <?= $is_checked ? 'checked' : '' ?> id="pop_<?= $row_key ?>_<?= $col_key ?>">
+                                                                        </div>
+                                                                    </td>
+                                                                    <?php endforeach; ?>
+                                                                </tr>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 2.2 Number of birds kept per shed (Input Grid) -->
+                                                <div>
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <h6 class="fw-bold text-dark mb-0">
+                                                            <i class="bi bi-houses me-1 text-primary"></i>2.2 Number of Birds Kept Per Shed (Input Grid)
+                                                        </h6>
+                                                        <span class="badge bg-secondary-subtle text-secondary small">Enter maximum bird capacity per shed type</span>
+                                                    </div>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered align-middle mb-0">
+                                                            <thead class="table-light text-center">
+                                                                <tr>
+                                                                    <th class="text-start" style="width: 34%;">Shed Type</th>
+                                                                    <th style="width: 22%;">Max No of birds<br><small class="text-muted">(Layers)</small></th>
+                                                                    <th style="width: 22%;">Max No of birds<br><small class="text-muted">(Broilers)</small></th>
+                                                                    <th style="width: 22%;">Max No of birds<br><small class="text-muted">(Breeders)</small></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                $shed_rows = [
+                                                                    'deep_litter' => 'Deep litter',
+                                                                    'slatted' => 'Slatted',
+                                                                    'slatted_deep' => 'Slatted & Deep litter combined',
+                                                                    'cages' => 'Cages',
+                                                                    'other' => 'Other'
+                                                                ];
+                                                                foreach ($shed_rows as $shed_key => $shed_label):
+                                                                    $l_val = $poultry_rec['shed'][$shed_key]['layers'] ?? '';
+                                                                    $b_val = $poultry_rec['shed'][$shed_key]['broilers'] ?? '';
+                                                                    $br_val = $poultry_rec['shed'][$shed_key]['breeders'] ?? '';
+                                                                    $other_spec = $poultry_rec['shed']['other_specify'] ?? '';
+                                                                ?>
+                                                                <tr>
+                                                                    <td class="fw-semibold bg-light-subtle">
+                                                                        <?= $shed_label ?>
+                                                                        <?php if ($shed_key === 'other'): ?>
+                                                                        <input type="text" name="poultry[shed][other_specify]" class="form-control form-control-sm mt-1" placeholder="Specify shed type..." value="<?= htmlspecialchars($other_spec) ?>">
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" min="0" name="poultry[shed][<?= $shed_key ?>][layers]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="<?= htmlspecialchars($l_val) ?>">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" min="0" name="poultry[shed][<?= $shed_key ?>][broilers]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="<?= htmlspecialchars($b_val) ?>">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" min="0" name="poultry[shed][<?= $shed_key ?>][breeders]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="<?= htmlspecialchars($br_val) ?>">
+                                                                    </td>
+                                                                </tr>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                </div>
+
+                                <div class="panel-nav-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-p-sec1" data-prev-index="0">
+                                        <i class="bi bi-arrow-left me-1"></i>Previous: 1. Farm Ownership & Location
+                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetPoultryMasterForm();">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-sm btn-next-category" data-next-pane="pane-p-sec3" data-next-index="2">
+                                            Next: 3. Supply Information<i class="bi bi-arrow-right ms-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ============================================================== -->
+                            <!-- SECTION 3: FARM INPUT SUPPLY                                   -->
+                            <!-- ============================================================== -->
+                            <div class="category-pane" id="pane-p-sec3" style="display: none;">
+                                <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <span class="category-badge-step mb-1" style="background-color: #fef3c7; color: #b45309;">Section 3 of 5</span>
+                                        <h4 class="h5 fw-bold text-dark mb-1">
+                                            <i class="bi bi-truck text-warning me-2"></i>3. Supply Information
+                                        </h4>
+                                        <p class="text-muted small mb-0">Day-old chicks supply origins and commercial feed supplier / feed mill registration.</p>
+                                    </div>
+                                    <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
+                                        <i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
+                                    </span>
+                                </div>
+
+                                <div class="p-4 p-md-4">
+
+                                <!-- 3.1 Chicks source (Checkbox/Input Grid) -->
+                                                <div class="mb-4">
+                                                    <h6 class="fw-bold text-dark mb-2">
+                                                        <i class="bi bi-arrow-repeat me-1 text-primary"></i>3.1 Chicks Source (Checkbox/Input Grid)
+                                                    </h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered align-middle mb-0">
+                                                            <thead class="table-light text-center small">
+                                                                <tr>
+                                                                    <th class="text-start" style="width: 18%;">Type of Bird</th>
+                                                                    <th style="width: 16%;">Grand Parent Farm / Hatchery</th>
+                                                                    <th style="width: 16%;">Parent Stock Farm / Hatchery</th>
+                                                                    <th style="width: 14%;">Commercial Farm</th>
+                                                                    <th style="width: 18%;">Private Farm/Hatchery<br><small class="text-muted">(Specify)</small></th>
+                                                                    <th style="width: 18%;">Govt. Farm/Hatchery<br><small class="text-muted">(Specify)</small></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                $chick_rows = [
+                                                                    'layers' => 'Layers',
+                                                                    'broilers' => 'Broilers',
+                                                                    'breeder' => 'Breeder'
+                                                                ];
+                                                                foreach ($chick_rows as $ck_key => $ck_label):
+                                                                    $src_c = $poultry_rec['chick_source'][$ck_key] ?? [];
+                                                                ?>
+                                                                <tr>
+                                                                    <td class="fw-semibold bg-light-subtle"><?= $ck_label ?></td>
+                                                                    <td class="text-center">
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[chick_source][<?= $ck_key ?>][grand_parent]" value="1" <?= !empty($src_c['grand_parent']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[chick_source][<?= $ck_key ?>][parent_stock]" value="1" <?= !empty($src_c['parent_stock']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[chick_source][<?= $ck_key ?>][commercial]" value="1" <?= !empty($src_c['commercial']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" name="poultry[chick_source][<?= $ck_key ?>][private_specify]" class="form-control form-control-sm" placeholder="Private source..." value="<?= htmlspecialchars($src_c['private_specify'] ?? '') ?>">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" name="poultry[chick_source][<?= $ck_key ?>][govt_specify]" class="form-control form-control-sm" placeholder="Govt source..." value="<?= htmlspecialchars($src_c['govt_specify'] ?? '') ?>">
+                                                                    </td>
+                                                                </tr>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 3.2 Feed Supply (Checkboxes/Inputs) -->
+                                                <div class="mb-4 p-3 bg-light-subtle rounded-3 border">
+                                                    <h6 class="fw-bold text-dark mb-2">
+                                                        <i class="bi bi-cart3 me-1 text-primary"></i>3.2 Feed Supply
+                                                    </h6>
+                                                    <div class="row g-3 align-items-center">
+                                                        <div class="col-md-3">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="poultry[feed_supply][own_mix]" id="feed_own_mix" value="1" <?= !empty($poultry_rec['feed_supply']['own_mix']) ? 'checked' : '' ?>>
+                                                                <label class="form-check-label small fw-semibold" for="feed_own_mix">Own Feed Mixture</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="form-check text-nowrap">
+                                                                    <input class="form-check-input" type="checkbox" name="poultry[feed_supply][commercial]" id="feed_commercial" value="1" <?= !empty($poultry_rec['feed_supply']['commercial']) ? 'checked' : '' ?>>
+                                                                    <label class="form-check-label small fw-semibold" for="feed_commercial">Commercial Feed</label>
+                                                                </div>
+                                                                <input type="text" name="poultry[feed_supply][commercial_company]" class="form-control form-control-sm" placeholder="Company Name (e.g. Prima, CIC, Bairaha)" value="<?= htmlspecialchars($poultry_rec['feed_supply']['commercial_company'] ?? '') ?>">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="poultry[feed_supply][both]" id="feed_both" value="1" <?= !empty($poultry_rec['feed_supply']['both']) ? 'checked' : '' ?>>
+                                                                <label class="form-check-label small fw-semibold" for="feed_both">Both (Own & Commercial)</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12 mt-2">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="form-check text-nowrap">
+                                                                    <input class="form-check-input" type="checkbox" name="poultry[feed_supply][other_check]" id="feed_other_check" value="1" <?= !empty($poultry_rec['feed_supply']['other_check']) ? 'checked' : '' ?>>
+                                                                    <label class="form-check-label small fw-semibold" for="feed_other_check">Other</label>
+                                                                </div>
+                                                                <input type="text" name="poultry[feed_supply][other_specify]" class="form-control form-control-sm" placeholder="Specify other feed supply source..." value="<?= htmlspecialchars($poultry_rec['feed_supply']['other_specify'] ?? '') ?>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 3.3 Source of Farm Inputs (Checkbox Grid) -->
+                                                <div class="mb-4">
+                                                    <h6 class="fw-bold text-dark mb-2">
+                                                        <i class="bi bi-building me-1 text-primary"></i>3.3 Source of Farm Inputs (Checkbox Grid)
+                                                    </h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered align-middle mb-0 text-center">
+                                                            <thead class="table-light small">
+                                                                <tr>
+                                                                    <th class="text-start" style="width: 25%;">Input Category</th>
+                                                                    <th style="width: 20%;">Company</th>
+                                                                    <th style="width: 20%;">Govt. Vet. Office</th>
+                                                                    <th style="width: 20%;">Private Vet</th>
+                                                                    <th style="width: 25%;">Other (Specify)</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                $input_src_rows = [
+                                                                    'chicks' => 'Chicks',
+                                                                    'feed' => 'Feed',
+                                                                    'drugs_vaccines' => 'Drugs & Vaccines',
+                                                                    'equipments' => 'Equipments',
+                                                                    'other' => 'Other'
+                                                                ];
+                                                                foreach ($input_src_rows as $is_key => $is_label):
+                                                                    $row_is = $poultry_rec['input_source'][$is_key] ?? [];
+                                                                ?>
+                                                                <tr>
+                                                                    <td class="text-start fw-semibold bg-light-subtle"><?= $is_label ?></td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[input_source][<?= $is_key ?>][company]" value="1" <?= !empty($row_is['company']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[input_source][<?= $is_key ?>][govt_vet]" value="1" <?= !empty($row_is['govt_vet']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[input_source][<?= $is_key ?>][private_vet]" value="1" <?= !empty($row_is['private_vet']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" name="poultry[input_source][<?= $is_key ?>][other_specify]" class="form-control form-control-sm text-start" placeholder="Specify..." value="<?= htmlspecialchars($row_is['other_specify'] ?? '') ?>">
+                                                                    </td>
+                                                                </tr>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 3.4 Feed manufacturing on the farm (Input Grid) -->
+                                                <div class="mb-4">
+                                                    <h6 class="fw-bold text-dark mb-2">
+                                                        <i class="bi bi-gear-wide-connected me-1 text-primary"></i>3.4 Feed Manufacturing on the Farm (Input Grid)
+                                                    </h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered align-middle mb-0">
+                                                            <thead class="table-light text-center small">
+                                                                <tr>
+                                                                    <th class="text-start" style="width: 44%;">Feed Category</th>
+                                                                    <th style="width: 32%;">Monthly Production</th>
+                                                                    <th style="width: 24%;">Unit</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                $feed_cats = [
+                                                                    'starter_layer' => 'Starter (Layer)',
+                                                                    'starter_broiler' => 'Starter (Broiler)',
+                                                                    'starter_breeder' => 'Starter (Breeder)',
+                                                                    'grower_layer' => 'Grower (Layer)',
+                                                                    'grower_breeder' => 'Grower (Breeder)',
+                                                                    'finisher_broiler' => 'Finisher (Broiler)',
+                                                                    'layer_layer' => 'Layer (Layer)',
+                                                                    'layer_breeder' => 'Layer (Breeder)',
+                                                                    'other' => 'Other'
+                                                                ];
+                                                                foreach ($feed_cats as $fc_key => $fc_label):
+                                                                    $prod_val = $poultry_rec['feed_mfg'][$fc_key]['monthly_prod'] ?? '';
+                                                                    $unit_val = $poultry_rec['feed_mfg'][$fc_key]['unit'] ?? 'kg';
+                                                                    $spec_val = $poultry_rec['feed_mfg']['other_specify'] ?? '';
+                                                                ?>
+                                                                <tr>
+                                                                    <td class="fw-semibold bg-light-subtle">
+                                                                        <?= $fc_label ?>
+                                                                        <?php if ($fc_key === 'other'): ?>
+                                                                        <input type="text" name="poultry[feed_mfg][other_specify]" class="form-control form-control-sm mt-1" placeholder="Specify other feed category..." value="<?= htmlspecialchars($spec_val) ?>">
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="number" step="any" min="0" name="poultry[feed_mfg][<?= $fc_key ?>][monthly_prod]" class="form-control form-control-sm text-end font-monospace" placeholder="0.0" value="<?= htmlspecialchars($prod_val) ?>">
+                                                                    </td>
+                                                                    <td>
+                                                                        <select name="poultry[feed_mfg][<?= $fc_key ?>][unit]" class="form-select form-select-sm">
+                                                                            <option value="kg" <?= ($unit_val === 'kg') ? 'selected' : '' ?>>kg</option>
+                                                                            <option value="MT" <?= ($unit_val === 'MT') ? 'selected' : '' ?>>MT (Metric Ton)</option>
+                                                                            <option value="Bags (50kg)" <?= ($unit_val === 'Bags (50kg)') ? 'selected' : '' ?>>Bags (50kg)</option>
+                                                                        </select>
+                                                                    </td>
+                                                                </tr>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 3.5 DAPH Registration -->
+                                                <div class="p-3 bg-white border rounded-3 border-start border-4 border-info">
+                                                    <h6 class="fw-bold text-dark mb-2">
+                                                        <i class="bi bi-patch-check-fill me-1 text-info"></i>3.5 DAPH Registration
+                                                    </h6>
+                                                    <div class="row align-items-center g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small fw-bold mb-1 d-block">
+                                                                Is the farm registered with the Department of Animal Production and Health?
+                                                            </label>
+                                                            <div class="d-flex gap-3">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="poultry[daph_registered]" id="daph_reg_yes" value="Yes" <?= (($poultry_rec['daph_registered'] ?? 'No') === 'Yes') ? 'checked' : '' ?> onchange="toggleDaphRegNumber(true)">
+                                                                    <label class="form-check-label small fw-semibold" for="daph_reg_yes">Yes</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" name="poultry[daph_registered]" id="daph_reg_no" value="No" <?= (($poultry_rec['daph_registered'] ?? 'No') !== 'Yes') ? 'checked' : '' ?> onchange="toggleDaphRegNumber(false)">
+                                                                    <label class="form-check-label small fw-semibold" for="daph_reg_no">No</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small fw-bold mb-1" for="poultry_daph_reg_no">
+                                                                DAPH Registration Number
+                                                            </label>
+                                                            <input type="text" name="poultry[daph_reg_no]" id="poultry_daph_reg_no" class="form-control form-control-sm font-monospace" placeholder="Enter official DAPH registration number" value="<?= htmlspecialchars($poultry_rec['daph_reg_no'] ?? '') ?>">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                </div>
+
+                                <div class="panel-nav-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-p-sec2" data-prev-index="1">
+                                        <i class="bi bi-arrow-left me-1"></i>Previous: 2. Flock Information
+                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetPoultryMasterForm();">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-sm btn-next-category" data-next-pane="pane-p-sec4" data-next-index="3">
+                                            Next: 4. Production Data<i class="bi bi-arrow-right ms-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ============================================================== -->
+                            <!-- SECTION 4: FARM PRODUCTION                                     -->
+                            <!-- ============================================================== -->
+                            <div class="category-pane" id="pane-p-sec4" style="display: none;">
+                                <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <span class="category-badge-step mb-1" style="background-color: #fef3c7; color: #b45309;">Section 4 of 5</span>
+                                        <h4 class="h5 fw-bold text-dark mb-1">
+                                            <i class="bi bi-bar-chart-line-fill text-warning me-2"></i>4. Production Data
+                                        </h4>
+                                        <p class="text-muted small mb-0">Flock age, cycles, broiler carcass forms, and egg production outputs.</p>
+                                    </div>
+                                    <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
+                                        <i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
+                                    </span>
+                                </div>
+
+                                <div class="p-4 p-md-4">
+
+                                <!-- 4.1 General production parameters -->
+                                                <div class="card border-0 shadow-xs bg-light-subtle rounded-3 mb-3 p-3">
+                                                    <h6 class="fw-bold text-dark mb-3">
+                                                        <i class="bi bi-clock-history me-1 text-primary"></i>4.1 General Production Parameters
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small fw-bold">Maximum Age of Layer / Breeder Flock (Weeks)</label>
+                                                            <input type="number" step="any" min="0" name="poultry[prod][max_age_layer_breeder]" id="poultry_max_age_layer" class="form-control form-control-sm text-end" placeholder="e.g. 72" value="<?= htmlspecialchars($poultry_rec['prod']['max_age_layer_breeder'] ?? '') ?>">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small fw-bold">Maximum Age of Broiler Flock (Days / Weeks)</label>
+                                                            <input type="number" step="any" min="0" name="poultry[prod][max_age_broiler]" id="poultry_max_age_broiler" class="form-control form-control-sm text-end" placeholder="e.g. 42" value="<?= htmlspecialchars($poultry_rec['prod']['max_age_broiler'] ?? '') ?>">
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <label class="form-label small fw-bold mb-1">Maximum Mortality % (Layer / Broiler / Breeder)</label>
+                                                            <div class="row g-2">
+                                                                <div class="col-md-4">
+                                                                    <div class="input-group input-group-sm">
+                                                                        <span class="input-group-text bg-white">Layer</span>
+                                                                        <input type="number" step="0.01" min="0" max="100" name="poultry[prod][mortality_layer]" class="form-control text-end font-monospace" placeholder="0.00" value="<?= htmlspecialchars($poultry_rec['prod']['mortality_layer'] ?? '') ?>">
+                                                                        <span class="input-group-text bg-white">%</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <div class="input-group input-group-sm">
+                                                                        <span class="input-group-text bg-white">Broiler</span>
+                                                                        <input type="number" step="0.01" min="0" max="100" name="poultry[prod][mortality_broiler]" class="form-control text-end font-monospace" placeholder="0.00" value="<?= htmlspecialchars($poultry_rec['prod']['mortality_broiler'] ?? '') ?>">
+                                                                        <span class="input-group-text bg-white">%</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <div class="input-group input-group-sm">
+                                                                        <span class="input-group-text bg-white">Breeder</span>
+                                                                        <input type="number" step="0.01" min="0" max="100" name="poultry[prod][mortality_breeder]" class="form-control text-end font-monospace" placeholder="0.00" value="<?= htmlspecialchars($poultry_rec['prod']['mortality_breeder'] ?? '') ?>">
+                                                                        <span class="input-group-text bg-white">%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 4.2 Other production parameters -->
+                                                <div class="card border-0 shadow-xs bg-light-subtle rounded-3 mb-3 p-3">
+                                                    <h6 class="fw-bold text-dark mb-3">
+                                                        <i class="bi bi-graph-up-arrow me-1 text-primary"></i>4.2 Other Production Parameters
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">Average Egg Production / Hen / Year</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" step="any" min="0" name="poultry[prod][avg_egg_hen_year]" class="form-control text-end font-monospace" placeholder="e.g. 280" value="<?= htmlspecialchars($poultry_rec['prod']['avg_egg_hen_year'] ?? '') ?>">
+                                                                <span class="input-group-text bg-white">Eggs</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">Average Feed Conversion Ratio (Broiler)</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" step="0.01" min="0" name="poultry[prod][avg_fcr_broiler]" class="form-control text-end font-monospace" placeholder="e.g. 1.65" value="<?= htmlspecialchars($poultry_rec['prod']['avg_fcr_broiler'] ?? '') ?>">
+                                                                <span class="input-group-text bg-white">FCR</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">Average Body Weight at Market Age</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" step="0.01" min="0" name="poultry[prod][avg_weight_broiler]" class="form-control text-end font-monospace" placeholder="e.g. 2.10" value="<?= htmlspecialchars($poultry_rec['prod']['avg_weight_broiler'] ?? '') ?>">
+                                                                <span class="input-group-text bg-white">kg</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 4.3 Egg production parameters -->
+                                                <div class="card border-0 shadow-xs bg-light-subtle rounded-3 p-3">
+                                                    <h6 class="fw-bold text-dark mb-3">
+                                                        <i class="bi bi-egg me-1 text-primary"></i>4.3 Egg Production Parameters
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">Average Egg Weight</label>
+                                                            <div class="input-group input-group-sm">
+                                                                <input type="number" step="0.1" min="0" name="poultry[prod][avg_egg_weight]" class="form-control text-end font-monospace" placeholder="e.g. 58.5" value="<?= htmlspecialchars($poultry_rec['prod']['avg_egg_weight'] ?? '') ?>">
+                                                                <span class="input-group-text bg-white">grams</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">Shell Color</label>
+                                                            <select name="poultry[prod][shell_color]" class="form-select form-select-sm">
+                                                                <?php
+                                                                $shell_colors = ['Brown', 'White', 'Tinted / Cream', 'Other'];
+                                                                $cur_sc = $poultry_rec['prod']['shell_color'] ?? 'Brown';
+                                                                foreach ($shell_colors as $sc):
+                                                                ?>
+                                                                <option value="<?= htmlspecialchars($sc) ?>" <?= ($cur_sc === $sc) ? 'selected' : '' ?>><?= htmlspecialchars($sc) ?></option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label small fw-bold">Yolk Color</label>
+                                                            <select name="poultry[prod][yolk_color]" class="form-select form-select-sm">
+                                                                <?php
+                                                                $yolk_colors = ['Deep Yellow', 'Medium Yellow', 'Pale Yellow', 'Orange', 'Golden Orange', 'Other'];
+                                                                $cur_yc = $poultry_rec['prod']['yolk_color'] ?? 'Deep Yellow';
+                                                                foreach ($yolk_colors as $yc):
+                                                                ?>
+                                                                <option value="<?= htmlspecialchars($yc) ?>" <?= ($cur_yc === $yc) ? 'selected' : '' ?>><?= htmlspecialchars($yc) ?></option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                </div>
+
+                                <div class="panel-nav-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-p-sec3" data-prev-index="2">
+                                        <i class="bi bi-arrow-left me-1"></i>Previous: 3. Supply Information
+                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetPoultryMasterForm();">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-sm btn-next-category" data-next-pane="pane-p-sec5" data-next-index="4">
+                                            Next: 5. Marketing Details<i class="bi bi-arrow-right ms-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ============================================================== -->
+                            <!-- SECTION 5: MARKETING                                           -->
+                            <!-- ============================================================== -->
+                            <div class="category-pane" id="pane-p-sec5" style="display: none;">
+                                <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <span class="category-badge-step mb-1" style="background-color: #fef3c7; color: #b45309;">Section 5 of 5</span>
+                                        <h4 class="h5 fw-bold text-dark mb-1">
+                                            <i class="bi bi-shop text-warning me-2"></i>5. Marketing Details
+                                        </h4>
+                                        <p class="text-muted small mb-0">Poultry meat, live bird, egg, manure, and feather marketing distribution channels.</p>
+                                    </div>
+                                    <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
+                                        <i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
+                                    </span>
+                                </div>
+
+                                <div class="p-4 p-md-4">
+
+                                <!-- 5.1 Sales of Meat -->
+                                                <div class="mb-4">
+                                                    <h6 class="fw-bold text-dark mb-2">
+                                                        <i class="bi bi-cart-check me-1 text-primary"></i>5.1 Sales of Meat (Checkbox Grid)
+                                                    </h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered align-middle text-center mb-0">
+                                                            <thead class="table-light small">
+                                                                <tr>
+                                                                    <th class="text-start" style="width: 34%;">Meat Product Category</th>
+                                                                    <th style="width: 22%;">Farm Gate</th>
+                                                                    <th style="width: 22%;">Wholesale</th>
+                                                                    <th style="width: 22%;">Retail</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                $meat_rows = [
+                                                                    'live_birds' => 'Live birds',
+                                                                    'dressed_birds' => 'Dressed birds',
+                                                                    'processed_products' => 'Processed products',
+                                                                    'other' => 'Other'
+                                                                ];
+                                                                foreach ($meat_rows as $mr_key => $mr_label):
+                                                                    $mr_data = $poultry_rec['marketing']['meat'][$mr_key] ?? [];
+                                                                    $mr_spec = $poultry_rec['marketing']['meat']['other_specify'] ?? '';
+                                                                ?>
+                                                                <tr>
+                                                                    <td class="text-start fw-semibold bg-light-subtle">
+                                                                        <?= $mr_label ?>
+                                                                        <?php if ($mr_key === 'other'): ?>
+                                                                        <input type="text" name="poultry[marketing][meat][other_specify]" class="form-control form-control-sm mt-1" placeholder="Specify other meat product..." value="<?= htmlspecialchars($mr_spec) ?>">
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[marketing][meat][<?= $mr_key ?>][farm_gate]" value="1" <?= !empty($mr_data['farm_gate']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[marketing][meat][<?= $mr_key ?>][wholesale]" value="1" <?= !empty($mr_data['wholesale']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[marketing][meat][<?= $mr_key ?>][retail]" value="1" <?= !empty($mr_data['retail']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 5.2 Sales of Eggs -->
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-2">
+                                                        <i class="bi bi-basket3 me-1 text-primary"></i>5.2 Sales of Eggs (Checkbox Grid)
+                                                    </h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered align-middle text-center mb-0">
+                                                            <thead class="table-light small">
+                                                                <tr>
+                                                                    <th class="text-start" style="width: 25%;">Egg Category</th>
+                                                                    <th style="width: 20%;">Farm Gate</th>
+                                                                    <th style="width: 20%;">Wholesale</th>
+                                                                    <th style="width: 20%;">Retail</th>
+                                                                    <th style="width: 25%;">Other (Specify)</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php
+                                                                $egg_rows = [
+                                                                    'table_eggs' => 'Table eggs',
+                                                                    'hatching_eggs' => 'Hatching eggs'
+                                                                ];
+                                                                foreach ($egg_rows as $er_key => $er_label):
+                                                                    $er_data = $poultry_rec['marketing']['eggs'][$er_key] ?? [];
+                                                                ?>
+                                                                <tr>
+                                                                    <td class="text-start fw-semibold bg-light-subtle"><?= $er_label ?></td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[marketing][eggs][<?= $er_key ?>][farm_gate]" value="1" <?= !empty($er_data['farm_gate']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[marketing][eggs][<?= $er_key ?>][wholesale]" value="1" <?= !empty($er_data['wholesale']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                                            <input class="form-check-input" type="checkbox" name="poultry[marketing][eggs][<?= $er_key ?>][retail]" value="1" <?= !empty($er_data['retail']) ? 'checked' : '' ?>>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" name="poultry[marketing][eggs][<?= $er_key ?>][other_specify]" class="form-control form-control-sm text-start" placeholder="Specify..." value="<?= htmlspecialchars($er_data['other_specify'] ?? '') ?>">
+                                                                    </td>
+                                                                </tr>
+                                                                <?php endforeach; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                </div>
+
+                                <div class="panel-nav-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-p-sec4" data-prev-index="3">
+                                        <i class="bi bi-arrow-left me-1"></i>Previous: 4. Production Data
+                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetPoultryMasterForm();">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                                        </button>
+                                        <button type="submit" class="btn btn-danger btn-sm px-4 fw-bold shadow-sm" style="background-color: var(--daph-maroon); border-color: var(--daph-maroon);">
+                                            <i class="bi bi-check2-circle me-1"></i><span id="btnSubmitPoultryBottomText"><?= empty($poultry_rec['registration_no']) ? 'Save to Database' : 'Update Record in Database' ?></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
+
+                <!-- COLLAPSIBLE ACCORDION LAYOUT SHELL (POPULATED DYNAMICALLY IF SWITCHED) -->
+                <div id="poultryAccordionLayoutContainer" class="accordion accordion-branding d-none"></div>
+
+            </form>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- VIEW 3: VIEW ADDED DETAILS (DATA GRID & SUMMARY TABLE)         -->
+        <!-- ============================================================== -->
+        <div class="tab-pane fade <?= !empty($_GET['view_records']) ? 'show active' : '' ?> py-2" id="viewRegistryPanel" role="tabpanel" aria-labelledby="view-registry-tab">
+            
+            <!-- SUB-NAVIGATION PILLS: LIVESTOCK FARMERS VS POULTRY FARMERS -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 bg-light p-2 rounded-4 border">
+                <ul class="nav nav-pills gap-2" id="registrySubTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill px-4 py-2 fw-semibold d-flex align-items-center gap-2 border shadow-xs" id="tab-livestock-registry" data-bs-toggle="pill" data-bs-target="#pane-livestock-registry" type="button" role="tab" aria-controls="pane-livestock-registry" aria-selected="true">
+                            <i class="bi bi-shield-shaded text-danger"></i>
+                            <span>Livestock Farmers</span>
+                            <span class="badge bg-danger rounded-pill ms-1" id="badgeLivestockCount"><?= count($livestock_records) ?></span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 py-2 fw-semibold d-flex align-items-center gap-2 border shadow-xs" id="tab-poultry-registry" data-bs-toggle="pill" data-bs-target="#pane-poultry-registry" type="button" role="tab" aria-controls="pane-poultry-registry" aria-selected="false">
+                            <i class="bi bi-egg-fried text-warning"></i>
+                            <span>Poultry Farmers</span>
+                            <span class="badge bg-warning text-dark rounded-pill ms-1" id="badgePoultryCount"><?= count($poultry_records) ?></span>
+                        </button>
+                    </li>
+                </ul>
+                <div class="d-flex gap-2 flex-wrap align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-success" id="btnExportBrandingCsv" onclick="exportBrandingToCSV();" title="Export All Farm Records with Full Nested Data to CSV">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export to CSV
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnExportBrandingPdf" onclick="exportBrandingToPDF();" title="Export All Farm Records with Full Nested Data to PDF">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>Export to PDF
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="switchToNewForm();">
+                        <i class="bi bi-plus-circle me-1"></i>Add New Livestock
+                    </button>
+                    <button type="button" class="btn btn-sm btn-warning text-dark fw-semibold" onclick="switchToPoultryForm();">
+                        <i class="bi bi-plus-circle me-1"></i>Add New Poultry
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-TAB CONTENT PANES -->
+            <div class="tab-content" id="registrySubTabsContent">
+
+                <!-- ============================================================== -->
+                <!-- SUB-PANE 1: LIVESTOCK FARMERS REGISTRY                         -->
+                <!-- ============================================================== -->
+                <div class="tab-pane fade show active" id="pane-livestock-registry" role="tabpanel" aria-labelledby="tab-livestock-registry">
+                    <div class="card shadow-sm border-0 rounded-4 mb-5">
+                        <div class="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
+                            <div>
+                                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-shield-shaded text-danger me-2"></i>Livestock Farmers Registry</h5>
+                                <small class="text-muted">Master database records for cattle, buffaloes, swine, goats, sheep and fodder cultivations in <?= htmlspecialchars($range_name) ?> range.</small>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="sortMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Sort Livestock Records">
+                                        <i class="bi bi-sort-down me-1"></i>Sort
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="sortMenuBtn">
+                                        <li><h6 class="dropdown-header">Date of Registration</h6></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAddedDetails(1, 'desc');"><i class="bi bi-sort-numeric-down-alt me-2 text-danger"></i>Renewal Date (Newest first)</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAddedDetails(1, 'asc');"><i class="bi bi-sort-numeric-down me-2 text-secondary"></i>Renewal Date (Oldest first)</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header">Registration No</h6></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAddedDetails(0, 'asc');"><i class="bi bi-sort-numeric-down me-2 text-primary"></i>Reg No (0-9 Ascending)</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAddedDetails(0, 'desc');"><i class="bi bi-sort-numeric-down-alt me-2 text-primary"></i>Reg No (9-0 Descending)</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header">Farmer Name</h6></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAddedDetails(2, 'asc');"><i class="bi bi-sort-alpha-down me-2 text-success"></i>Farmer Name (A to Z)</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAddedDetails(2, 'desc');"><i class="bi bi-sort-alpha-down-alt me-2 text-success"></i>Farmer Name (Z to A)</a></li>
+                                    </ul>
+                                </div>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fw-semibold">
+                                    <i class="bi bi-check2-circle me-1"></i><?= count($livestock_records) ?> Registered Farms
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body p-3 p-md-4">
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover align-middle mb-0 datatable" id="addedDetailsDataTable" style="width: 100%;">
+                                    <thead class="table-light small text-uppercase">
+                                        <tr>
+                                            <th class="ps-4" style="cursor: pointer;" onclick="toggleBrandingSort(0);" title="Click to sort by Reg No (ASC/DESC)">
+                                                Reg No (9 Digits) <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_0"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="toggleBrandingSort(1);" title="Click to sort by Renewal Date (ASC/DESC)">
+                                                Renewal Date <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_1"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="toggleBrandingSort(2);" title="Click to sort by Farmer Name (ASC/DESC)">
+                                                Farmer Name <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_2"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="toggleBrandingSort(3);" title="Click to sort by NIC / Phone (ASC/DESC)">
+                                                NIC / Phone <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_3"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="toggleBrandingSort(4);" title="Click to sort by DS / GN Division (ASC/DESC)">
+                                                DS / GN Division <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_4"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="toggleBrandingSort(5);" title="Click to sort by Farm Type (ASC/DESC)">
+                                                Farm Type <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_5"></i>
+                                            </th>
+                                            <th class="text-center" style="cursor: pointer;" onclick="toggleBrandingSort(6);" title="Click to sort by Cattle (ASC/DESC)">
+                                                Cattle <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_6"></i>
+                                            </th>
+                                            <th class="text-center" style="cursor: pointer;" onclick="toggleBrandingSort(7);" title="Click to sort by Buffalo (ASC/DESC)">
+                                                Buffalo <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_7"></i>
+                                            </th>
+                                            <th class="text-center" style="cursor: pointer;" onclick="toggleBrandingSort(8);" title="Click to sort by Milk Output (ASC/DESC)">
+                                                Milk (L/d) <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_8"></i>
+                                            </th>
+                                            <th class="text-center" style="cursor: pointer;" onclick="toggleBrandingSort(9);" title="Click to sort by Pasture (ASC/DESC)">
+                                                Pasture (P) <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_9"></i>
+                                            </th>
+                                            <th class="text-end pe-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="addedDetailsTableBody">
+                                        <?php if (empty($livestock_records)): ?>
+                                        <tr>
+                                            <td colspan="11" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                                                <span class="fw-semibold">No livestock farm registration records found in the database.</span><br>
+                                                <small class="text-muted">Click the button below to register the first livestock farm.</small><br>
+                                                <button type="button" class="btn btn-sm btn-primary mt-3" onclick="switchToNewForm();">
+                                                    <i class="bi bi-plus-circle me-1"></i>Register New Livestock Farm
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <?php else: ?>
+                                        <?php foreach($livestock_records as $rec): ?>
+                                        <tr id="row_record_<?= $rec['id'] ?>">
+                                            <td class="ps-4" data-sort="<?= htmlspecialchars($rec['registration_no'], ENT_QUOTES) ?>">
+                                                <span class="badge bg-light text-dark border font-monospace fw-bold fs-7"><?= htmlspecialchars($rec['registration_no']) ?></span>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($rec['date_of_registration_renewal'], ENT_QUOTES) ?>">
+                                                <small class="text-muted"><?= htmlspecialchars($rec['date_of_registration_renewal']) ?></small>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($rec['farmer_name'], ENT_QUOTES) ?>">
+                                                <strong class="d-block text-dark"><?= htmlspecialchars($rec['farmer_name']) ?></strong>
+                                                <small class="text-muted text-truncate d-inline-block" style="max-width: 180px;"><?= htmlspecialchars($rec['farmer_address']) ?></small>
+                                                <?php if (!empty($rec['gps_location'])): ?>
+                                                    <div class="mt-1">
+                                                        <a href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($rec['gps_location']) ?>" target="_blank" class="badge bg-light text-primary border text-decoration-none" title="Open in Google Maps" style="font-size: 0.72rem;">
+                                                            <i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($rec['gps_location']) ?>
+                                                        </a>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($rec['nic'], ENT_QUOTES) ?>">
+                                                <span class="small d-block fw-semibold text-dark"><?= htmlspecialchars($rec['nic']) ?></span>
+                                                <small class="text-muted"><?= htmlspecialchars($rec['telephone_no']) ?></small>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($rec['ds_division'], ENT_QUOTES) ?>">
+                                                <span class="small d-block"><?= htmlspecialchars($rec['ds_division']) ?></span>
+                                                <small class="text-muted"><?= htmlspecialchars($rec['gn_division']) ?></small>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($rec['farm_type'], ENT_QUOTES) ?>">
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><?= htmlspecialchars($rec['farm_type']) ?></span>
+                                            </td>
+                                            <td class="text-center" data-sort="<?= (int)$rec['total_neat_cattle'] ?>">
+                                                <span class="badge bg-dark rounded-pill"><?= (int)$rec['total_neat_cattle'] ?></span>
+                                            </td>
+                                            <td class="text-center" data-sort="<?= (int)$rec['total_buffaloes'] ?>">
+                                                <span class="badge bg-warning text-dark rounded-pill"><?= (int)$rec['total_buffaloes'] ?></span>
+                                            </td>
+                                            <td class="text-center font-monospace" data-sort="<?= (float)$rec['daily_milk_production'] ?>">
+                                                <?= number_format((float)$rec['daily_milk_production'], 1) ?>
+                                            </td>
+                                            <td class="text-center font-monospace" data-sort="<?= (float)$rec['fodder_total_land_area'] ?>">
+                                                <?= number_format((float)$rec['fodder_total_land_area'], 1) ?>
+                                                <?php
+                                                $f_list = !empty($rec['fodder_data']) ? (json_decode($rec['fodder_data'], true) ?: []) : [];
+                                                if (empty($f_list)) {
+                                                    if ((float)$rec['fodder_hybrid_napier'] > 0) $f_list[] = ['item' => 'Hybrid Napier', 'amount' => (float)$rec['fodder_hybrid_napier'], 'other_specify' => ''];
+                                                    if ((float)$rec['fodder_sorghum'] > 0) $f_list[] = ['item' => 'Sorghum', 'amount' => (float)$rec['fodder_sorghum'], 'other_specify' => ''];
+                                                    if ((float)$rec['fodder_maize'] > 0) $f_list[] = ['item' => 'Maize(fodder)', 'amount' => (float)$rec['fodder_maize'], 'other_specify' => ''];
+                                                    if ((float)$rec['fodder_other'] > 0) $f_list[] = ['item' => 'Other', 'amount' => (float)$rec['fodder_other'], 'other_specify' => $rec['fodder_other_specify'] ?? ''];
+                                                }
+                                                if (!empty($f_list)):
+                                                ?>
+                                                <div class="text-start mt-1" style="font-size: 0.72rem; line-height: 1.25;">
+                                                    <?php foreach ($f_list as $fItem): ?>
+                                                        <div class="text-nowrap text-secondary">
+                                                            • <?= htmlspecialchars($fItem['item'] === 'Other' && !empty($fItem['other_specify']) ? 'Other (' . $fItem['other_specify'] . ')' : $fItem['item']) ?>: <strong><?= number_format((float)$fItem['amount'], 1) ?>P</strong>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-primary" onclick="showRecordDetailModal(<?= $rec['id'] ?>);" title="View Full Details">
+                                                        <i class="bi bi-eye-fill"></i> View
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary" onclick="loadRecordIntoForm(<?= $rec['id'] ?>);" title="Edit / Load into Form">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger" onclick="deleteRecordPrompt(<?= $rec['id'] ?>, '<?= htmlspecialchars($rec['registration_no'], ENT_QUOTES) ?>');" title="Delete Record">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- SUB-PANE 2: POULTRY FARMERS REGISTRY                           -->
+                <!-- ============================================================== -->
+                <div class="tab-pane fade" id="pane-poultry-registry" role="tabpanel" aria-labelledby="tab-poultry-registry">
+                    <div class="card shadow-sm border-0 rounded-4 mb-5">
+                        <div class="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
+                            <div>
+                                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-egg-fried text-warning me-2"></i>Poultry Farmers Registry</h5>
+                                <small class="text-muted">Master database records for layer, broiler, breeder farms, flock capacity and production in <?= htmlspecialchars($range_name) ?> range.</small>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="poultrySortMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Sort Poultry Records">
+                                        <i class="bi bi-sort-down me-1"></i>Sort
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="poultrySortMenuBtn">
+                                        <li><h6 class="dropdown-header">Date of Registration</h6></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortPoultryDetails(1, 'desc');"><i class="bi bi-sort-numeric-down-alt me-2 text-danger"></i>Renewal Date (Newest first)</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortPoultryDetails(1, 'asc');"><i class="bi bi-sort-numeric-down me-2 text-secondary"></i>Renewal Date (Oldest first)</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header">Registration No</h6></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortPoultryDetails(0, 'asc');"><i class="bi bi-sort-numeric-down me-2 text-primary"></i>Reg No (A-Z Ascending)</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortPoultryDetails(0, 'desc');"><i class="bi bi-sort-numeric-down-alt me-2 text-primary"></i>Reg No (Z-A Descending)</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header">Owner Name</h6></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortPoultryDetails(2, 'asc');"><i class="bi bi-sort-alpha-down me-2 text-success"></i>Owner Name (A to Z)</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortPoultryDetails(2, 'desc');"><i class="bi bi-sort-alpha-down-alt me-2 text-success"></i>Owner Name (Z to A)</a></li>
+                                    </ul>
+                                </div>
+                                <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
+                                    <i class="bi bi-egg-fill text-warning me-1"></i><?= count($poultry_records) ?> Registered Poultry Farms
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body p-3 p-md-4">
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover align-middle mb-0 datatable" id="poultryDetailsDataTable" style="width: 100%;">
+                                    <thead class="table-light small text-uppercase">
+                                        <tr>
+                                            <th class="ps-4" style="cursor: pointer;" onclick="togglePoultrySort(0);" title="Sort by Reg No">
+                                                Reg No (P) <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator-p" id="pSortIcon_0"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="togglePoultrySort(1);" title="Sort by Renewal Date">
+                                                Renewal Date <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator-p" id="pSortIcon_1"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="togglePoultrySort(2);" title="Sort by Owner Name">
+                                                Owner & Manager <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator-p" id="pSortIcon_2"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="togglePoultrySort(3);" title="Sort by NIC / Phone">
+                                                NIC & Phone <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator-p" id="pSortIcon_3"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="togglePoultrySort(4);" title="Sort by Location">
+                                                DS / GN Division <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator-p" id="pSortIcon_4"></i>
+                                            </th>
+                                            <th style="cursor: pointer;" onclick="togglePoultrySort(5);" title="Sort by Ownership">
+                                                Ownership & Land <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator-p" id="pSortIcon_5"></i>
+                                            </th>
+                                            <th class="text-center" style="cursor: pointer;" onclick="togglePoultrySort(6);" title="Sort by Flock Capacity">
+                                                Flock Population <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator-p" id="pSortIcon_6"></i>
+                                            </th>
+                                            <th>Feed & Input Supply</th>
+                                            <th>Egg / Meat Yield</th>
+                                            <th class="text-end pe-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="poultryDetailsTableBody">
+                                        <?php if (empty($poultry_records)): ?>
+                                        <tr>
+                                            <td colspan="10" class="text-center py-5 text-muted">
+                                                <i class="bi bi-egg fs-1 d-block mb-2 text-warning"></i>
+                                                <span class="fw-semibold">No poultry farm registration records found in the database.</span><br>
+                                                <small class="text-muted">Click below to register the first poultry farm.</small><br>
+                                                <button type="button" class="btn btn-sm btn-warning mt-3 text-dark fw-semibold" onclick="switchToPoultryForm();">
+                                                    <i class="bi bi-plus-circle me-1"></i>Register Poultry Farm
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <?php else: ?>
+                                        <?php foreach($poultry_records as $p_row): 
+                                            $p_info = !empty($p_row['poultry_data']) ? (json_decode($p_row['poultry_data'], true) ?: []) : [];
+                                            $p_reg = !empty($p_info['registration_no']) ? $p_info['registration_no'] : $p_row['registration_no'];
+                                            $p_owner = !empty($p_info['owner_name']) ? $p_info['owner_name'] : $p_row['farmer_name'];
+                                            $p_mgr = !empty($p_info['manager_name']) ? $p_info['manager_name'] : '';
+                                            $p_addr = !empty($p_info['farm_address']) ? $p_info['farm_address'] : $p_row['farmer_address'];
+                                            $p_phone = !empty($p_info['telephone_no']) ? $p_info['telephone_no'] : $p_row['telephone_no'];
+                                            $p_nic = !empty($p_info['owner_nic']) ? $p_info['owner_nic'] : $p_row['nic'];
+                                            $p_ownership = !empty($p_info['ownership']) ? $p_info['ownership'] : 'Private';
+                                            $p_land = !empty($p_info['present_land_usage']) ? $p_info['present_land_usage'] : 'Own';
+                                            $p_ds = !empty($p_info['ds_division']) ? $p_info['ds_division'] : $p_row['ds_division'];
+                                            $p_gn = !empty($p_info['gn_division']) ? $p_info['gn_division'] : $p_row['gn_division'];
+                                            $p_pop = $p_info['pop'] ?? [];
+                                            $p_prod = $p_info['prod'] ?? [];
+                                            $p_shed = $p_info['shed'] ?? [];
+                                            
+                                            $total_shed_birds = 0;
+                                            if (!empty($p_shed)) {
+                                                foreach (['deep_litter', 'slatted', 'slatted_deep', 'cages', 'other'] as $s_type) {
+                                                    foreach (['layers', 'broilers', 'breeders'] as $b_type) {
+                                                        if (!empty($p_shed[$s_type][$b_type])) {
+                                                            $total_shed_birds += (int)$p_shed[$s_type][$b_type];
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ?>
+                                        <tr id="row_record_<?= $p_row['id'] ?>">
+                                            <td class="ps-4" data-sort="<?= htmlspecialchars($p_reg, ENT_QUOTES) ?>">
+                                                <span class="badge bg-warning-subtle text-dark border border-warning font-monospace fw-bold fs-7">
+                                                    <i class="bi bi-egg-fill text-warning me-1"></i><?= htmlspecialchars($p_reg) ?>
+                                                </span>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($p_row['date_of_registration_renewal'], ENT_QUOTES) ?>">
+                                                <small class="text-muted"><?= htmlspecialchars($p_row['date_of_registration_renewal']) ?></small>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($p_owner, ENT_QUOTES) ?>">
+                                                <strong class="d-block text-dark"><?= htmlspecialchars($p_owner) ?></strong>
+                                                <?php if (!empty($p_mgr)): ?>
+                                                    <small class="text-secondary d-block"><i class="bi bi-person-badge me-1"></i>Mgr: <?= htmlspecialchars($p_mgr) ?></small>
+                                                <?php endif; ?>
+                                                <small class="text-muted text-truncate d-inline-block" style="max-width: 180px;"><?= htmlspecialchars($p_addr) ?></small>
+                                                <?php if (!empty($p_row['gps_location'])): ?>
+                                                    <div class="mt-1">
+                                                        <a href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($p_row['gps_location']) ?>" target="_blank" class="badge bg-light text-primary border text-decoration-none" title="Open in Google Maps" style="font-size: 0.72rem;">
+                                                            <i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($p_row['gps_location']) ?>
+                                                        </a>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($p_nic, ENT_QUOTES) ?>">
+                                                <span class="small d-block fw-semibold text-dark"><?= htmlspecialchars($p_nic) ?></span>
+                                                <small class="text-muted"><?= htmlspecialchars($p_phone) ?></small>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($p_ds, ENT_QUOTES) ?>">
+                                                <span class="small d-block"><?= htmlspecialchars($p_ds) ?></span>
+                                                <small class="text-muted"><?= htmlspecialchars($p_gn) ?></small>
+                                            </td>
+                                            <td data-sort="<?= htmlspecialchars($p_ownership, ENT_QUOTES) ?>">
+                                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle"><?= htmlspecialchars($p_ownership) ?></span>
+                                                <small class="d-block text-muted mt-1"><?= htmlspecialchars($p_land) ?></small>
+                                            </td>
+                                            <td class="text-center" data-sort="<?= $total_shed_birds ?>">
+                                                <?php if ($total_shed_birds > 0): ?>
+                                                    <span class="badge bg-dark rounded-pill fs-7"><?= number_format($total_shed_birds) ?> Birds</span>
+                                                <?php endif; ?>
+                                                <div class="d-flex flex-wrap gap-1 justify-content-center mt-1">
+                                                    <?php if (!empty($p_pop['layers'])): ?>
+                                                        <span class="badge bg-warning-subtle text-dark border border-warning" style="font-size: 0.7rem;">Layers</span>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($p_pop['broilers'])): ?>
+                                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.7rem;">Broilers</span>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($p_pop['breeder'])): ?>
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.7rem;">Breeder</span>
+                                                    <?php endif; ?>
+                                                    <?php if (empty($p_pop['layers']) && empty($p_pop['broilers']) && empty($p_pop['breeder']) && $total_shed_birds == 0): ?>
+                                                        <span class="text-muted small">-</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                            <td style="font-size: 0.8rem;">
+                                                <?php 
+                                                $feed_info = $p_info['feed_procurement'] ?? ($p_info['feed_supply'] ?? []);
+                                                $feed_types = [];
+                                                if (!empty($feed_info['own_mix'])) $feed_types[] = 'Self-Mixed';
+                                                if (!empty($feed_info['commercial'])) $feed_types[] = 'Commercial';
+                                                if (!empty($feed_info['both'])) $feed_types[] = 'Both';
+                                                ?>
+                                                <?php if (!empty($feed_types)): ?>
+                                                    <span class="badge bg-light text-dark border"><?= implode(', ', $feed_types) ?></span>
+                                                <?php else: ?>
+                                                    <small class="text-muted">Standard</small>
+                                                <?php endif; ?>
+                                                <?php if (!empty($p_info['daph_registered']) && $p_info['daph_registered'] === 'Yes'): ?>
+                                                    <div class="mt-1">
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">DAPH Reg</span>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="font-size: 0.8rem;">
+                                                <?php 
+                                                $has_yield = false;
+                                                if (!empty($p_prod['avg_egg_hen_year'])): 
+                                                    $has_yield = true;
+                                                ?>
+                                                    <div><small class="text-muted">Eggs:</small> <strong><?= htmlspecialchars($p_prod['avg_egg_hen_year']) ?></strong>/yr</div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($p_prod['avg_weight_broiler'])): 
+                                                    $has_yield = true;
+                                                ?>
+                                                    <div><small class="text-muted">Broiler:</small> <strong><?= htmlspecialchars($p_prod['avg_weight_broiler']) ?>kg</strong></div>
+                                                <?php endif; ?>
+                                                <?php if (!empty($p_prod['avg_fcr_broiler'])): 
+                                                    $has_yield = true;
+                                                ?>
+                                                    <div><small class="text-muted">FCR:</small> <strong><?= htmlspecialchars($p_prod['avg_fcr_broiler']) ?></strong></div>
+                                                <?php endif; ?>
+                                                <?php if (!$has_yield): ?>
+                                                    <span class="text-muted small">-</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-primary" onclick="showRecordDetailModal(<?= $p_row['id'] ?>);" title="View Full Details">
+                                                        <i class="bi bi-eye-fill"></i> View
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary" onclick="loadRecordIntoForm(<?= $p_row['id'] ?>);" title="Edit / Load into Form">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger" onclick="deleteRecordPrompt(<?= $p_row['id'] ?>, '<?= htmlspecialchars($p_reg, ENT_QUOTES) ?>');" title="Delete Record">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -1567,11 +3096,21 @@ require_once '../../../includes/header.php';
             <div class="modal-body p-4" id="modalDetailContent">
                 <!-- Dynamically populated via JS -->
             </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-dark btn-sm" onclick="window.print();">
-                    <i class="bi bi-printer me-1"></i>Print Record Summary
-                </button>
+            <div class="modal-footer bg-light justify-content-between flex-wrap gap-2">
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success btn-sm" id="btnModalExportCsv" onclick="exportModalRecordCsv();" title="Export this Farm Record with Full Breakdown to CSV">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export to CSV
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnModalExportPdf" onclick="exportModalRecordPdf();" title="Export this Farm Record with Full Breakdown to PDF">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>Export to PDF
+                    </button>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-dark btn-sm" onclick="window.print();">
+                        <i class="bi bi-printer me-1"></i>Print Record Summary
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1582,6 +3121,9 @@ require_once '../../../includes/header.php';
 // Live database records array passed from PHP to global scope
 window.liveDatabaseRecords = <?= json_encode($records_for_js, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?: '[]' ?>;
 let liveDatabaseRecords = window.liveDatabaseRecords;
+window.brandingRangeName = <?= json_encode($range_name) ?>;
+window.brandingDistrictName = <?= json_encode($district_name) ?>;
+window.brandingProvinceName = <?= json_encode($province_name) ?>;
 </script>
 <script src="../../../assets/js/veterinary.js"></script>
 
