@@ -1985,3 +1985,1030 @@ $(document).ready(function() {
     }
 });
 
+/* ==========================================================================
+   ANIMAL BRANDING & LIVESTOCK FARM REGISTRATION RENEWAL MODULE
+   ========================================================================== */
+
+function initAnimalBranding() {
+    const masterForm = document.getElementById('farmRenewalMasterForm');
+    if (!masterForm) return; // Only execute if Animal Branding form is present on page
+    if (window.__animalBrandingInitialized) return;
+    window.__animalBrandingInitialized = true;
+
+    // 1. Vertical Tab Switching Logic & State Indication
+    const tabButtons = document.querySelectorAll('.v-tab-btn');
+    const contentPanes = document.querySelectorAll('.category-pane');
+    const progressSegments = document.querySelectorAll('.category-progress-segment');
+
+    function activateCategoryPane(targetPaneId, targetIndex) {
+        contentPanes.forEach(function (pane) {
+            pane.style.display = 'none';
+        });
+
+        const activePane = document.getElementById(targetPaneId);
+        if (activePane) {
+            activePane.style.display = 'block';
+        }
+
+        tabButtons.forEach(function (btn) {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+        });
+
+        const activeBtn = document.querySelector('.v-tab-btn[data-target-pane="' + targetPaneId + '"]');
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-selected', 'true');
+        }
+
+        const currentIdx = parseInt(targetIndex);
+        progressSegments.forEach(function (seg, idx) {
+            seg.classList.remove('active');
+            if (idx < currentIdx) {
+                seg.classList.add('completed');
+            } else if (idx === currentIdx) {
+                seg.classList.add('active');
+                seg.classList.remove('completed');
+            } else {
+                seg.classList.remove('completed');
+            }
+        });
+
+        history.replaceState(null, null, '#' + targetPaneId);
+
+        if (window.innerWidth < 768 && activePane) {
+            activePane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    tabButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const paneId = this.getAttribute('data-target-pane');
+            const catIndex = this.getAttribute('data-category-index');
+            activateCategoryPane(paneId, catIndex);
+        });
+    });
+
+    document.querySelectorAll('.btn-next-category').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const nextPane = this.getAttribute('data-next-pane');
+            const nextIdx = this.getAttribute('data-next-index');
+            activateCategoryPane(nextPane, nextIdx);
+        });
+    });
+    document.querySelectorAll('.btn-prev-category').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const prevPane = this.getAttribute('data-prev-pane');
+            const prevIdx = this.getAttribute('data-prev-index');
+            activateCategoryPane(prevPane, prevIdx);
+        });
+    });
+
+    if (window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        const matchedBtn = document.querySelector('.v-tab-btn[data-target-pane="' + hash + '"]');
+        if (matchedBtn) {
+            const idx = matchedBtn.getAttribute('data-category-index');
+            activateCategoryPane(hash, idx);
+        }
+    }
+
+    // 2. Real-time Grid & Form Calculations
+    function calcNeatCattleGrid() {
+        const rows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
+        let colTotals = { euro: 0, indian: 0, local: 0 };
+        let grandTotal = 0;
+
+        rows.forEach(function (rowKey) {
+            let rowSum = 0;
+            ['euro', 'indian', 'local'].forEach(function (colKey) {
+                const input = document.querySelector(`.cattle-calc-input[data-row="${rowKey}"][data-col="${colKey}"]`);
+                const val = input ? (parseInt(input.value) || 0) : 0;
+                rowSum += val;
+                colTotals[colKey] += val;
+            });
+            const rowTotCell = document.getElementById('row_tot_cattle_' + rowKey);
+            if (rowTotCell) rowTotCell.textContent = rowSum;
+            grandTotal += rowSum;
+        });
+
+        const cEuro = document.getElementById('col_tot_cattle_euro');
+        const cInd = document.getElementById('col_tot_cattle_indian');
+        const cLoc = document.getElementById('col_tot_cattle_local');
+        const cGrand = document.getElementById('grand_tot_neat_cattle');
+        if (cEuro) cEuro.textContent = colTotals.euro;
+        if (cInd) cInd.textContent = colTotals.indian;
+        if (cLoc) cLoc.textContent = colTotals.local;
+        if (cGrand) cGrand.textContent = grandTotal;
+    }
+    document.querySelectorAll('.cattle-calc-input').forEach(function (el) {
+        el.addEventListener('input', calcNeatCattleGrid);
+    });
+
+    function calcBuffaloGrid() {
+        const rows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
+        let colTotals = { niliravi: 0, murah: 0, cross_breed: 0 };
+        let grandTotal = 0;
+
+        rows.forEach(function (rowKey) {
+            let rowSum = 0;
+            ['niliravi', 'murah', 'cross_breed'].forEach(function (colKey) {
+                const input = document.querySelector(`.buffalo-calc-input[data-row="${rowKey}"][data-col="${colKey}"]`);
+                const val = input ? (parseInt(input.value) || 0) : 0;
+                rowSum += val;
+                colTotals[colKey] += val;
+            });
+            const rowTotCell = document.getElementById('row_tot_buf_' + rowKey);
+            if (rowTotCell) rowTotCell.textContent = rowSum;
+            grandTotal += rowSum;
+        });
+
+        const cNili = document.getElementById('col_tot_buf_niliravi');
+        const cMurah = document.getElementById('col_tot_buf_murah');
+        const cCross = document.getElementById('col_tot_buf_cross_breed');
+        const cGrand = document.getElementById('grand_tot_buffaloes');
+        if (cNili) cNili.textContent = colTotals.niliravi;
+        if (cMurah) cMurah.textContent = colTotals.murah;
+        if (cCross) cCross.textContent = colTotals.cross_breed;
+        if (cGrand) cGrand.textContent = grandTotal;
+    }
+    document.querySelectorAll('.buffalo-calc-input').forEach(function (el) {
+        el.addEventListener('input', calcBuffaloGrid);
+    });
+
+    function calcMilkGrid() {
+        const rows = ['prod', 'home', 'proc', 'sales'];
+        rows.forEach(function (rowKey) {
+            const cowVal = parseFloat(document.querySelector(`.milk-calc-input[data-row="${rowKey}"][data-col="cow"]`)?.value) || 0;
+            const bufVal = parseFloat(document.querySelector(`.milk-calc-input[data-row="${rowKey}"][data-col="buf"]`)?.value) || 0;
+            const rowTot = (cowVal + bufVal).toFixed(1);
+            const cell = document.getElementById('row_tot_milk_' + rowKey);
+            if (cell) cell.textContent = rowTot;
+        });
+    }
+    document.querySelectorAll('.milk-calc-input').forEach(function (el) {
+        el.addEventListener('input', calcMilkGrid);
+    });
+
+    // Dynamic 1-to-Many Fodder Functions
+    window.fodderRowIndex = document.querySelectorAll('#fodderItemsTableBody .fodder-row').length || 1;
+
+    window.addFodderRow = function(cropItem = '', amount = '', otherSpecify = '') {
+        const tbody = document.getElementById('fodderItemsTableBody');
+        if (!tbody) return;
+
+        const idx = window.fodderRowIndex++;
+        const tr = document.createElement('tr');
+        tr.className = 'fodder-row';
+        tr.id = `fodder_row_${idx}`;
+
+        const isOther = cropItem === 'Other';
+        tr.innerHTML = `
+            <td>
+                <select name="fodder_items[${idx}][item]" class="form-select form-select-sm fodder-item-select" required onchange="handleFodderItemChange(${idx}); calcFodderTotal();">
+                    <option value="" disabled ${!cropItem ? 'selected' : ''}>-- Select Crop Item --</option>
+                    <option value="Hybrid Napier" ${cropItem === 'Hybrid Napier' ? 'selected' : ''}>Hybrid Napier</option>
+                    <option value="Sorghum" ${cropItem === 'Sorghum' ? 'selected' : ''}>Sorghum</option>
+                    <option value="Maize(fodder)" ${cropItem === 'Maize(fodder)' ? 'selected' : ''}>Maize(fodder)</option>
+                    <option value="Other" ${cropItem === 'Other' ? 'selected' : ''}>Other</option>
+                </select>
+            </td>
+            <td>
+                <div id="fodder_specify_wrap_${idx}" style="${isOther ? 'display: block;' : 'display: none;'}">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-tag-fill text-success"></i></span>
+                        <input type="text" maxlength="255" name="fodder_items[${idx}][other_specify]" id="fodder_other_specify_${idx}" class="form-control form-control-sm fodder-specify-input" placeholder="e.g. Guinea Grass, CO-3, etc." value="${isOther ? (otherSpecify || '') : ''}" ${isOther ? 'required' : ''}>
+                    </div>
+                </div>
+                <div id="fodder_specify_placeholder_${idx}" class="text-muted small px-2" style="${isOther ? 'display: none;' : 'display: block;'}">
+                    <span class="fst-italic">- N/A -</span>
+                </div>
+            </td>
+            <td>
+                <div class="input-group input-group-sm">
+                    <input type="number" step="0.1" min="0" name="fodder_items[${idx}][amount]" class="form-control form-control-sm fodder-amount-input" placeholder="0.0" value="${amount !== '' ? amount : ''}" required oninput="calcFodderTotal();">
+                    <span class="input-group-text">P</span>
+                </div>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1" onclick="removeFodderRow(${idx});" title="Remove Row">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        window.calcFodderTotal();
+    };
+
+    window.handleFodderItemChange = function(idx) {
+        const row = document.getElementById(`fodder_row_${idx}`);
+        if (!row) return;
+        const select = row.querySelector('.fodder-item-select');
+        const wrap = document.getElementById(`fodder_specify_wrap_${idx}`);
+        const ph = document.getElementById(`fodder_specify_placeholder_${idx}`);
+        const input = document.getElementById(`fodder_other_specify_${idx}`);
+
+        if (select && select.value === 'Other') {
+            if (wrap) wrap.style.display = 'block';
+            if (ph) ph.style.display = 'none';
+            if (input) {
+                input.setAttribute('required', 'required');
+                input.focus();
+            }
+        } else {
+            if (wrap) wrap.style.display = 'none';
+            if (ph) ph.style.display = 'block';
+            if (input) {
+                input.removeAttribute('required');
+                input.value = '';
+                input.classList.remove('is-invalid');
+            }
+        }
+    };
+
+    window.removeFodderRow = function(idx) {
+        const tbody = document.getElementById('fodderItemsTableBody');
+        const row = document.getElementById(`fodder_row_${idx}`);
+        if (!row || !tbody) return;
+        row.remove();
+        if (tbody.querySelectorAll('.fodder-row').length === 0) {
+            window.addFodderRow();
+        }
+        window.calcFodderTotal();
+    };
+
+    window.calcFodderTotal = function() {
+        let total = 0;
+        document.querySelectorAll('.fodder-amount-input').forEach(function(input) {
+            const val = parseFloat(input.value) || 0;
+            total += val;
+        });
+        const totalInput = document.getElementById('fodder_total_land_area');
+        if (totalInput) {
+            totalInput.value = total.toFixed(1);
+        }
+    };
+
+    function calcFodderLand() {
+        window.calcFodderTotal();
+    }
+
+    function calcSwineTotal() {
+        const f = parseInt(document.getElementById('swine_breeding_female')?.value) || 0;
+        const m = parseInt(document.getElementById('swine_breeding_male')?.value) || 0;
+        const w = parseInt(document.getElementById('swine_weaners')?.value) || 0;
+        const p = parseInt(document.getElementById('swine_pre_weaners')?.value) || 0;
+        const total = f + m + w + p;
+        const totInput = document.getElementById('swine_total_no');
+        if (totInput && total > 0) totInput.value = total;
+    }
+    document.querySelectorAll('.swine-sub-calc').forEach(function (el) {
+        el.addEventListener('input', calcSwineTotal);
+    });
+
+    function calcGoatTotal() {
+        const f = parseInt(document.getElementById('goat_breeding_female')?.value) || 0;
+        const m = parseInt(document.getElementById('goat_breeding_male')?.value) || 0;
+        const w = parseInt(document.getElementById('goat_weaners')?.value) || 0;
+        const p = parseInt(document.getElementById('goat_pre_weaners')?.value) || 0;
+        const total = f + m + w + p;
+        const totInput = document.getElementById('goat_total_no');
+        if (totInput && total > 0) totInput.value = total;
+    }
+    document.querySelectorAll('.goat-sub-calc').forEach(function (el) {
+        el.addEventListener('input', calcGoatTotal);
+    });
+
+    function calcSheepTotal() {
+        const f = parseInt(document.getElementById('sheep_breeding_female')?.value) || 0;
+        const m = parseInt(document.getElementById('sheep_breeding_male')?.value) || 0;
+        const meat = parseInt(document.getElementById('sheep_for_meat')?.value) || 0;
+        const total = f + m + meat;
+        const display = document.getElementById('totalSheepDisplay');
+        if (display) display.textContent = total + ' Heads';
+    }
+    document.querySelectorAll('.sheep-calc-input').forEach(function (el) {
+        el.addEventListener('input', calcSheepTotal);
+    });
+
+    // 3. Layout Mode Switcher (Vertical Tabs vs Accordion)
+    const btnLayoutTabs = document.getElementById('btnLayoutTabs');
+    const btnLayoutAccordion = document.getElementById('btnLayoutAccordion');
+    const vTabsContainer = document.getElementById('verticalTabsLayoutContainer');
+    const accordionContainer = document.getElementById('accordionLayoutContainer');
+    const categoryContentCard = document.querySelector('.category-content-card');
+
+    const categoryDefinitions = [
+        { id: 'pane-general', num: '1', title: '1. General Information', icon: 'bi-info-circle-fill', color: 'text-danger' },
+        { id: 'pane-cattle', num: '2', title: '2. Neat Cattle', icon: 'bi-shield-check', color: 'text-primary' },
+        { id: 'pane-buffaloes', num: '3', title: '3. Buffaloes', icon: 'bi-record-circle-fill', color: 'text-warning' },
+        { id: 'pane-milk', num: '4', title: '4. Milk Production and Sale', icon: 'bi-cup-hot-fill', color: 'text-info' },
+        { id: 'pane-fodder', num: '5', title: '5. Fodder / pasture cultivations (Land area) in Perch', icon: 'bi-tree-fill', color: 'text-success' },
+        { id: 'pane-swine', num: '6', title: '6. Swine', icon: 'bi-bookmark-star-fill', color: 'text-danger' },
+        { id: 'pane-goat', num: '7', title: '7. Goat', icon: 'bi-patch-check-fill', color: 'text-warning' },
+        { id: 'pane-sheep', num: '8', title: '8. Sheep', icon: 'bi-circle-square', color: 'text-secondary' }
+    ];
+
+    let accordionBuilt = false;
+
+    function buildAccordionShell() {
+        if (!accordionContainer) return;
+        accordionContainer.innerHTML = '';
+
+        categoryDefinitions.forEach(function (cat, index) {
+            const isFirst = (index === 0);
+            const collapseId = 'collapseCat_' + cat.num.replace('.', '_');
+
+            const item = document.createElement('div');
+            item.className = 'accordion-item shadow-sm mb-3';
+            item.setAttribute('data-pane-id', cat.id);
+            item.innerHTML = `
+                <h2 class="accordion-header" id="heading_${collapseId}">
+                    <button class="accordion-button ${isFirst ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="${isFirst ? 'true' : 'false'}" aria-controls="${collapseId}">
+                        <span class="tab-num me-2">${cat.num}</span>
+                        <i class="bi ${cat.icon} me-2 ${cat.color}"></i>
+                        <span class="fw-bold">${cat.title}</span>
+                    </button>
+                </h2>
+                <div id="${collapseId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}" aria-labelledby="heading_${collapseId}" data-bs-parent="#accordionLayoutContainer">
+                    <div class="accordion-body p-0" id="accordionBody_${cat.id}">
+                        <!-- Category Pane is dynamically reparented here -->
+                    </div>
+                </div>
+            `;
+            accordionContainer.appendChild(item);
+        });
+        accordionBuilt = true;
+    }
+
+    function reparentToAccordion() {
+        if (!accordionBuilt) buildAccordionShell();
+        categoryDefinitions.forEach(function (cat) {
+            const pane = document.getElementById(cat.id);
+            const targetBody = document.getElementById('accordionBody_' + cat.id);
+            if (pane && targetBody) {
+                targetBody.appendChild(pane);
+                pane.style.display = 'block';
+            }
+        });
+    }
+
+    function reparentToVerticalTabs() {
+        if (!categoryContentCard) return;
+        categoryDefinitions.forEach(function (cat) {
+            const pane = document.getElementById(cat.id);
+            if (pane) {
+                categoryContentCard.appendChild(pane);
+            }
+        });
+        const activeBtn = document.querySelector('.v-tab-btn.active') || document.querySelector('.v-tab-btn');
+        if (activeBtn) {
+            const paneId = activeBtn.getAttribute('data-target-pane');
+            const idx = activeBtn.getAttribute('data-category-index');
+            activateCategoryPane(paneId, idx);
+        }
+    }
+
+    if (btnLayoutTabs && btnLayoutAccordion) {
+        btnLayoutTabs.addEventListener('click', function () {
+            btnLayoutTabs.classList.add('active');
+            btnLayoutAccordion.classList.remove('active');
+            accordionContainer.classList.add('d-none');
+            vTabsContainer.classList.remove('d-none');
+            reparentToVerticalTabs();
+        });
+
+        btnLayoutAccordion.addEventListener('click', function () {
+            btnLayoutAccordion.classList.add('active');
+            btnLayoutTabs.classList.remove('active');
+            vTabsContainer.classList.add('d-none');
+            accordionContainer.classList.remove('d-none');
+            reparentToAccordion();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'info',
+                    title: 'Accordion View Activated',
+                    showConfirmButton: false,
+                    timer: 1600
+                });
+            }
+        });
+    }
+
+    // Run initial calculations
+    calcNeatCattleGrid();
+    calcBuffaloGrid();
+    calcMilkGrid();
+    calcFodderLand();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAnimalBranding);
+} else {
+    initAnimalBranding();
+}
+
+// Global Helper Functions for Animal Branding
+window.switchToNewForm = function() {
+    window.resetMasterForm();
+    const tabBtn = document.getElementById('view-form-tab');
+    if (tabBtn && typeof bootstrap !== 'undefined') new bootstrap.Tab(tabBtn).show();
+};
+
+window.resetMasterForm = function() {
+    const form = document.getElementById('farmRenewalMasterForm');
+    if (form) form.reset();
+    const editId = document.getElementById('editingRecordId');
+    if (editId) editId.value = '';
+    const banner = document.getElementById('editingStatusBanner');
+    if (banner) banner.classList.add('d-none');
+    const tabTitle = document.getElementById('formTabTitle');
+    if (tabTitle) tabTitle.textContent = 'Livestock Registration & Renewal Form';
+    const btnText = document.getElementById('btnSubmitText');
+    if (btnText) btnText.textContent = 'Save to Database';
+    const bottomBtn = document.getElementById('btnSubmitBottomText');
+    if (bottomBtn) bottomBtn.textContent = 'Save to Database';
+
+    // Reset grid totals
+    document.querySelectorAll('.daph-grid-total-cell').forEach(el => el.textContent = '0');
+    ['col_tot_buf_niliravi', 'col_tot_buf_murah', 'col_tot_buf_cross_breed', 'col_tot_cattle_euro', 'col_tot_cattle_indian', 'col_tot_cattle_local'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '0';
+    });
+    const grandC = document.getElementById('grand_tot_neat_cattle');
+    if (grandC) grandC.textContent = '0';
+    const grandB = document.getElementById('grand_tot_buffaloes');
+    if (grandB) grandB.textContent = '0';
+
+    const fodderTbody = document.getElementById('fodderItemsTableBody');
+    if (fodderTbody) {
+        fodderTbody.innerHTML = '';
+        window.fodderRowIndex = 0;
+        if (typeof window.addFodderRow === 'function') {
+            window.addFodderRow();
+        }
+    }
+    const totFodder = document.getElementById('fodder_total_land_area');
+    if (totFodder) totFodder.value = '0.0';
+};
+
+window.showRecordDetailModal = function(recordId) {
+    const list = (typeof window.liveDatabaseRecords !== 'undefined' && Array.isArray(window.liveDatabaseRecords)) 
+        ? window.liveDatabaseRecords 
+        : ((typeof liveDatabaseRecords !== 'undefined' && Array.isArray(liveDatabaseRecords)) ? liveDatabaseRecords : []);
+    const rec = list.find(r => Number(r.id) === Number(recordId));
+    if (!rec) {
+        console.warn('Record not found in liveDatabaseRecords for id:', recordId);
+        return;
+    }
+
+    const modalContent = document.getElementById('modalDetailContent');
+    if (!modalContent) return;
+
+    const cData = rec.neat_cattle_data || {};
+    const bData = rec.buffaloes_data || {};
+    const mData = rec.milk_data || {};
+
+    const num = v => {
+        const n = parseFloat(v);
+        return isNaN(n) ? 0 : n;
+    };
+
+    const escapeHtml = str => {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
+    // Neat Cattle rows with European, Indian, Local breed columns
+    const neatRows = [
+        { key: 'cows_milch', label: 'Cows (Milch)' },
+        { key: 'unproductive_cows', label: 'Unproductive Cows' },
+        { key: 'heifers', label: 'Heifers' },
+        { key: 'female_under_1', label: 'Female Calf' },
+        { key: 'bulls', label: 'Bulls' },
+        { key: 'male_under_1', label: 'Male Calf' }
+    ];
+
+    let neatEuroTot = 0, neatIndTot = 0, neatLocTot = 0;
+    const neatRowsHtml = neatRows.map(r => {
+        const euro = num(cData[r.key]?.european);
+        const ind = num(cData[r.key]?.indian);
+        const loc = num(cData[r.key]?.local);
+        const rowTot = euro + ind + loc;
+        neatEuroTot += euro;
+        neatIndTot += ind;
+        neatLocTot += loc;
+        return `<tr>
+            <td class="fw-semibold text-nowrap">${r.label}</td>
+            <td class="text-center font-monospace">${euro}</td>
+            <td class="text-center font-monospace">${ind}</td>
+            <td class="text-center font-monospace">${loc}</td>
+            <td class="text-end fw-bold font-monospace bg-light">${rowTot}</td>
+        </tr>`;
+    }).join('');
+
+    // Buffaloes rows with Niliravi, Murah, Cross breed columns
+    const bufRows = [
+        { key: 'cows_milch', label: 'Cows (Milch)' },
+        { key: 'unproductive_cows', label: 'Unproductive Cows' },
+        { key: 'heifers', label: 'Heifers' },
+        { key: 'female_under_1', label: 'less than 1 year Female' },
+        { key: 'bulls', label: 'Bulls' },
+        { key: 'male_under_1', label: 'less than 1 year Male' }
+    ];
+
+    let bufNiliTot = 0, bufMurahTot = 0, bufCrossTot = 0;
+    const bufRowsHtml = bufRows.map(r => {
+        const nili = num(bData[r.key]?.niliravi ?? bData[r.key]?.indian);
+        const murah = num(bData[r.key]?.murah);
+        const cross = num(bData[r.key]?.cross_breed ?? bData[r.key]?.local);
+        const rowTot = nili + murah + cross;
+        bufNiliTot += nili;
+        bufMurahTot += murah;
+        bufCrossTot += cross;
+        return `<tr>
+            <td class="fw-semibold text-nowrap">${r.label}</td>
+            <td class="text-center font-monospace">${nili}</td>
+            <td class="text-center font-monospace">${murah}</td>
+            <td class="text-center font-monospace">${cross}</td>
+            <td class="text-end fw-bold font-monospace bg-light">${rowTot}</td>
+        </tr>`;
+    }).join('');
+
+    modalContent.innerHTML = `
+        <!-- General Info Header Summary -->
+        <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <span class="text-muted small">Registration No (9 Digits):</span>
+                    <h5 class="fw-bold font-monospace text-danger mb-1">${escapeHtml(rec.registration_no)}</h5>
+                    <span class="text-muted small">Renewal Date: <strong>${escapeHtml(rec.date_of_registration_renewal)}</strong></span>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span class="badge bg-primary px-3 py-2 fs-7">${escapeHtml(rec.farm_type || 'N/A')}</span>
+                    <div class="text-muted small mt-1">Mixed Type: <strong>${escapeHtml(rec.mixed_farm_type || 'N/A')}</strong></div>
+                </div>
+            </div>
+            <hr class="my-2">
+            <div class="row g-2 small">
+                <div class="col-md-6">
+                    <div><strong>Farmer:</strong> ${escapeHtml(rec.farmer_name)}</div>
+                    <div><strong>Address:</strong> ${escapeHtml(rec.farmer_address)}</div>
+                    <div><strong>Phone:</strong> ${escapeHtml(rec.telephone_no)} | <strong>NIC:</strong> ${escapeHtml(rec.nic)}</div>
+                </div>
+                <div class="col-md-6">
+                    <div><strong>Province:</strong> ${escapeHtml(rec.province)}</div>
+                    <div><strong>District:</strong> ${escapeHtml(rec.district)} | <strong>DS Division:</strong> ${escapeHtml(rec.ds_division)}</div>
+                    <div><strong>VS Division:</strong> ${escapeHtml(rec.vs_division)} | <strong>GN Division:</strong> ${escapeHtml(rec.gn_division)}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Neat Cattle & 3. Buffaloes Breakdown with Explicit Breed Columns -->
+        <div class="row g-3 mb-3">
+            <div class="col-lg-6">
+                <div class="border rounded-3 p-3 h-100 bg-white shadow-xs">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-primary small text-uppercase mb-0">
+                            <i class="bi bi-shield-check me-1"></i>2. Neat Cattle
+                        </h6>
+                        <span class="badge bg-primary px-2 py-1">${num(rec.total_neat_cattle)} Heads</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle small mb-0">
+                            <thead class="table-light text-center small">
+                                <tr>
+                                    <th class="text-start" style="width: 36%;">Livestock Class</th>
+                                    <th style="width: 16%;">European</th>
+                                    <th style="width: 16%;">Indian</th>
+                                    <th style="width: 16%;">Local</th>
+                                    <th class="bg-light-subtle" style="width: 16%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${neatRowsHtml}
+                            </tbody>
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td>Total</td>
+                                    <td class="text-center font-monospace">${neatEuroTot}</td>
+                                    <td class="text-center font-monospace">${neatIndTot}</td>
+                                    <td class="text-center font-monospace">${neatLocTot}</td>
+                                    <td class="text-end font-monospace text-primary">${neatEuroTot + neatIndTot + neatLocTot}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="border rounded-3 p-3 h-100 bg-white shadow-xs">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-warning-emphasis small text-uppercase mb-0">
+                            <i class="bi bi-record-circle-fill me-1"></i>3. Buffaloes
+                        </h6>
+                        <span class="badge bg-warning text-dark px-2 py-1">${num(rec.total_buffaloes)} Heads</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle small mb-0">
+                            <thead class="table-light text-center small">
+                                <tr>
+                                    <th class="text-start" style="width: 34%;">Livestock Class</th>
+                                    <th style="width: 17%;">Niliravi</th>
+                                    <th style="width: 17%;">Murah</th>
+                                    <th style="width: 17%;">Cross breed</th>
+                                    <th class="bg-light-subtle" style="width: 15%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${bufRowsHtml}
+                            </tbody>
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td>Total</td>
+                                    <td class="text-center font-monospace">${bufNiliTot}</td>
+                                    <td class="text-center font-monospace">${bufMurahTot}</td>
+                                    <td class="text-center font-monospace">${bufCrossTot}</td>
+                                    <td class="text-end font-monospace text-warning-emphasis">${bufNiliTot + bufMurahTot + bufCrossTot}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Milk & 5. Fodder -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <div class="border rounded-3 p-3 h-100">
+                    <h6 class="fw-bold text-info small text-uppercase mb-2"><i class="bi bi-cup-hot-fill me-1"></i>4. Milk Production & Sale</h6>
+                    <table class="table table-sm table-borderless small mb-0">
+                        <tr><td>Cow Milk Production:</td><td class="text-end fw-bold">${num(mData.total_production?.cow).toFixed(1)} L/day</td></tr>
+                        <tr><td>Buffalo Milk Production:</td><td class="text-end fw-bold">${num(mData.total_production?.buffalo).toFixed(1)} L/day</td></tr>
+                        <tr><td>Total Milk Output:</td><td class="text-end fw-bold text-primary">${num(rec.daily_milk_production).toFixed(1)} L/day</td></tr>
+                        <tr><td>Commercial Sales:</td><td class="text-end fw-bold text-success">${(num(mData.sales?.cow) + num(mData.sales?.buffalo)).toFixed(1)} L/day</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded-3 p-3 h-100">
+                    <h6 class="fw-bold text-success small text-uppercase mb-2 d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-tree-fill me-1"></i>5. Fodder Cultivations (Perches)</span>
+                        <span class="badge bg-success-subtle text-success">${num(rec.fodder_total_land_area).toFixed(1)} P Total</span>
+                    </h6>
+                    ${(() => {
+                        const items = Array.isArray(rec.fodder_data) && rec.fodder_data.length > 0 ? rec.fodder_data : [];
+                        if (items.length === 0) {
+                            return `<p class="text-muted small mb-0 fst-italic">No fodder cultivations recorded.</p>`;
+                        }
+                        const rows = items.map((it, idx) => {
+                            const isOther = it.item === 'Other';
+                            const label = isOther && it.other_specify 
+                                ? `Other (<span class="text-success fw-bold">${escapeHtml(it.other_specify)}</span>)` 
+                                : escapeHtml(it.item);
+                            return `<tr>
+                                <td>${idx + 1}. ${label}</td>
+                                <td class="text-end fw-bold font-monospace">${num(it.amount).toFixed(1)} P</td>
+                            </tr>`;
+                        }).join('');
+                        return `<table class="table table-sm table-borderless small mb-0">
+                            <tbody>${rows}</tbody>
+                            <tfoot class="border-top fw-bold text-success">
+                                <tr>
+                                    <td>Total Land Area:</td>
+                                    <td class="text-end font-monospace">${num(rec.fodder_total_land_area).toFixed(1)} Perches</td>
+                                </tr>
+                            </tfoot>
+                        </table>`;
+                    })()}
+                </div>
+            </div>
+        </div>
+
+        <!-- 6, 7 & 8: Swine, Goat & Sheep -->
+        <div class="border rounded-3 p-3">
+            <h6 class="fw-bold text-dark small text-uppercase mb-2">Other Livestock Rearing</h6>
+            <div class="row g-2 small text-center">
+                <div class="col-4 border-end">
+                    <span class="text-muted d-block">6. Swine</span>
+                    <strong class="fs-6">${num(rec.swine_total_no)}</strong> Heads
+                    <small class="d-block text-muted">Meat freq: ${escapeHtml(rec.swine_freq_meat)}</small>
+                </div>
+                <div class="col-4 border-end">
+                    <span class="text-muted d-block">7. Goat</span>
+                    <strong class="fs-6">${num(rec.goat_total_no)}</strong> Heads
+                    <small class="d-block text-muted">Milk: ${num(rec.goat_milk_per_day).toFixed(1)} L/d</small>
+                </div>
+                <div class="col-4">
+                    <span class="text-muted d-block">8. Sheep</span>
+                    <strong class="fs-6">${num(rec.sheep_total_no)}</strong> Heads
+                    <small class="d-block text-muted">For meat: ${num(rec.sheep_for_meat)}</small>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const modalEl = document.getElementById('recordDetailModal');
+    if (modalEl) {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        } else if (typeof $ !== 'undefined' && typeof $(modalEl).modal === 'function') {
+            $(modalEl).modal('show');
+        }
+    }
+};
+
+window.loadRecordIntoForm = function(recordId) {
+    const list = (typeof window.liveDatabaseRecords !== 'undefined' && Array.isArray(window.liveDatabaseRecords)) 
+        ? window.liveDatabaseRecords 
+        : ((typeof liveDatabaseRecords !== 'undefined' && Array.isArray(liveDatabaseRecords)) ? liveDatabaseRecords : []);
+    const rec = list.find(r => Number(r.id) === Number(recordId));
+    if (!rec) return;
+
+    // Switch to Form Tab
+    const formTabBtn = document.getElementById('view-form-tab');
+    if (formTabBtn && typeof bootstrap !== 'undefined') new bootstrap.Tab(formTabBtn).show();
+
+    // Populate Hidden ID and Update Banner
+    document.getElementById('editingRecordId').value = rec.id;
+    document.getElementById('editingRecordNoDisplay').textContent = rec.registration_no;
+    document.getElementById('editingFarmerDisplay').textContent = rec.farmer_name;
+    document.getElementById('editingStatusBanner').classList.remove('d-none');
+    document.getElementById('formTabTitle').textContent = `Editing Reg #${rec.registration_no}`;
+    document.getElementById('btnSubmitText').textContent = 'Update Record in Database';
+    const bottomBtn = document.getElementById('btnSubmitBottomText');
+    if (bottomBtn) bottomBtn.textContent = 'Update Record in Database';
+
+    // 1. General Information
+    document.getElementById('gen_date_renewal').value = rec.date_of_registration_renewal || '';
+    document.getElementById('gen_province').value = rec.province || '';
+    document.getElementById('gen_district').value = rec.district || '';
+    document.getElementById('gen_ds_division').value = rec.ds_division || '';
+    document.getElementById('gen_vs_division').value = rec.vs_division || '';
+    document.getElementById('gen_gn_division').value = rec.gn_division || '';
+    document.getElementById('gen_farmer_name').value = rec.farmer_name || '';
+    document.getElementById('gen_farmer_address').value = rec.farmer_address || '';
+    document.getElementById('gen_registration_no').value = rec.registration_no || '';
+    document.getElementById('gen_telephone_no').value = rec.telephone_no || '';
+    document.getElementById('gen_nic').value = rec.nic || '';
+    document.getElementById('gen_farm_type').value = rec.farm_type || '';
+    document.getElementById('gen_mixed_farm_type').value = rec.mixed_farm_type || '';
+
+    // 2.1 Neat Cattle Grid
+    const cData = rec.neat_cattle_data || {};
+    const cattleRows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
+    cattleRows.forEach(rKey => {
+        ['euro', 'indian', 'local'].forEach(cKey => {
+            const input = document.querySelector(`.cattle-calc-input[data-row="${rKey}"][data-col="${cKey}"]`);
+            if (input) {
+                const subKey = (cKey === 'euro') ? 'european' : cKey;
+                input.value = cData[rKey] ? (cData[rKey][subKey] || 0) : 0;
+            }
+        });
+    });
+
+    // 2.2 Buffaloes Grid
+    const bData = rec.buffaloes_data || {};
+    const bufRows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
+    bufRows.forEach(rKey => {
+        ['niliravi', 'murah', 'cross_breed'].forEach(cKey => {
+            const input = document.querySelector(`.buffalo-calc-input[data-row="${rKey}"][data-col="${cKey}"]`);
+            if (input) {
+                let val = bData[rKey] ? (bData[rKey][cKey] ?? null) : null;
+                if (val === null && bData[rKey]) {
+                    if (cKey === 'niliravi' && bData[rKey]['indian'] !== undefined) val = bData[rKey]['indian'];
+                    else if (cKey === 'cross_breed' && bData[rKey]['local'] !== undefined) val = bData[rKey]['local'];
+                }
+                input.value = val !== null ? val : 0;
+            }
+        });
+    });
+
+    // 3. Milk Production Grid
+    const mData = rec.milk_data || {};
+    const milkRows = ['total_production', 'household_consumption', 'used_for_processing', 'sales'];
+    const rowMap = { 'total_production': 'prod', 'household_consumption': 'home', 'used_for_processing': 'proc', 'sales': 'sales' };
+    milkRows.forEach(rKey => {
+        const shortKey = rowMap[rKey];
+        const cowIn = document.querySelector(`.milk-calc-input[data-row="${shortKey}"][data-col="cow"]`);
+        const bufIn = document.querySelector(`.milk-calc-input[data-row="${shortKey}"][data-col="buf"]`);
+        if (cowIn) cowIn.value = mData[rKey] ? (mData[rKey]['cow'] || 0.0) : 0.0;
+        if (bufIn) bufIn.value = mData[rKey] ? (mData[rKey]['buffalo'] || 0.0) : 0.0;
+    });
+
+    // 4. Fodder (Dynamic Rows)
+    const fodderTbody = document.getElementById('fodderItemsTableBody');
+    if (fodderTbody) {
+        fodderTbody.innerHTML = '';
+        window.fodderRowIndex = 0;
+        const fItems = Array.isArray(rec.fodder_data) ? rec.fodder_data : [];
+        if (fItems.length > 0) {
+            fItems.forEach(it => {
+                if (typeof window.addFodderRow === 'function') {
+                    window.addFodderRow(it.item, it.amount, it.other_specify || '');
+                }
+            });
+        } else {
+            let addedAny = false;
+            if (parseFloat(rec.fodder_hybrid_napier) > 0) {
+                if (typeof window.addFodderRow === 'function') window.addFodderRow('Hybrid Napier', rec.fodder_hybrid_napier, '');
+                addedAny = true;
+            }
+            if (parseFloat(rec.fodder_sorghum) > 0) {
+                if (typeof window.addFodderRow === 'function') window.addFodderRow('Sorghum', rec.fodder_sorghum, '');
+                addedAny = true;
+            }
+            if (parseFloat(rec.fodder_maize) > 0) {
+                if (typeof window.addFodderRow === 'function') window.addFodderRow('Maize(fodder)', rec.fodder_maize, '');
+                addedAny = true;
+            }
+            if (parseFloat(rec.fodder_other) > 0) {
+                if (typeof window.addFodderRow === 'function') window.addFodderRow('Other', rec.fodder_other, rec.fodder_other_specify || '');
+                addedAny = true;
+            }
+            if (!addedAny && typeof window.addFodderRow === 'function') {
+                window.addFodderRow();
+            }
+        }
+    }
+    const totFodder = document.getElementById('fodder_total_land_area');
+    if (totFodder) totFodder.value = parseFloat(rec.fodder_total_land_area || 0).toFixed(1);
+    if (typeof window.calcFodderTotal === 'function') window.calcFodderTotal();
+
+    // 5. Swine
+    document.getElementById('swine_total_no').value = rec.swine_total_no || 0;
+    document.getElementById('swine_breeding_female').value = rec.swine_breeding_female || 0;
+    document.getElementById('swine_breeding_male').value = rec.swine_breeding_male || 0;
+    document.getElementById('swine_weaners').value = rec.swine_weaners_fattening || 0;
+    document.getElementById('swine_pre_weaners').value = rec.swine_pre_weaners || 0;
+    document.getElementById('swine_freq_meat').value = rec.swine_freq_meat || 'Not applicable';
+    document.getElementById('swine_freq_breeding').value = rec.swine_freq_breeding || 'Not applicable';
+
+    // 6. Goat
+    document.getElementById('goat_total_no').value = rec.goat_total_no || 0;
+    document.getElementById('goat_breeding_female').value = rec.goat_breeding_female || 0;
+    document.getElementById('goat_breeding_male').value = rec.goat_breeding_male || 0;
+    document.getElementById('goat_weaners').value = rec.goat_weaners_fattening || 0;
+    document.getElementById('goat_pre_weaners').value = rec.goat_pre_weaners || 0;
+    document.getElementById('goat_freq_meat').value = rec.goat_freq_meat || 'Not applicable';
+    document.getElementById('goat_freq_breeding').value = rec.goat_freq_breeding || 'Not applicable';
+    document.getElementById('goat_milk_per_day').value = rec.goat_milk_per_day || 0.0;
+
+    // 7. Sheep
+    document.getElementById('sheep_breeding_female').value = rec.sheep_breeding_female || 0;
+    document.getElementById('sheep_breeding_male').value = rec.sheep_breeding_male || 0;
+    document.getElementById('sheep_for_meat').value = rec.sheep_for_meat || 0;
+
+    // Trigger grid calculations
+    document.querySelectorAll('.cattle-calc-input')[0]?.dispatchEvent(new Event('input'));
+    document.querySelectorAll('.buffalo-calc-input')[0]?.dispatchEvent(new Event('input'));
+    document.querySelectorAll('.milk-calc-input')[0]?.dispatchEvent(new Event('input'));
+    document.querySelectorAll('.sheep-calc-input')[0]?.dispatchEvent(new Event('input'));
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: `Loaded Reg #${rec.registration_no} from database`,
+            showConfirmButton: false,
+            timer: 1800
+        });
+    }
+};
+
+window.handleFormSubmitAjax = function(e) {
+    const regNo = document.getElementById('gen_registration_no')?.value;
+    if (!regNo || regNo.length !== 9 || !/^\d{9}$/.test(regNo)) {
+        if (e) e.preventDefault();
+        const genBtn = document.querySelector('.v-tab-btn[data-target-pane="pane-general"]');
+        if (genBtn) genBtn.click();
+        const regInput = document.getElementById('gen_registration_no');
+        if (regInput) regInput.focus();
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Registration Number',
+                text: 'Registration Number must be exactly 9 numeric digits.'
+            });
+        } else {
+            alert('Registration Number must be exactly 9 numeric digits.');
+        }
+        return false;
+    }
+
+    // Validate Fodder rows: ensure crop item is selected and "Other" specifies the crop type
+    const fodderRows = document.querySelectorAll('#fodderItemsTableBody .fodder-row');
+    for (let r of fodderRows) {
+        const itemSelect = r.querySelector('.fodder-item-select');
+        const itemVal = itemSelect ? itemSelect.value : '';
+        const specifyInput = r.querySelector('.fodder-specify-input');
+
+        if (!itemVal) {
+            if (e) e.preventDefault();
+            const fodderBtn = document.querySelector('.v-tab-btn[data-target-pane="pane-fodder"]');
+            if (fodderBtn) fodderBtn.click();
+            if (itemSelect) {
+                itemSelect.focus();
+                itemSelect.classList.add('is-invalid');
+                itemSelect.addEventListener('change', function() {
+                    if (this.value) this.classList.remove('is-invalid');
+                }, { once: true });
+            }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Crop Item Required',
+                    text: 'Please select a crop type for all rows in the Fodder section.'
+                });
+            } else {
+                alert('Please select a crop type for all rows in the Fodder section.');
+            }
+            return false;
+        }
+
+        if (itemVal === 'Other') {
+            const specVal = specifyInput ? specifyInput.value.trim() : '';
+            if (!specVal) {
+                if (e) e.preventDefault();
+                const fodderBtn = document.querySelector('.v-tab-btn[data-target-pane="pane-fodder"]');
+                if (fodderBtn) fodderBtn.click();
+                if (specifyInput) {
+                    specifyInput.focus();
+                    specifyInput.classList.add('is-invalid');
+                    specifyInput.addEventListener('input', function() {
+                        if (this.value.trim()) this.classList.remove('is-invalid');
+                    }, { once: true });
+                }
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Specify Crop Type',
+                        text: 'Please type the specific crop name for any row with "Other" selected.'
+                    });
+                } else {
+                    alert('Please type the specific crop name for any row with "Other" selected.');
+                }
+                return false;
+            }
+        }
+    }
+
+    return true;
+};
+
+window.deleteRecordPrompt = function(recordId, regNo) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Delete Registration Record?',
+            html: `Are you sure you want to permanently delete registration <strong>#${regNo}</strong> from the database?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete Record'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'animal_branding.php';
+                form.innerHTML = `
+                    <input type="hidden" name="action" value="delete_renewal">
+                    <input type="hidden" name="id" value="${recordId}">
+                    <input type="hidden" name="view_records" value="1">
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    } else {
+        if (confirm(`Delete registration #${regNo} permanently?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'animal_branding.php';
+            form.innerHTML = `
+                <input type="hidden" name="action" value="delete_renewal">
+                <input type="hidden" name="id" value="${recordId}">
+                <input type="hidden" name="view_records" value="1">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+};
+
+window.escapeHtml = function(text) {
+    if (!text) return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+};
+
+
