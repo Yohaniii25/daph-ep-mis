@@ -177,7 +177,7 @@ $current_view_param = $_GET['view'] ?? '';
             <div style="flex: 1; overflow-y: auto; overflow-x: hidden;">
 
                 <div class="text-center py-4 border-bottom">
-                    <img src="<?= $base_path ?>assets/img/animal_health_logo.png" height="30" class="mb-2">
+                    <img src="<?= $base_path ?>assets/img/Government Department of Animal Production and Health – Eastern Province, Sri Lanka(black).png" height="30" class="mb-2">
                 </div>
 
                 <!-- Main Menu Items -->

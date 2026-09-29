@@ -2260,7 +2260,7 @@ function initAnimalBranding() {
         const p = parseInt(document.getElementById('swine_pre_weaners')?.value) || 0;
         const total = f + m + w + p;
         const totInput = document.getElementById('swine_total_no');
-        if (totInput && total > 0) totInput.value = total;
+        if (totInput) totInput.value = total;
     }
     document.querySelectorAll('.swine-sub-calc').forEach(function (el) {
         el.addEventListener('input', calcSwineTotal);
@@ -2273,7 +2273,7 @@ function initAnimalBranding() {
         const p = parseInt(document.getElementById('goat_pre_weaners')?.value) || 0;
         const total = f + m + w + p;
         const totInput = document.getElementById('goat_total_no');
-        if (totInput && total > 0) totInput.value = total;
+        if (totInput) totInput.value = total;
     }
     document.querySelectorAll('.goat-sub-calc').forEach(function (el) {
         el.addEventListener('input', calcGoatTotal);
@@ -2402,6 +2402,8 @@ function initAnimalBranding() {
     calcBuffaloGrid();
     calcMilkGrid();
     calcFodderLand();
+    calcSwineTotal();
+    calcGoatTotal();
 }
 
 if (document.readyState === 'loading') {

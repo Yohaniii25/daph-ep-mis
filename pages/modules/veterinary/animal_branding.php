@@ -1196,25 +1196,35 @@ require_once '../../../includes/header.php';
 
                                 <div class="p-4">
                                     <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Total No</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_total_no'] ?? 0) ?>" name="swine[total_no]" id="swine_total_no" class="form-control form-control-sm font-monospace fw-bold">
-                                        </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">Breeding Female</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_breeding_female'] ?? 0) ?>" name="swine[breeding_female]" id="swine_breeding_female" class="form-control form-control-sm swine-sub-calc">
+                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_breeding_female'] ?? 0) ?>" name="swine[breeding_female]" id="swine_breeding_female" class="form-control form-control-sm swine-sub-calc" placeholder="0">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">Breeding Male</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_breeding_male'] ?? 0) ?>" name="swine[breeding_male]" id="swine_breeding_male" class="form-control form-control-sm swine-sub-calc">
+                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_breeding_male'] ?? 0) ?>" name="swine[breeding_male]" id="swine_breeding_male" class="form-control form-control-sm swine-sub-calc" placeholder="0">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Weaners fattening</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_weaners_fattening'] ?? 0) ?>" name="swine[weaners_fattening]" id="swine_weaners" class="form-control form-control-sm swine-sub-calc">
+                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_weaners_fattening'] ?? 0) ?>" name="swine[weaners_fattening]" id="swine_weaners" class="form-control form-control-sm swine-sub-calc" placeholder="0">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Pre weaners (Piglings)</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_pre_weaners'] ?? 0) ?>" name="swine[pre_weaners]" id="swine_pre_weaners" class="form-control form-control-sm swine-sub-calc">
+                                            <input type="number" min="0" value="<?= intval($edit_rec['swine_pre_weaners'] ?? 0) ?>" name="swine[pre_weaners]" id="swine_pre_weaners" class="form-control form-control-sm swine-sub-calc" placeholder="0">
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <label class="form-label fw-bold text-dark mb-0">Total Swine Herd (Total No)</label>
+                                                    <small class="text-muted d-block">Automatic summation of Breeding Female + Breeding Male + Weaners + Pre weaners.</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="input-group input-group-sm" style="max-width: 200px;">
+                                                        <input type="number" min="0" readonly value="<?= intval($edit_rec['swine_total_no'] ?? 0) ?>" name="swine[total_no]" id="swine_total_no" class="form-control form-control-sm font-monospace fw-bold text-danger fs-6 text-center" placeholder="0">
+                                                        <span class="input-group-text fw-semibold">Heads</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Frequency of animal sales for meat</label>
@@ -1275,25 +1285,35 @@ require_once '../../../includes/header.php';
 
                                 <div class="p-4">
                                     <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Total No</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_total_no'] ?? 0) ?>" name="goat[total_no]" id="goat_total_no" class="form-control form-control-sm font-monospace fw-bold">
-                                        </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">Breeding Female</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_breeding_female'] ?? 0) ?>" name="goat[breeding_female]" id="goat_breeding_female" class="form-control form-control-sm goat-sub-calc">
+                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_breeding_female'] ?? 0) ?>" name="goat[breeding_female]" id="goat_breeding_female" class="form-control form-control-sm goat-sub-calc" placeholder="0">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">Breeding Male</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_breeding_male'] ?? 0) ?>" name="goat[breeding_male]" id="goat_breeding_male" class="form-control form-control-sm goat-sub-calc">
+                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_breeding_male'] ?? 0) ?>" name="goat[breeding_male]" id="goat_breeding_male" class="form-control form-control-sm goat-sub-calc" placeholder="0">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Weaners fattening</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_weaners_fattening'] ?? 0) ?>" name="goat[weaners_fattening]" id="goat_weaners" class="form-control form-control-sm goat-sub-calc">
+                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_weaners_fattening'] ?? 0) ?>" name="goat[weaners_fattening]" id="goat_weaners" class="form-control form-control-sm goat-sub-calc" placeholder="0">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Pre weaners (Kids)</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_pre_weaners'] ?? 0) ?>" name="goat[pre_weaners]" id="goat_pre_weaners" class="form-control form-control-sm goat-sub-calc">
+                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_pre_weaners'] ?? 0) ?>" name="goat[pre_weaners]" id="goat_pre_weaners" class="form-control form-control-sm goat-sub-calc" placeholder="0">
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <label class="form-label fw-bold text-dark mb-0">Total Goat Flock (Total No)</label>
+                                                    <small class="text-muted d-block">Automatic summation of Breeding Female + Breeding Male + Weaners + Pre weaners (Kids).</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="input-group input-group-sm" style="max-width: 200px;">
+                                                        <input type="number" min="0" readonly value="<?= intval($edit_rec['goat_total_no'] ?? 0) ?>" name="goat[total_no]" id="goat_total_no" class="form-control form-control-sm font-monospace fw-bold text-warning-emphasis fs-6 text-center" placeholder="0">
+                                                        <span class="input-group-text fw-semibold">Heads</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Frequency of animal sales for meat</label>
