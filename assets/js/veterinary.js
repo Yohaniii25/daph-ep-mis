@@ -2688,6 +2688,84 @@ window.resetMasterForm = function() {
     if (totFodder) totFodder.value = '0.0';
 };
 
+// ---- Poultry License Toggle ----
+window.togglePoultryLicenseField = function(type) {
+    const sel = document.getElementById('poultry_' + type + '_license');
+    const group = document.getElementById(type + '_license_no_group');
+    if (!sel || !group) return;
+    group.style.display = (sel.value === 'Yes') ? '' : 'none';
+    const inp = group.querySelector('input');
+    if (inp) inp.required = (sel.value === 'Yes');
+};
+
+// ---- Poultry Farm Type Change ----
+window.onPoultryFarmTypeChange = function(val) {
+    const group = document.getElementById('poultry_farm_type_others_group');
+    if (!group) return;
+    group.style.display = (val === 'Others') ? '' : 'none';
+    const inp = document.getElementById('poultry_farm_type_other');
+    if (inp) inp.required = (val === 'Others');
+};
+
+// ---- Dynamic Flock Age Group Rows ----
+window._flockAgeGroupIndex = null;
+
+window.addFlockAgeGroupRow = function() {
+    const tbody = document.getElementById('flockAgeGroupBody');
+    if (!tbody) return;
+    const existingRows = tbody.querySelectorAll('tr.flock-age-group-row');
+    const nextIndex = existingRows.length;
+    const tr = document.createElement('tr');
+    tr.className = 'flock-age-group-row';
+    tr.innerHTML = `
+        <td>
+            <select name="poultry[flock_age_groups][${nextIndex}][age_group]" class="form-select form-select-sm">
+                <option value="Chicks">Chicks</option>
+                <option value="Growers">Growers</option>
+                <option value="Hens">Hens</option>
+                <option value="Roosters">Roosters</option>
+                <option value="Pullets">Pullets</option>
+                <option value="Cockerels">Cockerels</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" min="0" name="poultry[flock_age_groups][${nextIndex}][quantity]" class="form-control form-control-sm text-end font-monospace" placeholder="0">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFlockAgeGroupRow(this)" title="Remove row">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>`;
+    tbody.appendChild(tr);
+    // Re-index all rows
+    window.reindexFlockAgeGroupRows();
+};
+
+window.removeFlockAgeGroupRow = function(btn) {
+    const tbody = document.getElementById('flockAgeGroupBody');
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('tr.flock-age-group-row');
+    if (rows.length <= 1) {
+        alert('At least one flock age group row is required.');
+        return;
+    }
+    const tr = btn.closest('tr');
+    if (tr) tr.remove();
+    window.reindexFlockAgeGroupRows();
+};
+
+window.reindexFlockAgeGroupRows = function() {
+    const tbody = document.getElementById('flockAgeGroupBody');
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('tr.flock-age-group-row');
+    rows.forEach((row, i) => {
+        const sel = row.querySelector('select');
+        const inp = row.querySelector('input[type="number"]');
+        if (sel) sel.name = `poultry[flock_age_groups][${i}][age_group]`;
+        if (inp) inp.name = `poultry[flock_age_groups][${i}][quantity]`;
+    });
+};
+
 window.resetPoultryMasterForm = function() {
     const form = document.getElementById('poultryMasterForm');
     if (form) form.reset();

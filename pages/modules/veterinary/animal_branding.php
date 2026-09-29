@@ -1903,8 +1903,50 @@ require_once '../../../includes/header.php';
                                                             foreach ($land_usages as $lu):
                                                             ?>
                                                             <option value="<?= htmlspecialchars($lu) ?>" <?= ($cur_usage === $lu) ? 'selected' : '' ?>><?= htmlspecialchars($lu) ?></option>
-                                                            <?php endforeach; ?>
+                                                             <?php endforeach; ?>
                                                         </select>
+                                                    </div>
+
+                                                    <!-- 1.12 Environmental License -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.12 Environmental License</label>
+                                                        <select name="poultry[env_license]" id="poultry_env_license" class="form-select form-select-sm" onchange="togglePoultryLicenseField('env')">
+                                                            <option value="No" <?= (($poultry_rec['env_license'] ?? 'No') === 'No') ? 'selected' : '' ?>>No</option>
+                                                            <option value="Yes" <?= (($poultry_rec['env_license'] ?? 'No') === 'Yes') ? 'selected' : '' ?>>Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-8" id="env_license_no_group" style="<?= (($poultry_rec['env_license'] ?? 'No') === 'Yes') ? '' : 'display:none;' ?>">
+                                                        <label class="form-label small fw-bold">Environmental License Number <span class="text-danger">*</span></label>
+                                                        <input type="text" name="poultry[env_license_no]" id="poultry_env_license_no" class="form-control form-control-sm font-monospace" placeholder="e.g. EIA-2024-00123" value="<?= htmlspecialchars($poultry_rec['env_license_no'] ?? '') ?>">
+                                                    </div>
+
+                                                    <!-- 1.13 Business License -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.13 Business License</label>
+                                                        <select name="poultry[business_license]" id="poultry_business_license" class="form-select form-select-sm" onchange="togglePoultryLicenseField('business')">
+                                                            <option value="No" <?= (($poultry_rec['business_license'] ?? 'No') === 'No') ? 'selected' : '' ?>>No</option>
+                                                            <option value="Yes" <?= (($poultry_rec['business_license'] ?? 'No') === 'Yes') ? 'selected' : '' ?>>Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-8" id="business_license_no_group" style="<?= (($poultry_rec['business_license'] ?? 'No') === 'Yes') ? '' : 'display:none;' ?>">
+                                                        <label class="form-label small fw-bold">Business License Number <span class="text-danger">*</span></label>
+                                                        <input type="text" name="poultry[business_license_no]" id="poultry_business_license_no" class="form-control form-control-sm font-monospace" placeholder="e.g. BRN-2024-00456" value="<?= htmlspecialchars($poultry_rec['business_license_no'] ?? '') ?>">
+                                                    </div>
+
+                                                    <!-- 1.14 Farm Type -->
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-bold">1.14 Farm Type</label>
+                                                        <select name="poultry[poultry_farm_type]" id="poultry_poultry_farm_type" class="form-select form-select-sm" onchange="onPoultryFarmTypeChange(this.value)">
+                                                            <option value="">-- Select Farm Type --</option>
+                                                            <option value="Broiler" <?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Broiler') ? 'selected' : '' ?>>Broiler</option>
+                                                            <option value="Layer" <?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Layer') ? 'selected' : '' ?>>Layer</option>
+                                                            <option value="Local / Free range chickens" <?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Local / Free range chickens') ? 'selected' : '' ?>>Local / Free range chickens</option>
+                                                            <option value="Others" <?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Others') ? 'selected' : '' ?>>Others</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-8" id="poultry_farm_type_others_group" style="<?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Others') ? '' : 'display:none;' ?>">
+                                                        <label class="form-label small fw-bold">Specify Farm Type <span class="text-danger">*</span></label>
+                                                        <input type="text" name="poultry[poultry_farm_type_other]" id="poultry_farm_type_other" class="form-control form-control-sm" placeholder="e.g. Duck, Turkey, Quail..." value="<?= htmlspecialchars($poultry_rec['poultry_farm_type_other'] ?? '') ?>">
                                                     </div>
                                                 </div>
 
@@ -1930,127 +1972,93 @@ require_once '../../../includes/header.php';
                                 <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
                                         <span class="category-badge-step mb-1" style="background-color: #fef3c7; color: #b45309;">Section 2 of 5</span>
-                                        <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-grid-3x3-gap-fill text-warning me-2"></i>2. Flock Information
-                                        </h4>
-                                        <p class="text-muted small mb-0">Poultry population capacity tiers and detailed species headcount and feed breakdown.</p>
-                                    </div>
-                                    <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
-                                        <i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
-                                    </span>
-                                </div>
+						<h4 class="h5 fw-bold text-dark mb-1">
+							<i class="bi bi-grid-3x3-gap-fill text-warning me-2"></i>2. Flock Information &amp; Housing System
+						</h4>
+						<p class="text-muted small mb-0">Age-group based flock headcount and housing system capacity.</p>
+					</div>
+					<span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
+						<i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
+					</span>
+				</div>
 
-                                <div class="p-4 p-md-4">
+				<div class="p-4 p-md-4">
 
-                                <!-- 2.1 Poultry population details (Checkbox Grid) -->
-                                                <div class="mb-4">
-                                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                                        <h6 class="fw-bold text-dark mb-0">
-                                                            <i class="bi bi-grid-3x3 me-1 text-primary"></i>2.1 Poultry Population Details (Checkbox Grid)
-                                                        </h6>
-                                                        <span class="badge bg-secondary-subtle text-secondary small">Select applicable population ranges</span>
-                                                    </div>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-bordered align-middle text-center mb-0">
-                                                            <thead class="table-light">
-                                                                <tr>
-                                                                    <th class="text-start" style="width: 28%;">Bird Category</th>
-                                                                    <th style="width: 18%;">Under 1000</th>
-                                                                    <th style="width: 18%;">1000 - 5000</th>
-                                                                    <th style="width: 18%;">5000 - 10000</th>
-                                                                    <th style="width: 18%;">Over 10000</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <?php
-                                                                $pop_rows = [
-                                                                    'layers' => 'Layers',
-                                                                    'broilers' => 'Broilers',
-                                                                    'breeder' => 'Breeder (Heavy/Light)'
-                                                                ];
-                                                                $pop_cols = [
-                                                                    'under_1000' => 'Under 1000',
-                                                                    '1000_5000' => '1000 - 5000',
-                                                                    '5000_10000' => '5000 - 10000',
-                                                                    'over_10000' => 'Over 10000'
-                                                                ];
-                                                                foreach ($pop_rows as $row_key => $row_label):
-                                                                ?>
-                                                                <tr>
-                                                                    <td class="text-start fw-semibold bg-light-subtle"><?= $row_label ?></td>
-                                                                    <?php foreach ($pop_cols as $col_key => $col_label): 
-                                                                        $is_checked = !empty($poultry_rec['pop'][$row_key][$col_key]);
-                                                                    ?>
-                                                                    <td>
-                                                                        <div class="form-check d-flex justify-content-center m-0">
-                                                                            <input class="form-check-input poultry-check" type="checkbox" name="poultry[pop][<?= $row_key ?>][<?= $col_key ?>]" value="1" <?= $is_checked ? 'checked' : '' ?> id="pop_<?= $row_key ?>_<?= $col_key ?>">
-                                                                        </div>
-                                                                    </td>
-                                                                    <?php endforeach; ?>
-                                                                </tr>
-                                                                <?php endforeach; ?>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
+				<!-- 2.1 Flock Age Groups (Dynamic Row Entry) -->
+				<div class="mb-4">
+					<div class="d-flex align-items-center justify-content-between mb-2">
+						<h6 class="fw-bold text-dark mb-0">
+							<i class="bi bi-table me-1 text-primary"></i>2.1 Flock Age Groups &amp; Quantity
+						</h6>
+						<button type="button" class="btn btn-sm btn-outline-success" onclick="addFlockAgeGroupRow()">
+							<i class="bi bi-plus-circle me-1"></i>Add Row
+						</button>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-sm table-bordered align-middle mb-0" id="flockAgeGroupTable">
+							<thead class="table-light text-center">
+								<tr>
+									<th class="text-start" style="width: 45%;">Age Group</th>
+									<th style="width: 40%;">Quantity (No. of Birds)</th>
+									<th style="width: 15%;">Action</th>
+								</tr>
+							</thead>
+							<tbody id="flockAgeGroupBody">
+								<?php
+								$flock_groups = $poultry_rec['flock_age_groups'] ?? [['age_group' => 'Chicks', 'quantity' => '']];
+								if (!is_array($flock_groups) || empty($flock_groups)) {
+									$flock_groups = [['age_group' => 'Chicks', 'quantity' => '']];
+								}
+								foreach ($flock_groups as $fg_i => $fg_row):
+									$fg_age = $fg_row['age_group'] ?? 'Chicks';
+									$fg_qty = $fg_row['quantity'] ?? '';
+								?>
+								<tr class="flock-age-group-row">
+									<td>
+										<select name="poultry[flock_age_groups][<?= $fg_i ?>][age_group]" class="form-select form-select-sm">
+											<option value="Chicks (&lt;8 weeks)" <?= ($fg_age === 'Chicks (&lt;8 weeks)') ? 'selected' : '' ?>>Chicks (&lt;8 weeks)</option>
+											<option value="Growers (8-17 weeks)" <?= ($fg_age === 'Growers (8-17 weeks)') ? 'selected' : '' ?>>Growers (8-17 weeks old)</option>
+											<option value="Hens (&gt;18 weeks)" <?= ($fg_age === 'Hens (&gt;18 weeks)') ? 'selected' : '' ?>>Hens (&gt;18 Weeks)</option>
+										</select>
+									</td>
+									<td>
+										<input type="number" min="0" name="poultry[flock_age_groups][<?= $fg_i ?>][quantity]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="<?= htmlspecialchars($fg_qty) ?>">
+									</td>
+									<td class="text-center">
+										<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFlockAgeGroupRow(this)" title="Remove row">
+											<i class="bi bi-trash"></i>
+										</button>
+									</td>
+								</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+					<div class="text-muted small mt-1"><i class="bi bi-info-circle me-1"></i>Add one row per age group. At least one row required.</div>
+				</div>
 
-                                                <!-- 2.2 Number of birds kept per shed (Input Grid) -->
-                                                <div>
-                                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                                        <h6 class="fw-bold text-dark mb-0">
-                                                            <i class="bi bi-houses me-1 text-primary"></i>2.2 Number of Birds Kept Per Shed (Input Grid)
-                                                        </h6>
-                                                        <span class="badge bg-secondary-subtle text-secondary small">Enter maximum bird capacity per shed type</span>
-                                                    </div>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-bordered align-middle mb-0">
-                                                            <thead class="table-light text-center">
-                                                                <tr>
-                                                                    <th class="text-start" style="width: 34%;">Shed Type</th>
-                                                                    <th style="width: 22%;">Max No of birds<br><small class="text-muted">(Layers)</small></th>
-                                                                    <th style="width: 22%;">Max No of birds<br><small class="text-muted">(Broilers)</small></th>
-                                                                    <th style="width: 22%;">Max No of birds<br><small class="text-muted">(Breeders)</small></th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <?php
-                                                                $shed_rows = [
-                                                                    'deep_litter' => 'Deep litter',
-                                                                    'slatted' => 'Slatted',
-                                                                    'slatted_deep' => 'Slatted & Deep litter combined',
-                                                                    'cages' => 'Cages',
-                                                                    'other' => 'Other'
-                                                                ];
-                                                                foreach ($shed_rows as $shed_key => $shed_label):
-                                                                    $l_val = $poultry_rec['shed'][$shed_key]['layers'] ?? '';
-                                                                    $b_val = $poultry_rec['shed'][$shed_key]['broilers'] ?? '';
-                                                                    $br_val = $poultry_rec['shed'][$shed_key]['breeders'] ?? '';
-                                                                    $other_spec = $poultry_rec['shed']['other_specify'] ?? '';
-                                                                ?>
-                                                                <tr>
-                                                                    <td class="fw-semibold bg-light-subtle">
-                                                                        <?= $shed_label ?>
-                                                                        <?php if ($shed_key === 'other'): ?>
-                                                                        <input type="text" name="poultry[shed][other_specify]" class="form-control form-control-sm mt-1" placeholder="Specify shed type..." value="<?= htmlspecialchars($other_spec) ?>">
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="number" min="0" name="poultry[shed][<?= $shed_key ?>][layers]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="<?= htmlspecialchars($l_val) ?>">
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="number" min="0" name="poultry[shed][<?= $shed_key ?>][broilers]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="<?= htmlspecialchars($b_val) ?>">
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="number" min="0" name="poultry[shed][<?= $shed_key ?>][breeders]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="<?= htmlspecialchars($br_val) ?>">
-                                                                    </td>
-                                                                </tr>
-                                                                <?php endforeach; ?>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
+				<!-- 2.2 Housing System -->
+				<div class="mb-2">
+					<h6 class="fw-bold text-dark mb-3">
+						<i class="bi bi-houses-fill me-1 text-primary"></i>2.2 Housing System (Capacity per System)
+					</h6>
+					<div class="row g-3">
+						<div class="col-md-4">
+							<label class="form-label small fw-bold">Deep Litter Pens (No. of birds)</label>
+							<input type="number" min="0" name="poultry[housing][deep_litter_pens]" id="poultry_housing_deep_litter" class="form-control form-control-sm font-monospace text-end" placeholder="0" value="<?= htmlspecialchars($poultry_rec['housing']['deep_litter_pens'] ?? '') ?>">
+						</div>
+						<div class="col-md-4">
+							<label class="form-label small fw-bold">Battery Cages (No. of birds)</label>
+							<input type="number" min="0" name="poultry[housing][battery_cages]" id="poultry_housing_battery_cages" class="form-control form-control-sm font-monospace text-end" placeholder="0" value="<?= htmlspecialchars($poultry_rec['housing']['battery_cages'] ?? '') ?>">
+						</div>
+						<div class="col-md-4">
+							<label class="form-label small fw-bold">Free Range (No. of birds)</label>
+							<input type="number" min="0" name="poultry[housing][free_range]" id="poultry_housing_free_range" class="form-control form-control-sm font-monospace text-end" placeholder="0" value="<?= htmlspecialchars($poultry_rec['housing']['free_range'] ?? '') ?>">
+						</div>
+					</div>
+				</div>
 
-                                </div>
+				</div>
 
                                 <div class="panel-nav-footer">
                                     <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-p-sec1" data-prev-index="0">
@@ -3120,7 +3128,7 @@ require_once '../../../includes/header.php';
 <script>
 // Live database records array passed from PHP to global scope
 window.liveDatabaseRecords = <?= json_encode($records_for_js, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?: '[]' ?>;
-let liveDatabaseRecords = window.liveDatabaseRecords;
+var liveDatabaseRecords = window.liveDatabaseRecords;
 window.brandingRangeName = <?= json_encode($range_name) ?>;
 window.brandingDistrictName = <?= json_encode($district_name) ?>;
 window.brandingProvinceName = <?= json_encode($province_name) ?>;
