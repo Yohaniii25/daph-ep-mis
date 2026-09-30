@@ -20,10 +20,9 @@ $user_role = $_SESSION['role'] ?? '';
 $user_district_id = $_SESSION['district_id'] ?? null;
 $is_supervisory = in_array($user_role, ['district_dd', 'deputy_director_district', 'sms', 'provincial_director', 'admin', 'super_admin', 'administrator']);
 
-// View routing: 'hub' (Primary Navigation View) vs 'maintenance' (Specific Drug Maintenance Details View)
+// View routing: 'hub' (Main Navigation Level), 'batches' (Batch Maintain View), 'maintenance' (Drug Maintain View)
 $view = $_GET['view'] ?? 'hub';
-$is_maintenance_view = ($view === 'maintenance');
-$active_tab_param = $_GET['tab'] ?? 'all';
+$active_tab_param = $_GET['tab'] ?? 'records';
 $selected_year = intval($_GET['year'] ?? date('Y'));
 
 // Supervisory range switching or session range
@@ -137,6 +136,8 @@ $drug_types_sql = "
         COALESCE(t.brand_name, t.vaccine_name) AS brand_name,
         t.vaccine_name,
         COALESCE(t.chemical_composition, '—') AS chemical_composition,
+        t.target_animal,
+        t.description,
         t.expiry_date,
         COUNT(r.id) AS total_records,
         COALESCE(SUM(r.starter_count_month), 0) AS starter_sum,
@@ -146,7 +147,7 @@ $drug_types_sql = "
         COALESCE(SUM(r.starter_count_month + r.during_month_received - r.used_doses_count - r.doses_damaged), 0) AS balance_sum
     FROM drug_types t
     LEFT JOIN drug_records r ON t.id = r.drug_type_id
-    GROUP BY t.id, t.brand_name, t.vaccine_name, t.chemical_composition, t.expiry_date
+    GROUP BY t.id, t.brand_name, t.vaccine_name, t.chemical_composition, t.target_animal, t.description, t.expiry_date
     ORDER BY brand_name ASC
 ";
 $drug_types_res = $mysqli->query($drug_types_sql);
@@ -154,6 +155,16 @@ $all_drug_types = [];
 if ($drug_types_res) {
     while ($dt = $drug_types_res->fetch_assoc()) {
         $all_drug_types[$dt['id']] = $dt;
+    }
+}
+
+// Fetch master list of drug names specifically for Tab 2
+$master_drugs_sql = "SELECT * FROM `drug_types` ORDER BY COALESCE(brand_name, vaccine_name) ASC";
+$master_drugs_res = $mysqli->query($master_drugs_sql);
+$master_drugs = [];
+if ($master_drugs_res) {
+    while ($md = $master_drugs_res->fetch_assoc()) {
+        $master_drugs[] = $md;
     }
 }
 
@@ -173,12 +184,23 @@ $ledger_query = "
 ";
 $ledger_res = $mysqli->query($ledger_query);
 $all_records = [];
-$records_by_drug = [];
 if ($ledger_res) {
     while ($rec = $ledger_res->fetch_assoc()) {
         $all_records[] = $rec;
-        $dt_id = intval($rec['drug_type_id']);
-        $records_by_drug[$dt_id][] = $rec;
+    }
+}
+
+// Fetch all vaccine batches for the Batch Maintain view
+$batches_sql = "SELECT id, batch_number, is_active, remarks, expiry_date, created_at FROM `vaccine_batches` ORDER BY id DESC";
+$batches_res = $mysqli->query($batches_sql);
+$all_batches = [];
+$active_batches_count = 0;
+if ($batches_res) {
+    while ($b_row = $batches_res->fetch_assoc()) {
+        $all_batches[] = $b_row;
+        if ($b_row['is_active'] == 1) {
+            $active_batches_count++;
+        }
     }
 }
 
@@ -199,21 +221,41 @@ require_once __DIR__ . '/../../../includes/header.php';
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important;
 }
-.nav-card-action {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.nav-option-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     border-radius: 12px;
 }
-.nav-card-action:hover {
+.nav-option-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.12) !important;
 }
-.tabs-scroller {
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
+.custom-nav-pills .nav-link {
+    font-weight: 600;
+    color: #495057;
+    border-radius: 8px;
+    padding: 10px 20px;
+    transition: all 0.2s ease;
 }
-.nav-pills-letter-h .nav-link {
-    white-space: nowrap;
+.custom-nav-pills .nav-link.active {
+    background-color: #370709;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(55, 7, 9, 0.25);
+}
+.custom-nav-pills .nav-link:not(.active):hover {
+    background-color: #f1f3f5;
+    color: #212529;
+}
+.badge-tab-count {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-left: 6px;
+    background: rgba(255,255,255,0.25);
+}
+.custom-nav-pills .nav-link:not(.active) .badge-tab-count {
+    background: #e9ecef;
+    color: #495057;
 }
 </style>
 
@@ -223,7 +265,13 @@ require_once __DIR__ . '/../../../includes/header.php';
         <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">
-                    <?= $is_maintenance_view ? 'Drug Maintenance - Formulation Ledgers' : 'Therapeutic Drug & Vaccine Operations' ?>
+                    <?php if ($view === 'batches'): ?>
+                        Batch Maintain - Master Batches Register
+                    <?php elseif ($view === 'maintenance'): ?>
+                        Drug Maintain - Stock Ledgers & Drug Master Register
+                    <?php else: ?>
+                        Therapeutic Drug & Vaccine Operations
+                    <?php endif; ?>
                 </h2>
                 <p class="text-muted small mb-0">
                     Manage stock balances, batches & ledgers for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)
@@ -232,8 +280,11 @@ require_once __DIR__ . '/../../../includes/header.php';
             <div class="d-flex align-items-center gap-2">
                 <?php if ($is_supervisory && !empty($supervisory_ranges)): ?>
                     <form method="GET" class="d-flex align-items-center gap-2">
-                        <?php if ($is_maintenance_view): ?>
-                            <input type="hidden" name="view" value="maintenance">
+                        <?php if ($view !== 'hub'): ?>
+                            <input type="hidden" name="view" value="<?= htmlspecialchars($view) ?>">
+                        <?php endif; ?>
+                        <?php if (!empty($active_tab_param) && $view === 'maintenance'): ?>
+                            <input type="hidden" name="tab" value="<?= htmlspecialchars($active_tab_param) ?>">
                         <?php endif; ?>
                         <label class="small fw-semibold text-secondary text-nowrap"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Select Range:</label>
                         <select name="range_id" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()">
@@ -246,9 +297,9 @@ require_once __DIR__ . '/../../../includes/header.php';
                     </form>
                 <?php endif; ?>
 
-                <?php if ($is_maintenance_view): ?>
+                <?php if ($view !== 'hub'): ?>
                     <a href="drug_maintenance.php<?= $range_id ? '?range_id=' . $range_id : '' ?>" class="btn btn-secondary shadow-sm text-nowrap">
-                        <i class="bi bi-arrow-left me-1"></i>Back to Navigation Menu
+                        <i class="bi bi-arrow-left me-1"></i>Back to Main Menu
                     </a>
                 <?php else: ?>
                     <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
@@ -259,7 +310,7 @@ require_once __DIR__ . '/../../../includes/header.php';
         </div>
 
         <!-- ============================================================ -->
-        <!-- KEY METRIC CARDS -->
+        <!-- KEY METRIC CARDS (ALL VIEWS)                                 -->
         <!-- ============================================================ -->
         <div class="row g-3 mb-4">
             <div class="col-xl-3 col-md-6">
@@ -324,9 +375,13 @@ require_once __DIR__ . '/../../../includes/header.php';
             </div>
         </div>
 
-        <?php if (!$is_maintenance_view): ?>
+        <?php if ($view === 'hub'): ?>
         <!-- =================================================================================== -->
-        <!-- VIEW 1: PRIMARY VIEW (MAIN NAVIGATION OPTIONS & HUB)                                -->
+        <!-- 1. MAIN NAVIGATION LEVEL (TOP LEVEL OF DRUG MAINTENANCE INTERFACE)                  -->
+        <!-- Displays 3 distinct navigation options/buttons:                                     -->
+        <!--   1. Add Vaccine Record                                                            -->
+        <!--   2. Batch Maintain                                                                -->
+        <!--   3. Drug Maintain                                                                 -->
         <!-- =================================================================================== -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3 border-0">
@@ -338,13 +393,76 @@ require_once __DIR__ . '/../../../includes/header.php';
                     </div>
                 </div>
             </div>
-            <div class="card-body pt-0">
+            <div class="card-body pt-0 pb-4">
                 <div class="row g-4">
 
+                    <!-- Option 1: Add Vaccine Record -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 border-0 shadow-sm nav-option-card" style="border-top: 4px solid #820100 !important; background: #ffffff;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center gap-3 mb-3">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; background: rgba(130, 1, 0, 0.1); color: #820100;">
+                                            <i class="bi bi-file-earmark-plus fs-3"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0 text-dark">Add Vaccine Record</h5>
+                                            <span class="badge bg-danger-subtle text-danger small">Immunization Stock</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted small mb-3">
+                                        Log monthly vaccine returns, opening balance doses, receipt consignments, field utilization, and wastage counts.
+                                    </p>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn w-100 text-light fw-bold shadow-sm py-2 mb-2" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBalanceModal">
+                                        <i class="bi bi-plus-circle me-1"></i>Add Vaccine Record
+                                    </button>
+                                    <div class="text-center">
+                                        <a href="vaccine_balance.php" class="small text-muted text-decoration-none">
+                                            <i class="bi bi-table me-1"></i>View Vaccine Balances Register &rarr;
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <!-- Option 2: Drug Maintenance -->
-                    <div class="col-lg-6 col-md-6">
-                        <div class="card h-100 border-0 shadow-sm nav-card-action" style="border-top: 4px solid #2b3a4a !important; background: #ffffff;">
+                    <!-- Option 2: Batch Maintain -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 border-0 shadow-sm nav-option-card" style="border-top: 4px solid #b08723 !important; background: #ffffff;">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center gap-3 mb-3">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; background: rgba(176, 135, 35, 0.12); color: #b08723;">
+                                            <i class="bi bi-box-seam fs-3"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0 text-dark">Batch Maintain</h5>
+                                            <span class="badge bg-warning-subtle text-warning small"><?= count($all_batches) ?> Registered Batches</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted small mb-3">
+                                        Access centralized master list of batches, register new batch identity codes, manage expiration dates and active stock availability.
+                                    </p>
+                                </div>
+                                <div>
+                                    <a href="drug_maintenance.php?view=batches" class="btn w-100 text-light fw-bold shadow-sm py-2 mb-2" style="background-color: #b08723;">
+                                        <i class="bi bi-box-seam me-1"></i>Batch Maintain
+                                    </a>
+                                    <div class="text-center">
+                                        <button type="button" class="btn btn-link p-0 small text-muted text-decoration-none" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
+                                            <i class="bi bi-plus-circle me-1"></i>Quick Add Batch &rarr;
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Option 3: Drug Maintain -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 border-0 shadow-sm nav-option-card" style="border-top: 4px solid #2b3a4a !important; background: #ffffff;">
                             <div class="card-body p-4 d-flex flex-column justify-content-between">
                                 <div>
                                     <div class="d-flex align-items-center gap-3 mb-3">
@@ -352,32 +470,33 @@ require_once __DIR__ . '/../../../includes/header.php';
                                             <i class="bi bi-capsule-pill fs-3"></i>
                                         </div>
                                         <div>
-                                            <h5 class="fw-bold mb-0 text-dark">Drug Maintenance</h5>
+                                            <h5 class="fw-bold mb-0 text-dark">Drug Maintain</h5>
                                             <span class="badge bg-secondary-subtle text-secondary small"><?= count($all_drug_types) ?> Registered Types</span>
                                         </div>
                                     </div>
                                     <p class="text-muted small mb-3">
-                                        Access comprehensive drug stock inventory ledger, horizontal drug-wise tabs, live balance computations, and ledger history.
+                                        Access consolidated drug inventory records, itemized formulation ledgers, and maintain master list of drug names.
                                     </p>
                                 </div>
                                 <div>
                                     <a href="drug_maintenance.php?view=maintenance" class="btn w-100 text-light fw-bold shadow-sm py-2 mb-2" style="background-color: #2b3a4a;">
-                                        <i class="bi bi-journal-medical me-1"></i>Open Drug Maintenance
+                                        <i class="bi bi-journal-medical me-1"></i>Drug Maintain
                                     </a>
                                     <div class="text-center">
-                                        <a href="drug_types.php" class="small text-muted text-decoration-none">
-                                            <i class="bi bi-search me-1"></i>Manage Drug Formulations &rarr;
+                                        <a href="drug_maintenance.php?view=maintenance&tab=drug_names" class="small text-muted text-decoration-none">
+                                            <i class="bi bi-capsule me-1"></i>Name of the Drugs Master &rarr;
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
 
-        <!-- Drug Stock Summary by Formulation -->
+        <!-- Drug Stock Summary by Formulation Overview -->
         <div class="card border-0 shadow-sm rounded-3">
             <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
@@ -385,7 +504,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                     <small class="text-muted">Summary of stock quantities across all registered drug formulations.</small>
                 </div>
                 <a href="drug_maintenance.php?view=maintenance" class="btn btn-sm text-light fw-bold shadow-sm" style="background-color: #820100;">
-                    <i class="bi bi-journal-text me-1"></i>View Itemized Drug Tabs &rarr;
+                    <i class="bi bi-journal-text me-1"></i>Open Drug Maintain &rarr;
                 </a>
             </div>
             <div class="card-body">
@@ -424,8 +543,8 @@ require_once __DIR__ . '/../../../includes/header.php';
                                     <td class="text-center font-monospace text-danger">-<?= number_format($drug['damaged_sum']) ?></td>
                                     <td class="text-center font-monospace fw-bold bg-light text-success"><?= number_format($drug['balance_sum']) ?></td>
                                     <td class="text-center">
-                                        <a href="drug_maintenance.php?view=maintenance&tab=<?= $dt_id ?>" class="btn btn-sm btn-outline-primary" title="View records for <?= htmlspecialchars($drug['brand_name']) ?>">
-                                            <i class="bi bi-eye me-1"></i>View Tab
+                                        <a href="drug_maintenance.php?view=maintenance&tab=records" class="btn btn-sm btn-outline-primary" title="View records for <?= htmlspecialchars($drug['brand_name']) ?>">
+                                            <i class="bi bi-eye me-1"></i>View Records
                                         </a>
                                     </td>
                                 </tr>
@@ -436,9 +555,9 @@ require_once __DIR__ . '/../../../includes/header.php';
             </div>
         </div>
 
-        <?php else: ?>
+        <?php elseif ($view === 'batches'): ?>
         <!-- =================================================================================== -->
-        <!-- VIEW 2: SPECIFIC DRUG MAINTENANCE DETAILS VIEW (WITH HORIZONTAL DRUG TABS)         -->
+        <!-- 2. BATCH MAINTAIN VIEW (LIST OF BATCH + ADD BATCH MODAL/BUTTON)                     -->
         <!-- =================================================================================== -->
         
         <!-- Navigation Ribbon -->
@@ -448,81 +567,206 @@ require_once __DIR__ . '/../../../includes/header.php';
                     <a href="drug_maintenance.php" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-grid me-1"></i>Main Menu
                     </a>
-                    <a href="batches.php" class="btn btn-sm btn-outline-dark">
-                        <i class="bi bi-box-seam me-1"></i>Batch Management
+                    <a href="drug_maintenance.php?view=batches" class="btn btn-sm active fw-bold text-light" style="background-color: #b08723;">
+                        <i class="bi bi-box-seam me-1"></i>Batch Maintain (Active)
                     </a>
-                    <a href="drug_maintenance.php?view=maintenance" class="btn btn-sm active fw-bold text-light" style="background-color: #370709;">
-                        <i class="bi bi-capsule-pill me-1"></i>Drug Maintenance (Active)
+                    <a href="drug_maintenance.php?view=maintenance" class="btn btn-sm btn-outline-dark">
+                        <i class="bi bi-capsule-pill me-1"></i>Drug Maintain
                     </a>
                 </div>
                 <div class="text-muted small">
-                    <i class="bi bi-info-circle me-1 text-primary"></i>Batches are managed via the dedicated Batch Management page.
+                    <i class="bi bi-info-circle me-1 text-primary"></i>Track master batches for vaccines and pharmaceutical formulations.
                 </div>
             </div>
         </div>
 
-        <!-- Action Bar: Add New Record (Retained) + Name of the Drugs (Batches button REMOVED) -->
+        <!-- Action Bar: Add Batch Button -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-3">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
-                        <button class="btn text-light fw-bold px-3 py-2 shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addDrugRecordModal">
-                            <i class="bi bi-plus-circle me-1"></i>Add New Record
+                        <button type="button" class="btn text-light fw-bold px-3 py-2 shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
+                            <i class="bi bi-plus-circle me-1"></i>Add Batch
                         </button>
-                        <a href="drug_types.php" class="btn btn-outline-secondary px-3 py-2 shadow-sm">
-                            <i class="bi bi-search me-1"></i>Name of the Drugs
+                        <a href="drug_maintenance.php" class="btn btn-outline-secondary px-3 py-2 shadow-sm">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Navigation Menu
                         </a>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-light text-secondary border px-3 py-2">
-                            <i class="bi bi-geo-alt-fill text-danger me-1"></i>Range: <?= htmlspecialchars($range_name) ?>
+                            <i class="bi bi-box-seam me-1 text-warning"></i>Total Batches: <?= count($all_batches) ?>
+                        </span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                            <i class="bi bi-check-circle me-1"></i>Active: <?= $active_batches_count ?>
                         </span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Horizontal Tabbed Interface for the Data Grid -->
+        <!-- List of Batch Card -->
+        <div class="card border-0 shadow-sm rounded-3 mb-5">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="m-0 fw-bold text-dark"><i class="bi bi-list-check me-2 text-warning"></i>List of Batch</h5>
+                    <small class="text-muted">Master register of all vaccine & therapeutic drug stock batch codes, active status, and expiry schedules.</small>
+                </div>
+                <button type="button" class="btn btn-sm text-light fw-bold shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Batch
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="batchTable" class="table table-striped table-bordered align-middle row-border small" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 8%;">ID</th>
+                                <th style="width: 25%;">Batch Identity Code</th>
+                                <th style="width: 15%;">Expiration Date</th>
+                                <th style="width: 14%;">Status</th>
+                                <th style="width: 20%;">Remarks / Log Notes</th>
+                                <th style="width: 15%;">Date Registered</th>
+                                <th style="width: 8%;" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($all_batches)): ?>
+                                <?php foreach ($all_batches as $row): 
+                                    $formatted_expiry = !empty($row['expiry_date']) ? date('Y-m-d', strtotime($row['expiry_date'])) : 'N/A';
+                                ?>
+                                    <tr>
+                                        <td class="fw-bold text-secondary">#<?= $row['id'] ?></td>
+                                        <td>
+                                            <div class="fw-bold text-dark">
+                                                <i class="bi bi-qr-code-scan me-2 text-muted"></i><?= htmlspecialchars($row['batch_number']) ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="small fw-semibold <?= $formatted_expiry !== 'N/A' ? 'text-danger font-monospace' : 'text-muted' ?>">
+                                                <i class="bi bi-calendar-event me-1"></i><?= $formatted_expiry ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php if ($row['is_active'] == 1): ?>
+                                                <span class="badge bg-success-subtle text-success px-2.5 py-1.5 rounded-pill fw-semibold">
+                                                    <i class="bi bi-check-circle-fill me-1"></i>Active Stock
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 rounded-pill fw-semibold">
+                                                    <i class="bi bi-x-circle-fill me-1"></i>Archived
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted text-wrap d-block text-break">
+                                                <?= htmlspecialchars($row['remarks'] ?: 'No operational remarks added.') ?>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="small text-dark fw-semibold">
+                                                <i class="bi bi-calendar3 me-1.5 text-muted"></i><?= date('Y-m-d g:i A', strtotime($row['created_at'])) ?>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-secondary edit-batch-btn"
+                                                    data-id="<?= $row['id'] ?>"
+                                                    data-batch="<?= htmlspecialchars($row['batch_number'], ENT_QUOTES) ?>"
+                                                    data-status="<?= $row['is_active'] ?>"
+                                                    data-expiry="<?= !empty($row['expiry_date']) ? date('Y-m-d', strtotime($row['expiry_date'])) : '' ?>"
+                                                    data-remarks="<?= htmlspecialchars($row['remarks'], ENT_QUOTES) ?>">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <a href="processors/vaccine_batch_crud.php?action=delete&id=<?= $row['id'] ?>&return_url=<?= urlencode('../drug_maintenance.php?view=batches') ?>"
+                                                    class="btn btn-outline-danger btn-delete-batch"
+                                                    data-batch="<?= htmlspecialchars($row['batch_number'], ENT_QUOTES) ?>">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <?php elseif ($view === 'maintenance'): ?>
+        <!-- =================================================================================== -->
+        <!-- 3. DRUG MAINTAIN VIEW (TWO-TAB STRUCTURE)                                           -->
+        <!--   Tab 1: "All drug records" (Consolidated list/grid + "add record" modal/button)   -->
+        <!--   Tab 2: "Name of the drugs" (List of drugs master list + "add" modal/button)      -->
+        <!-- =================================================================================== -->
+        
+        <!-- Navigation Ribbon -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body p-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <a href="drug_maintenance.php" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-grid me-1"></i>Main Menu
+                    </a>
+                    <a href="drug_maintenance.php?view=batches" class="btn btn-sm btn-outline-dark">
+                        <i class="bi bi-box-seam me-1"></i>Batch Maintain
+                    </a>
+                    <a href="drug_maintenance.php?view=maintenance" class="btn btn-sm active fw-bold text-light" style="background-color: #2b3a4a;">
+                        <i class="bi bi-capsule-pill me-1"></i>Drug Maintain (Active)
+                    </a>
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-info-circle me-1 text-primary"></i>Use the two tabs below to manage drug records or the master catalog of drug names.
+                </div>
+            </div>
+        </div>
+
+        <!-- Two-Tab Header Navigation -->
         <div class="card border-0 shadow-sm rounded-3 mb-4">
-            <div class="card-header bg-white p-3 border-bottom tabs-scroller">
-                <ul class="nav nav-pills nav-pills-letter-h flex-nowrap overflow-auto" id="drugMaintenanceTabs" role="tablist">
+            <div class="card-header bg-white p-3 border-bottom">
+                <ul class="nav nav-pills custom-nav-pills" id="drugMaintainTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link <?= ($active_tab_param === 'all' || empty($active_tab_param)) ? 'active' : '' ?>" id="tab-all-drugs-btn" data-bs-toggle="pill" data-bs-target="#tab-all-drugs" type="button" role="tab">
-                            <i class="bi bi-layers-fill me-1"></i>All Drugs
+                        <button class="nav-link <?= ($active_tab_param !== 'drug_names') ? 'active' : '' ?>" id="tab-all-records-nav" data-bs-toggle="pill" data-bs-target="#tab-all-records" type="button" role="tab">
+                            <i class="bi bi-journal-medical me-2"></i>All drug records
                             <span class="badge-tab-count"><?= count($all_records) ?></span>
                         </button>
                     </li>
-                    <?php foreach ($all_drug_types as $dt_id => $drug): ?>
-                        <?php 
-                            $tab_key = 'drug_' . $dt_id;
-                            $is_tab_active = ($active_tab_param == $dt_id);
-                            $d_records_cnt = count($records_by_drug[$dt_id] ?? []);
-                        ?>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link <?= $is_tab_active ? 'active' : '' ?>" id="tab-<?= $tab_key ?>-btn" data-bs-toggle="pill" data-bs-target="#tab-<?= $tab_key ?>" type="button" role="tab">
-                                <i class="bi bi-capsule me-1"></i><?= htmlspecialchars($drug['brand_name']) ?>
-                                <span class="badge-tab-count"><?= $d_records_cnt ?></span>
-                            </button>
-                        </li>
-                    <?php endforeach; ?>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link <?= ($active_tab_param === 'drug_names') ? 'active' : '' ?>" id="tab-drug-names-nav" data-bs-toggle="pill" data-bs-target="#tab-drug-names" type="button" role="tab">
+                            <i class="bi bi-capsule me-2"></i>Name of the drugs
+                            <span class="badge-tab-count"><?= count($master_drugs) ?></span>
+                        </button>
+                    </li>
                 </ul>
             </div>
 
             <div class="card-body p-4">
-                <div class="tab-content" id="drugMaintenanceTabContent">
+                <div class="tab-content" id="drugMaintainTabContent">
                     
-                    <!-- TAB 1: ALL DRUGS CONSOLIDATED -->
-                    <div class="tab-pane fade <?= ($active_tab_param === 'all' || empty($active_tab_param)) ? 'show active' : '' ?>" id="tab-all-drugs" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <!-- ============================================================== -->
+                    <!-- TAB 1: ALL DRUG RECORDS                                         -->
+                    <!-- Consolidated list/grid of all drug records                     -->
+                    <!-- Includes "add record" modal/button specific to adding records  -->
+                    <!-- ============================================================== -->
+                    <div class="tab-pane fade <?= ($active_tab_param !== 'drug_names') ? 'show active' : '' ?>" id="tab-all-records" role="tabpanel">
+                        
+                        <!-- Tab 1 Action Strip -->
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 p-3 bg-light rounded-3 border">
                             <div>
-                                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-medical me-1 text-primary"></i>All Drug Formulations Stock Ledger</h6>
-                                <small class="text-muted">Consolidated historical log entries for all drugs in inventory.</small>
+                                <h5 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-journal-medical me-2 text-primary"></i>All Drug Records
+                                </h5>
+                                <small class="text-muted">Consolidated historical and live inventory log entries across all drug formulations.</small>
                             </div>
-                            <span class="badge bg-secondary-subtle text-secondary"><?= count($all_records) ?> Total Ledger Rows</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn text-light fw-bold px-3 py-2 shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addDrugRecordModal">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Drug Record
+                                </button>
+                            </div>
                         </div>
 
+                        <!-- Consolidated Table Grid -->
                         <div class="table-responsive">
-                            <table id="drugTableAll" class="table table-bordered table-striped align-middle row-border drug-datatable" style="width:100%">
+                            <table id="drugTableAll" class="table table-bordered table-striped align-middle row-border" style="width:100%">
                                 <thead class="table-light text-center align-middle">
                                     <tr>
                                         <th>Log Date</th>
@@ -571,7 +815,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                                             data-damaged="<?= $row['doses_damaged'] ?>">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
-                                                        <a href="processors/drug_record_crud.php?action=delete&id=<?= $row['id'] ?>&return_url=<?= urlencode('../drug_maintenance.php?view=maintenance&tab=all') ?>" 
+                                                        <a href="processors/drug_record_crud.php?action=delete&id=<?= $row['id'] ?>&return_url=<?= urlencode('../drug_maintenance.php?view=maintenance&tab=records') ?>" 
                                                            class="btn btn-outline-danger btn-delete-drug">
                                                             <i class="bi bi-trash"></i>
                                                         </a>
@@ -585,129 +829,88 @@ require_once __DIR__ . '/../../../includes/header.php';
                         </div>
                     </div>
 
-                    <!-- TABS FOR EACH SPECIFIC DRUG -->
-                    <?php foreach ($all_drug_types as $dt_id => $drug): ?>
-                        <?php 
-                            $tab_key = 'drug_' . $dt_id;
-                            $is_tab_active = ($active_tab_param == $dt_id);
-                            $drug_recs = $records_by_drug[$dt_id] ?? [];
-                        ?>
-                        <div class="tab-pane fade <?= $is_tab_active ? 'show active' : '' ?>" id="tab-<?= $tab_key ?>" role="tabpanel">
-                            
-                            <!-- Drug Header KPI strip -->
-                            <div class="p-3 bg-light rounded-3 border mb-3">
-                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                    <div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <h5 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($drug['brand_name']) ?></h5>
-                                            <?php if (!empty($drug['chemical_composition']) && $drug['chemical_composition'] !== '—'): ?>
-                                                <span class="badge bg-secondary-subtle text-secondary"><?= htmlspecialchars($drug['chemical_composition']) ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <small class="text-muted">Formulation identifier: #<?= $dt_id ?> | Total Recorded Ledger Entries: <?= count($drug_recs) ?></small>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="text-end">
-                                            <span class="text-muted small d-block">Current Stock Balance</span>
-                                            <span class="h5 fw-bold text-success mb-0"><?= number_format($drug['balance_sum']) ?> Units</span>
-                                        </div>
-                                        <button class="btn btn-sm text-light fw-bold add-drug-for-type-btn" style="background-color: #820100;" data-drug-type-id="<?= $dt_id ?>">
-                                            <i class="bi bi-plus-circle me-1"></i>Add Record
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="row g-2 mt-2 pt-2 border-top text-center small">
-                                    <div class="col-sm-3">
-                                        <span class="text-muted">Opening Stock:</span> <strong><?= number_format($drug['starter_sum']) ?></strong>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <span class="text-muted">Total Receipts:</span> <strong class="text-success">+<?= number_format($drug['received_sum']) ?></strong>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <span class="text-muted">Total Used:</span> <strong class="text-info">-<?= number_format($drug['used_sum']) ?></strong>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <span class="text-muted">Damaged / Wasted:</span> <strong class="text-danger">-<?= number_format($drug['damaged_sum']) ?></strong>
-                                    </div>
-                                </div>
+                    <!-- ============================================================== -->
+                    <!-- TAB 2: NAME OF THE DRUGS                                        -->
+                    <!-- List of drugs (master list available in the system)            -->
+                    <!-- Includes "add model" (modal/button) for adding new drug names  -->
+                    <!-- ============================================================== -->
+                    <div class="tab-pane fade <?= ($active_tab_param === 'drug_names') ? 'show active' : '' ?>" id="tab-drug-names" role="tabpanel">
+                        
+                        <!-- Tab 2 Action Strip -->
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 p-3 bg-light rounded-3 border">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-capsule me-2 text-success"></i>List of Drugs (Master Catalog)
+                                </h5>
+                                <small class="text-muted">Master catalogue of all registered drug names, formulations, chemical compositions, and target animal species.</small>
                             </div>
-
-                            <?php if (empty($drug_recs)): ?>
-                                <div class="text-center py-5 bg-white rounded border">
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px; background: rgba(130, 1, 0, 0.08); color: #820100;">
-                                        <i class="bi bi-capsule fs-2"></i>
-                                    </div>
-                                    <h6 class="fw-bold text-secondary mb-1">No Maintenance Records Found for <?= htmlspecialchars($drug['brand_name']) ?></h6>
-                                    <p class="text-muted small mb-3">No stock ledger entries have been logged for this specific drug yet.</p>
-                                    <button class="btn btn-sm text-light fw-bold add-drug-for-type-btn" style="background-color: #820100;" data-drug-type-id="<?= $dt_id ?>">
-                                        <i class="bi bi-plus-circle me-1"></i>Add First Record for <?= htmlspecialchars($drug['brand_name']) ?>
-                                    </button>
-                                </div>
-                            <?php else: ?>
-                                <div class="table-responsive">
-                                    <table id="drugTable_<?= $dt_id ?>" class="table table-bordered table-striped align-middle row-border drug-datatable" style="width:100%">
-                                        <thead class="table-light text-center align-middle">
-                                            <tr>
-                                                <th>Log Date</th>
-                                                <th>Drug Formulation</th>
-                                                <th>Chemical Composition</th>
-                                                <th>Batch No</th>
-                                                <th>Date of Expiry</th>
-                                                <th>Opening Balance</th>
-                                                <th>Mid-Month Receipts</th>
-                                                <th>Quantity Used</th>
-                                                <th>Wasted / Damaged</th>
-                                                <th class="bg-light-success fw-bold">End Balance</th>
-                                                <th style="width: 100px;">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($drug_recs as $row): 
-                                                $formatted_expiry = (!empty($row['expiry_date']) && $row['expiry_date'] !== 'N/A') ? date('Y-m-d', strtotime($row['expiry_date'])) : 'N/A';
-                                                $brand = !empty($row['brand_name']) ? $row['brand_name'] : $row['vaccine_name'];
-                                                $chem = !empty($row['chemical_composition']) ? $row['chemical_composition'] : '—';
-                                            ?>
-                                                <tr>
-                                                    <td class="text-center font-monospace small"><?= htmlspecialchars($row['log_date']) ?></td>
-                                                    <td class="fw-bold text-dark"><span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1"><?= htmlspecialchars($brand) ?></span></td>
-                                                    <td class="fw-semibold text-secondary small"><i class="bi bi-prescription2 me-1"></i><?= htmlspecialchars($chem) ?></td>
-                                                    <td class="text-center"><span class="badge bg-dark font-monospace"><?= htmlspecialchars($row['batch_number']) ?></span></td>
-                                                    <td class="text-center small fw-semibold text-danger"><?= $formatted_expiry ?></td>
-                                                    <td class="text-center font-monospace"><?= number_format($row['starter_count_month']) ?></td>
-                                                    <td class="text-center font-monospace text-success">+<?= number_format($row['during_month_received']) ?></td>
-                                                    <td class="text-center font-monospace text-info">-<?= number_format($row['used_doses_count']) ?></td>
-                                                    <td class="text-center font-monospace text-danger">-<?= number_format($row['doses_damaged']) ?></td>
-                                                    <td class="text-center font-monospace fw-bold bg-light text-success"><?= number_format($row['balance_end_month']) ?></td>
-                                                    <td class="text-center">
-                                                        <div class="btn-group btn-group-sm">
-                                                            <button type="button" class="btn btn-outline-primary edit-drug-record-btn"
-                                                                data-id="<?= $row['id'] ?>"
-                                                                data-date="<?= $row['log_date'] ?>"
-                                                                data-drug="<?= htmlspecialchars($row['vaccine_name'], ENT_QUOTES) ?>"
-                                                                data-drug-type-id="<?= $row['drug_type_id'] ?>"
-                                                                data-batch="<?= $row['vaccine_batch_id'] ?>"
-                                                                data-expiry="<?= $formatted_expiry ?>"
-                                                                data-starter="<?= $row['starter_count_month'] ?>"
-                                                                data-received="<?= $row['during_month_received'] ?>"
-                                                                data-used="<?= $row['used_doses_count'] ?>"
-                                                                data-damaged="<?= $row['doses_damaged'] ?>">
-                                                                <i class="bi bi-pencil"></i>
-                                                            </button>
-                                                            <a href="processors/drug_record_crud.php?action=delete&id=<?= $row['id'] ?>&return_url=<?= urlencode('../drug_maintenance.php?view=maintenance&tab=' . $dt_id) ?>" 
-                                                               class="btn btn-outline-danger btn-delete-drug">
-                                                                <i class="bi bi-trash"></i>
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
-
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-success fw-bold px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#addDrugTypeModal">
+                                    <i class="bi bi-plus-circle me-1"></i>Add New Drug Name
+                                </button>
+                            </div>
                         </div>
-                    <?php endforeach; ?>
+
+                        <!-- Specific List of Drugs Table -->
+                        <div class="table-responsive">
+                            <table id="masterDrugTypesTable" class="table table-bordered table-striped align-middle row-border" style="width:100%">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 6%;">ID</th>
+                                        <th style="width: 18%;">Brand Name</th>
+                                        <th style="width: 22%;">Chemical Composition</th>
+                                        <th style="width: 20%;">Display Name</th>
+                                        <th style="width: 20%;">Target Animals</th>
+                                        <th style="width: 14%;" class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!empty($master_drugs)): ?>
+                                        <?php foreach ($master_drugs as $row): 
+                                            $brand = !empty($row['brand_name']) ? $row['brand_name'] : $row['vaccine_name'];
+                                            $chem = !empty($row['chemical_composition']) ? $row['chemical_composition'] : '—';
+                                        ?>
+                                            <tr>
+                                                <td class="fw-bold text-secondary">#<?= $row['id'] ?></td>
+                                                <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-bold"><?= htmlspecialchars($brand) ?></span></td>
+                                                <td class="fw-semibold text-dark"><i class="bi bi-prescription2 text-secondary me-1"></i><?= htmlspecialchars($chem) ?></td>
+                                                <td class="text-muted small"><?= htmlspecialchars($row['vaccine_name']) ?></td>
+                                                <td>
+                                                    <?php
+                                                    $animals = array_filter(array_map('trim', explode(',', $row['target_animal'] ?? '')));
+                                                    foreach ($animals as $animal): ?>
+                                                        <span class="badge bg-secondary px-2 py-1 me-1 mb-1">
+                                                            <i class="bi bi-tag me-1"></i><?= htmlspecialchars($animal) ?>
+                                                        </span>
+                                                    <?php endforeach; ?>
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button" class="btn btn-outline-secondary edit-drug-type-btn"
+                                                            data-id="<?= $row['id'] ?>"
+                                                            data-brand="<?= htmlspecialchars($row['brand_name'] ?? '', ENT_QUOTES) ?>"
+                                                            data-chem="<?= htmlspecialchars($row['chemical_composition'] ?? '', ENT_QUOTES) ?>"
+                                                            data-name="<?= htmlspecialchars($row['vaccine_name'] ?? '', ENT_QUOTES) ?>"
+                                                            data-expiry="<?= htmlspecialchars($row['expiry_date'] ?? '', ENT_QUOTES) ?>"
+                                                            data-animal="<?= htmlspecialchars($row['target_animal'] ?? '', ENT_QUOTES) ?>"
+                                                            data-desc="<?= htmlspecialchars($row['description'] ?? '', ENT_QUOTES) ?>">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <a href="processors/drug_type_crud.php?action=delete&id=<?= $row['id'] ?>&return_url=<?= urlencode('../drug_maintenance.php?view=maintenance&tab=drug_names') ?>"
+                                                            class="btn btn-outline-danger btn-delete-drugtype"
+                                                            data-name="<?= htmlspecialchars($row['vaccine_name'], ENT_QUOTES) ?>">
+                                                            <i class="bi bi-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
 
                 </div>
             </div>
@@ -716,8 +919,11 @@ require_once __DIR__ . '/../../../includes/header.php';
         <?php endif; ?>
 
 <?php 
-// Modals for Drug Records
+// Modals for the entire module
+include __DIR__ . '/model/add_vaccine_balance_modal.php'; 
+include __DIR__ . '/model/vaccine_batch_modal.php'; 
 include __DIR__ . '/model/drug_record_modal.php'; 
+include __DIR__ . '/model/drug_type_modal.php'; 
 ?>
 
 <?php
@@ -725,37 +931,95 @@ $pageScripts = '
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        // Initialize DataTables for all table views
-        $(".drug-datatable").each(function() {
-            if (!$.fn.DataTable.isDataTable(this)) {
-                $(this).DataTable({
-                    "order": [[0, "desc"]],
-                    "dom": \'<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>\',
-                    "language": {
-                        "search": "_INPUT_",
-                        "searchPlaceholder": "Search ledger rows..."
+        // Initialize DataTables for Drug Records table
+        if ($("#drugTableAll").length && !$.fn.DataTable.isDataTable("#drugTableAll")) {
+            $("#drugTableAll").DataTable({
+                "order": [[0, "desc"]],
+                "dom": \'<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>\',
+                "language": {
+                    "search": "_INPUT_",
+                    "searchPlaceholder": "Search ledger records..."
+                },
+                "buttons": [
+                    {
+                        extend: "csv",
+                        text: "<i class=\\"bi bi-file-earmark-spreadsheet\\"></i> CSV",
+                        className: "btn btn-sm btn-success me-2 shadow-sm"
                     },
-                    "buttons": [
-                        {
-                            extend: "csv",
-                            text: "<i class=\\"bi bi-file-earmark-spreadsheet\\"></i> CSV",
-                            className: "btn btn-sm btn-success me-2 shadow-sm"
-                        },
-                        {
-                            extend: "pdf",
-                            text: "<i class=\\"bi bi-file-pdf\\"></i> PDF",
-                            className: "btn btn-sm btn-danger me-2 shadow-sm",
-                            title: "Drug Stock Inventory Ledger Balances"
-                        },
-                        {
-                            extend: "print",
-                            text: "<i class=\\"bi bi-printer\\"></i> Print",
-                            className: "btn btn-sm btn-dark shadow-sm"
-                        }
-                    ]
-                });
-            }
-        });
+                    {
+                        extend: "pdf",
+                        text: "<i class=\\"bi bi-file-pdf\\"></i> PDF",
+                        className: "btn btn-sm btn-danger me-2 shadow-sm",
+                        title: "Drug Stock Inventory Ledger Balances"
+                    },
+                    {
+                        extend: "print",
+                        text: "<i class=\\"bi bi-printer\\"></i> Print",
+                        className: "btn btn-sm btn-dark shadow-sm"
+                    }
+                ]
+            });
+        }
+
+        // Initialize DataTables for Master Drug Types table
+        if ($("#masterDrugTypesTable").length && !$.fn.DataTable.isDataTable("#masterDrugTypesTable")) {
+            $("#masterDrugTypesTable").DataTable({
+                "order": [[1, "asc"]],
+                "dom": \'<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>\',
+                "language": {
+                    "search": "_INPUT_",
+                    "searchPlaceholder": "Search drug names / active compounds..."
+                },
+                "buttons": [
+                    {
+                        extend: "csv",
+                        text: "<i class=\\"bi bi-file-earmark-spreadsheet\\"></i> CSV",
+                        className: "btn btn-sm btn-success me-2 shadow-sm"
+                    },
+                    {
+                        extend: "pdf",
+                        text: "<i class=\\"bi bi-file-pdf\\"></i> PDF",
+                        className: "btn btn-sm btn-danger me-2 shadow-sm",
+                        title: "Master List of Drug Classifications"
+                    },
+                    {
+                        extend: "print",
+                        text: "<i class=\\"bi bi-printer\\"></i> Print",
+                        className: "btn btn-sm btn-dark shadow-sm"
+                    }
+                ]
+            });
+        }
+
+        // Initialize DataTables for Batches table
+        if ($("#batchTable").length && !$.fn.DataTable.isDataTable("#batchTable")) {
+            $("#batchTable").DataTable({
+                "order": [[0, "desc"]],
+                "dom": \'<"d-flex justify-content-between align-items-center mb-3"Bf>rt<"d-flex justify-content-between align-items-center mt-3"ip>\',
+                "language": {
+                    "search": "_INPUT_",
+                    "searchPlaceholder": "Search batch codes..."
+                },
+                "buttons": [
+                    {
+                        extend: "csv",
+                        text: "<i class=\\"bi bi-file-earmark-spreadsheet\\"></i> CSV",
+                        className: "btn btn-sm btn-success me-2 shadow-sm"
+                    },
+                    {
+                        extend: "pdf",
+                        text: "<i class=\\"bi bi-file-pdf\\"></i> PDF",
+                        className: "btn btn-sm btn-danger me-2 shadow-sm",
+                        title: "Master List of Vaccine Batches"
+                    },
+                    {
+                        extend: "print",
+                        text: "<i class=\\"bi bi-printer\\"></i> Print",
+                        className: "btn btn-sm btn-dark shadow-sm"
+                    }
+                ]
+            });
+        }
 
         // Initialize Summary Table on Hub View
         if ($("#summaryDrugTable").length && !$.fn.DataTable.isDataTable("#summaryDrugTable")) {
@@ -781,8 +1045,8 @@ $pageScripts = '
             });
         }
 
-        // Adjust DataTables columns when horizontal tabs switch
-        $(\'button[data-bs-toggle="pill"]\').on(\'shown.bs.tab\', function (e) {
+        // Adjust DataTables columns when tabs switch
+        $(\'button[data-bs-toggle="pill"], button[data-bs-toggle="tab"]\').on(\'shown.bs.tab\', function (e) {
             $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
         });
 
@@ -809,7 +1073,58 @@ $pageScripts = '
             window.history.replaceState({}, document.title, window.location.pathname + (urlParams.get(\'view\') ? \'?view=\' + urlParams.get(\'view\') : \'\'));
         }
 
-        // Edit Drug Record Pre-fill
+        // ==============================================================
+        // BATCH MAINTAIN EVENT HANDLERS
+        // ==============================================================
+        $(document).on(\'click\', \'.edit-batch-btn\', function() {
+            $(\'#modalAction\').val(\'update\');
+            $(\'#batchId\').val($(this).data(\'id\'));
+            $(\'#batchNumber\').val($(this).data(\'batch\'));
+            $(\'#is_active\').val($(this).data(\'status\'));
+            $(\'#batchExpiryDate\').val($(this).data(\'expiry\') || \'\');
+            $(\'#remarks\').val($(this).data(\'remarks\'));
+            $(\'#batchReturnUrl\').val(\'../drug_maintenance.php?view=batches\');
+
+            $(\'#modalTitle\').html(\'<i class="bi bi-pencil-square me-2 text-warning"></i>Modify Batch Details\');
+            $(\'#submitBtn\').removeClass(\'btn-success\').addClass(\'btn-warning\').text(\'Save Changes\');
+            $(\'#addVaccineBatchModal\').modal(\'show\');
+        });
+
+        $(\'#addVaccineBatchModal\').on(\'hidden.bs.modal\', function() {
+            $(\'#modalAction\').val(\'create\');
+            $(\'#batchId\').val(\'\');
+            $(\'#batchExpiryDate\').val(\'\');
+            $(\'#batchReturnUrl\').val(\'../drug_maintenance.php?view=batches\');
+            $(\'#batchForm\')[0].reset();
+
+            $(\'#modalTitle\').html(\'<i class="bi bi-box-seam me-2"></i>Register New Vaccine Stock Batch\');
+            $(\'#submitBtn\').removeClass(\'btn-warning\').addClass(\'btn-success\').text(\'Save Batch\');
+        });
+
+        $(document).on(\'click\', \'.btn-delete-batch\', function(e) {
+            e.preventDefault();
+            var deleteUrl = $(this).attr(\'href\');
+            var batchNum = $(this).data(\'batch\') || \'this batch\';
+
+            Swal.fire({
+                icon: \'warning\',
+                title: \'Delete Vaccine Batch?\',
+                html: \'You are about to delete batch "<strong>\' + batchNum + \'</strong>".<br>This action cannot be undone.\',
+                showCancelButton: true,
+                confirmButtonColor: \'#d33\',
+                cancelButtonColor: \'#6c757d\',
+                confirmButtonText: \'Yes, Delete\',
+                cancelButtonText: \'Cancel\'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+
+        // ==============================================================
+        // DRUG RECORD EVENT HANDLERS (TAB 1)
+        // ==============================================================
         $(document).on(\'click\', \'.edit-drug-record-btn\', function() {
             $(\'#drugAction\').val(\'update\');
             $(\'#drugId\').val($(this).data(\'id\'));
@@ -824,13 +1139,8 @@ $pageScripts = '
             $(\'#qtyDamaged\').val($(this).data(\'damaged\'));
             
             $(\'#drugExpiryDisplay\').text($(this).data(\'expiry\'));
-            
-            // Set return_url to maintain active tab
-            var activeTabId = $(\'#drugMaintenanceTabs .nav-link.active\').attr(\'id\') || \'\';
-            var activeDrugId = activeTabId.replace(\'tab-drug_\', \'\').replace(\'-btn\', \'\');
-            $(\'#drugReturnUrl\').val(\'../drug_maintenance.php?view=maintenance&tab=\' + (activeDrugId || \'all\'));
+            $(\'#drugReturnUrl\').val(\'../drug_maintenance.php?view=maintenance&tab=records\');
 
-            // Trigger calculation
             $(\'.calc-trigger\').first().trigger(\'input\');
             
             $(\'#drugRecordModalTitle\').html(\'<i class="bi bi-pencil-square me-2 text-warning"></i>Modify Drug Stock Entry\');
@@ -838,31 +1148,17 @@ $pageScripts = '
             $(\'#addDrugRecordModal\').modal(\'show\');
         });
 
-        // Quick Add Record for specific drug button
-        $(document).on(\'click\', \'.add-drug-for-type-btn\', function() {
-            var drugTypeId = $(this).data(\'drug-type-id\');
-            $(\'#drugRecordForm\')[0].reset();
-            $(\'#drugAction\').val(\'create\');
-            $(\'#drugId\').val(\'\');
-            $(\'#drugType\').val(drugTypeId).trigger(\'change\');
-            $(\'#drugReturnUrl\').val(\'../drug_maintenance.php?view=maintenance&tab=\' + drugTypeId);
-            $(\'#drugRecordModalTitle\').html(\'<i class="bi bi-capsule-compartment me-2"></i>Drug Stock Ledger Entry\');
-            $(\'#immSubmitBtn\').prop(\'disabled\', false).text(\'Commit Ledger Entry\');
-            $(\'#addDrugRecordModal\').modal(\'show\');
-        });
-
-        // Reset Drug Record Modal upon close
         $(\'#addDrugRecordModal\').on(\'hidden.bs.modal\', function() {
             $(\'#drugRecordForm\')[0].reset();
             $(\'#drugAction\').val(\'create\');
             $(\'#drugId\').val(\'\');
+            $(\'#drugReturnUrl\').val(\'../drug_maintenance.php?view=maintenance&tab=records\');
             $(\'#drugExpiryDisplay\').text(\'None selected\');
             $(\'#drugLiveBalanceDisplay\').text(\'0 Units\').removeClass(\'text-danger text-success\').addClass(\'text-dark\');
             $(\'#drugRecordModalTitle\').html(\'<i class="bi bi-capsule-compartment me-2"></i>Drug Stock Ledger Entry\');
             $(\'#immSubmitBtn\').prop(\'disabled\', false).text(\'Commit Ledger Entry\');
         });
 
-        // Delete Drug Record Confirmation
         $(document).on(\'click\', \'.btn-delete-drug\', function(e) {
             e.preventDefault();
             var deleteUrl = $(this).attr(\'href\');
@@ -909,6 +1205,120 @@ $pageScripts = '
                 display.removeClass(\'text-danger\').addClass(\'text-success fw-bold\');
                 $(\'#immSubmitBtn\').prop(\'disabled\', false).text($(\'#drugAction\').val() === \'update\' ? \'Save Changes\' : \'Commit Ledger Entry\');
             }
+        });
+
+        // ==============================================================
+        // DRUG TYPE / MASTER NAME EVENT HANDLERS (TAB 2)
+        // ==============================================================
+        const selectedAnimals = new Set();
+
+        function updateAnimalHidden() {
+            const arr = [...selectedAnimals];
+            $(\'#targetAnimalHidden\').val(arr.join(\',\'));
+
+            const select = $(\'#targetAnimalArray\');
+            select.empty();
+            arr.forEach(value => {
+                select.append($(\'<option>\').val(value).text(value).prop(\'selected\', true));
+            });
+
+            if (arr.length === 0) {
+                $(\'#animalSelectedPills\').text(\'No animals selected.\');
+            } else {
+                $(\'#animalSelectedPills\').html(
+                    arr.map(a => `<span class="badge bg-success me-1">${a}</span>`).join(\'\')
+                );
+            }
+        }
+
+        function resetAnimalSelection() {
+            selectedAnimals.clear();
+            $(\'.animal-toggle-btn\').removeClass(\'active\').find(\'.check-icon\').hide();
+            $(\'#targetAnimalArray\').empty();
+            updateAnimalHidden();
+        }
+
+        $(document).on(\'click\', \'.animal-toggle-btn\', function() {
+            const value = $(this).data(\'value\');
+            if (selectedAnimals.has(value)) {
+                selectedAnimals.delete(value);
+                $(this).removeClass(\'active\');
+                $(this).find(\'.check-icon\').hide();
+            } else {
+                selectedAnimals.add(value);
+                $(this).addClass(\'active\');
+                $(this).find(\'.check-icon\').show();
+            }
+            updateAnimalHidden();
+        });
+
+        $(document).on(\'click\', \'.edit-drug-type-btn\', function() {
+            $(\'#drugTypeForm\')[0].reset();
+            $(\'#modalAction\').val(\'update\');
+            $(\'#typeId\').val($(this).data(\'id\'));
+            $(\'#brandName\').val($(this).data(\'brand\'));
+            $(\'#chemComp\').val($(this).data(\'chem\'));
+            $(\'#drugName\').val($(this).data(\'name\'));
+            $(\'#expiry_date\').val($(this).data(\'expiry\'));
+            $(\'#description\').val($(this).data(\'desc\'));
+            $(\'#drugTypeReturnUrl\').val(\'../drug_maintenance.php?view=maintenance&tab=drug_names\');
+
+            resetAnimalSelection();
+            const animalData = $(this).data(\'animal\') || \'\';
+            if (animalData.trim() !== \'\') {
+                animalData.split(\',\').map(s => s.trim()).filter(Boolean).forEach(value => {
+                    selectedAnimals.add(value);
+                    const btn = $(`.animal-toggle-btn[data-value="${value}"]`);
+                    btn.addClass(\'active\');
+                    btn.find(\'.check-icon\').show();
+                });
+                updateAnimalHidden();
+            }
+
+            $(\'#drugModalTitle\').html(\'<i class="bi bi-pencil-square me-2 text-warning"></i>Modify Drug Type Configuration\');
+            $(\'#submitBtn\').removeClass(\'btn-success\').addClass(\'btn-warning\').text(\'Save Modifications\');
+            $(\'#addDrugTypeModal\').modal(\'show\');
+        });
+
+        $(\'#addDrugTypeModal\').on(\'hidden.bs.modal\', function() {
+            $(\'#modalAction\').val(\'create\');
+            $(\'#typeId\').val(\'\');
+            $(\'#brandName\').val(\'\');
+            $(\'#chemComp\').val(\'\');
+            $(\'#drugName\').val(\'\');
+            $(\'#expiry_date\').val(\'\');
+            $(\'#drugTypeReturnUrl\').val(\'../drug_maintenance.php?view=maintenance&tab=drug_names\');
+            $(\'#drugTypeForm\')[0].reset();
+            resetAnimalSelection();
+
+            $(\'#drugModalTitle\').html(\'<i class="bi bi-patch-plus me-2 text-success"></i>Add New Drug Classification Type\');
+            $(\'#submitBtn\').removeClass(\'btn-warning\').addClass(\'btn-success\').text(\'Save Configuration\');
+        });
+
+        $(\'#drugTypeForm\').on(\'submit\', function() {
+            updateAnimalHidden();
+            return true;
+        });
+
+        $(document).on(\'click\', \'.btn-delete-drugtype\', function(e) {
+            e.preventDefault();
+            var deleteUrl = $(this).attr(\'href\');
+            var name = $(this).data(\'name\') || \'this drug type\';
+
+            Swal.fire({
+                icon: \'warning\',
+                title: \'Delete Drug Type?\',
+                html: \'You are about to delete drug configuration for "<strong>\' + name + \'</strong>".<br>This action cannot be undone.\',
+                showCancelButton: true,
+                confirmButtonColor: \'#d33\',
+                cancelButtonColor: \'#6c757d\',
+                confirmButtonText: \'Yes, Delete\',
+                cancelButtonText: \'Cancel\'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    window.location.href = deleteUrl;
+                }
+            });
         });
     });
 </script>

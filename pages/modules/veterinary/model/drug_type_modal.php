@@ -18,6 +18,7 @@ $allowed_animals = ['Cattle', 'Dairy Cows', 'Buffalo', 'Goats', 'Poultry', 'othe
                     
                     <input type="hidden" name="action" id="modalAction" value="create">
                     <input type="hidden" name="id" id="typeId" value="">
+                    <input type="hidden" name="return_url" id="drugTypeReturnUrl" value="">
                     
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">

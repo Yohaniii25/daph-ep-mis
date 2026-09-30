@@ -14,6 +14,7 @@ global $mysqli;
 
 $allowed_set_options = ['Cattle', 'Dairy Cows', 'Buffalo', 'Goats', 'Poultry', 'other'];
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
+$return_url = $_POST['return_url'] ?? $_GET['return_url'] ?? '../drug_types.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
@@ -51,7 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $insert_stmt->bind_param("ssssss", $vaccine_name, $brand_name, $chemical_composition, $target_animal_string, $description, $expiry_date);
         
         if ($insert_stmt->execute()) {
-            header("Location: ../drug_types.php?status=success&msg=Drug+Type+Registered+Successfully");
+            $delim = (strpos($return_url, '?') !== false) ? '&' : '?';
+            header("Location: {$return_url}{$delim}status=success&msg=Drug+Type+Registered+Successfully");
             exit();
         } else {
             die("Database Write Fault: Error compiling row logging parameter updates: " . $mysqli->error);
@@ -62,7 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_stmt->bind_param("ssssssi", $vaccine_name, $brand_name, $chemical_composition, $target_animal_string, $description, $expiry_date, $id);
         
         if ($update_stmt->execute()) {
-            header("Location: ../drug_types.php?status=success&msg=Drug+Configuration+Row+Modified");
+            $delim = (strpos($return_url, '?') !== false) ? '&' : '?';
+            header("Location: {$return_url}{$delim}status=success&msg=Drug+Configuration+Row+Modified");
             exit();
         } else {
             die("Database Update Fault: Error writing target modification configurations to row data layout: " . $mysqli->error);
@@ -81,12 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $delete_stmt->bind_param("i", $id);
     
     if ($delete_stmt->execute()) {
-        header("Location: ../drug_types.php?status=success&msg=Drug+Registration+Row+Purged");
+        $delim = (strpos($return_url, '?') !== false) ? '&' : '?';
+        header("Location: {$return_url}{$delim}status=success&msg=Drug+Registration+Row+Purged");
         exit();
     } else {
         die("Database Structural Execution Error: Could not clear entry configuration index target line row: " . $mysqli->error);
     }
 }
 
-header("Location: ../drug_types.php");
+header("Location: {$return_url}");
 exit();

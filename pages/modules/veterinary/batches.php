@@ -33,7 +33,7 @@ if ($total_batches_res) {
 
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
-                <h3 class="mb-1 fw-bold" style="color: #370709;">Batch Management Register</h3>
+                <h3 class="mb-1 fw-bold" style="color: #370709;">Batch Maintain - List of Batch</h3>
                 <p class="text-muted small mb-0">Centralized tracking of vaccine & drug inventory batch codes, active status, and expiry schedules.</p>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -41,7 +41,7 @@ if ($total_batches_res) {
                     <i class="bi bi-plus-circle me-1"></i>Add Batch
                 </button>
                 <a href="drug_maintenance.php" class="btn btn-secondary shadow-sm text-nowrap">
-                    <i class="bi bi-arrow-left me-1"></i>Back to Drug Maintenance
+                    <i class="bi bi-arrow-left me-1"></i>Back to Main Menu
                 </a>
             </div>
         </div>
@@ -87,7 +87,7 @@ if ($total_batches_res) {
 
         <div class="card border-0 shadow-sm rounded-3 mb-5">
             <div class="card-header bg-white py-3 border-0">
-                <h6 class="m-0 fw-bold text-dark"><i class="bi bi-bookmark-star me-2 text-success"></i>Registered Vaccine Stock Batches</h6>
+                <h6 class="m-0 fw-bold text-dark"><i class="bi bi-list-check me-2 text-warning"></i>List of Batch</h6>
             </div>
             <div class="card-body">
                 <table id="batchTable" class="table table-striped align-middle row-border small" style="width:100%">
