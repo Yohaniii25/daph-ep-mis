@@ -2637,6 +2637,18 @@ window.toggleDaphRegNumber = function(isRegistered) {
     }
 };
 
+// ---- Section 3.5: DAPH Feed Manufacturer Registration Number Toggle ----
+window.toggleDaphFeedMfrRegNumber = function(isRegistered) {
+    const grp = document.getElementById('daph_feed_mfr_reg_no_group');
+    if (!grp) return;
+    grp.style.display = isRegistered ? '' : 'none';
+    const inp = document.getElementById('poultry_daph_feed_mfr_reg_no');
+    if (inp) {
+        inp.required = isRegistered;
+        if (isRegistered) inp.focus();
+    }
+};
+
 window.resetMasterForm = function() {
     const form = document.getElementById('farmRenewalMasterForm');
     if (form) form.reset();
@@ -2699,12 +2711,52 @@ window.togglePoultryLicenseField = function(type) {
 };
 
 // ---- Poultry Farm Type Change ----
+// Maps each Farm Type option value to its CSS class used in Section 3
+window._farmTypeClassMap = {
+    'Broiler':                        'farm-type-broiler',
+    'Layer':                          'farm-type-layer',
+    'Local / Free range chickens':    'farm-type-local',
+    'Others':                         'farm-type-others'
+};
+
 window.onPoultryFarmTypeChange = function(val) {
+    // 1. Handle the 'Others' text field in Section 1
     const group = document.getElementById('poultry_farm_type_others_group');
-    if (!group) return;
-    group.style.display = (val === 'Others') ? '' : 'none';
-    const inp = document.getElementById('poultry_farm_type_other');
-    if (inp) inp.required = (val === 'Others');
+    if (group) {
+        group.style.display = (val === 'Others') ? '' : 'none';
+        const inp = document.getElementById('poultry_farm_type_other');
+        if (inp) inp.required = (val === 'Others');
+    }
+
+    // 2. Update Section 3 conditional layout
+    const activeClass = window._farmTypeClassMap[val] || null;
+
+    // Show/hide the "no type selected" notice vs the active banner
+    const noticeEl   = document.getElementById('sec3_no_type_notice');
+    const bannerEl   = document.getElementById('sec3_type_active_banner');
+    const labelEl    = document.getElementById('sec3_active_type_label');
+
+    if (noticeEl) noticeEl.style.display   = activeClass ? 'none' : '';
+    if (bannerEl) bannerEl.style.display   = activeClass ? ''     : 'none';
+    if (labelEl  && val) labelEl.textContent = val;
+
+    // Hide ALL conditional rows and sections first
+    document.querySelectorAll('.farm-type-row').forEach(function(el) {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.farm-type-section').forEach(function(el) {
+        el.style.display = 'none';
+    });
+
+    if (!activeClass) return;  // Nothing selected — all hidden
+
+    // Show rows belonging to this farm type
+    // Note: some rows carry two classes (e.g. farm-type-local + farm-type-others)
+    document.querySelectorAll('.' + activeClass).forEach(function(el) {
+        if (el.classList.contains('farm-type-row') || el.classList.contains('farm-type-section')) {
+            el.style.display = '';
+        }
+    });
 };
 
 // ---- Dynamic Flock Age Group Rows ----
@@ -3311,7 +3363,21 @@ window.loadRecordIntoForm = function(recordId) {
     setVal('poultry_province_district', pData.province_district);
     setVal('poultry_present_land_usage', pData.present_land_usage);
 
-    // Section 2: Flock Information
+    // Section 1 extras: License toggles
+    if (typeof window.togglePoultryLicenseField === 'function') {
+        window.togglePoultryLicenseField('env');
+        window.togglePoultryLicenseField('business');
+    }
+
+    // Restore Poultry Farm Type and trigger Section 3 conditional rendering
+    const pFarmTypeSel = document.getElementById('poultry_poultry_farm_type');
+    if (pFarmTypeSel && pData.poultry_farm_type) {
+        pFarmTypeSel.value = pData.poultry_farm_type;
+        if (typeof window.onPoultryFarmTypeChange === 'function') {
+            window.onPoultryFarmTypeChange(pData.poultry_farm_type);
+        }
+    }
+
     const popData = pData.pop || {};
     ['layers', 'broilers', 'breeder'].forEach(r => {
         ['under_1000', '1000_5000', '5000_10000', 'over_10000'].forEach(c => {
@@ -3329,59 +3395,75 @@ window.loadRecordIntoForm = function(recordId) {
     const otherShedSpec = document.querySelector('input[name="poultry[shed][other_specify]"]');
     if (otherShedSpec) otherShedSpec.value = shedData.other_specify || '';
 
-    // Section 3: Farm Input Supply
-    const chkSrc = pData.chick_source || {};
-    ['layers', 'broilers', 'breeder'].forEach(r => {
-        ['grand_parent', 'parent_stock', 'commercial'].forEach(col => {
-            const chk = document.querySelector(`input[name="poultry[chick_source][${r}][${col}]"]`);
-            if (chk) chk.checked = !!(chkSrc[r] && chkSrc[r][col]);
+    // Section 3: Farm Input Supply (new structure)
+    // 3.1 Purchase of Animals
+    const purchData = pData.purchase_animals || {};
+    ['broiler', 'layer', 'local_free', 'others'].forEach(function(r) {
+        ['direct_hatchery', 'through_agent', 'buyback', 'own_hatchery'].forEach(function(col) {
+            var chk = document.querySelector('input[name="poultry[purchase_animals][' + r + '][' + col + ']"]');
+            if (chk) chk.checked = !!(purchData[r] && purchData[r][col]);
         });
-        const privIn = document.querySelector(`input[name="poultry[chick_source][${r}][private_specify]"]`);
-        if (privIn) privIn.value = (chkSrc[r] && chkSrc[r].private_specify) || '';
-        const govtIn = document.querySelector(`input[name="poultry[chick_source][${r}][govt_specify]"]`);
-        if (govtIn) govtIn.value = (chkSrc[r] && chkSrc[r].govt_specify) || '';
     });
 
-    const feedSup = pData.feed_supply || {};
-    const ownMixChk = document.getElementById('feed_own_mix');
-    if (ownMixChk) ownMixChk.checked = !!feedSup.own_mix;
-    const commChk = document.getElementById('feed_commercial');
-    if (commChk) commChk.checked = !!feedSup.commercial;
-    const commCo = document.querySelector('input[name="poultry[feed_supply][commercial_company]"]');
-    if (commCo) commCo.value = feedSup.commercial_company || '';
-    const bothChk = document.getElementById('feed_both');
-    if (bothChk) bothChk.checked = !!feedSup.both;
-    const otherFeedChk = document.getElementById('feed_other_check');
-    if (otherFeedChk) otherFeedChk.checked = !!feedSup.other_check;
-    const otherFeedSpec = document.querySelector('input[name="poultry[feed_supply][other_specify]"]');
-    if (otherFeedSpec) otherFeedSpec.value = feedSup.other_specify || '';
-
-    const inpSrc = pData.input_source || {};
-    ['chicks', 'feed', 'drugs_vaccines', 'equipments', 'other'].forEach(r => {
-        ['company', 'govt_vet', 'private_vet'].forEach(col => {
-            const chk = document.querySelector(`input[name="poultry[input_source][${r}][${col}]"]`);
-            if (chk) chk.checked = !!(inpSrc[r] && inpSrc[r][col]);
-        });
-        const specIn = document.querySelector(`input[name="poultry[input_source][${r}][other_specify]"]`);
-        if (specIn) specIn.value = (inpSrc[r] && inpSrc[r].other_specify) || '';
+    // 3.2 Feed Supply Types (checkboxes)
+    var feedTypes = pData.feed_supply_types || {};
+    var allFeedKeys = [
+        'broiler_booster','broiler_starter','broiler_grower','broiler_finisher','broiler_withdrawal',
+        'layer_booster','layer_starter','layer_grower','layer_layer',
+        'local_commercial','local_supplements','local_scavenging'
+    ];
+    allFeedKeys.forEach(function(fk) {
+        var el = document.getElementById('fs_' + fk);
+        if (el) el.checked = !!(feedTypes[fk]);
     });
 
-    const feedMfg = pData.feed_mfg || {};
-    ['starter_layer', 'starter_broiler', 'starter_breeder', 'grower_layer', 'grower_breeder', 'finisher_broiler', 'layer_layer', 'layer_breeder', 'other'].forEach(fc => {
-        const prodIn = document.querySelector(`input[name="poultry[feed_mfg][${fc}][monthly_prod]"]`);
+    // 3.3 Method of Feed Supply
+    var methodData = pData.feed_method || {};
+    var methodKeys = [
+        'method_broiler_booster','method_broiler_starter','method_broiler_grower',
+        'method_broiler_finisher','method_broiler_withdrawal',
+        'method_layer_booster','method_layer_starter','method_layer_grower','method_layer_layer'
+    ];
+    methodKeys.forEach(function(mk) {
+        ['commercial','self_prep','buyback'].forEach(function(col) {
+            var chk = document.querySelector('input[name="poultry[feed_method][' + mk + '][' + col + ']"]');
+            if (chk) chk.checked = !!(methodData[mk] && methodData[mk][col]);
+        });
+    });
+
+    // 3.4 Feed Manufacturing Quantities
+    var feedMfg = pData.feed_mfg || {};
+    var mfgKeys = [
+        'broiler_booster','broiler_starter','broiler_grower','broiler_finisher','broiler_withdrawal',
+        'layer_booster','layer_starter','layer_grower','layer_layer',
+        'local_commercial','local_supplements','local_scavenging'
+    ];
+    mfgKeys.forEach(function(fc) {
+        var prodIn = document.querySelector('input[name="poultry[feed_mfg][' + fc + '][monthly_prod]"]');
         if (prodIn) prodIn.value = (feedMfg[fc] && feedMfg[fc].monthly_prod !== undefined) ? feedMfg[fc].monthly_prod : '';
-        const unitSel = document.querySelector(`select[name="poultry[feed_mfg][${fc}][unit]"]`);
+        var unitSel = document.querySelector('select[name="poultry[feed_mfg][' + fc + '][unit]"]');
         if (unitSel && feedMfg[fc] && feedMfg[fc].unit) unitSel.value = feedMfg[fc].unit;
     });
-    const mfgSpec = document.querySelector('input[name="poultry[feed_mfg][other_specify]"]');
-    if (mfgSpec) mfgSpec.value = feedMfg.other_specify || '';
 
-    const daphReg = pData.daph_registered === 'Yes';
-    const rYes = document.getElementById('daph_reg_yes');
-    const rNo = document.getElementById('daph_reg_no');
+    // 3.5 DAPH Registration (Feed Manufacturer)
+    var daphFeedReg = pData.daph_feed_mfr_registered === 'Yes';
+    var dYes = document.getElementById('daph_feed_mfr_yes');
+    var dNo  = document.getElementById('daph_feed_mfr_no');
+    if (dYes) dYes.checked = daphFeedReg;
+    if (dNo)  dNo.checked  = !daphFeedReg;
+    setVal('poultry_daph_feed_mfr_reg_no', pData.daph_feed_mfr_reg_no);
+    if (typeof window.toggleDaphFeedMfrRegNumber === 'function') {
+        window.toggleDaphFeedMfrRegNumber(daphFeedReg);
+    }
+
+    // Also restore the old farm DAPH registered field (still exists)
+    var daphReg = pData.daph_registered === 'Yes';
+    var rYes = document.getElementById('daph_reg_yes');
+    var rNo  = document.getElementById('daph_reg_no');
     if (rYes) rYes.checked = daphReg;
-    if (rNo) rNo.checked = !daphReg;
+    if (rNo)  rNo.checked  = !daphReg;
     setVal('poultry_daph_reg_no', pData.daph_reg_no);
+
 
     // Section 4: Farm Production
     const pProd = pData.prod || {};

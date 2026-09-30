@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . '/../../../config/db_connect.php';
 
@@ -2076,6 +2076,7 @@ require_once '../../../includes/header.php';
                             </div>
 
                             <!-- ============================================================== -->
+                            <!-- ============================================================== -->
                             <!-- SECTION 3: FARM INPUT SUPPLY                                   -->
                             <!-- ============================================================== -->
                             <div class="category-pane" id="pane-p-sec3" style="display: none;">
@@ -2083,9 +2084,9 @@ require_once '../../../includes/header.php';
                                     <div>
                                         <span class="category-badge-step mb-1" style="background-color: #fef3c7; color: #b45309;">Section 3 of 5</span>
                                         <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-truck text-warning me-2"></i>3. Supply Information
+                                            <i class="bi bi-truck text-warning me-2"></i>3. Farm Input Supply
                                         </h4>
-                                        <p class="text-muted small mb-0">Day-old chicks supply origins and commercial feed supplier / feed mill registration.</p>
+                                        <p class="text-muted small mb-0">Animal purchase channels, feed supply types, method of feed supply, manufacturing quantities, and DAPH feed manufacturer registration.</p>
                                     </div>
                                     <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
                                         <i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
@@ -2094,244 +2095,293 @@ require_once '../../../includes/header.php';
 
                                 <div class="p-4 p-md-4">
 
-                                <!-- 3.1 Chicks source (Checkbox/Input Grid) -->
-                                                <div class="mb-4">
-                                                    <h6 class="fw-bold text-dark mb-2">
-                                                        <i class="bi bi-arrow-repeat me-1 text-primary"></i>3.1 Chicks Source (Checkbox/Input Grid)
-                                                    </h6>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-bordered align-middle mb-0">
-                                                            <thead class="table-light text-center small">
-                                                                <tr>
-                                                                    <th class="text-start" style="width: 18%;">Type of Bird</th>
-                                                                    <th style="width: 16%;">Grand Parent Farm / Hatchery</th>
-                                                                    <th style="width: 16%;">Parent Stock Farm / Hatchery</th>
-                                                                    <th style="width: 14%;">Commercial Farm</th>
-                                                                    <th style="width: 18%;">Private Farm/Hatchery<br><small class="text-muted">(Specify)</small></th>
-                                                                    <th style="width: 18%;">Govt. Farm/Hatchery<br><small class="text-muted">(Specify)</small></th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <?php
-                                                                $chick_rows = [
-                                                                    'layers' => 'Layers',
-                                                                    'broilers' => 'Broilers',
-                                                                    'breeder' => 'Breeder'
-                                                                ];
-                                                                foreach ($chick_rows as $ck_key => $ck_label):
-                                                                    $src_c = $poultry_rec['chick_source'][$ck_key] ?? [];
-                                                                ?>
-                                                                <tr>
-                                                                    <td class="fw-semibold bg-light-subtle"><?= $ck_label ?></td>
-                                                                    <td class="text-center">
-                                                                        <div class="form-check d-flex justify-content-center m-0">
-                                                                            <input class="form-check-input" type="checkbox" name="poultry[chick_source][<?= $ck_key ?>][grand_parent]" value="1" <?= !empty($src_c['grand_parent']) ? 'checked' : '' ?>>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td class="text-center">
-                                                                        <div class="form-check d-flex justify-content-center m-0">
-                                                                            <input class="form-check-input" type="checkbox" name="poultry[chick_source][<?= $ck_key ?>][parent_stock]" value="1" <?= !empty($src_c['parent_stock']) ? 'checked' : '' ?>>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td class="text-center">
-                                                                        <div class="form-check d-flex justify-content-center m-0">
-                                                                            <input class="form-check-input" type="checkbox" name="poultry[chick_source][<?= $ck_key ?>][commercial]" value="1" <?= !empty($src_c['commercial']) ? 'checked' : '' ?>>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="text" name="poultry[chick_source][<?= $ck_key ?>][private_specify]" class="form-control form-control-sm" placeholder="Private source..." value="<?= htmlspecialchars($src_c['private_specify'] ?? '') ?>">
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="text" name="poultry[chick_source][<?= $ck_key ?>][govt_specify]" class="form-control form-control-sm" placeholder="Govt source..." value="<?= htmlspecialchars($src_c['govt_specify'] ?? '') ?>">
-                                                                    </td>
-                                                                </tr>
-                                                                <?php endforeach; ?>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 3.2 Feed Supply (Checkboxes/Inputs) -->
-                                                <div class="mb-4 p-3 bg-light-subtle rounded-3 border">
-                                                    <h6 class="fw-bold text-dark mb-2">
-                                                        <i class="bi bi-cart3 me-1 text-primary"></i>3.2 Feed Supply
-                                                    </h6>
-                                                    <div class="row g-3 align-items-center">
-                                                        <div class="col-md-3">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="poultry[feed_supply][own_mix]" id="feed_own_mix" value="1" <?= !empty($poultry_rec['feed_supply']['own_mix']) ? 'checked' : '' ?>>
-                                                                <label class="form-check-label small fw-semibold" for="feed_own_mix">Own Feed Mixture</label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-5">
-                                                            <div class="d-flex align-items-center gap-2">
-                                                                <div class="form-check text-nowrap">
-                                                                    <input class="form-check-input" type="checkbox" name="poultry[feed_supply][commercial]" id="feed_commercial" value="1" <?= !empty($poultry_rec['feed_supply']['commercial']) ? 'checked' : '' ?>>
-                                                                    <label class="form-check-label small fw-semibold" for="feed_commercial">Commercial Feed</label>
-                                                                </div>
-                                                                <input type="text" name="poultry[feed_supply][commercial_company]" class="form-control form-control-sm" placeholder="Company Name (e.g. Prima, CIC, Bairaha)" value="<?= htmlspecialchars($poultry_rec['feed_supply']['commercial_company'] ?? '') ?>">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="poultry[feed_supply][both]" id="feed_both" value="1" <?= !empty($poultry_rec['feed_supply']['both']) ? 'checked' : '' ?>>
-                                                                <label class="form-check-label small fw-semibold" for="feed_both">Both (Own & Commercial)</label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-12 mt-2">
-                                                            <div class="d-flex align-items-center gap-2">
-                                                                <div class="form-check text-nowrap">
-                                                                    <input class="form-check-input" type="checkbox" name="poultry[feed_supply][other_check]" id="feed_other_check" value="1" <?= !empty($poultry_rec['feed_supply']['other_check']) ? 'checked' : '' ?>>
-                                                                    <label class="form-check-label small fw-semibold" for="feed_other_check">Other</label>
-                                                                </div>
-                                                                <input type="text" name="poultry[feed_supply][other_specify]" class="form-control form-control-sm" placeholder="Specify other feed supply source..." value="<?= htmlspecialchars($poultry_rec['feed_supply']['other_specify'] ?? '') ?>">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 3.3 Source of Farm Inputs (Checkbox Grid) -->
-                                                <div class="mb-4">
-                                                    <h6 class="fw-bold text-dark mb-2">
-                                                        <i class="bi bi-building me-1 text-primary"></i>3.3 Source of Farm Inputs (Checkbox Grid)
-                                                    </h6>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-bordered align-middle mb-0 text-center">
-                                                            <thead class="table-light small">
-                                                                <tr>
-                                                                    <th class="text-start" style="width: 25%;">Input Category</th>
-                                                                    <th style="width: 20%;">Company</th>
-                                                                    <th style="width: 20%;">Govt. Vet. Office</th>
-                                                                    <th style="width: 20%;">Private Vet</th>
-                                                                    <th style="width: 25%;">Other (Specify)</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <?php
-                                                                $input_src_rows = [
-                                                                    'chicks' => 'Chicks',
-                                                                    'feed' => 'Feed',
-                                                                    'drugs_vaccines' => 'Drugs & Vaccines',
-                                                                    'equipments' => 'Equipments',
-                                                                    'other' => 'Other'
-                                                                ];
-                                                                foreach ($input_src_rows as $is_key => $is_label):
-                                                                    $row_is = $poultry_rec['input_source'][$is_key] ?? [];
-                                                                ?>
-                                                                <tr>
-                                                                    <td class="text-start fw-semibold bg-light-subtle"><?= $is_label ?></td>
-                                                                    <td>
-                                                                        <div class="form-check d-flex justify-content-center m-0">
-                                                                            <input class="form-check-input" type="checkbox" name="poultry[input_source][<?= $is_key ?>][company]" value="1" <?= !empty($row_is['company']) ? 'checked' : '' ?>>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="form-check d-flex justify-content-center m-0">
-                                                                            <input class="form-check-input" type="checkbox" name="poultry[input_source][<?= $is_key ?>][govt_vet]" value="1" <?= !empty($row_is['govt_vet']) ? 'checked' : '' ?>>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="form-check d-flex justify-content-center m-0">
-                                                                            <input class="form-check-input" type="checkbox" name="poultry[input_source][<?= $is_key ?>][private_vet]" value="1" <?= !empty($row_is['private_vet']) ? 'checked' : '' ?>>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="text" name="poultry[input_source][<?= $is_key ?>][other_specify]" class="form-control form-control-sm text-start" placeholder="Specify..." value="<?= htmlspecialchars($row_is['other_specify'] ?? '') ?>">
-                                                                    </td>
-                                                                </tr>
-                                                                <?php endforeach; ?>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 3.4 Feed manufacturing on the farm (Input Grid) -->
-                                                <div class="mb-4">
-                                                    <h6 class="fw-bold text-dark mb-2">
-                                                        <i class="bi bi-gear-wide-connected me-1 text-primary"></i>3.4 Feed Manufacturing on the Farm (Input Grid)
-                                                    </h6>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-bordered align-middle mb-0">
-                                                            <thead class="table-light text-center small">
-                                                                <tr>
-                                                                    <th class="text-start" style="width: 44%;">Feed Category</th>
-                                                                    <th style="width: 32%;">Monthly Production</th>
-                                                                    <th style="width: 24%;">Unit</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <?php
-                                                                $feed_cats = [
-                                                                    'starter_layer' => 'Starter (Layer)',
-                                                                    'starter_broiler' => 'Starter (Broiler)',
-                                                                    'starter_breeder' => 'Starter (Breeder)',
-                                                                    'grower_layer' => 'Grower (Layer)',
-                                                                    'grower_breeder' => 'Grower (Breeder)',
-                                                                    'finisher_broiler' => 'Finisher (Broiler)',
-                                                                    'layer_layer' => 'Layer (Layer)',
-                                                                    'layer_breeder' => 'Layer (Breeder)',
-                                                                    'other' => 'Other'
-                                                                ];
-                                                                foreach ($feed_cats as $fc_key => $fc_label):
-                                                                    $prod_val = $poultry_rec['feed_mfg'][$fc_key]['monthly_prod'] ?? '';
-                                                                    $unit_val = $poultry_rec['feed_mfg'][$fc_key]['unit'] ?? 'kg';
-                                                                    $spec_val = $poultry_rec['feed_mfg']['other_specify'] ?? '';
-                                                                ?>
-                                                                <tr>
-                                                                    <td class="fw-semibold bg-light-subtle">
-                                                                        <?= $fc_label ?>
-                                                                        <?php if ($fc_key === 'other'): ?>
-                                                                        <input type="text" name="poultry[feed_mfg][other_specify]" class="form-control form-control-sm mt-1" placeholder="Specify other feed category..." value="<?= htmlspecialchars($spec_val) ?>">
-                                                                        <?php endif; ?>
-                                                                    </td>
-                                                                    <td>
-                                                                        <input type="number" step="any" min="0" name="poultry[feed_mfg][<?= $fc_key ?>][monthly_prod]" class="form-control form-control-sm text-end font-monospace" placeholder="0.0" value="<?= htmlspecialchars($prod_val) ?>">
-                                                                    </td>
-                                                                    <td>
-                                                                        <select name="poultry[feed_mfg][<?= $fc_key ?>][unit]" class="form-select form-select-sm">
-                                                                            <option value="kg" <?= ($unit_val === 'kg') ? 'selected' : '' ?>>kg</option>
-                                                                            <option value="MT" <?= ($unit_val === 'MT') ? 'selected' : '' ?>>MT (Metric Ton)</option>
-                                                                            <option value="Bags (50kg)" <?= ($unit_val === 'Bags (50kg)') ? 'selected' : '' ?>>Bags (50kg)</option>
-                                                                        </select>
-                                                                    </td>
-                                                                </tr>
-                                                                <?php endforeach; ?>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-
-                                                <!-- 3.5 DAPH Registration -->
-                                                <div class="p-3 bg-white border rounded-3 border-start border-4 border-info">
-                                                    <h6 class="fw-bold text-dark mb-2">
-                                                        <i class="bi bi-patch-check-fill me-1 text-info"></i>3.5 DAPH Registration
-                                                    </h6>
-                                                    <div class="row align-items-center g-3">
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small fw-bold mb-1 d-block">
-                                                                Is the farm registered with the Department of Animal Production and Health?
-                                                            </label>
-                                                            <div class="d-flex gap-3">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="poultry[daph_registered]" id="daph_reg_yes" value="Yes" <?= (($poultry_rec['daph_registered'] ?? 'No') === 'Yes') ? 'checked' : '' ?> onchange="toggleDaphRegNumber(true)">
-                                                                    <label class="form-check-label small fw-semibold" for="daph_reg_yes">Yes</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="radio" name="poultry[daph_registered]" id="daph_reg_no" value="No" <?= (($poultry_rec['daph_registered'] ?? 'No') !== 'Yes') ? 'checked' : '' ?> onchange="toggleDaphRegNumber(false)">
-                                                                    <label class="form-check-label small fw-semibold" for="daph_reg_no">No</label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small fw-bold mb-1" for="poultry_daph_reg_no">
-                                                                DAPH Registration Number
-                                                            </label>
-                                                            <input type="text" name="poultry[daph_reg_no]" id="poultry_daph_reg_no" class="form-control form-control-sm font-monospace" placeholder="Enter official DAPH registration number" value="<?= htmlspecialchars($poultry_rec['daph_reg_no'] ?? '') ?>">
-                                                        </div>
-                                                    </div>
-                                                </div>
-
+                                <!-- Farm Type active indicator -->
+                                <div id="sec3_type_active_banner" class="alert d-flex align-items-center gap-2 py-2 mb-4 rounded-3" style="background:#fffbeb; border:1px solid #fde68a; display:none!important;">
+                                    <i class="bi bi-funnel-fill text-warning"></i>
+                                    <span class="small">Showing data entry fields for Farm Type: <strong id="sec3_active_type_label">&#8212;</strong></span>
                                 </div>
+                                <div id="sec3_no_type_notice" class="alert alert-secondary d-flex align-items-center gap-2 py-2 mb-4" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    <span class="small fw-semibold">No Farm Type selected. Please go back to <strong>Section 1 (1.14 Farm Type)</strong> and make a selection to unlock all sub-sections below.</span>
+                                </div>
+
+                                <!-- ===== 3.1 Purchase of Animals (Checkbox Grid) ===== -->
+                                <div class="mb-4" id="sec3_1_purchase">
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="bi bi-arrow-repeat me-1 text-primary"></i>3.1 Purchase of Animals
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered align-middle mb-0 text-center">
+                                            <thead class="table-light small">
+                                                <tr>
+                                                    <th class="text-start" style="width: 22%;">Animal Type</th>
+                                                    <th style="width: 19.5%;">Direct purchase from hatchery</th>
+                                                    <th style="width: 19.5%;">Purchase through an agent</th>
+                                                    <th style="width: 19.5%;">Buyback system</th>
+                                                    <th style="width: 19.5%;">Supply from own hatchery / Breeder farm</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $purchase_rows = [
+                                                    'broiler'    => ['label' => 'Broiler',            'class' => 'farm-type-row farm-type-broiler'],
+                                                    'layer'      => ['label' => 'Layer',              'class' => 'farm-type-row farm-type-layer'],
+                                                    'local_free' => ['label' => 'Local / Free Range', 'class' => 'farm-type-row farm-type-local'],
+                                                    'others'     => ['label' => 'Others',             'class' => 'farm-type-row farm-type-others'],
+                                                ];
+                                                foreach ($purchase_rows as $pr_key => $pr_meta):
+                                                    $pr_src = $poultry_rec['purchase_animals'][$pr_key] ?? [];
+                                                ?>
+                                                <tr class="<?= $pr_meta['class'] ?>" style="display:none;">
+                                                    <td class="text-start fw-semibold bg-light-subtle"><?= $pr_meta['label'] ?></td>
+                                                    <td>
+                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                            <input class="form-check-input" type="checkbox" name="poultry[purchase_animals][<?= $pr_key ?>][direct_hatchery]" value="1" <?= !empty($pr_src['direct_hatchery']) ? 'checked' : '' ?>>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                            <input class="form-check-input" type="checkbox" name="poultry[purchase_animals][<?= $pr_key ?>][through_agent]" value="1" <?= !empty($pr_src['through_agent']) ? 'checked' : '' ?>>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                            <input class="form-check-input" type="checkbox" name="poultry[purchase_animals][<?= $pr_key ?>][buyback]" value="1" <?= !empty($pr_src['buyback']) ? 'checked' : '' ?>>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                            <input class="form-check-input" type="checkbox" name="poultry[purchase_animals][<?= $pr_key ?>][own_hatchery]" value="1" <?= !empty($pr_src['own_hatchery']) ? 'checked' : '' ?>>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- ===== 3.2 Feed Supply (Checkbox Grid) ===== -->
+                                <div class="mb-4 p-3 bg-light-subtle rounded-3 border" id="sec3_2_feed_supply">
+                                    <h6 class="fw-bold text-dark mb-3">
+                                        <i class="bi bi-cart3 me-1 text-primary"></i>3.2 Feed Supply
+                                    </h6>
+                                    <!-- Broiler feed types -->
+                                    <div class="farm-type-section farm-type-broiler" style="display:none;">
+                                        <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>Select all applicable feed types used for <strong>Broiler</strong> production.</p>
+                                        <div class="row g-3">
+                                            <?php
+                                            $broiler_feeds = [
+                                                'broiler_booster'    => 'Booster',
+                                                'broiler_starter'    => 'Starter',
+                                                'broiler_grower'     => 'Grower',
+                                                'broiler_finisher'   => 'Finisher',
+                                                'broiler_withdrawal' => 'Withdrawal',
+                                            ];
+                                            foreach ($broiler_feeds as $bfk => $bfl):
+                                            ?>
+                                            <div class="col-md-2 col-sm-4 col-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="poultry[feed_supply_types][<?= $bfk ?>]" id="fs_<?= $bfk ?>" value="1" <?= !empty($poultry_rec['feed_supply_types'][$bfk]) ? 'checked' : '' ?>>
+                                                    <label class="form-check-label small fw-semibold" for="fs_<?= $bfk ?>"><?= $bfl ?></label>
+                                                </div>
+                                            </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                    <!-- Layer feed types -->
+                                    <div class="farm-type-section farm-type-layer" style="display:none;">
+                                        <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>Select all applicable feed types used for <strong>Layer</strong> production.</p>
+                                        <div class="row g-3">
+                                            <?php
+                                            $layer_feeds = [
+                                                'layer_booster' => 'Booster',
+                                                'layer_starter' => 'Starter',
+                                                'layer_grower'  => 'Grower',
+                                                'layer_layer'   => 'Layer',
+                                            ];
+                                            foreach ($layer_feeds as $lfk => $lfl):
+                                            ?>
+                                            <div class="col-md-3 col-sm-6 col-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="poultry[feed_supply_types][<?= $lfk ?>]" id="fs_<?= $lfk ?>" value="1" <?= !empty($poultry_rec['feed_supply_types'][$lfk]) ? 'checked' : '' ?>>
+                                                    <label class="form-check-label small fw-semibold" for="fs_<?= $lfk ?>"><?= $lfl ?></label>
+                                                </div>
+                                            </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                    <!-- Local / Free Range & Others feed types -->
+                                    <div class="farm-type-section farm-type-local farm-type-others" style="display:none;">
+                                        <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>Select all applicable feed types for <strong>Local / Free Range or Other</strong> birds.</p>
+                                        <div class="row g-3">
+                                            <?php
+                                            $local_feeds = [
+                                                'local_commercial'  => 'Commercial feed',
+                                                'local_supplements' => 'Supplements',
+                                                'local_scavenging'  => 'Scavenging',
+                                            ];
+                                            foreach ($local_feeds as $lok => $lol):
+                                            ?>
+                                            <div class="col-md-4 col-sm-6 col-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="poultry[feed_supply_types][<?= $lok ?>]" id="fs_<?= $lok ?>" value="1" <?= !empty($poultry_rec['feed_supply_types'][$lok]) ? 'checked' : '' ?>>
+                                                    <label class="form-check-label small fw-semibold" for="fs_<?= $lok ?>"><?= $lol ?></label>
+                                                </div>
+                                            </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ===== 3.3 Method of Feed Supply (Checkbox Grid) ===== -->
+                                <div class="mb-4" id="sec3_3_feed_method">
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="bi bi-building me-1 text-primary"></i>3.3 Method of Feed Supply
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered align-middle mb-0 text-center">
+                                            <thead class="table-light small">
+                                                <tr>
+                                                    <th class="text-start" style="width: 28%;">Feed Category</th>
+                                                    <th style="width: 24%;">Commercial feed</th>
+                                                    <th style="width: 24%;">Preparation by oneself</th>
+                                                    <th style="width: 24%;">Obtaining from buy-back institutions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $method_rows = [
+                                                    ['key' => 'method_broiler_booster',    'label' => 'Broiler booster',    'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'method_broiler_starter',    'label' => 'Broiler starter',    'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'method_broiler_grower',     'label' => 'Broiler grower',     'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'method_broiler_finisher',   'label' => 'Broiler finisher',   'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'method_broiler_withdrawal', 'label' => 'Broiler withdrawal', 'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'method_layer_booster',      'label' => 'Layer booster',      'class' => 'farm-type-row farm-type-layer'],
+                                                    ['key' => 'method_layer_starter',      'label' => 'Layer starter',      'class' => 'farm-type-row farm-type-layer'],
+                                                    ['key' => 'method_layer_grower',       'label' => 'Layer grower',       'class' => 'farm-type-row farm-type-layer'],
+                                                    ['key' => 'method_layer_layer',        'label' => 'Layer layer',        'class' => 'farm-type-row farm-type-layer'],
+                                                ];
+                                                foreach ($method_rows as $mr):
+                                                    $mr_data = $poultry_rec['feed_method'][$mr['key']] ?? [];
+                                                ?>
+                                                <tr class="<?= $mr['class'] ?>" style="display:none;">
+                                                    <td class="text-start fw-semibold bg-light-subtle"><?= $mr['label'] ?></td>
+                                                    <td>
+                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                            <input class="form-check-input" type="checkbox" name="poultry[feed_method][<?= $mr['key'] ?>][commercial]" value="1" <?= !empty($mr_data['commercial']) ? 'checked' : '' ?>>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                            <input class="form-check-input" type="checkbox" name="poultry[feed_method][<?= $mr['key'] ?>][self_prep]" value="1" <?= !empty($mr_data['self_prep']) ? 'checked' : '' ?>>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check d-flex justify-content-center m-0">
+                                                            <input class="form-check-input" type="checkbox" name="poultry[feed_method][<?= $mr['key'] ?>][buyback]" value="1" <?= !empty($mr_data['buyback']) ? 'checked' : '' ?>>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="text-muted small mt-1"><i class="bi bi-info-circle me-1"></i>Only rows for the selected Farm Type are shown.</div>
+                                </div>
+
+                                <!-- ===== 3.4 Feed Manufacturing Quantities (Input Grid) ===== -->
+                                <div class="mb-4" id="sec3_4_feed_mfg">
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="bi bi-gear-wide-connected me-1 text-primary"></i>3.4 Feed Manufacturing Quantities
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered align-middle mb-0">
+                                            <thead class="table-light text-center small">
+                                                <tr>
+                                                    <th class="text-start" style="width: 44%;">Feed Category</th>
+                                                    <th style="width: 32%;">Monthly Production</th>
+                                                    <th style="width: 24%;">Unit</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $mfg_rows = [
+                                                    ['key' => 'broiler_booster',    'label' => 'Broiler Booster',    'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'broiler_starter',    'label' => 'Broiler Starter',    'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'broiler_grower',     'label' => 'Broiler Grower',     'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'broiler_finisher',   'label' => 'Broiler Finisher',   'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'broiler_withdrawal', 'label' => 'Broiler Withdrawal', 'class' => 'farm-type-row farm-type-broiler'],
+                                                    ['key' => 'layer_booster',      'label' => 'Layer Booster',      'class' => 'farm-type-row farm-type-layer'],
+                                                    ['key' => 'layer_starter',      'label' => 'Layer Starter',      'class' => 'farm-type-row farm-type-layer'],
+                                                    ['key' => 'layer_grower',       'label' => 'Layer Grower',       'class' => 'farm-type-row farm-type-layer'],
+                                                    ['key' => 'layer_layer',        'label' => 'Layer (Layer)',       'class' => 'farm-type-row farm-type-layer'],
+                                                    ['key' => 'local_commercial',   'label' => 'Commercial Feed',    'class' => 'farm-type-row farm-type-local farm-type-others'],
+                                                    ['key' => 'local_supplements',  'label' => 'Supplements',        'class' => 'farm-type-row farm-type-local farm-type-others'],
+                                                    ['key' => 'local_scavenging',   'label' => 'Scavenging',         'class' => 'farm-type-row farm-type-local farm-type-others'],
+                                                ];
+                                                foreach ($mfg_rows as $mfgr):
+                                                    $prod_val = $poultry_rec['feed_mfg'][$mfgr['key']]['monthly_prod'] ?? '';
+                                                    $unit_val = $poultry_rec['feed_mfg'][$mfgr['key']]['unit'] ?? 'Kg';
+                                                ?>
+                                                <tr class="<?= $mfgr['class'] ?>" style="display:none;">
+                                                    <td class="fw-semibold bg-light-subtle"><?= $mfgr['label'] ?></td>
+                                                    <td>
+                                                        <input type="number" step="any" min="0"
+                                                            name="poultry[feed_mfg][<?= $mfgr['key'] ?>][monthly_prod]"
+                                                            class="form-control form-control-sm text-end font-monospace"
+                                                            placeholder="0.0"
+                                                            value="<?= htmlspecialchars($prod_val) ?>">
+                                                    </td>
+                                                    <td>
+                                                        <select name="poultry[feed_mfg][<?= $mfgr['key'] ?>][unit]" class="form-select form-select-sm">
+                                                            <option value="Kg" <?= ($unit_val === 'Kg') ? 'selected' : '' ?>>Kg</option>
+                                                            <option value="MT" <?= ($unit_val === 'MT') ? 'selected' : '' ?>>MT</option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="text-muted small mt-1"><i class="bi bi-info-circle me-1"></i>Only categories matching the selected Farm Type are shown.</div>
+                                </div>
+
+                                <!-- ===== 3.5 DAPH Registration (Feed Manufacturer) ===== -->
+                                <div class="p-3 bg-white border rounded-3 border-start border-4 border-info" id="sec3_5_daph">
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="bi bi-patch-check-fill me-1 text-info"></i>3.5 DAPH Registration
+                                    </h6>
+                                    <p class="text-muted small mb-3">If the farmer is registered with the Department of Animal Production and Health as an animal feed manufacturer, please state the registration number.</p>
+                                    <div class="row align-items-end g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold mb-1 d-block">
+                                                Is the farmer registered with DAPH as an animal feed manufacturer?
+                                            </label>
+                                            <div class="d-flex gap-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="poultry[daph_feed_mfr_registered]" id="daph_feed_mfr_yes" value="Yes" <?= (($poultry_rec['daph_feed_mfr_registered'] ?? 'No') === 'Yes') ? 'checked' : '' ?> onchange="toggleDaphFeedMfrRegNumber(true)">
+                                                    <label class="form-check-label small fw-semibold" for="daph_feed_mfr_yes">Yes</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="poultry[daph_feed_mfr_registered]" id="daph_feed_mfr_no" value="No" <?= (($poultry_rec['daph_feed_mfr_registered'] ?? 'No') !== 'Yes') ? 'checked' : '' ?> onchange="toggleDaphFeedMfrRegNumber(false)">
+                                                    <label class="form-check-label small fw-semibold" for="daph_feed_mfr_no">No</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6" id="daph_feed_mfr_reg_no_group" style="<?= (($poultry_rec['daph_feed_mfr_registered'] ?? 'No') === 'Yes') ? '' : 'display:none;' ?>">
+                                            <label class="form-label small fw-bold mb-1" for="poultry_daph_feed_mfr_reg_no">
+                                                DAPH Feed Manufacturer Registration Number <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" name="poultry[daph_feed_mfr_reg_no]" id="poultry_daph_feed_mfr_reg_no"
+                                                class="form-control form-control-sm font-monospace"
+                                                placeholder="Enter DAPH feed manufacturer registration number"
+                                                value="<?= htmlspecialchars($poultry_rec['daph_feed_mfr_reg_no'] ?? '') ?>">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                </div><!-- end .p-4 -->
 
                                 <div class="panel-nav-footer">
                                     <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-p-sec2" data-prev-index="1">
