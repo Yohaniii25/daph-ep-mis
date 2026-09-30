@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once __DIR__ . '/../../../config/db_connect.php';
 
@@ -65,10 +65,68 @@ if (!empty($range_id)) {
 
 
 // -------------------------------------------------------------------------
-// 2. Handle CRUD Form Submissions (Create / Update / Delete)
+// 2. Handle AJAX & CRUD Form Submissions (Fetch / Create / Update / Delete)
 // -------------------------------------------------------------------------
 $alert_status = null;
 $alert_message = null;
+
+// Dedicated API endpoint: Fetch full farmer & farm registration record by ID
+if (isset($_REQUEST['action']) && $_REQUEST['action'] === 'get_record') {
+    header('Content-Type: application/json');
+    $fetch_id = intval($_REQUEST['id'] ?? 0);
+    if ($fetch_id <= 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Invalid record ID specified.']);
+        exit();
+    }
+
+    $stmt = $mysqli->prepare("SELECT * FROM `farm_registration_renewals` WHERE `id` = ? LIMIT 1");
+    if ($stmt) {
+        $stmt->bind_param("i", $fetch_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $record = $res->fetch_assoc();
+        $stmt->close();
+
+        if ($record) {
+            // Also fetch 1-to-many fodder items if present
+            $fod_stmt = $mysqli->prepare("SELECT `crop_item`, `other_specify`, `amount_perches` FROM `farm_registration_fodder_items` WHERE `farm_registration_id` = ?");
+            $fod_items = [];
+            if ($fod_stmt) {
+                $fod_stmt->bind_param("i", $fetch_id);
+                $fod_stmt->execute();
+                $fod_res = $fod_stmt->get_result();
+                while ($fod_row = $fod_res->fetch_assoc()) {
+                    $fod_items[] = [
+                        'item' => $fod_row['crop_item'],
+                        'other_specify' => $fod_row['other_specify'] ?? '',
+                        'amount' => (float)$fod_row['amount_perches']
+                    ];
+                }
+                $fod_stmt->close();
+            }
+
+            // Decode JSON fields if stored as strings
+            $record['neat_cattle_data'] = !empty($record['neat_cattle_data']) ? (is_string($record['neat_cattle_data']) ? json_decode($record['neat_cattle_data'], true) : $record['neat_cattle_data']) : [];
+            $record['buffaloes_data'] = !empty($record['buffaloes_data']) ? (is_string($record['buffaloes_data']) ? json_decode($record['buffaloes_data'], true) : $record['buffaloes_data']) : [];
+            $record['milk_data'] = !empty($record['milk_data']) ? (is_string($record['milk_data']) ? json_decode($record['milk_data'], true) : $record['milk_data']) : [];
+            $record['fodder_data'] = !empty($record['fodder_data']) ? (is_string($record['fodder_data']) ? json_decode($record['fodder_data'], true) : $record['fodder_data']) : [];
+            $record['poultry_data'] = !empty($record['poultry_data']) ? (is_string($record['poultry_data']) ? json_decode($record['poultry_data'], true) : $record['poultry_data']) : [];
+
+            if (empty($record['fodder_data']) && !empty($fod_items)) {
+                $record['fodder_data'] = $fod_items;
+            }
+
+            echo json_encode(['status' => 'success', 'record' => $record]);
+            exit();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Farmer record not found in the database.']);
+            exit();
+        }
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Database query preparation failed: ' . $mysqli->error]);
+        exit();
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -372,19 +430,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         $poultry_post = $_POST['poultry'] ?? [];
         $reg_no = trim($poultry_post['registration_no'] ?? '');
-        $farmer_name = trim($poultry_post['owner_name'] ?? '');
-        $farmer_addr = trim($poultry_post['farm_address'] ?? '');
+        $farmer_name = trim($poultry_post['farmer_name'] ?? ($poultry_post['owner_name'] ?? ''));
+        $farmer_addr = trim($poultry_post['farmer_address'] ?? ($poultry_post['farm_address'] ?? ''));
         $phone = trim($poultry_post['telephone_no'] ?? '');
-        $nic = trim($poultry_post['owner_nic'] ?? '');
+        $nic = trim($poultry_post['nic'] ?? ($poultry_post['owner_nic'] ?? ''));
         $prov = trim($poultry_post['province'] ?? $province_name);
         $dist = trim($poultry_post['district'] ?? $district_name);
         $ds_div = trim($poultry_post['ds_division'] ?? '');
-        $vs_div = $range_name;
+        $vs_div = trim($poultry_post['vs_division'] ?? $range_name);
         $gn_div = trim($poultry_post['gn_division'] ?? '');
-        $reg_date = date('Y-m-d');
+        $reg_date = trim($poultry_post['date_of_registration_renewal'] ?? date('Y-m-d'));
         $farm_type = 'Poultry';
         $mixed_type = '';
         $gps_location = '';
+
+        // Standardize both naming keys in json for backward and cross-module compatibility
+        $poultry_post['farmer_name'] = $farmer_name;
+        $poultry_post['owner_name'] = $farmer_name;
+        $poultry_post['farmer_address'] = $farmer_addr;
+        $poultry_post['farm_address'] = $farmer_addr;
+        $poultry_post['nic'] = $nic;
+        $poultry_post['owner_nic'] = $nic;
+        $poultry_post['date_of_registration_renewal'] = $reg_date;
+        $poultry_post['province'] = $prov;
+        $poultry_post['district'] = $dist;
+        $poultry_post['ds_division'] = $ds_div;
+        $poultry_post['vs_division'] = $vs_div;
+        $poultry_post['gn_division'] = $gn_div;
         $poultry_json = json_encode($poultry_post, JSON_UNESCAPED_UNICODE);
 
         // Empty livestock defaults
@@ -412,11 +484,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 UPDATE `farm_registration_renewals` SET
                     `farmer_name` = ?, `farmer_address` = ?, `registration_no` = ?,
                     `telephone_no` = ?, `nic` = ?, `farm_type` = ?,
-                    `ds_division` = ?, `gn_division` = ?, `poultry_data` = ?
+                    `ds_division` = ?, `gn_division` = ?, `poultry_data` = ?,
+                    `date_of_registration_renewal` = ?, `province` = ?, `district` = ?, `vs_division` = ?
                 WHERE `id` = ?
             ");
             if ($upd_stmt) {
-                $upd_stmt->bind_param("sssssssssi", $farmer_name, $farmer_addr, $reg_no, $phone, $nic, $farm_type, $ds_div, $gn_div, $poultry_json, $edit_id);
+                $upd_stmt->bind_param("sssssssssssssi", $farmer_name, $farmer_addr, $reg_no, $phone, $nic, $farm_type, $ds_div, $gn_div, $poultry_json, $reg_date, $prov, $dist, $vs_div, $edit_id);
                 $upd_stmt->execute();
                 $upd_stmt->close();
                 $alert_status = 'success';
@@ -624,6 +697,16 @@ if (isset($_GET['edit_poultry_id']) && is_numeric($_GET['edit_poultry_id'])) {
         if ($p_edit && !empty($p_edit['poultry_data'])) {
             $poultry_rec = json_decode($p_edit['poultry_data'], true) ?: [];
             $poultry_rec['id'] = $p_edit['id'];
+            if (empty($poultry_rec['farmer_name']) && !empty($p_edit['farmer_name'])) $poultry_rec['farmer_name'] = $p_edit['farmer_name'];
+            if (empty($poultry_rec['farmer_address']) && !empty($p_edit['farmer_address'])) $poultry_rec['farmer_address'] = $p_edit['farmer_address'];
+            if (empty($poultry_rec['registration_no']) && !empty($p_edit['registration_no'])) $poultry_rec['registration_no'] = $p_edit['registration_no'];
+            if (empty($poultry_rec['telephone_no']) && !empty($p_edit['telephone_no'])) $poultry_rec['telephone_no'] = $p_edit['telephone_no'];
+            if (empty($poultry_rec['nic']) && !empty($p_edit['nic'])) $poultry_rec['nic'] = $p_edit['nic'];
+            if (empty($poultry_rec['ds_division']) && !empty($p_edit['ds_division'])) $poultry_rec['ds_division'] = $p_edit['ds_division'];
+            if (empty($poultry_rec['gn_division']) && !empty($p_edit['gn_division'])) $poultry_rec['gn_division'] = $p_edit['gn_division'];
+            if (empty($poultry_rec['date_of_registration_renewal']) && !empty($p_edit['date_of_registration_renewal'])) $poultry_rec['date_of_registration_renewal'] = $p_edit['date_of_registration_renewal'];
+            if (empty($poultry_rec['district']) && !empty($p_edit['district'])) $poultry_rec['district'] = $p_edit['district'];
+            if (empty($poultry_rec['vs_division']) && !empty($p_edit['vs_division'])) $poultry_rec['vs_division'] = $p_edit['vs_division'];
         }
         $_GET['view_poultry'] = 1;
     }
@@ -1642,11 +1725,11 @@ require_once '../../../includes/header.php';
                             </div>
 
                             <div class="nav flex-column" id="poultryCategoryVerticalTabs" role="tablist" aria-orientation="vertical">
-                                <!-- 1. Farm Ownership & Location -->
+                                <!-- 1. General Information -->
                                 <button type="button" class="v-tab-btn active" data-target-pane="pane-p-sec1" data-category-index="0" role="tab" aria-selected="true">
                                     <span class="tab-num">1</span>
-                                    <i class="bi bi-geo-alt-fill tab-icon text-warning"></i>
-                                    <span class="tab-title">1. Farm Ownership & Location</span>
+                                    <i class="bi bi-info-circle-fill tab-icon text-warning"></i>
+                                    <span class="tab-title">1. General Information</span>
                                     <i class="bi bi-chevron-right tab-chevron"></i>
                                 </button>
 
@@ -1700,256 +1783,202 @@ require_once '../../../includes/header.php';
 
                     <!-- Right Column: Category Content Panels (Col-lg-9 Col-md-8) -->
                     <div class="col-lg-9 col-md-8">
-                        <!-- Persistent Header Card: Poultry Registration Number with Required "P" Prefix -->
-                            <div class="card border-0 shadow-sm mb-4 bg-white rounded-3 border-start border-4 border-warning">
-                                <div class="card-body p-3 p-md-4">
-                                    <div class="row align-items-center g-3">
-                                        <div class="col-md-7">
-                                            <label for="poultry_registration_no" class="form-label fw-bold mb-1 d-flex align-items-center text-dark">
-                                                <i class="bi bi-tag-fill text-warning me-2"></i>Poultry Registration Number
-                                                <span class="badge bg-danger ms-2">Prefix "P" Required</span>
-                                            </label>
-                                            <div class="text-muted small">
-                                                Official poultry farm registration identifier. Must begin with the capital or lowercase prefix <strong>"P"</strong> (e.g. <code>P-00123</code>, <code>P/EP/2026/01</code>).
-                                            </div>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-warning-subtle fw-bold text-dark border-warning font-monospace" id="poultryRegPrefixIcon">P</span>
-                                                <input type="text" 
-                                                       name="poultry[registration_no]" 
-                                                       id="poultry_registration_no" 
-                                                       class="form-control font-monospace fw-bold border-warning" 
-                                                       placeholder="e.g. P100245 or P/EP/001" 
-                                                       value="<?= htmlspecialchars($poultry_rec['registration_no'] ?? '') ?>"
-                                                       oninput="validatePoultryRegPrefix(this)"
-                                                       onblur="validatePoultryRegPrefix(this)">
-                                                <button type="button" class="btn btn-outline-warning text-dark btn-sm" onclick="applyPoultryPrefixAuto();" title="Prepend prefix 'P'">
-                                                    <i class="bi bi-plus-lg me-1"></i>Add "P"
-                                                </button>
-                                            </div>
-                                            <div id="poultryRegFeedback" class="small mt-1 text-muted">
-                                                <i class="bi bi-info-circle me-1"></i>Format must begin with "P" (e.g., P-12345).
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            
                         <div class="category-content-card shadow-sm rounded-4 border mb-5">
 
-
                             <!-- ============================================================== -->
-                            <!-- SECTION 1: FARM OWNERSHIP AND LOCATION                         -->
+                            <!-- SECTION 1: GENERAL INFORMATION                                 -->
                             <!-- ============================================================== -->
                             <div class="category-pane" id="pane-p-sec1" style="display: block;">
                                 <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
                                         <span class="category-badge-step mb-1" style="background-color: #fef3c7; color: #b45309;">Section 1 of 5</span>
                                         <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>1. Farm Ownership and Location
+                                            <i class="bi bi-info-circle-fill text-warning me-2"></i>1. General Information
                                         </h4>
-                                        <p class="text-muted small mb-0">Owner details, management contact, NIC, ownership type, administrative boundaries, and land usage.</p>
+                                        <p class="text-muted small mb-0">Record registration renewal date, geographical jurisdiction, and farmer credentials.</p>
                                     </div>
                                     <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
-                                        <i class="bi bi-egg-fill text-warning me-1"></i>DAPH Poultry Registry
+                                        <i class="bi bi-egg-fill text-warning me-1"></i>Mandatory General Fields
                                     </span>
                                 </div>
 
                                 <div class="p-4 p-md-4">
-
-                                <div class="row g-3">
-                                                    <!-- 1.1 Farm Owner Name -->
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold">1.1 Farm Owner Name</label>
-                                                        <input type="text" name="poultry[owner_name]" id="poultry_owner_name" class="form-control form-control-sm" placeholder="Enter owner's full name" value="<?= htmlspecialchars($poultry_rec['owner_name'] ?? '') ?>">
-                                                    </div>
-                                                    <!-- 1.2 Farm Manager Name -->
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold">1.2 Farm Manager Name</label>
-                                                        <input type="text" name="poultry[manager_name]" id="poultry_manager_name" class="form-control form-control-sm" placeholder="Enter farm manager name" value="<?= htmlspecialchars($poultry_rec['manager_name'] ?? '') ?>">
-                                                    </div>
-                                                    <!-- 1.3 Farm Address -->
-                                                    <div class="col-12">
-                                                        <label class="form-label small fw-bold">1.3 Farm Address</label>
-                                                        <input type="text" name="poultry[farm_address]" id="poultry_farm_address" class="form-control form-control-sm" placeholder="Full postal address of the poultry farm" value="<?= htmlspecialchars($poultry_rec['farm_address'] ?? '') ?>">
-                                                    </div>
-                                                    <!-- 1.4 Telephone number -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.4 Telephone Number</label>
-                                                        <input type="tel" name="poultry[telephone_no]" id="poultry_telephone_no" class="form-control form-control-sm" placeholder="e.g. 0771234567" value="<?= htmlspecialchars($poultry_rec['telephone_no'] ?? '') ?>">
-                                                    </div>
-                                                    <!-- 1.5 Farm Owner NIC Number -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.5 Farm Owner NIC Number</label>
-                                                        <input type="text" name="poultry[owner_nic]" id="poultry_owner_nic" class="form-control form-control-sm font-monospace" placeholder="e.g. 198012345678 or 801234567V" value="<?= htmlspecialchars($poultry_rec['owner_nic'] ?? '') ?>">
-                                                    </div>
-                                                    <!-- 1.6 Farm Ownership (Dropdown) -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.6 Farm Ownership</label>
-                                                        <select name="poultry[ownership]" id="poultry_ownership" class="form-select form-select-sm">
-                                                            <?php
-                                                            $ownership_options = [
-                                                                'Private / Sole Proprietor',
-                                                                'Partnership',
-                                                                'Private Limited Company (Pvt Ltd)',
-                                                                'Public Listed Company (PLC)',
-                                                                'Cooperative Society',
-                                                                'State / Government',
-                                                                'Other'
-                                                            ];
-                                                            $cur_own = $poultry_rec['ownership'] ?? 'Private / Sole Proprietor';
-                                                            foreach ($ownership_options as $opt):
-                                                            ?>
-                                                            <option value="<?= htmlspecialchars($opt) ?>" <?= ($cur_own === $opt) ? 'selected' : '' ?>><?= htmlspecialchars($opt) ?></option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-                                                    <!-- 1.7 GN Division -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.7 GN Division</label>
-                                                        <input type="text" name="poultry[gn_division]" id="poultry_gn_division" class="form-control form-control-sm" placeholder="Grama Niladhari Division" value="<?= htmlspecialchars($poultry_rec['gn_division'] ?? '') ?>">
-                                                    </div>
-                                                    <!-- 1.8 DS/Divisional Secretariat (Dropdown) -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.8 DS / Divisional Secretariat</label>
-                                                        <select name="poultry[ds_division]" id="poultry_ds_division" class="form-select form-select-sm">
-                                                            <?php
-                                                            $ds_list = [
-                                                                'Trincomalee Town and Gravets', 'Kuchchaveli', 'Kinniya', 'Muttur', 'Seruvila', 'Kantalai', 'Morawewa', 'Gomarankadawala', 'Padavi Sri Pura', 'Thampalakamam',
-                                                                'Batticaloa', 'Manmunai North', 'Manmunai South & Eruvil Pattu', 'Eravur Pattu', 'Koralai Pattu', 'Porativu Pattu',
-                                                                'Ampara', 'Kalmunai', 'Sammanthurai', 'Akkaraipattu', 'Pothuvil', 'Uhana', 'Damana', 'Dehiattakandiya',
-                                                                'Colombo', 'Kandy', 'Kurunegala', 'Galle', 'Jaffna', 'Anuradhapura', 'Badulla', 'Ratnapura', 'Other'
-                                                            ];
-                                                            $cur_ds = $poultry_rec['ds_division'] ?? ($edit_rec['ds_division'] ?? 'Trincomalee Town and Gravets');
-                                                            foreach ($ds_list as $ds):
-                                                            ?>
-                                                            <option value="<?= htmlspecialchars($ds) ?>" <?= ($cur_ds === $ds) ? 'selected' : '' ?>><?= htmlspecialchars($ds) ?></option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-                                                    <!-- 1.9 Provincial Directorate (Dropdown) -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.9 Provincial Directorate</label>
-                                                        <select name="poultry[provincial_directorate]" id="poultry_provincial_directorate" class="form-select form-select-sm">
-                                                            <?php
-                                                            $prov_dirs = [
-                                                                'Eastern Provincial Directorate',
-                                                                'Northern Provincial Directorate',
-                                                                'Western Provincial Directorate',
-                                                                'Central Provincial Directorate',
-                                                                'North Western Provincial Directorate',
-                                                                'Southern Provincial Directorate',
-                                                                'North Central Provincial Directorate',
-                                                                'Uva Provincial Directorate',
-                                                                'Sabaragamuwa Provincial Directorate'
-                                                            ];
-                                                            $cur_pdir = $poultry_rec['provincial_directorate'] ?? 'Eastern Provincial Directorate';
-                                                            foreach ($prov_dirs as $pd):
-                                                            ?>
-                                                            <option value="<?= htmlspecialchars($pd) ?>" <?= ($cur_pdir === $pd) ? 'selected' : '' ?>><?= htmlspecialchars($pd) ?></option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-                                                    <!-- 1.10 Province / District (Dropdown) -->
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold">1.10 Province / District</label>
-                                                        <select name="poultry[province_district]" id="poultry_province_district" class="form-select form-select-sm">
-                                                            <optgroup label="Eastern Province">
-                                                                <option value="Eastern / Trincomalee" <?= (($poultry_rec['province_district'] ?? 'Eastern / Trincomalee') === 'Eastern / Trincomalee') ? 'selected' : '' ?>>Eastern / Trincomalee</option>
-                                                                <option value="Eastern / Batticaloa" <?= (($poultry_rec['province_district'] ?? '') === 'Eastern / Batticaloa') ? 'selected' : '' ?>>Eastern / Batticaloa</option>
-                                                                <option value="Eastern / Ampara" <?= (($poultry_rec['province_district'] ?? '') === 'Eastern / Ampara') ? 'selected' : '' ?>>Eastern / Ampara</option>
-                                                            </optgroup>
-                                                            <optgroup label="Western Province">
-                                                                <option value="Western / Colombo" <?= (($poultry_rec['province_district'] ?? '') === 'Western / Colombo') ? 'selected' : '' ?>>Western / Colombo</option>
-                                                                <option value="Western / Gampaha" <?= (($poultry_rec['province_district'] ?? '') === 'Western / Gampaha') ? 'selected' : '' ?>>Western / Gampaha</option>
-                                                                <option value="Western / Kalutara" <?= (($poultry_rec['province_district'] ?? '') === 'Western / Kalutara') ? 'selected' : '' ?>>Western / Kalutara</option>
-                                                            </optgroup>
-                                                            <optgroup label="Central Province">
-                                                                <option value="Central / Kandy" <?= (($poultry_rec['province_district'] ?? '') === 'Central / Kandy') ? 'selected' : '' ?>>Central / Kandy</option>
-                                                                <option value="Central / Matale" <?= (($poultry_rec['province_district'] ?? '') === 'Central / Matale') ? 'selected' : '' ?>>Central / Matale</option>
-                                                                <option value="Central / Nuwara Eliya" <?= (($poultry_rec['province_district'] ?? '') === 'Central / Nuwara Eliya') ? 'selected' : '' ?>>Central / Nuwara Eliya</option>
-                                                            </optgroup>
-                                                            <optgroup label="North Western Province">
-                                                                <option value="North Western / Kurunegala" <?= (($poultry_rec['province_district'] ?? '') === 'North Western / Kurunegala') ? 'selected' : '' ?>>North Western / Kurunegala</option>
-                                                                <option value="North Western / Puttalam" <?= (($poultry_rec['province_district'] ?? '') === 'North Western / Puttalam') ? 'selected' : '' ?>>North Western / Puttalam</option>
-                                                            </optgroup>
-                                                            <optgroup label="Other Districts">
-                                                                <option value="Northern / Jaffna" <?= (($poultry_rec['province_district'] ?? '') === 'Northern / Jaffna') ? 'selected' : '' ?>>Northern / Jaffna</option>
-                                                                <option value="North Central / Anuradhapura" <?= (($poultry_rec['province_district'] ?? '') === 'North Central / Anuradhapura') ? 'selected' : '' ?>>North Central / Anuradhapura</option>
-                                                                <option value="Southern / Galle" <?= (($poultry_rec['province_district'] ?? '') === 'Southern / Galle') ? 'selected' : '' ?>>Southern / Galle</option>
-                                                                <option value="Uva / Badulla" <?= (($poultry_rec['province_district'] ?? '') === 'Uva / Badulla') ? 'selected' : '' ?>>Uva / Badulla</option>
-                                                                <option value="Sabaragamuwa / Ratnapura" <?= (($poultry_rec['province_district'] ?? '') === 'Sabaragamuwa / Ratnapura') ? 'selected' : '' ?>>Sabaragamuwa / Ratnapura</option>
-                                                            </optgroup>
-                                                        </select>
-                                                    </div>
-                                                    <!-- 1.11 Present Land Usage (Dropdown) -->
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold">1.11 Present Land Usage</label>
-                                                        <select name="poultry[present_land_usage]" id="poultry_present_land_usage" class="form-select form-select-sm">
-                                                            <?php
-                                                            $land_usages = [
-                                                                'Dedicated Intensive Poultry Farm',
-                                                                'Mixed Livestock and Poultry Farming',
-                                                                'Backyard / Semi-Intensive Homestead',
-                                                                'Agriculture & Poultry Combined',
-                                                                'Coconut Plantation Intercropping',
-                                                                'Commercial Hatchery & Breeder Facility',
-                                                                'Leased Crown / State Land',
-                                                                'Other'
-                                                            ];
-                                                            $cur_usage = $poultry_rec['present_land_usage'] ?? 'Dedicated Intensive Poultry Farm';
-                                                            foreach ($land_usages as $lu):
-                                                            ?>
-                                                            <option value="<?= htmlspecialchars($lu) ?>" <?= ($cur_usage === $lu) ? 'selected' : '' ?>><?= htmlspecialchars($lu) ?></option>
-                                                             <?php endforeach; ?>
-                                                        </select>
-                                                    </div>
-
-                                                    <!-- 1.12 Environmental License -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.12 Environmental License</label>
-                                                        <select name="poultry[env_license]" id="poultry_env_license" class="form-select form-select-sm" onchange="togglePoultryLicenseField('env')">
-                                                            <option value="No" <?= (($poultry_rec['env_license'] ?? 'No') === 'No') ? 'selected' : '' ?>>No</option>
-                                                            <option value="Yes" <?= (($poultry_rec['env_license'] ?? 'No') === 'Yes') ? 'selected' : '' ?>>Yes</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-8" id="env_license_no_group" style="<?= (($poultry_rec['env_license'] ?? 'No') === 'Yes') ? '' : 'display:none;' ?>">
-                                                        <label class="form-label small fw-bold">Environmental License Number <span class="text-danger">*</span></label>
-                                                        <input type="text" name="poultry[env_license_no]" id="poultry_env_license_no" class="form-control form-control-sm font-monospace" placeholder="e.g. EIA-2024-00123" value="<?= htmlspecialchars($poultry_rec['env_license_no'] ?? '') ?>">
-                                                    </div>
-
-                                                    <!-- 1.13 Business License -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.13 Business License</label>
-                                                        <select name="poultry[business_license]" id="poultry_business_license" class="form-select form-select-sm" onchange="togglePoultryLicenseField('business')">
-                                                            <option value="No" <?= (($poultry_rec['business_license'] ?? 'No') === 'No') ? 'selected' : '' ?>>No</option>
-                                                            <option value="Yes" <?= (($poultry_rec['business_license'] ?? 'No') === 'Yes') ? 'selected' : '' ?>>Yes</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-8" id="business_license_no_group" style="<?= (($poultry_rec['business_license'] ?? 'No') === 'Yes') ? '' : 'display:none;' ?>">
-                                                        <label class="form-label small fw-bold">Business License Number <span class="text-danger">*</span></label>
-                                                        <input type="text" name="poultry[business_license_no]" id="poultry_business_license_no" class="form-control form-control-sm font-monospace" placeholder="e.g. BRN-2024-00456" value="<?= htmlspecialchars($poultry_rec['business_license_no'] ?? '') ?>">
-                                                    </div>
-
-                                                    <!-- 1.14 Farm Type -->
-                                                    <div class="col-md-4">
-                                                        <label class="form-label small fw-bold">1.14 Farm Type</label>
-                                                        <select name="poultry[poultry_farm_type]" id="poultry_poultry_farm_type" class="form-select form-select-sm" onchange="onPoultryFarmTypeChange(this.value)">
-                                                            <option value="">-- Select Farm Type --</option>
-                                                            <option value="Broiler" <?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Broiler') ? 'selected' : '' ?>>Broiler</option>
-                                                            <option value="Layer" <?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Layer') ? 'selected' : '' ?>>Layer</option>
-                                                            <option value="Local / Free range chickens" <?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Local / Free range chickens') ? 'selected' : '' ?>>Local / Free range chickens</option>
-                                                            <option value="Others" <?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Others') ? 'selected' : '' ?>>Others</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-8" id="poultry_farm_type_others_group" style="<?= (($poultry_rec['poultry_farm_type'] ?? '') === 'Others') ? '' : 'display:none;' ?>">
-                                                        <label class="form-label small fw-bold">Specify Farm Type <span class="text-danger">*</span></label>
-                                                        <input type="text" name="poultry[poultry_farm_type_other]" id="poultry_farm_type_other" class="form-control form-control-sm" placeholder="e.g. Duck, Turkey, Quail..." value="<?= htmlspecialchars($poultry_rec['poultry_farm_type_other'] ?? '') ?>">
-                                                    </div>
+                                    <div class="row g-4">
+                                        <!-- Left Column: Location & Division Details -->
+                                        <div class="col-md-6 border-end-md">
+                                            <h6 class="small fw-bold text-uppercase text-secondary mb-3 pb-2 border-bottom">
+                                                <i class="bi bi-geo-alt-fill text-warning me-1"></i>Location & Division Details
+                                            </h6>
+                                            <!-- Date of Registration Renewal -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Date of Registration Renewal <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white"><i class="bi bi-calendar-event"></i></span>
+                                                    <input type="date" name="poultry[date_of_registration_renewal]" id="poultry_date_renewal" class="form-control form-control-sm" value="<?= htmlspecialchars($poultry_rec['date_of_registration_renewal'] ?? ($edit_rec['date_of_registration_renewal'] ?? date('Y-m-d'))) ?>" required>
                                                 </div>
+                                            </div>
+                                            <!-- Province -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Province <span class="text-danger">*</span></label>
+                                                <input type="text" name="poultry[province]" id="poultry_province" class="form-control form-control-sm bg-light" value="Eastern Province" readonly required>
+                                            </div>
+                                            <!-- District -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">District <span class="text-danger">*</span></label>
+                                                <?php 
+                                                $cur_dist = $poultry_rec['district'] ?? ($edit_rec['district'] ?? $district_name);
+                                                $ep_districts = ['Trincomalee', 'Batticaloa', 'Ampara'];
+                                                ?>
+                                                <select name="poultry[district]" id="poultry_district" class="form-select form-select-sm" required>
+                                                    <?php foreach ($ep_districts as $d): ?>
+                                                    <option value="<?= htmlspecialchars($d) ?>" <?= ($cur_dist === $d) ? 'selected' : '' ?>><?= htmlspecialchars($d) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <!-- DS Division -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">DS Division <span class="text-danger">*</span></label>
+                                                <input type="text" name="poultry[ds_division]" id="poultry_ds_division" class="form-control form-control-sm" placeholder="e.g. Town and Gravets" value="<?= htmlspecialchars($poultry_rec['ds_division'] ?? ($edit_rec['ds_division'] ?? '')) ?>" required>
+                                            </div>
+                                            <!-- VS Division -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">VS Division <span class="text-danger">*</span></label>
+                                                <input type="text" name="poultry[vs_division]" id="poultry_vs_division" class="form-control form-control-sm" value="<?= htmlspecialchars($poultry_rec['vs_division'] ?? ($edit_rec['vs_division'] ?? $range_name)) ?>" required>
+                                            </div>
+                                            <!-- GN Division -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">GN Division <span class="text-danger">*</span></label>
+                                                <input type="text" name="poultry[gn_division]" id="poultry_gn_division" class="form-control form-control-sm" placeholder="e.g. 241B Orr's Hill" value="<?= htmlspecialchars($poultry_rec['gn_division'] ?? ($edit_rec['gn_division'] ?? '')) ?>" required>
+                                            </div>
+                                        </div>
 
+                                        <!-- Right Column: Farmer & Farm Profile -->
+                                        <div class="col-md-6">
+                                            <h6 class="small fw-bold text-uppercase text-secondary mb-3 pb-2 border-bottom">
+                                                <i class="bi bi-person-badge-fill text-warning me-1"></i>Farmer & Farm Profile
+                                            </h6>
+                                            <!-- Name of the Farmer -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Name of the Farmer <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                                                    <input type="text" name="poultry[farmer_name]" id="poultry_farmer_name" class="form-control form-control-sm" placeholder="Full Name of Farmer" value="<?= htmlspecialchars($poultry_rec['farmer_name'] ?? ($poultry_rec['owner_name'] ?? ($edit_rec['farmer_name'] ?? ''))) ?>" required>
+                                                </div>
+                                            </div>
+                                            <!-- Address of the Farmer -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Address of the Farmer <span class="text-danger">*</span></label>
+                                                <textarea name="poultry[farmer_address]" id="poultry_farmer_address" class="form-control form-control-sm" rows="2" placeholder="Permanent Residential / Holding Address" required><?= htmlspecialchars($poultry_rec['farmer_address'] ?? ($poultry_rec['farm_address'] ?? ($edit_rec['farmer_address'] ?? ''))) ?></textarea>
+                                            </div>
+                                            <!-- Registration No (must start with "P") -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Registration No (Must start with "P") <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text font-monospace bg-warning-subtle fw-bold text-dark border-warning" id="poultryRegPrefixIcon">P</span>
+                                                    <input type="text" 
+                                                           name="poultry[registration_no]" 
+                                                           id="poultry_registration_no" 
+                                                           class="form-control form-control-sm font-monospace fw-bold border-warning" 
+                                                           placeholder="e.g. P104829375 or P/EP/2026/01" 
+                                                           value="<?= htmlspecialchars($poultry_rec['registration_no'] ?? ($edit_rec['registration_no'] ?? '')) ?>" 
+                                                           required 
+                                                           oninput="validatePoultryRegPrefix(this)" 
+                                                           onblur="validatePoultryRegPrefix(this)">
+                                                    <button type="button" class="btn btn-outline-warning text-dark btn-sm" onclick="applyPoultryPrefixAuto();" title="Prepend prefix 'P'">
+                                                        <i class="bi bi-plus-lg me-1"></i>Add "P"
+                                                    </button>
+                                                </div>
+                                                <div id="poultryRegFeedback" class="small mt-1 text-muted" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-info-circle me-1"></i>Official poultry registration number must begin with prefix "P".
+                                                </div>
+                                            </div>
+                                            <!-- Telephone No & NIC in a row -->
+                                            <div class="row g-2 mb-3">
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold">Telephone No <span class="text-danger">*</span></label>
+                                                    <input type="tel" name="poultry[telephone_no]" id="poultry_telephone_no" class="form-control form-control-sm" placeholder="e.g. 0771234567" value="<?= htmlspecialchars($poultry_rec['telephone_no'] ?? ($edit_rec['telephone_no'] ?? '')) ?>" required>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold">NIC <span class="text-danger">*</span></label>
+                                                    <input type="text" name="poultry[nic]" id="poultry_nic" class="form-control form-control-sm font-monospace" placeholder="National Identity Card" value="<?= htmlspecialchars($poultry_rec['nic'] ?? ($poultry_rec['owner_nic'] ?? ($edit_rec['nic'] ?? ''))) ?>" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Additional Poultry-Specific Fields Divider -->
+                                    <hr class="my-4">
+                                    <h6 class="small fw-bold text-uppercase text-secondary mb-3 pb-2 border-bottom">
+                                        <i class="bi bi-shield-check text-warning me-1"></i>Poultry Licensing & Farm Type
+                                    </h6>
+
+                                    <div class="row g-3">
+                                        <!-- 1.12 Environmental License -->
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold d-block">1.12 Environmental License <span class="text-danger">*</span></label>
+                                            <?php $env_lic = $poultry_rec['env_license'] ?? 'No'; ?>
+                                            <div class="btn-group btn-group-sm w-100" role="group" aria-label="Environmental License Toggle">
+                                                <input type="radio" class="btn-check" name="poultry[env_license]" id="poultry_env_license_no" value="No" autocomplete="off" <?= ($env_lic !== 'Yes') ? 'checked' : '' ?> onchange="togglePoultryLicenseField('env')">
+                                                <label class="btn btn-outline-secondary" for="poultry_env_license_no"><i class="bi bi-x-circle me-1"></i>No</label>
+
+                                                <input type="radio" class="btn-check" name="poultry[env_license]" id="poultry_env_license_yes" value="Yes" autocomplete="off" <?= ($env_lic === 'Yes') ? 'checked' : '' ?> onchange="togglePoultryLicenseField('env')">
+                                                <label class="btn btn-outline-success" for="poultry_env_license_yes"><i class="bi bi-check-circle me-1"></i>Yes</label>
+                                            </div>
+                                            <input type="hidden" id="poultry_env_license" value="<?= htmlspecialchars($env_lic) ?>">
+
+                                            <div class="mt-2" id="env_license_no_group" style="<?= ($env_lic === 'Yes') ? '' : 'display:none;' ?>">
+                                                <label class="form-label small fw-bold text-success">Environmental License Number <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white"><i class="bi bi-file-earmark-check text-success"></i></span>
+                                                    <input type="text" name="poultry[env_license_no]" id="poultry_env_license_no" class="form-control form-control-sm font-monospace" placeholder="e.g. EIA-2024-00123" value="<?= htmlspecialchars($poultry_rec['env_license_no'] ?? '') ?>">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 1.13 Business License -->
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold d-block">1.13 Business License <span class="text-danger">*</span></label>
+                                            <?php $bus_lic = $poultry_rec['business_license'] ?? 'No'; ?>
+                                            <div class="btn-group btn-group-sm w-100" role="group" aria-label="Business License Toggle">
+                                                <input type="radio" class="btn-check" name="poultry[business_license]" id="poultry_business_license_no" value="No" autocomplete="off" <?= ($bus_lic !== 'Yes') ? 'checked' : '' ?> onchange="togglePoultryLicenseField('business')">
+                                                <label class="btn btn-outline-secondary" for="poultry_business_license_no"><i class="bi bi-x-circle me-1"></i>No</label>
+
+                                                <input type="radio" class="btn-check" name="poultry[business_license]" id="poultry_business_license_yes" value="Yes" autocomplete="off" <?= ($bus_lic === 'Yes') ? 'checked' : '' ?> onchange="togglePoultryLicenseField('business')">
+                                                <label class="btn btn-outline-success" for="poultry_business_license_yes"><i class="bi bi-check-circle me-1"></i>Yes</label>
+                                            </div>
+                                            <input type="hidden" id="poultry_business_license" value="<?= htmlspecialchars($bus_lic) ?>">
+
+                                            <div class="mt-2" id="business_license_no_group" style="<?= ($bus_lic === 'Yes') ? '' : 'display:none;' ?>">
+                                                <label class="form-label small fw-bold text-success">Business License Number <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white"><i class="bi bi-briefcase text-success"></i></span>
+                                                    <input type="text" name="poultry[business_license_no]" id="poultry_business_license_no" class="form-control form-control-sm font-monospace" placeholder="e.g. BRN-2024-00456" value="<?= htmlspecialchars($poultry_rec['business_license_no'] ?? '') ?>">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 1.14 Farm Type -->
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">1.14 Farm Type <span class="text-danger">*</span></label>
+                                            <?php $p_ft = $poultry_rec['poultry_farm_type'] ?? ($edit_rec['farm_type'] ?? ''); ?>
+                                            <select name="poultry[poultry_farm_type]" id="poultry_poultry_farm_type" class="form-select form-select-sm" onchange="onPoultryFarmTypeChange(this.value)" required>
+                                                <option value="" disabled <?= empty($p_ft) ? 'selected' : '' ?>>-- Select Farm Type --</option>
+                                                <option value="Broiler" <?= ($p_ft === 'Broiler') ? 'selected' : '' ?>>Broiler</option>
+                                                <option value="Layer" <?= ($p_ft === 'Layer') ? 'selected' : '' ?>>Layer</option>
+                                                <option value="Local / Free range chickens" <?= ($p_ft === 'Local / Free range chickens') ? 'selected' : '' ?>>Local / Free range chickens</option>
+                                                <option value="Others" <?= ($p_ft === 'Others') ? 'selected' : '' ?>>Others</option>
+                                            </select>
+                                            <small class="text-muted" style="font-size: 0.75rem;">Determines input supply & flock data grids.</small>
+                                        </div>
+
+                                        <div class="col-md-6" id="poultry_farm_type_others_group" style="<?= ($p_ft === 'Others') ? '' : 'display:none;' ?>">
+                                            <label class="form-label small fw-bold">Specify Farm Type <span class="text-danger">*</span></label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white"><i class="bi bi-pencil"></i></span>
+                                                <input type="text" name="poultry[poultry_farm_type_other]" id="poultry_farm_type_other" class="form-control form-control-sm" placeholder="e.g. Duck, Turkey, Quail..." value="<?= htmlspecialchars($poultry_rec['poultry_farm_type_other'] ?? '') ?>">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="panel-nav-footer">
@@ -2754,6 +2783,12 @@ require_once '../../../includes/header.php';
                                 <small class="text-muted">Master database records for cattle, buffaloes, swine, goats, sheep and fodder cultivations in <?= htmlspecialchars($range_name) ?> range.</small>
                             </div>
                             <div class="d-flex gap-2 flex-wrap align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-xs" onclick="exportLivestockFarmerListCSV();" title="Export Livestock Farmers Summary List to CSV">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i> <span>Export to CSV</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-xs" onclick="exportLivestockFarmerListPDF();" title="Export Livestock Farmers Summary List to PDF">
+                                    <i class="bi bi-file-earmark-pdf"></i> <span>Export to PDF</span>
+                                </button>
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="sortMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Sort Livestock Records">
                                         <i class="bi bi-sort-down me-1"></i>Sort
@@ -2922,6 +2957,12 @@ require_once '../../../includes/header.php';
                                 <small class="text-muted">Master database records for layer, broiler, breeder farms, flock capacity and production in <?= htmlspecialchars($range_name) ?> range.</small>
                             </div>
                             <div class="d-flex gap-2 flex-wrap align-items-center">
+                                <button type="button" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-xs" onclick="exportPoultryFarmerListCSV();" title="Export Poultry Farmers Summary List to CSV">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i> <span>Export to CSV</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-xs" onclick="exportPoultryFarmerListPDF();" title="Export Poultry Farmers Summary List to PDF">
+                                    <i class="bi bi-file-earmark-pdf"></i> <span>Export to PDF</span>
+                                </button>
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="poultrySortMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Sort Poultry Records">
                                         <i class="bi bi-sort-down me-1"></i>Sort

@@ -2041,6 +2041,7 @@ function initAnimalBranding() {
             activePane.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
+    window.activateLivestockPane = activateCategoryPane;
 
     tabButtons.forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -2505,6 +2506,13 @@ function initAnimalBranding() {
     if (typeof initAddedDetailsTable === 'function') {
         initAddedDetailsTable();
     }
+
+    // Initialise Section 3 conditional layout based on the pre-selected Poultry Farm Type
+    // (needed when a record is loaded server-side via PHP with a pre-selected value)
+    const pFarmTypeSel = document.getElementById('poultry_poultry_farm_type');
+    if (pFarmTypeSel && typeof window.onPoultryFarmTypeChange === 'function') {
+        window.onPoultryFarmTypeChange(pFarmTypeSel.value);
+    }
 }
 
 if (document.readyState === 'loading') {
@@ -2702,12 +2710,15 @@ window.resetMasterForm = function() {
 
 // ---- Poultry License Toggle ----
 window.togglePoultryLicenseField = function(type) {
+    const checkedRadio = document.querySelector(`input[name="poultry[${type}_license]"]:checked`);
     const sel = document.getElementById('poultry_' + type + '_license');
+    const val = checkedRadio ? checkedRadio.value : (sel ? sel.value : 'No');
     const group = document.getElementById(type + '_license_no_group');
-    if (!sel || !group) return;
-    group.style.display = (sel.value === 'Yes') ? '' : 'none';
+    if (!group) return;
+    group.style.display = (val === 'Yes') ? '' : 'none';
     const inp = group.querySelector('input');
-    if (inp) inp.required = (sel.value === 'Yes');
+    if (inp) inp.required = (val === 'Yes');
+    if (sel && sel.type === 'hidden') sel.value = val;
 };
 
 // ---- Poultry Farm Type Change ----
@@ -2839,6 +2850,17 @@ window.resetPoultryMasterForm = function() {
     if (pFeedback) {
         pFeedback.className = 'small mt-1 text-muted';
         pFeedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Format must begin with "P" (e.g., P-12345).';
+    }
+
+    if (typeof window.onPoultryFarmTypeChange === 'function') {
+        window.onPoultryFarmTypeChange('');
+    }
+    if (typeof window.togglePoultryLicenseField === 'function') {
+        window.togglePoultryLicenseField('env');
+        window.togglePoultryLicenseField('business');
+    }
+    if (typeof window.toggleDaphFeedMfrRegNumber === 'function') {
+        window.toggleDaphFeedMfrRegNumber(false);
     }
 
     if (typeof window.activatePoultryPane === 'function') {
@@ -3178,64 +3200,465 @@ window.showRecordDetailModal = function(recordId) {
 };
 
 window.loadRecordIntoForm = function(recordId) {
-    const list = (typeof window.liveDatabaseRecords !== 'undefined' && Array.isArray(window.liveDatabaseRecords)) 
-        ? window.liveDatabaseRecords 
-        : ((typeof liveDatabaseRecords !== 'undefined' && Array.isArray(liveDatabaseRecords)) ? liveDatabaseRecords : []);
-    const rec = list.find(r => Number(r.id) === Number(recordId));
+    if (!recordId) return;
+
+    // Show loading indicator
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Fetching Farmer Data...',
+            text: 'Loading details from the database',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    // Determine backend endpoint URL
+    const pathname = window.location.pathname || '';
+    const scriptName = pathname.substring(pathname.lastIndexOf('/') + 1) || 'animal_branding.php';
+    const fetchUrl = `${scriptName}?action=get_record&id=${encodeURIComponent(recordId)}`;
+
+    fetch(fetchUrl, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.status === 'success' && data.record) {
+            window.populateFetchedRecord(data.record);
+        } else {
+            console.warn('Backend get_record returned non-success, using client cache fallback:', data?.message);
+            fallbackToLiveRecords(recordId, data?.message);
+        }
+    })
+    .catch(err => {
+        console.warn('AJAX fetch failed, falling back to liveDatabaseRecords:', err);
+        fallbackToLiveRecords(recordId, err.message);
+    });
+
+    function fallbackToLiveRecords(recId, errMsg) {
+        const list = (typeof window.liveDatabaseRecords !== 'undefined' && Array.isArray(window.liveDatabaseRecords)) 
+            ? window.liveDatabaseRecords 
+            : ((typeof liveDatabaseRecords !== 'undefined' && Array.isArray(liveDatabaseRecords)) ? liveDatabaseRecords : []);
+        const rec = list.find(r => Number(r.id) === Number(recId));
+        if (rec) {
+            window.populateFetchedRecord(rec);
+        } else {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Record Not Found',
+                    text: errMsg || `Unable to load record #${recId} from database.`
+                });
+            } else {
+                alert('Unable to load record: ' + (errMsg || 'Record not found'));
+            }
+        }
+    }
+};
+
+window.populateFetchedRecord = function(rec) {
     if (!rec) return;
 
-    // Switch to respective Form Tab (Poultry vs Livestock)
-    const pData = rec.poultry_data || {};
-    const isPoultry = (rec.farm_type === 'Poultry') || (pData && (pData.registration_no || pData.owner_name)) || (/^[Pp]/.test(rec.registration_no || ''));
+    let pData = rec.poultry_data || {};
+    if (typeof pData === 'string') {
+        try { pData = JSON.parse(pData); } catch(e) { pData = {}; }
+    }
+
+    const isPoultry = (rec.farm_type === 'Poultry') || 
+                      (pData && (pData.registration_no || pData.owner_name || pData.poultry_farm_type)) || 
+                      (/^[Pp]/.test(rec.registration_no || ''));
+
     if (isPoultry) {
-        const poultryTabBtn = document.getElementById('view-poultry-tab');
-        if (poultryTabBtn && typeof bootstrap !== 'undefined') new bootstrap.Tab(poultryTabBtn).show();
-        const pEditId = document.getElementById('editingPoultryRecordId');
-        if (pEditId) pEditId.value = rec.id;
-        const pBanner = document.getElementById('editingPoultryStatusBanner');
-        if (pBanner) pBanner.classList.remove('d-none');
-        const pRecNo = document.getElementById('editingPoultryRecordNoDisplay');
-        if (pRecNo) pRecNo.textContent = (pData && pData.registration_no) ? pData.registration_no : rec.registration_no;
-        const pOwner = document.getElementById('editingPoultryOwnerDisplay');
-        if (pOwner) pOwner.textContent = (pData && pData.owner_name) ? pData.owner_name : rec.farmer_name;
-        const pBtn = document.getElementById('btnSubmitPoultryText');
-        if (pBtn) pBtn.textContent = 'Update Record in Database';
-        const pBottomBtn = document.getElementById('btnSubmitPoultryBottomText');
-        if (pBottomBtn) pBottomBtn.textContent = 'Update Record in Database';
+        window.loadPoultryRecordIntoForm(rec, pData);
     } else {
-        const formTabBtn = document.getElementById('view-form-tab');
-        if (formTabBtn && typeof bootstrap !== 'undefined') new bootstrap.Tab(formTabBtn).show();
+        window.loadLivestockRecordIntoForm(rec);
+    }
+};
+
+window.loadPoultryRecordIntoForm = function(rec, pData) {
+    if (!pData || typeof pData !== 'object') {
+        if (typeof pData === 'string') {
+            try { pData = JSON.parse(pData); } catch(e) { pData = {}; }
+        } else {
+            pData = {};
+        }
+    }
+
+    // 1. Switch Tab to Poultry Form Tab
+    const poultryTabBtn = document.getElementById('view-poultry-tab');
+    if (poultryTabBtn) {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(poultryTabBtn).show();
+        } else {
+            poultryTabBtn.click();
+        }
+    }
+    const pPanel = document.getElementById('viewPoultryPanel');
+    if (pPanel) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('show', 'active'));
+        pPanel.classList.add('show', 'active');
+        document.querySelectorAll('#brandingTopTabs .nav-link').forEach(b => b.classList.remove('active'));
+        if (poultryTabBtn) poultryTabBtn.classList.add('active');
+    }
+
+    // 2. Populate Hidden ID and Update Banner
+    const pEditId = document.getElementById('editingPoultryRecordId');
+    if (pEditId) pEditId.value = rec.id;
+    const pBanner = document.getElementById('editingPoultryStatusBanner');
+    if (pBanner) pBanner.classList.remove('d-none');
+    const regDisplay = (pData && pData.registration_no) ? pData.registration_no : (rec.registration_no || '');
+    const ownerDisplay = (pData && pData.owner_name) ? pData.owner_name : (rec.farmer_name || '');
+    const pRecNo = document.getElementById('editingPoultryRecordNoDisplay');
+    if (pRecNo) pRecNo.textContent = regDisplay;
+    const pOwner = document.getElementById('editingPoultryOwnerDisplay');
+    if (pOwner) pOwner.textContent = ownerDisplay;
+    const pBtn = document.getElementById('btnSubmitPoultryText');
+    if (pBtn) pBtn.textContent = 'Update Record in Database';
+    const pBottomBtn = document.getElementById('btnSubmitPoultryBottomText');
+    if (pBottomBtn) pBottomBtn.textContent = 'Update Record in Database';
+
+    // 3. Persistent Header: Registration Number
+    const pRegInput = document.getElementById('poultry_registration_no');
+    if (pRegInput) {
+        pRegInput.value = regDisplay;
+        if (typeof window.validatePoultryRegPrefix === 'function') {
+            window.validatePoultryRegPrefix(pRegInput);
+        }
+    }
+
+    // Helper to safely set element value
+    const setVal = (id, val) => { 
+        const el = document.getElementById(id); 
+        if (el) el.value = (val !== undefined && val !== null) ? val : ''; 
+    };
+
+    // 4. Section 1: General Information & Farmer Profile
+    const fName = pData.farmer_name || pData.owner_name || rec.farmer_name || '';
+    const fAddr = pData.farmer_address || pData.farm_address || rec.farmer_address || '';
+    const fNic  = pData.nic || pData.owner_nic || rec.nic || '';
+    const fPhone = pData.telephone_no || rec.telephone_no || '';
+    const fDate = pData.date_of_registration_renewal || rec.date_of_registration_renewal || '';
+    const fProv = pData.province || rec.province || 'Eastern Province';
+    const fDist = pData.district || rec.district || 'Trincomalee';
+    const fDs   = pData.ds_division || rec.ds_division || '';
+    const fVs   = pData.vs_division || rec.vs_division || '';
+    const fGn   = pData.gn_division || rec.gn_division || '';
+
+    setVal('poultry_date_renewal', fDate);
+    setVal('poultry_province', fProv);
+    setVal('poultry_district', fDist);
+    setVal('poultry_ds_division', fDs);
+    setVal('poultry_vs_division', fVs);
+    setVal('poultry_gn_division', fGn);
+
+    setVal('poultry_farmer_name', fName);
+    setVal('poultry_farmer_address', fAddr);
+    setVal('poultry_telephone_no', fPhone);
+    setVal('poultry_nic', fNic);
+
+    // Fallback/Legacy element IDs
+    setVal('poultry_owner_name', fName);
+    setVal('poultry_farm_address', fAddr);
+    setVal('poultry_owner_nic', fNic);
+
+    // 1.12 Environmental License
+    const envVal = pData.env_license || 'No';
+    const envRadio = document.querySelector(`input[name="poultry[env_license]"][value="${envVal}"]`);
+    if (envRadio) envRadio.checked = true;
+    setVal('poultry_env_license', envVal);
+    setVal('poultry_env_license_no', pData.env_license_no);
+    if (typeof window.togglePoultryLicenseField === 'function') {
+        window.togglePoultryLicenseField('env');
+    }
+
+    // 1.13 Business License
+    const busVal = pData.business_license || 'No';
+    const busRadio = document.querySelector(`input[name="poultry[business_license]"][value="${busVal}"]`);
+    if (busRadio) busRadio.checked = true;
+    setVal('poultry_business_license', busVal);
+    setVal('poultry_business_license_no', pData.business_license_no);
+    if (typeof window.togglePoultryLicenseField === 'function') {
+        window.togglePoultryLicenseField('business');
+    }
+
+    // 1.14 Farm Type
+    let farmType = pData.poultry_farm_type || '';
+    if (!farmType) {
+        if (rec.farm_type && ['Broiler', 'Layer', 'Local / Free range chickens', 'Others'].includes(rec.farm_type)) {
+            farmType = rec.farm_type;
+        } else if (pData.purchase_animals && pData.purchase_animals.broiler) {
+            farmType = 'Broiler';
+        } else if (pData.purchase_animals && pData.purchase_animals.layer) {
+            farmType = 'Layer';
+        } else if (pData.pop && pData.pop.broilers) {
+            farmType = 'Broiler';
+        } else if (pData.pop && pData.pop.layers) {
+            farmType = 'Layer';
+        }
+    }
+    const pFarmTypeSel = document.getElementById('poultry_poultry_farm_type');
+    if (pFarmTypeSel) pFarmTypeSel.value = farmType;
+    setVal('poultry_farm_type_other', pData.poultry_farm_type_other);
+    if (typeof window.onPoultryFarmTypeChange === 'function') {
+        window.onPoultryFarmTypeChange(farmType);
+    }
+
+    // 5. Section 2: Flock Information & Housing System
+    // 2.1 Flock Age Groups (Dynamic Rows)
+    const tbody = document.getElementById('flockAgeGroupBody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        const flockGroups = Array.isArray(pData.flock_age_groups) ? pData.flock_age_groups : [];
+        if (flockGroups.length > 0) {
+            flockGroups.forEach((fg, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'flock-age-group-row';
+                const ageVal = fg.age_group || 'Chicks (<8 weeks)';
+                const qtyVal = (fg.quantity !== undefined && fg.quantity !== null) ? fg.quantity : '';
+                tr.innerHTML = `
+                    <td>
+                        <select name="poultry[flock_age_groups][${idx}][age_group]" class="form-select form-select-sm">
+                            <option value="Chicks (&lt;8 weeks)" ${ageVal === 'Chicks (<8 weeks)' ? 'selected' : ''}>Chicks (&lt;8 weeks)</option>
+                            <option value="Growers (8-17 weeks)" ${ageVal === 'Growers (8-17 weeks)' ? 'selected' : ''}>Growers (8-17 weeks old)</option>
+                            <option value="Hens (&gt;18 weeks)" ${ageVal === 'Hens (>18 weeks)' ? 'selected' : ''}>Hens (&gt;18 Weeks)</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" min="0" name="poultry[flock_age_groups][${idx}][quantity]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="${qtyVal}">
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFlockAgeGroupRow(this)" title="Remove row">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        } else {
+            const tr = document.createElement('tr');
+            tr.className = 'flock-age-group-row';
+            tr.innerHTML = `
+                <td>
+                    <select name="poultry[flock_age_groups][0][age_group]" class="form-select form-select-sm">
+                        <option value="Chicks (&lt;8 weeks)" selected>Chicks (&lt;8 weeks)</option>
+                        <option value="Growers (8-17 weeks)">Growers (8-17 weeks old)</option>
+                        <option value="Hens (&gt;18 weeks)">Hens (&gt;18 Weeks)</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" min="0" name="poultry[flock_age_groups][0][quantity]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFlockAgeGroupRow(this)" title="Remove row">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>`;
+            tbody.appendChild(tr);
+        }
+    }
+
+    // 2.2 Housing System
+    const housingData = pData.housing || {};
+    setVal('poultry_housing_deep_litter', housingData.deep_litter_pens);
+    setVal('poultry_housing_battery_cages', housingData.battery_cages);
+    setVal('poultry_housing_free_range', housingData.free_range);
+
+    // 6. Section 3: Farm Input Supply
+    // 3.1 Purchase of Animals
+    const purchData = pData.purchase_animals || {};
+    ['broiler', 'layer', 'local_free', 'others'].forEach(function(r) {
+        ['direct_hatchery', 'through_agent', 'buyback', 'own_hatchery'].forEach(function(col) {
+            const chk = document.querySelector('input[name="poultry[purchase_animals][' + r + '][' + col + ']"]');
+            if (chk) chk.checked = !!(purchData[r] && purchData[r][col]);
+        });
+    });
+
+    // 3.2 Feed Supply Types (checkboxes)
+    const feedTypes = pData.feed_supply_types || {};
+    const allFeedKeys = [
+        'broiler_booster','broiler_starter','broiler_grower','broiler_finisher','broiler_withdrawal',
+        'layer_booster','layer_starter','layer_grower','layer_layer',
+        'local_commercial','local_supplements','local_scavenging'
+    ];
+    allFeedKeys.forEach(function(fk) {
+        const el = document.getElementById('fs_' + fk);
+        if (el) el.checked = !!(feedTypes[fk]);
+    });
+
+    // 3.3 Method of Feed Supply
+    const methodData = pData.feed_method || {};
+    const methodKeys = [
+        'method_broiler_booster','method_broiler_starter','method_broiler_grower',
+        'method_broiler_finisher','method_broiler_withdrawal',
+        'method_layer_booster','method_layer_starter','method_layer_grower','method_layer_layer'
+    ];
+    methodKeys.forEach(function(mk) {
+        ['commercial','self_prep','buyback'].forEach(function(col) {
+            const chk = document.querySelector('input[name="poultry[feed_method][' + mk + '][' + col + ']"]');
+            if (chk) chk.checked = !!(methodData[mk] && methodData[mk][col]);
+        });
+    });
+
+    // 3.4 Feed Manufacturing Quantities
+    const feedMfg = pData.feed_mfg || {};
+    const mfgKeys = [
+        'broiler_booster','broiler_starter','broiler_grower','broiler_finisher','broiler_withdrawal',
+        'layer_booster','layer_starter','layer_grower','layer_layer',
+        'local_commercial','local_supplements','local_scavenging'
+    ];
+    mfgKeys.forEach(function(fc) {
+        const prodIn = document.querySelector('input[name="poultry[feed_mfg][' + fc + '][monthly_prod]"]');
+        if (prodIn) prodIn.value = (feedMfg[fc] && feedMfg[fc].monthly_prod !== undefined && feedMfg[fc].monthly_prod !== null) ? feedMfg[fc].monthly_prod : '';
+        const unitSel = document.querySelector('select[name="poultry[feed_mfg][' + fc + '][unit]"]');
+        if (unitSel && feedMfg[fc] && feedMfg[fc].unit) unitSel.value = feedMfg[fc].unit;
+    });
+
+    // 3.5 DAPH Registration (Feed Manufacturer)
+    const daphFeedReg = (pData.daph_feed_mfr_registered === 'Yes');
+    const dYes = document.getElementById('daph_feed_mfr_yes');
+    const dNo  = document.getElementById('daph_feed_mfr_no');
+    if (dYes) dYes.checked = daphFeedReg;
+    if (dNo)  dNo.checked  = !daphFeedReg;
+    setVal('poultry_daph_feed_mfr_reg_no', pData.daph_feed_mfr_reg_no);
+    if (typeof window.toggleDaphFeedMfrRegNumber === 'function') {
+        window.toggleDaphFeedMfrRegNumber(daphFeedReg);
+    }
+
+    // 7. Section 4: Farm Production
+    const pProd = pData.prod || {};
+    setVal('poultry_max_age_layer', pProd.max_age_layer_breeder);
+    setVal('poultry_max_age_broiler', pProd.max_age_broiler);
+    const mortL = document.querySelector('input[name="poultry[prod][mortality_layer]"]');
+    if (mortL) mortL.value = (pProd.mortality_layer !== undefined && pProd.mortality_layer !== null) ? pProd.mortality_layer : '';
+    const mortB = document.querySelector('input[name="poultry[prod][mortality_broiler]"]');
+    if (mortB) mortB.value = (pProd.mortality_broiler !== undefined && pProd.mortality_broiler !== null) ? pProd.mortality_broiler : '';
+    const mortBr = document.querySelector('input[name="poultry[prod][mortality_breeder]"]');
+    if (mortBr) mortBr.value = (pProd.mortality_breeder !== undefined && pProd.mortality_breeder !== null) ? pProd.mortality_breeder : '';
+    const avgEgg = document.querySelector('input[name="poultry[prod][avg_egg_hen_year]"]');
+    if (avgEgg) avgEgg.value = (pProd.avg_egg_hen_year !== undefined && pProd.avg_egg_hen_year !== null) ? pProd.avg_egg_hen_year : '';
+    const avgFcr = document.querySelector('input[name="poultry[prod][avg_fcr_broiler]"]');
+    if (avgFcr) avgFcr.value = (pProd.avg_fcr_broiler !== undefined && pProd.avg_fcr_broiler !== null) ? pProd.avg_fcr_broiler : '';
+    const avgWt = document.querySelector('input[name="poultry[prod][avg_weight_broiler]"]');
+    if (avgWt) avgWt.value = (pProd.avg_weight_broiler !== undefined && pProd.avg_weight_broiler !== null) ? pProd.avg_weight_broiler : '';
+    const avgEggWt = document.querySelector('input[name="poultry[prod][avg_egg_weight]"]');
+    if (avgEggWt) avgEggWt.value = (pProd.avg_egg_weight !== undefined && pProd.avg_egg_weight !== null) ? pProd.avg_egg_weight : '';
+    const shellCol = document.querySelector('select[name="poultry[prod][shell_color]"]');
+    if (shellCol && pProd.shell_color) shellCol.value = pProd.shell_color;
+    const yolkCol = document.querySelector('select[name="poultry[prod][yolk_color]"]');
+    if (yolkCol && pProd.yolk_color) yolkCol.value = pProd.yolk_color;
+
+    // 8. Section 5: Marketing Details
+    const mkt = pData.marketing || {};
+    const meatMkt = mkt.meat || {};
+    ['live_birds', 'dressed_birds', 'processed_products', 'other'].forEach(r => {
+        ['farm_gate', 'wholesale', 'retail'].forEach(col => {
+            const chk = document.querySelector('input[name="poultry[marketing][meat][' + r + '][' + col + ']"]');
+            if (chk) chk.checked = !!(meatMkt[r] && meatMkt[r][col]);
+        });
+    });
+    const meatSpec = document.querySelector('input[name="poultry[marketing][meat][other_specify]"]');
+    if (meatSpec) meatSpec.value = meatMkt.other_specify || '';
+
+    const eggMkt = mkt.eggs || {};
+    ['table_eggs', 'hatching_eggs'].forEach(r => {
+        ['farm_gate', 'wholesale', 'retail'].forEach(col => {
+            const chk = document.querySelector('input[name="poultry[marketing][eggs][' + r + '][' + col + ']"]');
+            if (chk) chk.checked = !!(eggMkt[r] && eggMkt[r][col]);
+        });
+        const specIn = document.querySelector('input[name="poultry[marketing][eggs][' + r + '][other_specify]"]');
+        if (specIn) specIn.value = (eggMkt[r] && eggMkt[r].other_specify) || '';
+    });
+
+    // 9. Switch to Section 1 pane & scroll to top
+    if (typeof window.activatePoultryPane === 'function') {
+        window.activatePoultryPane('pane-p-sec1', 0);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: `Loaded Poultry Reg #${regDisplay} from database`,
+            showConfirmButton: false,
+            timer: 1800
+        });
+    }
+};
+
+window.loadLivestockRecordIntoForm = function(rec) {
+    const formTabBtn = document.getElementById('view-form-tab');
+    if (formTabBtn) {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(formTabBtn).show();
+        } else {
+            formTabBtn.click();
+        }
+    }
+    const fPanel = document.getElementById('viewFormPanel');
+    if (fPanel) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('show', 'active'));
+        fPanel.classList.add('show', 'active');
+        document.querySelectorAll('#brandingTopTabs .nav-link').forEach(b => b.classList.remove('active'));
+        if (formTabBtn) formTabBtn.classList.add('active');
+    }
+
+    // Ensure Category 1 (General Information) is active
+    if (typeof window.activateLivestockPane === 'function') {
+        window.activateLivestockPane('pane-general', 0);
+    } else {
+        const genBtn = document.querySelector('.v-tab-btn[data-target-pane="pane-general"]');
+        if (genBtn) genBtn.click();
     }
 
     // Populate Hidden ID and Update Banner
-    document.getElementById('editingRecordId').value = rec.id;
-    document.getElementById('editingRecordNoDisplay').textContent = rec.registration_no;
-    document.getElementById('editingFarmerDisplay').textContent = rec.farmer_name;
-    document.getElementById('editingStatusBanner').classList.remove('d-none');
-    document.getElementById('formTabTitle').textContent = `Editing Reg #${rec.registration_no}`;
-    document.getElementById('btnSubmitText').textContent = 'Update Record in Database';
+    const editIdEl = document.getElementById('editingRecordId');
+    if (editIdEl) editIdEl.value = rec.id;
+    const recNoEl = document.getElementById('editingRecordNoDisplay');
+    if (recNoEl) recNoEl.textContent = rec.registration_no || '';
+    const farmerEl = document.getElementById('editingFarmerDisplay');
+    if (farmerEl) farmerEl.textContent = rec.farmer_name || '';
+    const bannerEl = document.getElementById('editingStatusBanner');
+    if (bannerEl) bannerEl.classList.remove('d-none');
+    const titleEl = document.getElementById('formTabTitle');
+    if (titleEl) titleEl.textContent = `Editing Reg #${rec.registration_no}`;
+    const btnSub = document.getElementById('btnSubmitText');
+    if (btnSub) btnSub.textContent = 'Update Record in Database';
     const bottomBtn = document.getElementById('btnSubmitBottomText');
     if (bottomBtn) bottomBtn.textContent = 'Update Record in Database';
 
     // 1. General Information
-    document.getElementById('gen_date_renewal').value = rec.date_of_registration_renewal || '';
-    document.getElementById('gen_province').value = rec.province || '';
-    document.getElementById('gen_district').value = rec.district || '';
-    document.getElementById('gen_ds_division').value = rec.ds_division || '';
-    document.getElementById('gen_vs_division').value = rec.vs_division || '';
-    document.getElementById('gen_gn_division').value = rec.gn_division || '';
-    document.getElementById('gen_farmer_name').value = rec.farmer_name || '';
-    document.getElementById('gen_farmer_address').value = rec.farmer_address || '';
-    const genGps = document.getElementById('gen_gps_location');
-    if (genGps) genGps.value = rec.gps_location || '';
-    document.getElementById('gen_registration_no').value = rec.registration_no || '';
-    document.getElementById('gen_telephone_no').value = rec.telephone_no || '';
-    document.getElementById('gen_nic').value = rec.nic || '';
-    document.getElementById('gen_farm_type').value = rec.farm_type || '';
-    document.getElementById('gen_mixed_farm_type').value = rec.mixed_farm_type || '';
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = (val !== undefined && val !== null) ? val : '';
+    };
+    setVal('gen_date_renewal', rec.date_of_registration_renewal);
+    setVal('gen_province', rec.province);
+    setVal('gen_district', rec.district);
+    setVal('gen_ds_division', rec.ds_division);
+    setVal('gen_vs_division', rec.vs_division);
+    setVal('gen_gn_division', rec.gn_division);
+    setVal('gen_farmer_name', rec.farmer_name);
+    setVal('gen_farmer_address', rec.farmer_address);
+    setVal('gen_gps_location', rec.gps_location);
+    setVal('gen_registration_no', rec.registration_no);
+    setVal('gen_telephone_no', rec.telephone_no);
+    setVal('gen_nic', rec.nic);
+    setVal('gen_farm_type', rec.farm_type);
+    setVal('gen_mixed_farm_type', rec.mixed_farm_type);
 
     // 2.1 Neat Cattle Grid
-    const cData = rec.neat_cattle_data || {};
+    let cData = rec.neat_cattle_data || {};
+    if (typeof cData === 'string') { try { cData = JSON.parse(cData); } catch(e) { cData = {}; } }
     const cattleRows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
     cattleRows.forEach(rKey => {
         ['euro', 'indian', 'local'].forEach(cKey => {
@@ -3248,7 +3671,8 @@ window.loadRecordIntoForm = function(recordId) {
     });
 
     // 2.2 Buffaloes Grid
-    const bData = rec.buffaloes_data || {};
+    let bData = rec.buffaloes_data || {};
+    if (typeof bData === 'string') { try { bData = JSON.parse(bData); } catch(e) { bData = {}; } }
     const bufRows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
     bufRows.forEach(rKey => {
         ['niliravi', 'murah', 'cross_breed'].forEach(cKey => {
@@ -3265,7 +3689,8 @@ window.loadRecordIntoForm = function(recordId) {
     });
 
     // 3. Milk Production Grid
-    const mData = rec.milk_data || {};
+    let mData = rec.milk_data || {};
+    if (typeof mData === 'string') { try { mData = JSON.parse(mData); } catch(e) { mData = {}; } }
     const milkRows = ['total_production', 'household_consumption', 'used_for_processing', 'sales'];
     const rowMap = { 'total_production': 'prod', 'household_consumption': 'home', 'used_for_processing': 'proc', 'sales': 'sales' };
     milkRows.forEach(rKey => {
@@ -3281,7 +3706,10 @@ window.loadRecordIntoForm = function(recordId) {
     if (fodderTbody) {
         fodderTbody.innerHTML = '';
         window.fodderRowIndex = 0;
-        const fItems = Array.isArray(rec.fodder_data) ? rec.fodder_data : [];
+        let fItems = rec.fodder_data || [];
+        if (typeof fItems === 'string') { try { fItems = JSON.parse(fItems); } catch(e) { fItems = []; } }
+        if (!Array.isArray(fItems)) fItems = [];
+
         if (fItems.length > 0) {
             fItems.forEach(it => {
                 if (typeof window.addFodderRow === 'function') {
@@ -3316,205 +3744,36 @@ window.loadRecordIntoForm = function(recordId) {
     if (typeof window.calcFodderTotal === 'function') window.calcFodderTotal();
 
     // 5. Swine
-    document.getElementById('swine_total_no').value = rec.swine_total_no || 0;
-    document.getElementById('swine_breeding_female').value = rec.swine_breeding_female || 0;
-    document.getElementById('swine_breeding_male').value = rec.swine_breeding_male || 0;
-    document.getElementById('swine_weaners').value = rec.swine_weaners_fattening || 0;
-    document.getElementById('swine_pre_weaners').value = rec.swine_pre_weaners || 0;
-    document.getElementById('swine_freq_meat').value = rec.swine_freq_meat || 'Not applicable';
-    document.getElementById('swine_freq_breeding').value = rec.swine_freq_breeding || 'Not applicable';
+    setVal('swine_total_no', rec.swine_total_no || 0);
+    setVal('swine_breeding_female', rec.swine_breeding_female || 0);
+    setVal('swine_breeding_male', rec.swine_breeding_male || 0);
+    setVal('swine_weaners', rec.swine_weaners_fattening || 0);
+    setVal('swine_pre_weaners', rec.swine_pre_weaners || 0);
+    setVal('swine_freq_meat', rec.swine_freq_meat || 'Not applicable');
+    setVal('swine_freq_breeding', rec.swine_freq_breeding || 'Not applicable');
 
     // 6. Goat
-    document.getElementById('goat_total_no').value = rec.goat_total_no || 0;
-    document.getElementById('goat_breeding_female').value = rec.goat_breeding_female || 0;
-    document.getElementById('goat_breeding_male').value = rec.goat_breeding_male || 0;
-    document.getElementById('goat_weaners').value = rec.goat_weaners_fattening || 0;
-    document.getElementById('goat_pre_weaners').value = rec.goat_pre_weaners || 0;
-    document.getElementById('goat_freq_meat').value = rec.goat_freq_meat || 'Not applicable';
-    document.getElementById('goat_freq_breeding').value = rec.goat_freq_breeding || 'Not applicable';
-    document.getElementById('goat_milk_per_day').value = rec.goat_milk_per_day || 0.0;
+    setVal('goat_total_no', rec.goat_total_no || 0);
+    setVal('goat_breeding_female', rec.goat_breeding_female || 0);
+    setVal('goat_breeding_male', rec.goat_breeding_male || 0);
+    setVal('goat_weaners', rec.goat_weaners_fattening || 0);
+    setVal('goat_pre_weaners', rec.goat_pre_weaners || 0);
+    setVal('goat_freq_meat', rec.goat_freq_meat || 'Not applicable');
+    setVal('goat_freq_breeding', rec.goat_freq_breeding || 'Not applicable');
+    setVal('goat_milk_per_day', rec.goat_milk_per_day || 0.0);
 
     // 7. Sheep
-    document.getElementById('sheep_breeding_female').value = rec.sheep_breeding_female || 0;
-    document.getElementById('sheep_breeding_male').value = rec.sheep_breeding_male || 0;
-    document.getElementById('sheep_for_meat').value = rec.sheep_for_meat || 0;
-
-    // 8. Poultry
-    const pRegInput = document.getElementById('poultry_registration_no');
-    if (pRegInput) {
-        pRegInput.value = pData.registration_no || '';
-        if (typeof window.validatePoultryRegPrefix === 'function') {
-            window.validatePoultryRegPrefix(pRegInput);
-        }
-    }
-    const setVal = (id, val) => { 
-        const el = document.getElementById(id); 
-        if (el) el.value = (val !== undefined && val !== null) ? val : ''; 
-    };
-    setVal('poultry_owner_name', pData.owner_name);
-    setVal('poultry_manager_name', pData.manager_name);
-    setVal('poultry_farm_address', pData.farm_address);
-    setVal('poultry_telephone_no', pData.telephone_no);
-    setVal('poultry_owner_nic', pData.owner_nic);
-    setVal('poultry_ownership', pData.ownership);
-    setVal('poultry_gn_division', pData.gn_division);
-    setVal('poultry_ds_division', pData.ds_division);
-    setVal('poultry_provincial_directorate', pData.provincial_directorate);
-    setVal('poultry_province_district', pData.province_district);
-    setVal('poultry_present_land_usage', pData.present_land_usage);
-
-    // Section 1 extras: License toggles
-    if (typeof window.togglePoultryLicenseField === 'function') {
-        window.togglePoultryLicenseField('env');
-        window.togglePoultryLicenseField('business');
-    }
-
-    // Restore Poultry Farm Type and trigger Section 3 conditional rendering
-    const pFarmTypeSel = document.getElementById('poultry_poultry_farm_type');
-    if (pFarmTypeSel && pData.poultry_farm_type) {
-        pFarmTypeSel.value = pData.poultry_farm_type;
-        if (typeof window.onPoultryFarmTypeChange === 'function') {
-            window.onPoultryFarmTypeChange(pData.poultry_farm_type);
-        }
-    }
-
-    const popData = pData.pop || {};
-    ['layers', 'broilers', 'breeder'].forEach(r => {
-        ['under_1000', '1000_5000', '5000_10000', 'over_10000'].forEach(c => {
-            const chk = document.getElementById(`pop_${r}_${c}`);
-            if (chk) chk.checked = !!(popData[r] && popData[r][c]);
-        });
-    });
-    const shedData = pData.shed || {};
-    ['deep_litter', 'slatted', 'slatted_deep', 'cages', 'other'].forEach(s => {
-        ['layers', 'broilers', 'breeders'].forEach(b => {
-            const inEl = document.querySelector(`input[name="poultry[shed][${s}][${b}]"]`);
-            if (inEl) inEl.value = (shedData[s] && shedData[s][b] !== undefined) ? shedData[s][b] : '';
-        });
-    });
-    const otherShedSpec = document.querySelector('input[name="poultry[shed][other_specify]"]');
-    if (otherShedSpec) otherShedSpec.value = shedData.other_specify || '';
-
-    // Section 3: Farm Input Supply (new structure)
-    // 3.1 Purchase of Animals
-    const purchData = pData.purchase_animals || {};
-    ['broiler', 'layer', 'local_free', 'others'].forEach(function(r) {
-        ['direct_hatchery', 'through_agent', 'buyback', 'own_hatchery'].forEach(function(col) {
-            var chk = document.querySelector('input[name="poultry[purchase_animals][' + r + '][' + col + ']"]');
-            if (chk) chk.checked = !!(purchData[r] && purchData[r][col]);
-        });
-    });
-
-    // 3.2 Feed Supply Types (checkboxes)
-    var feedTypes = pData.feed_supply_types || {};
-    var allFeedKeys = [
-        'broiler_booster','broiler_starter','broiler_grower','broiler_finisher','broiler_withdrawal',
-        'layer_booster','layer_starter','layer_grower','layer_layer',
-        'local_commercial','local_supplements','local_scavenging'
-    ];
-    allFeedKeys.forEach(function(fk) {
-        var el = document.getElementById('fs_' + fk);
-        if (el) el.checked = !!(feedTypes[fk]);
-    });
-
-    // 3.3 Method of Feed Supply
-    var methodData = pData.feed_method || {};
-    var methodKeys = [
-        'method_broiler_booster','method_broiler_starter','method_broiler_grower',
-        'method_broiler_finisher','method_broiler_withdrawal',
-        'method_layer_booster','method_layer_starter','method_layer_grower','method_layer_layer'
-    ];
-    methodKeys.forEach(function(mk) {
-        ['commercial','self_prep','buyback'].forEach(function(col) {
-            var chk = document.querySelector('input[name="poultry[feed_method][' + mk + '][' + col + ']"]');
-            if (chk) chk.checked = !!(methodData[mk] && methodData[mk][col]);
-        });
-    });
-
-    // 3.4 Feed Manufacturing Quantities
-    var feedMfg = pData.feed_mfg || {};
-    var mfgKeys = [
-        'broiler_booster','broiler_starter','broiler_grower','broiler_finisher','broiler_withdrawal',
-        'layer_booster','layer_starter','layer_grower','layer_layer',
-        'local_commercial','local_supplements','local_scavenging'
-    ];
-    mfgKeys.forEach(function(fc) {
-        var prodIn = document.querySelector('input[name="poultry[feed_mfg][' + fc + '][monthly_prod]"]');
-        if (prodIn) prodIn.value = (feedMfg[fc] && feedMfg[fc].monthly_prod !== undefined) ? feedMfg[fc].monthly_prod : '';
-        var unitSel = document.querySelector('select[name="poultry[feed_mfg][' + fc + '][unit]"]');
-        if (unitSel && feedMfg[fc] && feedMfg[fc].unit) unitSel.value = feedMfg[fc].unit;
-    });
-
-    // 3.5 DAPH Registration (Feed Manufacturer)
-    var daphFeedReg = pData.daph_feed_mfr_registered === 'Yes';
-    var dYes = document.getElementById('daph_feed_mfr_yes');
-    var dNo  = document.getElementById('daph_feed_mfr_no');
-    if (dYes) dYes.checked = daphFeedReg;
-    if (dNo)  dNo.checked  = !daphFeedReg;
-    setVal('poultry_daph_feed_mfr_reg_no', pData.daph_feed_mfr_reg_no);
-    if (typeof window.toggleDaphFeedMfrRegNumber === 'function') {
-        window.toggleDaphFeedMfrRegNumber(daphFeedReg);
-    }
-
-    // Also restore the old farm DAPH registered field (still exists)
-    var daphReg = pData.daph_registered === 'Yes';
-    var rYes = document.getElementById('daph_reg_yes');
-    var rNo  = document.getElementById('daph_reg_no');
-    if (rYes) rYes.checked = daphReg;
-    if (rNo)  rNo.checked  = !daphReg;
-    setVal('poultry_daph_reg_no', pData.daph_reg_no);
-
-
-    // Section 4: Farm Production
-    const pProd = pData.prod || {};
-    setVal('poultry_max_age_layer', pProd.max_age_layer_breeder);
-    setVal('poultry_max_age_broiler', pProd.max_age_broiler);
-    const mortL = document.querySelector('input[name="poultry[prod][mortality_layer]"]');
-    if (mortL) mortL.value = pProd.mortality_layer || '';
-    const mortB = document.querySelector('input[name="poultry[prod][mortality_broiler]"]');
-    if (mortB) mortB.value = pProd.mortality_broiler || '';
-    const mortBr = document.querySelector('input[name="poultry[prod][mortality_breeder]"]');
-    if (mortBr) mortBr.value = pProd.mortality_breeder || '';
-    const avgEgg = document.querySelector('input[name="poultry[prod][avg_egg_hen_year]"]');
-    if (avgEgg) avgEgg.value = pProd.avg_egg_hen_year || '';
-    const avgFcr = document.querySelector('input[name="poultry[prod][avg_fcr_broiler]"]');
-    if (avgFcr) avgFcr.value = pProd.avg_fcr_broiler || '';
-    const avgWt = document.querySelector('input[name="poultry[prod][avg_weight_broiler]"]');
-    if (avgWt) avgWt.value = pProd.avg_weight_broiler || '';
-    const avgEggWt = document.querySelector('input[name="poultry[prod][avg_egg_weight]"]');
-    if (avgEggWt) avgEggWt.value = pProd.avg_egg_weight || '';
-    const shellCol = document.querySelector('select[name="poultry[prod][shell_color]"]');
-    if (shellCol && pProd.shell_color) shellCol.value = pProd.shell_color;
-    const yolkCol = document.querySelector('select[name="poultry[prod][yolk_color]"]');
-    if (yolkCol && pProd.yolk_color) yolkCol.value = pProd.yolk_color;
-
-    // Section 5: Marketing
-    const mkt = pData.marketing || {};
-    const meatMkt = mkt.meat || {};
-    ['live_birds', 'dressed_birds', 'processed_products', 'other'].forEach(r => {
-        ['farm_gate', 'wholesale', 'retail'].forEach(col => {
-            const chk = document.querySelector(`input[name="poultry[marketing][meat][${r}][${col}]"]`);
-            if (chk) chk.checked = !!(meatMkt[r] && meatMkt[r][col]);
-        });
-    });
-    const meatSpec = document.querySelector('input[name="poultry[marketing][meat][other_specify]"]');
-    if (meatSpec) meatSpec.value = meatMkt.other_specify || '';
-
-    const eggMkt = mkt.eggs || {};
-    ['table_eggs', 'hatching_eggs'].forEach(r => {
-        ['farm_gate', 'wholesale', 'retail'].forEach(col => {
-            const chk = document.querySelector(`input[name="poultry[marketing][eggs][${r}][${col}]"]`);
-            if (chk) chk.checked = !!(eggMkt[r] && eggMkt[r][col]);
-        });
-        const specIn = document.querySelector(`input[name="poultry[marketing][eggs][${r}][other_specify]"]`);
-        if (specIn) specIn.value = (eggMkt[r] && eggMkt[r].other_specify) || '';
-    });
+    setVal('sheep_breeding_female', rec.sheep_breeding_female || 0);
+    setVal('sheep_breeding_male', rec.sheep_breeding_male || 0);
+    setVal('sheep_for_meat', rec.sheep_for_meat || 0);
 
     // Trigger grid calculations
     document.querySelectorAll('.cattle-calc-input')[0]?.dispatchEvent(new Event('input'));
     document.querySelectorAll('.buffalo-calc-input')[0]?.dispatchEvent(new Event('input'));
     document.querySelectorAll('.milk-calc-input')[0]?.dispatchEvent(new Event('input'));
     document.querySelectorAll('.sheep-calc-input')[0]?.dispatchEvent(new Event('input'));
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (typeof Swal !== 'undefined') {
         Swal.fire({
@@ -4635,5 +4894,502 @@ window.exportModalRecordPdf = function() {
         window.exportBrandingToPDF(window.currentModalRecordId);
     }
 };
+
+// =========================================================================
+// HIGH-LEVEL FARMERS REGISTRY SUMMARY EXPORTS (CSV & PDF)
+// Independent of the detailed individual animal breakdown exports
+// =========================================================================
+
+function getLivestockSummaryRecords() {
+    const list = (typeof window.liveDatabaseRecords !== 'undefined' && Array.isArray(window.liveDatabaseRecords)) 
+        ? window.liveDatabaseRecords 
+        : ((typeof liveDatabaseRecords !== 'undefined' && Array.isArray(liveDatabaseRecords)) ? liveDatabaseRecords : []);
+    return list.filter(r => {
+        const isPoultry = (r.farm_type === 'Poultry') || 
+                          (r.poultry_data && (r.poultry_data.registration_no || r.poultry_data.owner_name || r.poultry_data.poultry_farm_type)) || 
+                          (/^[Pp]/.test(r.registration_no || ''));
+        return !isPoultry;
+    });
+}
+
+function getPoultrySummaryRecords() {
+    const list = (typeof window.liveDatabaseRecords !== 'undefined' && Array.isArray(window.liveDatabaseRecords)) 
+        ? window.liveDatabaseRecords 
+        : ((typeof liveDatabaseRecords !== 'undefined' && Array.isArray(liveDatabaseRecords)) ? liveDatabaseRecords : []);
+    return list.filter(r => {
+        const isPoultry = (r.farm_type === 'Poultry') || 
+                          (r.poultry_data && (r.poultry_data.registration_no || r.poultry_data.owner_name || r.poultry_data.poultry_farm_type)) || 
+                          (/^[Pp]/.test(r.registration_no || ''));
+        return isPoultry;
+    });
+}
+
+// 1. Livestock Farmers Registry - Summary Export to CSV
+window.exportLivestockFarmerListCSV = function() {
+    const records = getLivestockSummaryRecords();
+    if (!records.length) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'info', title: 'No Records', text: 'No livestock farmer records found to export.' });
+        } else {
+            alert('No livestock farmer records found to export.');
+        }
+        return;
+    }
+
+    const headers = [
+        "Registration No",
+        "Renewal Date",
+        "Farmer Name",
+        "Farmer Address",
+        "NIC",
+        "Telephone No",
+        "DS Division",
+        "GN Division",
+        "Farm Type",
+        "Total Cattle",
+        "Total Buffaloes",
+        "Total Goats",
+        "Total Swine",
+        "Total Sheep",
+        "Total Animals",
+        "Daily Milk Production (L)"
+    ];
+
+    const rows = records.map(r => {
+        const totalAnimals = (parseInt(r.total_neat_cattle) || 0) +
+                             (parseInt(r.total_buffaloes) || 0) +
+                             (parseInt(r.goat_total_no) || 0) +
+                             (parseInt(r.swine_total_no) || 0) +
+                             (parseInt(r.sheep_total_no) || 0);
+        return [
+            r.registration_no || '',
+            r.date_of_registration_renewal || '',
+            r.farmer_name || '',
+            r.farmer_address || '',
+            r.nic || '',
+            r.telephone_no || '',
+            r.ds_division || '',
+            r.gn_division || '',
+            r.farm_type || 'Livestock',
+            r.total_neat_cattle ?? 0,
+            r.total_buffaloes ?? 0,
+            r.goat_total_no ?? 0,
+            r.swine_total_no ?? 0,
+            r.sheep_total_no ?? 0,
+            totalAnimals,
+            parseFloat(r.daily_milk_production || 0).toFixed(1)
+        ];
+    });
+
+    const csvContent = [headers, ...rows]
+        .map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+        .join('\r\n');
+
+    const rangeName = (window.brandingRangeName || 'Trincomalee').replace(/\s+/g, '_');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const fileName = `Livestock_Farmers_Summary_${rangeName}_${dateStr}.csv`;
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'CSV Exported',
+            text: `Successfully exported ${records.length} livestock farmers to ${fileName}`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+};
+
+// 2. Livestock Farmers Registry - Summary Export to PDF
+window.exportLivestockFarmerListPDF = function() {
+    if (typeof pdfMake === 'undefined') {
+        alert('PDF generation library is still loading. Please try again in a few moments.');
+        return;
+    }
+
+    const records = getLivestockSummaryRecords();
+    if (!records.length) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'info', title: 'No Records', text: 'No livestock farmer records found to export.' });
+        } else {
+            alert('No livestock farmer records found to export.');
+        }
+        return;
+    }
+
+    const rangeName = window.brandingRangeName || 'Trincomalee';
+    const districtName = window.brandingDistrictName || 'Trincomalee';
+    const provinceName = window.brandingProvinceName || 'Eastern Province';
+    const printDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    const tableBody = [
+        [
+            { text: '#', style: 'tableHeader', alignment: 'center' },
+            { text: 'Reg No', style: 'tableHeader' },
+            { text: 'Renewal Date', style: 'tableHeader' },
+            { text: 'Farmer Name & Address', style: 'tableHeader' },
+            { text: 'NIC / Phone', style: 'tableHeader' },
+            { text: 'DS / GN Division', style: 'tableHeader' },
+            { text: 'Farm Type', style: 'tableHeader' },
+            { text: 'Cattle', style: 'tableHeader', alignment: 'center' },
+            { text: 'Buffalo', style: 'tableHeader', alignment: 'center' },
+            { text: 'Goats', style: 'tableHeader', alignment: 'center' },
+            { text: 'Swine', style: 'tableHeader', alignment: 'center' },
+            { text: 'Sheep', style: 'tableHeader', alignment: 'center' },
+            { text: 'Total', style: 'tableHeader', alignment: 'center' },
+            { text: 'Milk (L/d)', style: 'tableHeader', alignment: 'right' }
+        ]
+    ];
+
+    let grandTotalAnimals = 0;
+    let grandMilk = 0;
+
+    records.forEach((r, idx) => {
+        const cattle = parseInt(r.total_neat_cattle) || 0;
+        const buffalo = parseInt(r.total_buffaloes) || 0;
+        const goats = parseInt(r.goat_total_no) || 0;
+        const swine = parseInt(r.swine_total_no) || 0;
+        const sheep = parseInt(r.sheep_total_no) || 0;
+        const total = cattle + buffalo + goats + swine + sheep;
+        const milk = parseFloat(r.daily_milk_production) || 0;
+
+        grandTotalAnimals += total;
+        grandMilk += milk;
+
+        const rowBg = idx % 2 === 1 ? '#f8fafc' : '#ffffff';
+
+        tableBody.push([
+            { text: String(idx + 1), alignment: 'center', fillColor: rowBg },
+            { text: r.registration_no || '-', bold: true, fillColor: rowBg },
+            { text: r.date_of_registration_renewal || '-', fillColor: rowBg },
+            { text: `${r.farmer_name || '-'}\n${r.farmer_address || ''}`, fillColor: rowBg },
+            { text: `${r.nic || '-'}\n${r.telephone_no || '-'}`, fillColor: rowBg },
+            { text: `${r.ds_division || '-'}\n${r.gn_division || '-'}`, fillColor: rowBg },
+            { text: r.farm_type || 'Livestock', fillColor: rowBg },
+            { text: String(cattle), alignment: 'center', fillColor: rowBg },
+            { text: String(buffalo), alignment: 'center', fillColor: rowBg },
+            { text: String(goats), alignment: 'center', fillColor: rowBg },
+            { text: String(swine), alignment: 'center', fillColor: rowBg },
+            { text: String(sheep), alignment: 'center', fillColor: rowBg },
+            { text: String(total), bold: true, alignment: 'center', fillColor: rowBg },
+            { text: milk.toFixed(1), alignment: 'right', fillColor: rowBg }
+        ]);
+    });
+
+    // Summary Totals Row
+    tableBody.push([
+        { text: 'Total', colSpan: 12, bold: true, alignment: 'right', fillColor: '#f1f5f9' },
+        {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+        { text: String(grandTotalAnimals), bold: true, alignment: 'center', fillColor: '#f1f5f9' },
+        { text: grandMilk.toFixed(1), bold: true, alignment: 'right', fillColor: '#f1f5f9' }
+    ]);
+
+    const docDefinition = {
+        pageOrientation: 'landscape',
+        pageSize: 'A4',
+        pageMargins: [20, 20, 20, 25],
+        content: [
+            { text: 'DEPARTMENT OF ANIMAL PRODUCTION & HEALTH - EASTERN PROVINCE', style: 'mainHeader' },
+            { text: 'LIVESTOCK FARMERS REGISTRY - SUMMARY LIST', style: 'subHeader' },
+            { text: `Range: ${rangeName}  |  District: ${districtName}  |  Province: ${provinceName}  |  Generated on: ${printDate}  |  Total Registered Farms: ${records.length}`, style: 'metaHeader', margin: [0, 0, 0, 10] },
+            {
+                table: {
+                    headerRows: 1,
+                    widths: [20, 55, 55, 130, 80, 80, 60, 32, 35, 30, 30, 30, 38, 45],
+                    body: tableBody
+                },
+                layout: {
+                    hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5,
+                    vLineWidth: () => 0.5,
+                    hLineColor: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? '#370709' : '#cbd5e1',
+                    vLineColor: () => '#e2e8f0',
+                    paddingLeft: () => 4,
+                    paddingRight: () => 4,
+                    paddingTop: () => 3,
+                    paddingBottom: () => 3
+                }
+            }
+        ],
+        footer: function(currentPage, pageCount) {
+            return {
+                columns: [
+                    { text: `DAPH-EP MIS - Livestock Farmers Summary`, fontSize: 7, color: '#64748b', alignment: 'left', margin: [20, 0, 0, 0] },
+                    { text: `Page ${currentPage} of ${pageCount}`, fontSize: 7, color: '#64748b', alignment: 'right', margin: [0, 0, 20, 0] }
+                ]
+            };
+        },
+        styles: {
+            mainHeader: { fontSize: 11, bold: true, alignment: 'center', color: '#370709', margin: [0, 0, 0, 2] },
+            subHeader: { fontSize: 10, bold: true, alignment: 'center', color: '#1e293b', margin: [0, 0, 0, 2] },
+            metaHeader: { fontSize: 8, alignment: 'center', color: '#64748b' },
+            tableHeader: { fontSize: 7.5, bold: true, fillColor: '#370709', color: '#ffffff' }
+        },
+        defaultStyle: {
+            fontSize: 7,
+            color: '#1e293b'
+        }
+    };
+
+    const fileName = `Livestock_Farmers_Summary_${rangeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    pdfMake.createPdf(docDefinition).download(fileName);
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'PDF Downloaded',
+            text: `Successfully exported ${records.length} livestock farmers to ${fileName}`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+};
+
+// 3. Poultry Farmers Registry - Summary Export to CSV
+window.exportPoultryFarmerListCSV = function() {
+    const records = getPoultrySummaryRecords();
+    if (!records.length) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'info', title: 'No Records', text: 'No poultry farmer records found to export.' });
+        } else {
+            alert('No poultry farmer records found to export.');
+        }
+        return;
+    }
+
+    const headers = [
+        "Registration No",
+        "Renewal Date",
+        "Owner Name",
+        "Manager Name",
+        "Farm Address",
+        "Telephone No",
+        "NIC",
+        "DS Division",
+        "GN Division",
+        "Farm Type",
+        "Ownership",
+        "Total Birds"
+    ];
+
+    const rows = records.map(r => {
+        let pData = r.poultry_data || {};
+        if (typeof pData === 'string') { try { pData = JSON.parse(pData); } catch(e) { pData = {}; } }
+
+        const regNo = (pData && pData.registration_no) ? pData.registration_no : (r.registration_no || '');
+        const ownerName = (pData && pData.owner_name) ? pData.owner_name : (r.farmer_name || '');
+        const managerName = pData.manager_name || '';
+        const address = (pData && pData.farm_address) ? pData.farm_address : (r.farmer_address || '');
+        const phone = (pData && pData.telephone_no) ? pData.telephone_no : (r.telephone_no || '');
+        const nic = (pData && pData.owner_nic) ? pData.owner_nic : (r.nic || '');
+        const ds = (pData && pData.ds_division) ? pData.ds_division : (r.ds_division || '');
+        const gn = (pData && pData.gn_division) ? pData.gn_division : (r.gn_division || '');
+        const farmType = pData.poultry_farm_type || r.farm_type || 'Poultry';
+        const ownership = pData.ownership || '';
+
+        let totalBirds = 0;
+        if (Array.isArray(pData.flock_age_groups) && pData.flock_age_groups.length > 0) {
+            pData.flock_age_groups.forEach(g => {
+                totalBirds += (parseInt(g.quantity) || 0);
+            });
+        }
+
+        return [
+            regNo,
+            r.date_of_registration_renewal || '',
+            ownerName,
+            managerName,
+            address,
+            phone,
+            nic,
+            ds,
+            gn,
+            farmType,
+            ownership,
+            totalBirds
+        ];
+    });
+
+    const csvContent = [headers, ...rows]
+        .map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+        .join('\r\n');
+
+    const rangeName = (window.brandingRangeName || 'Trincomalee').replace(/\s+/g, '_');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const fileName = `Poultry_Farmers_Summary_${rangeName}_${dateStr}.csv`;
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'CSV Exported',
+            text: `Successfully exported ${records.length} poultry farmers to ${fileName}`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+};
+
+// 4. Poultry Farmers Registry - Summary Export to PDF
+window.exportPoultryFarmerListPDF = function() {
+    if (typeof pdfMake === 'undefined') {
+        alert('PDF generation library is still loading. Please try again in a few moments.');
+        return;
+    }
+
+    const records = getPoultrySummaryRecords();
+    if (!records.length) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'info', title: 'No Records', text: 'No poultry farmer records found to export.' });
+        } else {
+            alert('No poultry farmer records found to export.');
+        }
+        return;
+    }
+
+    const rangeName = window.brandingRangeName || 'Trincomalee';
+    const districtName = window.brandingDistrictName || 'Trincomalee';
+    const provinceName = window.brandingProvinceName || 'Eastern Province';
+    const printDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    const tableBody = [
+        [
+            { text: '#', style: 'tableHeader', alignment: 'center' },
+            { text: 'Reg No (P)', style: 'tableHeader' },
+            { text: 'Renewal Date', style: 'tableHeader' },
+            { text: 'Owner & Manager Name', style: 'tableHeader' },
+            { text: 'Farm Address', style: 'tableHeader' },
+            { text: 'NIC & Contact', style: 'tableHeader' },
+            { text: 'DS / GN Division', style: 'tableHeader' },
+            { text: 'Farm Type', style: 'tableHeader' },
+            { text: 'Ownership', style: 'tableHeader' },
+            { text: 'Total Birds', style: 'tableHeader', alignment: 'center' }
+        ]
+    ];
+
+    let grandTotalBirds = 0;
+
+    records.forEach((r, idx) => {
+        let pData = r.poultry_data || {};
+        if (typeof pData === 'string') { try { pData = JSON.parse(pData); } catch(e) { pData = {}; } }
+
+        const regNo = (pData && pData.registration_no) ? pData.registration_no : (r.registration_no || '-');
+        const ownerName = (pData && pData.owner_name) ? pData.owner_name : (r.farmer_name || '-');
+        const managerName = pData.manager_name ? ` (Mgr: ${pData.manager_name})` : '';
+        const address = (pData && pData.farm_address) ? pData.farm_address : (r.farmer_address || '-');
+        const phone = (pData && pData.telephone_no) ? pData.telephone_no : (r.telephone_no || '-');
+        const nic = (pData && pData.owner_nic) ? pData.owner_nic : (r.nic || '-');
+        const ds = (pData && pData.ds_division) ? pData.ds_division : (r.ds_division || '-');
+        const gn = (pData && pData.gn_division) ? pData.gn_division : (r.gn_division || '-');
+        const farmType = pData.poultry_farm_type || r.farm_type || 'Poultry';
+        const ownership = pData.ownership || '-';
+
+        let totalBirds = 0;
+        if (Array.isArray(pData.flock_age_groups) && pData.flock_age_groups.length > 0) {
+            pData.flock_age_groups.forEach(g => {
+                totalBirds += (parseInt(g.quantity) || 0);
+            });
+        }
+        grandTotalBirds += totalBirds;
+
+        const rowBg = idx % 2 === 1 ? '#fffbeb' : '#ffffff';
+
+        tableBody.push([
+            { text: String(idx + 1), alignment: 'center', fillColor: rowBg },
+            { text: regNo, bold: true, fillColor: rowBg },
+            { text: r.date_of_registration_renewal || '-', fillColor: rowBg },
+            { text: `${ownerName}${managerName}`, fillColor: rowBg },
+            { text: address, fillColor: rowBg },
+            { text: `${nic}\n${phone}`, fillColor: rowBg },
+            { text: `${ds}\n${gn}`, fillColor: rowBg },
+            { text: farmType, fillColor: rowBg },
+            { text: ownership, fillColor: rowBg },
+            { text: String(totalBirds), bold: true, alignment: 'center', fillColor: rowBg }
+        ]);
+    });
+
+    // Grand Total Row
+    tableBody.push([
+        { text: 'Total Registered Birds', colSpan: 9, bold: true, alignment: 'right', fillColor: '#fef3c7' },
+        {}, {}, {}, {}, {}, {}, {}, {},
+        { text: String(grandTotalBirds), bold: true, alignment: 'center', fillColor: '#fef3c7' }
+    ]);
+
+    const docDefinition = {
+        pageOrientation: 'landscape',
+        pageSize: 'A4',
+        pageMargins: [20, 20, 20, 25],
+        content: [
+            { text: 'DEPARTMENT OF ANIMAL PRODUCTION & HEALTH - EASTERN PROVINCE', style: 'mainHeader' },
+            { text: 'POULTRY FARMERS REGISTRY - SUMMARY LIST', style: 'subHeader' },
+            { text: `Range: ${rangeName}  |  District: ${districtName}  |  Province: ${provinceName}  |  Generated on: ${printDate}  |  Total Registered Poultry Farms: ${records.length}`, style: 'metaHeader', margin: [0, 0, 0, 10] },
+            {
+                table: {
+                    headerRows: 1,
+                    widths: [25, 70, 65, 140, 140, 90, 85, 75, 75, 55],
+                    body: tableBody
+                },
+                layout: {
+                    hLineWidth: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5,
+                    vLineWidth: () => 0.5,
+                    hLineColor: (i, node) => (i === 0 || i === 1 || i === node.table.body.length) ? '#92400e' : '#fcd34d',
+                    vLineColor: () => '#fde68a',
+                    paddingLeft: () => 4,
+                    paddingRight: () => 4,
+                    paddingTop: () => 3,
+                    paddingBottom: () => 3
+                }
+            }
+        ],
+        footer: function(currentPage, pageCount) {
+            return {
+                columns: [
+                    { text: `DAPH-EP MIS - Poultry Farmers Summary`, fontSize: 7, color: '#64748b', alignment: 'left', margin: [20, 0, 0, 0] },
+                    { text: `Page ${currentPage} of ${pageCount}`, fontSize: 7, color: '#64748b', alignment: 'right', margin: [0, 0, 20, 0] }
+                ]
+            };
+        },
+        styles: {
+            mainHeader: { fontSize: 11, bold: true, alignment: 'center', color: '#92400e', margin: [0, 0, 0, 2] },
+            subHeader: { fontSize: 10, bold: true, alignment: 'center', color: '#1e293b', margin: [0, 0, 0, 2] },
+            metaHeader: { fontSize: 8, alignment: 'center', color: '#64748b' },
+            tableHeader: { fontSize: 7.5, bold: true, fillColor: '#92400e', color: '#ffffff' }
+        },
+        defaultStyle: {
+            fontSize: 7,
+            color: '#1e293b'
+        }
+    };
+
+    const fileName = `Poultry_Farmers_Summary_${rangeName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    pdfMake.createPdf(docDefinition).download(fileName);
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'PDF Downloaded',
+            text: `Successfully exported ${records.length} poultry farmers to ${fileName}`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+};
+
 
 
