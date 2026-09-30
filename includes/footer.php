@@ -34,6 +34,7 @@
     <!-- Chart.js Library -->
     <script src="<?= $rel_path ?>assets/js/chart.min.js"></script>
 
+    <script>window.DAPH_REL_PATH = "<?= $rel_path ?>";</script>
     <!-- Dedicated Module JS Files -->
     <script src="<?= $rel_path ?>assets/js/farm.js"></script>
     <script src="<?= $rel_path ?>assets/js/veterinary.js"></script>

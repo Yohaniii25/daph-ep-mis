@@ -367,7 +367,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 labels: chartLabels,
                                 datasets: [{
                                     data: chartValues,
-                                    backgroundColor: ['#370709', '#a07174', '#e2e8f0', '#94a3b8', '#f59e0b', '#10b981'],
+                                    backgroundColor: ['#370709', '#820100', '#ea580c', '#eab308', '#10b981', '#0284c7', '#64748b'],
                                     borderWidth: 2,
                                     borderColor: '#ffffff'
                                 }]
@@ -5392,4 +5392,262 @@ window.exportPoultryFarmerListPDF = function() {
 };
 
 
+// =========================================================================
+// GLOBAL FARMER NIC LOOKUP & AUTO-POPULATION (MASTER REGISTRY INTEGRATION)
+// =========================================================================
+function getGlobalFarmerLookupUrl() {
+    if (typeof window.DAPH_REL_PATH !== 'undefined' && window.DAPH_REL_PATH !== null) {
+        return window.DAPH_REL_PATH + 'pages/modules/veterinary/processors/get_farmer_by_nic.php';
+    }
+    if (window.location.pathname.indexOf('/pages/modules/veterinary/') !== -1) {
+        return 'processors/get_farmer_by_nic.php';
+    }
+    const idx = window.location.pathname.indexOf('/pages/');
+    if (idx !== -1) {
+        return window.location.pathname.substring(0, idx) + '/pages/modules/veterinary/processors/get_farmer_by_nic.php';
+    }
+    return 'processors/get_farmer_by_nic.php';
+}
 
+function initGlobalFarmerNICLookup() {
+    // Selector for any input field capturing Farmer NIC across the entire application
+    const nicSelector = [
+        'input[data-farmer-nic]',
+        'input.farmer-nic-input',
+        'input#gen_nic',
+        'input#poultry_nic',
+        'input#leaf_farmer_nic',
+        'input#add_hc_farmer_nic',
+        'input#edit_farmer_nic',
+        'input#prog_nic_no',
+        'input#issue_form_nic',
+        'input#add_client_nic',
+        'input#edit_nic',
+        'input[name="farmer_nic"]',
+        'input[name="beneficiary_nic"]',
+        'input[name="general[nic]"]',
+        'input[name="poultry[nic]"]',
+        'input[name="client_nic"]',
+        'input[name="nic"]',
+        'input[name="nic_no"]'
+    ].join(', ');
+
+    let nicTimer = null;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        });
+    }
+
+    function doFarmerLookup($input, triggerType) {
+        // Exclude inputs inside staff / employee specific modals (like casual vaccinators or user creation)
+        if ($input.closest('#addStaffModal, #editStaffModal, #addUserModal, #editUserModal').length) {
+            return;
+        }
+
+        const rawVal = $input.val() ? $input.val().trim() : '';
+        const cleanNic = rawVal.replace(/[^0-9a-zA-Z]/g, '');
+
+        // Find or create feedback badge container next to the NIC input
+        let $feedback = $input.siblings('.global-farmer-nic-feedback');
+        if (!$feedback.length) {
+            const $parent = $input.closest('.input-group');
+            if ($parent.length) {
+                $feedback = $parent.siblings('.global-farmer-nic-feedback');
+                if (!$feedback.length) {
+                    $feedback = $('<div class="global-farmer-nic-feedback small mt-1" style="display:none;"></div>');
+                    $parent.after($feedback);
+                }
+            } else {
+                $feedback = $('<div class="global-farmer-nic-feedback small mt-1" style="display:none;"></div>');
+                $input.after($feedback);
+            }
+        }
+
+        if (!rawVal) {
+            $feedback.hide().empty();
+            return;
+        }
+
+        // On input event, only trigger query when length >= 9 (valid Sri Lankan NIC format)
+        if (triggerType === 'input' && cleanNic.length < 9) {
+            $feedback.hide().empty();
+            return;
+        }
+
+        // If blurs with less than 5 characters, ignore
+        if (cleanNic.length < 5) {
+            return;
+        }
+
+        $feedback
+            .html('<span class="text-secondary"><span class="spinner-border spinner-border-sm me-1" style="width:0.85rem;height:0.85rem;"></span>Querying Master Registry...</span>')
+            .show();
+
+        const lookupUrl = getGlobalFarmerLookupUrl();
+
+        $.ajax({
+            url: lookupUrl,
+            type: 'GET',
+            data: { nic: rawVal },
+            dataType: 'json',
+            success: function(resp) {
+                if (resp && resp.success && resp.found && resp.farmer) {
+                    const f = resp.farmer;
+                    const farmerName = f.farmer_name || f.full_name || '';
+                    const regNo = f.farm_registration_no || f.registration_no || '';
+                    const address = f.farmer_address || f.location_address || '';
+                    const phone = f.telephone_no || f.contact_no || f.phone || '';
+                    const dsDiv = f.ds_division || '';
+                    const gnDiv = f.gn_division || '';
+                    const vsDiv = f.vs_division || '';
+
+                    // Display feedback badge
+                    const badgeText = `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">` +
+                        `<i class="bi bi-shield-fill-check me-1"></i>Master Registry: <strong>${escapeHtml(farmerName)}</strong>` +
+                        (regNo ? ` | Reg: ${escapeHtml(regNo)}` : '') +
+                        `</span>`;
+                    $feedback.html(badgeText).show();
+
+                    // Locate surrounding container
+                    const $scope = $input.closest('form, .modal-content, .card-body, .card, tr, .container-fluid, body');
+
+                    // 1. Farmer Name
+                    const $nameFields = $scope.find([
+                        '#gen_farmer_name', '#poultry_farmer_name', '#leaf_farmer_name',
+                        '#prog_farmer_name', '#issue_form_beneficiary',
+                        'input[name*="farmer_name"]', 'input[name*="applicant_name"]',
+                        'input[name*="owner_name"]', 'input[name*="beneficiary_name"]',
+                        'input[name="name"]', 'input[name="full_name"]', 'input[name*="full_name"]'
+                    ].join(', '));
+                    $nameFields.each(function() {
+                        const $f = $(this);
+                        if ($f.is($input)) return;
+                        $f.val(farmerName).trigger('input').trigger('change');
+                        $f.addClass('is-valid');
+                        setTimeout(() => $f.removeClass('is-valid'), 2500);
+                    });
+
+                    // 2. Farm Registration Number
+                    const $regFields = $scope.find([
+                        '#gen_registration_no', '#poultry_registration_no', '#leaf_farm_registration_no',
+                        '#add_hc_farm_registration_no', '#edit_farm_registration_no', '#prog_farm_reg_no',
+                        'input[name*="farm_registration_no"]', 'input[name*="farmer_reg_no"]',
+                        'input[name*="registration_no"]', 'input[name="farm_reg_no"]'
+                    ].join(', '));
+                    if (regNo) {
+                        $regFields.each(function() {
+                            const $f = $(this);
+                            if ($f.is($input)) return;
+                            $f.val(regNo).trigger('input').trigger('change');
+                            $f.addClass('is-valid');
+                            setTimeout(() => $f.removeClass('is-valid'), 2500);
+                        });
+                    }
+
+                    // 3. Address
+                    const $addrFields = $scope.find([
+                        '#gen_farmer_address', '#poultry_farmer_address', '#leaf_location_address',
+                        '#prog_address', '#issue_form_address', '#add_hc_applicant_name_address',
+                        '#edit_applicant_name_address',
+                        'textarea[name*="farmer_address"]', 'input[name*="farmer_address"]',
+                        'textarea[name*="farm_address"]', 'input[name*="farm_address"]',
+                        'textarea[name*="applicant_name_address"]', 'input[name*="applicant_name_address"]',
+                        'textarea[name*="beneficiary_address"]', 'input[name*="beneficiary_address"]',
+                        'textarea[name*="location_address"]', 'input[name*="location_address"]',
+                        'textarea[name="address"]', 'input[name="address"]'
+                    ].join(', '));
+                    $addrFields.each(function() {
+                        const $f = $(this);
+                        if ($f.is($input)) return;
+                        const isCombined = $f.attr('name')?.includes('applicant_name_address') || $f.attr('id')?.includes('applicant_name_address');
+                        const valToSet = isCombined ? (farmerName + "\n" + address) : address;
+                        if (valToSet) {
+                            $f.val(valToSet).trigger('input').trigger('change');
+                            $f.addClass('is-valid');
+                            setTimeout(() => $f.removeClass('is-valid'), 2500);
+                        }
+                    });
+
+                    // 4. Telephone / Contact Number
+                    const $phoneFields = $scope.find([
+                        '#gen_telephone_no', '#poultry_telephone_no',
+                        'input[name*="telephone_no"]', 'input[name*="contact_no"]',
+                        'input[name="phone"]', 'input[name*="phone"]', 'input[name*="mobile"]'
+                    ].join(', '));
+                    if (phone) {
+                        $phoneFields.each(function() {
+                            const $f = $(this);
+                            if ($f.is($input)) return;
+                            $f.val(phone).trigger('input').trigger('change');
+                            $f.addClass('is-valid');
+                            setTimeout(() => $f.removeClass('is-valid'), 2500);
+                        });
+                    }
+
+                    // 5. Divisions (DS, GN, VS)
+                    if (dsDiv) {
+                        $scope.find('#gen_ds_div, #poultry_ds_division, [name*="ds_division"]').val(dsDiv).trigger('change');
+                    }
+                    if (gnDiv) {
+                        $scope.find('#gen_gn_div, #poultry_gn_division, [name*="gn_division"]').val(gnDiv).trigger('change');
+                    }
+                    if (vsDiv) {
+                        $scope.find('#gen_vs_div, #poultry_vs_division, [name*="vs_division"]').val(vsDiv).trigger('change');
+                    }
+
+                    // 6. Support for existing counterfoil badge card if on counterfoil page
+                    if ($('#leaf_animal_counts_container').length && f.animal_counts) {
+                        const c = f.animal_counts;
+                        const c_cattle = c.cattle || 0;
+                        const c_buffalo = c.buffalo || 0;
+                        const c_goat = c.goat || 0;
+                        const c_swine = c.swine || 0;
+                        const c_poultry = c.poultry || 0;
+                        const tot = f.total_animal_count || (c_cattle + c_buffalo + c_goat + c_swine + c_poultry);
+                        $('#leaf_animal_counts_summary').val(`Cattle: ${c_cattle}, Buffalo: ${c_buffalo}, Goat: ${c_goat}, Swine: ${c_swine}, Poultry: ${c_poultry} (Total: ${tot})`);
+                        $('#leaf_animal_counts_container').slideDown();
+                    }
+
+                    // 7. Support for existing health certificate card
+                    if ($('#add_hc_farmer_info_card').length && $input.is('#add_hc_farmer_nic')) {
+                        $('#add_hc_farmer_reg_display').html(`<strong>Farm Reg:</strong> ${regNo || "N/A"} | <strong>Location:</strong> ${address || "N/A"}`);
+                        $('#add_hc_farmer_info_card').slideDown();
+                    }
+                } else {
+                    $feedback
+                        .html('<span class="text-warning-emphasis small"><i class="bi bi-info-circle me-1"></i>Unregistered NIC in Master Registry (Manual Entry)</span>')
+                        .show();
+                    if ($('#leaf_animal_counts_container').length) {
+                        $('#leaf_animal_counts_container').slideUp();
+                    }
+                }
+            },
+            error: function() {
+                $feedback.html('<span class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>NIC Lookup Error</span>').show();
+            }
+        });
+    }
+
+    // Attach dynamic delegated event listeners to document
+    $(document).on('input', nicSelector, function() {
+        const $input = $(this);
+        clearTimeout(nicTimer);
+        nicTimer = setTimeout(function() {
+            doFarmerLookup($input, 'input');
+        }, 300);
+    });
+
+    $(document).on('blur change', nicSelector, function() {
+        const $input = $(this);
+        doFarmerLookup($input, 'blur');
+    });
+}
+
+// Expose globally and run on document ready
+window.initGlobalFarmerNICLookup = initGlobalFarmerNICLookup;
+$(document).ready(function() {
+    initGlobalFarmerNICLookup();
+});

@@ -69,20 +69,39 @@ if ($range_id) {
 $pop_years = array_unique($pop_years);
 rsort($pop_years);
 
-// Fetch distinct recorded years for animal population
-$animal_pop_years = [2026, 2025, 2024, 2023];
+// Fetch distinct recorded years for animal population (Master Registry farm_registration_renewals prioritized)
+$animal_pop_years = [intval(date('Y'))];
 if ($range_id) {
+    // 1. Live Master Registry years from farm_registration_renewals
+    $stmt_myr = $mysqli->prepare("SELECT DISTINCT YEAR(date_of_registration_renewal) AS yr FROM farm_registration_renewals WHERE range_id = ? AND date_of_registration_renewal IS NOT NULL ORDER BY yr DESC");
+    if ($stmt_myr) {
+        $stmt_myr->bind_param("i", $range_id);
+        $stmt_myr->execute();
+        $myr_res = $stmt_myr->get_result();
+        while ($myrow = $myr_res->fetch_assoc()) {
+            if (!empty($myrow['yr'])) {
+                $animal_pop_years[] = intval($myrow['yr']);
+            }
+        }
+        $stmt_myr->close();
+    }
+    // 2. Union historical recorded years from animal_populations
     $stmt_ayr = $mysqli->prepare("SELECT DISTINCT year FROM animal_populations WHERE range_id = ? ORDER BY year DESC");
     if ($stmt_ayr) {
         $stmt_ayr->bind_param("i", $range_id);
         $stmt_ayr->execute();
         $ayr_res = $stmt_ayr->get_result();
         while ($ayrow = $ayr_res->fetch_assoc()) {
-            $animal_pop_years[] = intval($ayrow['year']);
+            if (!empty($ayrow['year'])) {
+                $animal_pop_years[] = intval($ayrow['year']);
+            }
         }
         $stmt_ayr->close();
     }
 }
+$animal_pop_years = array_values(array_unique($animal_pop_years));
+rsort($animal_pop_years);
+
 // ==========================================
 // AUTOMATED SUMMARY CALCULATOR & AGGREGATOR
 // ==========================================
@@ -353,12 +372,12 @@ require_once '../../../includes/header.php';
                     <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
                             <h5 class="fw-bold mb-1" style="color: #370709;"><i class="bi bi-shield-shaded me-2"></i>Animal Population</h5>
-                            <p class="text-muted small mb-0">Livestock demographics composition tracking and sector breakdown analytics from database.</p>
+                            <p class="text-muted small mb-0">Live aggregated livestock demographics dynamically synchronized with the Master Registry (Farm Registrations).</p>
                         </div>
-                        <div>
-                            <button type="button" class="btn btn-sm btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#manageAnimalPopulationModal">
-                                <i class="bi bi-gear-fill me-1"></i> Manage Population
-                            </button>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-semibold">
+                                <i class="bi bi-broadcast me-1"></i>Automated Live Registry Sync
+                            </span>
                         </div>
                     </div>
                     <div class="card-body px-4 pb-4">
@@ -367,8 +386,11 @@ require_once '../../../includes/header.php';
                             <div class="col-12 col-md-4">
                                 <label class="form-label small fw-bold text-secondary">Year Selection</label>
                                 <select id="filterYearAnimal" class="form-select form-select-sm filter-control-animal">
-                                    <?php foreach ($animal_pop_years as $apy): ?>
-                                        <option value="<?= $apy ?>" <?= $apy === 2025 ? 'selected' : '' ?>><?= $apy ?></option>
+                                    <?php 
+                                    $default_ay = $animal_pop_years[0] ?? intval(date('Y'));
+                                    foreach ($animal_pop_years as $apy): 
+                                    ?>
+                                        <option value="<?= $apy ?>" <?= $apy === $default_ay ? 'selected' : '' ?>><?= $apy ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -741,7 +763,6 @@ require_once '../../../includes/header.php';
 <?php
 include 'model/add_health_record.php';
 include 'model/manage_human_population_modal.php';
-include 'model/manage_animal_population_modal.php';
 
 ob_start();
 ?>
@@ -992,306 +1013,6 @@ $(document).ready(function() {
         });
     });
 
-    // ==========================================
-    // ANIMAL POPULATION MANAGEMENT ROUTINES
-    // ==========================================
-
-    // Dynamic total calculation in manage animal population modal
-    function updateManageAnimalPopTotal() {
-        let total = 0;
-        $(".animal-counter-input").each(function() {
-            total += parseInt($(this).val()) || 0;
-        });
-        $("#manageAnimalPopTotalPreview").text(total.toLocaleString());
-    }
-    $(document).on("input", ".animal-counter-input", updateManageAnimalPopTotal);
-
-    // Reset button in manage animal population modal
-    $("#btnResetAnimalPopForm").on("click", function() {
-        $("#manageAnimalPopForm")[0].reset();
-        const currentYear = $("#filterYearAnimal").val() || new Date().getFullYear();
-        $("#manageAnimalPopYear").val(currentYear);
-        $("#manageAnimalPopTotalPreview").text("0");
-        $("#formAnimalTabLabel").text("Add / Update Record");
-        $("#btnSaveAnimalPopForm").html('<i class="bi bi-check-circle-fill me-1 text-success"></i> Save Animal Population');
-        $("#manageAnimalPopAlertBox").empty();
-    });
-
-    // Helper to fetch and load counts for a specific year into the form
-    function loadYearAnimalData(year) {
-        const rangeParam = typeof CURRENT_RANGE_ID !== 'undefined' && CURRENT_RANGE_ID ? `&range_id=${CURRENT_RANGE_ID}` : '';
-        $.ajax({
-            url: `processors/save_animal_population.php?action=get_year_data&year=${year}${rangeParam}`,
-            type: "GET",
-            dataType: "json",
-            success: function(res) {
-                if (res.success && res.data) {
-                    $("#animal_count_Cow").val(res.data.Cow || 0);
-                    $("#animal_count_Buffalo").val(res.data.Buffalo || 0);
-                    $("#animal_count_Goat").val(res.data.Goat || 0);
-                    $("#animal_count_Sheep").val(res.data.Sheep || 0);
-                    $("#animal_count_Chicken").val(res.data.Chicken || 0);
-                    $("#animal_count_Pig").val(res.data.Pig || 0);
-                    $("#animal_count_Others").val(res.data.Others || 0);
-                    updateManageAnimalPopTotal();
-                }
-            }
-        });
-    }
-
-    $("#btnLoadYearAnimalData").on("click", function() {
-        const y = $("#manageAnimalPopYear").val();
-        if (y) {
-            loadYearAnimalData(y);
-        }
-    });
-
-    $("#manageAnimalPopYear").on("change", function() {
-        const y = $(this).val();
-        if (y) {
-            loadYearAnimalData(y);
-        }
-    });
-
-    // Fetch and populate recorded livestock list in modal
-    function loadRecordedAnimalDemographics() {
-        const rangeParam = typeof CURRENT_RANGE_ID !== 'undefined' && CURRENT_RANGE_ID ? `&range_id=${CURRENT_RANGE_ID}` : '';
-        $.ajax({
-            url: `processors/save_animal_population.php?action=get_list${rangeParam}`,
-            type: "GET",
-            dataType: "json",
-            success: function(res) {
-                if (res.success) {
-                    const tbody = $("#recordedAnimalDemographicsTable tbody");
-                    tbody.empty();
-                    $("#animalRecordsCountBadge").text(res.data.length);
-                    if (res.data.length === 0) {
-                        tbody.append('<tr><td colspan="10" class="text-center py-3 text-muted">No animal population records found for this range.</td></tr>');
-                        return;
-                    }
-                    res.data.forEach(function(item) {
-                        const row = `
-                            <tr data-year="${item.year}" 
-                                data-cow="${item.Cow}" 
-                                data-buffalo="${item.Buffalo}" 
-                                data-goat="${item.Goat}" 
-                                data-sheep="${item.Sheep || 0}" 
-                                data-chicken="${item.Chicken}" 
-                                data-pig="${item.Pig}" 
-                                data-others="${item.Others}">
-                                <td class="fw-bold">${item.year}</td>
-                                <td class="text-end font-monospace">${Number(item.Cow).toLocaleString()}</td>
-                                <td class="text-end font-monospace">${Number(item.Buffalo).toLocaleString()}</td>
-                                <td class="text-end font-monospace">${Number(item.Goat).toLocaleString()}</td>
-                                <td class="text-end font-monospace">${Number(item.Sheep || 0).toLocaleString()}</td>
-                                <td class="text-end font-monospace">${Number(item.Chicken).toLocaleString()}</td>
-                                <td class="text-end font-monospace">${Number(item.Pig).toLocaleString()}</td>
-                                <td class="text-end font-monospace">${Number(item.Others).toLocaleString()}</td>
-                                <td class="text-end fw-bold font-monospace" style="color: #370709;">${Number(item.total).toLocaleString()}</td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-primary btn-xs py-0 px-2 btn-edit-animal-pop" title="Edit">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-danger btn-xs py-0 px-2 btn-delete-animal-pop" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                        tbody.append(row);
-                    });
-                }
-            },
-            error: function() {
-                $("#recordedAnimalDemographicsTable tbody").html('<tr><td colspan="10" class="text-center py-3 text-danger">Failed to load records.</td></tr>');
-            }
-        });
-    }
-
-    // Modal open event: pre-fill current active year & refresh livestock list
-    $("#manageAnimalPopulationModal").on("show.bs.modal", function() {
-        const currentYear = $("#filterYearAnimal").val() || new Date().getFullYear();
-        if ($("#formAnimalTabLabel").text() === "Add / Update Record") {
-            $("#manageAnimalPopYear").val(currentYear);
-            loadYearAnimalData(currentYear);
-        }
-        loadRecordedAnimalDemographics();
-    });
-
-    $("#btnRefreshAnimalPopList").on("click", function() {
-        loadRecordedAnimalDemographics();
-    });
-
-    // Form submission via AJAX for Animal Population
-    $("#manageAnimalPopForm").on("submit", function(e) {
-        e.preventDefault();
-        const btn = $("#btnSaveAnimalPopForm");
-        const originalBtnHtml = btn.html();
-        btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...');
-
-        $.ajax({
-            url: "processors/save_animal_population.php",
-            type: "POST",
-            data: $(this).serialize(),
-            dataType: "json",
-            success: function(res) {
-                btn.prop("disabled", false).html(originalBtnHtml);
-                if (res.success) {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Saved Successfully",
-                        text: res.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-
-                    // Ensure saved year exists in animal filter dropdown and is selected
-                    const savedYear = res.year;
-                    if (savedYear) {
-                        if ($(`#filterYearAnimal option[value="${savedYear}"]`).length === 0) {
-                            $("#filterYearAnimal").prepend(new Option(savedYear, savedYear, true, true));
-                        }
-                        $("#filterYearAnimal").val(savedYear);
-                    }
-
-                    // Trigger direct reload of animal pie chart and datatable
-                    if (typeof window.fetchFilteredAnimalPopulationData === 'function') {
-                        window.fetchFilteredAnimalPopulationData();
-                    }
-
-                    // Refresh modal records list
-                    loadRecordedAnimalDemographics();
-
-                    // Close modal
-                    const modalEl = document.getElementById("manageAnimalPopulationModal");
-                    if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
-                        if (modalInstance) {
-                            modalInstance.hide();
-                        }
-                    }
-                    $("#manageAnimalPopulationModal").modal("hide");
-                } else {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Save Failed",
-                        text: res.message || "An error occurred while saving animal population."
-                    });
-                }
-            },
-            error: function() {
-                btn.prop("disabled", false).html(originalBtnHtml);
-                Swal.fire({
-                    icon: "error",
-                    title: "Request Error",
-                    text: "Server communication failed. Check connection and try again."
-                });
-            }
-        });
-    });
-
-    // Edit button click in modal records table
-    $(document).on("click", ".btn-edit-animal-pop", function() {
-        const row = $(this).closest("tr");
-        const year = row.data("year");
-        const cow = row.data("cow");
-        const buffalo = row.data("buffalo");
-        const goat = row.data("goat");
-        const sheep = row.data("sheep");
-        const chicken = row.data("chicken");
-        const pig = row.data("pig");
-        const others = row.data("others");
-
-        $("#manageAnimalPopYear").val(year);
-        $("#animal_count_Cow").val(cow);
-        $("#animal_count_Buffalo").val(buffalo);
-        $("#animal_count_Goat").val(goat);
-        $("#animal_count_Sheep").val(sheep);
-        $("#animal_count_Chicken").val(chicken);
-        $("#animal_count_Pig").val(pig);
-        $("#animal_count_Others").val(others);
-        updateManageAnimalPopTotal();
-
-        $("#formAnimalTabLabel").text(`Edit Record: Year ${year}`);
-        $("#btnSaveAnimalPopForm").html('<i class="bi bi-pencil-square me-1"></i> Update Animal Population');
-
-        const addTabTrigger = new bootstrap.Tab(document.getElementById("add-animal-pop-tab"));
-        addTabTrigger.show();
-    });
-
-    // Delete button click in modal records table
-    $(document).on("click", ".btn-delete-animal-pop", function() {
-        const row = $(this).closest("tr");
-        const year = row.data("year");
-        const rangeParam = typeof CURRENT_RANGE_ID !== 'undefined' && CURRENT_RANGE_ID ? CURRENT_RANGE_ID : '';
-
-        Swal.fire({
-            icon: "warning",
-            title: "Delete Animal Population Record?",
-            html: `Are you sure you want to delete all animal population data for year <strong>${year}</strong>?<br><small class="text-danger">This will remove counts for all livestock categories in this year.</small>`,
-            showCancelButton: true,
-            confirmButtonColor: "#370709",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: '<i class="bi bi-trash-fill me-1"></i> Yes, Delete',
-            cancelButtonText: "Cancel"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: "processors/save_animal_population.php",
-                    type: "POST",
-                    data: {
-                        action: "delete",
-                        year: year,
-                        range_id: rangeParam
-                    },
-                    dataType: "json",
-                    success: function(res) {
-                        if (res.success) {
-                            Swal.fire({
-                                icon: "success",
-                                title: "Deleted",
-                                text: res.message,
-                                timer: 1800,
-                                showConfirmButton: false
-                            });
-                            row.fadeOut(300, function() {
-                                $(this).remove();
-                                const currentCount = parseInt($("#animalRecordsCountBadge").text()) || 1;
-                                $("#animalRecordsCountBadge").text(Math.max(0, currentCount - 1));
-                                if ($("#recordedAnimalDemographicsTable tbody tr").length === 0) {
-                                    $("#recordedAnimalDemographicsTable tbody").append('<tr><td colspan="9" class="text-center py-3 text-muted">No animal population records found for this range.</td></tr>');
-                                }
-                            });
-
-                            // Refresh main page animal chart & table
-                            if (typeof window.fetchFilteredAnimalPopulationData === 'function') {
-                                window.fetchFilteredAnimalPopulationData();
-                            }
-                            const filterYearAnimalEl = document.getElementById("filterYearAnimal");
-                            if (filterYearAnimalEl) {
-                                filterYearAnimalEl.dispatchEvent(new Event("change"));
-                            }
-                        } else {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Deletion Failed",
-                                text: res.message
-                            });
-                        }
-                    },
-                    error: function() {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: "Server communication error while attempting to delete."
-                        });
-                    }
-                });
-            }
-        });
-    });
 });
 </script>
 <?php
