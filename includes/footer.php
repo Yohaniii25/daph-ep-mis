@@ -390,21 +390,71 @@
             }
         });
 
-        // 2. Keyboard-Navigable Table Scroll Regions (WCAG 2.1.1)
+        // 2. Keyboard-Navigable Table Scroll Regions & Visual Scrolling Cues (WCAG 2.1.1 / UX)
+        function updateTableScrollCues(el) {
+            if (!el) return;
+            // Check if table container has horizontal overflow
+            const canScrollRight = el.scrollWidth > (el.clientWidth + 2) && (el.scrollLeft + el.clientWidth < el.scrollWidth - 3);
+            const canScrollLeft = el.scrollLeft > 3;
+
+            el.classList.toggle('has-scroll-right', canScrollRight);
+            el.classList.toggle('has-scroll-left', canScrollLeft);
+        }
+
         function makeTablesAccessible() {
             document.querySelectorAll('.table-responsive').forEach(function(el) {
                 if (!el.hasAttribute('tabindex')) {
                     el.setAttribute('tabindex', '0');
-                    el.setAttribute('role', 'region');
-                    const table = el.querySelector('table');
-                    const tableTitle = (table && (table.getAttribute('aria-label') || table.getAttribute('id') || (table.querySelector('caption') ? table.querySelector('caption').textContent : null))) || 'Data table';
-                    el.setAttribute('aria-label', tableTitle + ', scrollable horizontally with arrow keys');
                 }
+                if (!el.hasAttribute('role')) {
+                    el.setAttribute('role', 'region');
+                }
+                if (!el.hasAttribute('aria-label')) {
+                    const table = el.querySelector('table');
+                    const tableTitle = (table && (table.getAttribute('aria-label') || table.getAttribute('id') || (table.querySelector('caption') ? table.querySelector('caption').textContent.trim() : null))) || 'Data table';
+                    el.setAttribute('aria-label', tableTitle + ', scrollable horizontally with left and right arrow keys');
+                }
+                updateTableScrollCues(el);
             });
         }
+
+        // Initialize immediately and after DOM content loads
         makeTablesAccessible();
-        $(document).ajaxComplete(function() {
-            makeTablesAccessible();
+        $(document).ready(makeTablesAccessible);
+        window.addEventListener('load', makeTablesAccessible);
+
+        // Update scroll indicators dynamically when scrolling horizontally
+        $(document).on('scroll', '.table-responsive', function() {
+            updateTableScrollCues(this);
+        });
+
+        // Keyboard Accessibility: Left and Right arrow keys scroll focused table horizontally
+        $(document).on('keydown', '.table-responsive', function(e) {
+            // Only trigger keyboard scrolling if the responsive table wrapper itself is focused
+            if (e.target !== this) return;
+
+            const scrollDistance = 80;
+            if (e.key === 'ArrowRight') {
+                this.scrollBy({ left: scrollDistance, behavior: 'smooth' });
+                e.preventDefault();
+            } else if (e.key === 'ArrowLeft') {
+                this.scrollBy({ left: -scrollDistance, behavior: 'smooth' });
+                e.preventDefault();
+            } else if (e.key === 'Home') {
+                this.scrollTo({ left: 0, behavior: 'smooth' });
+                e.preventDefault();
+            } else if (e.key === 'End') {
+                this.scrollTo({ left: this.scrollWidth, behavior: 'smooth' });
+                e.preventDefault();
+            }
+        });
+
+        // Re-evaluate cues on resize, tab switch, modal show, DataTables draw, and AJAX
+        $(window).on('resize', function() {
+            document.querySelectorAll('.table-responsive').forEach(updateTableScrollCues);
+        });
+        $(document).on('shown.bs.tab shown.bs.modal draw.dt ajaxComplete', function() {
+            setTimeout(makeTablesAccessible, 50);
         });
     </script>
     <?php if (!empty($pageScripts)) echo $pageScripts; ?>

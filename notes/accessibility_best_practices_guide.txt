@@ -184,7 +184,7 @@ PHASE 1: Immediate High-Impact Fixes (Completed / In Progress)
 [X] 1. Add "Skip to main content" link in includes/header.php.
 [X] 2. Inject global :focus-visible styling in assets/css/style.css.
 [ ] 3. Add aria-label attributes to all icon-only buttons across tables and headers.
-[X] 4. Add tabindex="0" and aria-label to all .table-responsive wrappers (automated via footer.php).
+[X] 4. Add tabindex="0", role="region", keyboard arrow scrolling, viewport max-height constraint, sticky thead, and dynamic right inset shadow cues to all .table-responsive wrappers (automated via style.css & footer.php).
 
 PHASE 2: Form & Modal Hardening (2 - 3 Days)
 --------------------------------------------
