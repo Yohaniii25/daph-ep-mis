@@ -89,7 +89,7 @@ if (isset($_REQUEST['action']) && $_REQUEST['action'] === 'get_record') {
 
         if ($record) {
             // Also fetch 1-to-many fodder items if present
-            $fod_stmt = $mysqli->prepare("SELECT `crop_item`, `other_specify`, `amount_perches` FROM `farm_registration_fodder_items` WHERE `farm_registration_id` = ?");
+            $fod_stmt = $mysqli->prepare("SELECT `crop_item`, `other_specify`, `amount_perches`, `yield_amount_kg` FROM `farm_registration_fodder_items` WHERE `farm_registration_id` = ?");
             $fod_items = [];
             if ($fod_stmt) {
                 $fod_stmt->bind_param("i", $fetch_id);
@@ -99,7 +99,9 @@ if (isset($_REQUEST['action']) && $_REQUEST['action'] === 'get_record') {
                     $fod_items[] = [
                         'item' => $fod_row['crop_item'],
                         'other_specify' => $fod_row['other_specify'] ?? '',
-                        'amount' => (float)$fod_row['amount_perches']
+                        'amount' => (float)$fod_row['amount_perches'],
+                        'land_area' => (float)$fod_row['amount_perches'],
+                        'yield_amount' => (float)($fod_row['yield_amount_kg'] ?? 0)
                     ];
                 }
                 $fod_stmt->close();
@@ -146,20 +148,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $gn_div = trim($_POST['general']['gn_division'] ?? '');
         $farmer_name = trim($_POST['general']['farmer_name'] ?? '');
         $farmer_addr = trim($_POST['general']['farmer_address'] ?? '');
-        $gps_location = trim($_POST['general']['gps_location'] ?? '');
+        $farm_addr = trim($_POST['general']['farm_address'] ?? $farmer_addr);
+        $gps_location = ''; // GPS coordinates excluded from form
         $reg_no = trim($_POST['general']['registration_no'] ?? '');
         $phone = trim($_POST['general']['telephone_no'] ?? '');
         $nic = trim($_POST['general']['nic'] ?? '');
         $farm_type = trim($_POST['general']['farm_type'] ?? '');
         $mixed_type = trim($_POST['general']['mixed_farm_type'] ?? '');
 
-        // 2. Neat Cattle Data
+        // 2. Cattle Data
         $cattle_input = $_POST['cattle'] ?? [];
         $neat_cattle_json = json_encode($cattle_input);
         $total_neat_cattle = 0;
-        foreach (['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'] as $rKey) {
-            foreach (['european', 'indian', 'local'] as $cKey) {
-                $total_neat_cattle += intval($cattle_input[$rKey][$cKey] ?? 0);
+        if (is_array($cattle_input)) {
+            foreach ($cattle_input as $rKey => $cRow) {
+                if (is_array($cRow)) {
+                    foreach (['european', 'indian', 'local'] as $cKey) {
+                        $total_neat_cattle += intval($cRow[$cKey] ?? 0);
+                    }
+                }
             }
         }
 
@@ -167,10 +174,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $buf_input = $_POST['buffalo'] ?? [];
         $buffalo_json = json_encode($buf_input);
         $total_buffaloes = 0;
-        foreach (['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'] as $rKey) {
-            foreach (['niliravi', 'murah', 'cross_breed', 'indian', 'local'] as $cKey) {
-                if (isset($buf_input[$rKey][$cKey])) {
-                    $total_buffaloes += intval($buf_input[$rKey][$cKey]);
+        if (is_array($buf_input)) {
+            foreach ($buf_input as $rKey => $bRow) {
+                if (is_array($bRow)) {
+                    foreach (['european', 'indian', 'local', 'niliravi', 'murah', 'cross_breed'] as $cKey) {
+                        $total_buffaloes += intval($bRow[$cKey] ?? 0);
+                    }
                 }
             }
         }
@@ -195,13 +204,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (is_array($fodder_items_input)) {
             foreach ($fodder_items_input as $fRow) {
                 $item = trim($fRow['item'] ?? '');
-                $amt = floatval($fRow['amount'] ?? 0);
+                $amt = floatval($fRow['amount'] ?? ($fRow['land_area'] ?? 0));
+                $yield = floatval($fRow['yield_amount'] ?? 0);
                 $spec = trim($fRow['other_specify'] ?? '');
                 if ($item === '') continue;
 
                 $parsed_fodder_items[] = [
                     'item' => $item,
                     'amount' => $amt,
+                    'land_area' => $amt,
+                    'yield_amount' => $yield,
                     'other_specify' => ($item === 'Other') ? $spec : ''
                 ];
 
@@ -257,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $upd_stmt = $mysqli->prepare("
                 UPDATE `farm_registration_renewals` SET
                     `date_of_registration_renewal` = ?, `province` = ?, `district` = ?, `ds_division` = ?,
-                    `vs_division` = ?, `gn_division` = ?, `farmer_name` = ?, `farmer_address` = ?, `gps_location` = ?,
+                    `vs_division` = ?, `gn_division` = ?, `farmer_name` = ?, `farmer_address` = ?, `farm_address` = ?, `gps_location` = ?,
                     `registration_no` = ?, `telephone_no` = ?, `nic` = ?, `farm_type` = ?,
                     `mixed_farm_type` = ?, `neat_cattle_data` = ?, `total_neat_cattle` = ?,
                     `buffaloes_data` = ?, `total_buffaloes` = ?, `milk_data` = ?,
@@ -275,9 +287,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             ");
             if ($upd_stmt) {
                 $upd_stmt->bind_param(
-                    "sssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
+                    "ssssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
                     $reg_date, $prov, $dist, $ds_div,
-                    $vs_div, $gn_div, $farmer_name, $farmer_addr, $gps_location,
+                    $vs_div, $gn_div, $farmer_name, $farmer_addr, $farm_addr, $gps_location,
                     $reg_no, $phone, $nic, $farm_type,
                     $mixed_type, $neat_cattle_json, $total_neat_cattle,
                     $buffalo_json, $total_buffaloes, $milk_json,
@@ -303,10 +315,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $del_fod->close();
                 }
                 if (!empty($parsed_fodder_items)) {
-                    $ins_fod = $mysqli->prepare("INSERT INTO `farm_registration_fodder_items` (`farm_registration_id`, `crop_item`, `other_specify`, `amount_perches`) VALUES (?, ?, ?, ?)");
+                    $ins_fod = $mysqli->prepare("INSERT INTO `farm_registration_fodder_items` (`farm_registration_id`, `crop_item`, `other_specify`, `amount_perches`, `yield_amount_kg`) VALUES (?, ?, ?, ?, ?)");
                     if ($ins_fod) {
                         foreach ($parsed_fodder_items as $pItem) {
-                            $ins_fod->bind_param("issd", $edit_id, $pItem['item'], $pItem['other_specify'], $pItem['amount']);
+                            $ins_fod->bind_param("issdd", $edit_id, $pItem['item'], $pItem['other_specify'], $pItem['amount'], $pItem['yield_amount']);
                             $ins_fod->execute();
                         }
                         $ins_fod->close();
@@ -324,7 +336,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $ins_stmt = $mysqli->prepare("
                 INSERT INTO `farm_registration_renewals` (
                     `range_id`, `district_id`, `date_of_registration_renewal`, `province`, `district`,
-                    `ds_division`, `vs_division`, `gn_division`, `farmer_name`, `farmer_address`, `gps_location`,
+                    `ds_division`, `vs_division`, `gn_division`, `farmer_name`, `farmer_address`, `farm_address`, `gps_location`,
                     `registration_no`, `telephone_no`, `nic`, `farm_type`, `mixed_farm_type`,
                     `neat_cattle_data`, `total_neat_cattle`, `buffaloes_data`, `total_buffaloes`,
                     `milk_data`, `daily_milk_production`, `fodder_hybrid_napier`, `fodder_sorghum`,
@@ -334,13 +346,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     `goat_breeding_female`, `goat_breeding_male`, `goat_weaners_fattening`, `goat_pre_weaners`,
                     `goat_freq_meat`, `goat_freq_breeding`, `goat_milk_per_day`, `sheep_breeding_female`,
                     `sheep_breeding_male`, `sheep_for_meat`, `sheep_total_no`, `poultry_data`, `created_by`
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             if ($ins_stmt) {
                 $ins_stmt->bind_param(
-                    "iisssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
+                    "iissssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
                     $range_context, $district_context, $reg_date, $prov, $dist,
-                    $ds_div, $vs_div, $gn_div, $farmer_name, $farmer_addr, $gps_location,
+                    $ds_div, $vs_div, $gn_div, $farmer_name, $farmer_addr, $farm_addr, $gps_location,
                     $reg_no, $phone, $nic, $farm_type, $mixed_type,
                     $neat_cattle_json, $total_neat_cattle, $buffalo_json, $total_buffaloes,
                     $milk_json, $daily_milk_prod, $fod_napier, $fod_sorghum,
@@ -357,10 +369,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 // Sync 1-to-many child table
                 if ($new_reg_id && !empty($parsed_fodder_items)) {
-                    $ins_fod = $mysqli->prepare("INSERT INTO `farm_registration_fodder_items` (`farm_registration_id`, `crop_item`, `other_specify`, `amount_perches`) VALUES (?, ?, ?, ?)");
+                    $ins_fod = $mysqli->prepare("INSERT INTO `farm_registration_fodder_items` (`farm_registration_id`, `crop_item`, `other_specify`, `amount_perches`, `yield_amount_kg`) VALUES (?, ?, ?, ?, ?)");
                     if ($ins_fod) {
                         foreach ($parsed_fodder_items as $pItem) {
-                            $ins_fod->bind_param("issd", $new_reg_id, $pItem['item'], $pItem['other_specify'], $pItem['amount']);
+                            $ins_fod->bind_param("issdd", $new_reg_id, $pItem['item'], $pItem['other_specify'], $pItem['amount'], $pItem['yield_amount']);
                             $ins_fod->execute();
                         }
                         $ins_fod->close();
@@ -624,6 +636,7 @@ foreach ($db_records as $r) {
         'gn_division' => $r['gn_division'],
         'farmer_name' => $r['farmer_name'],
         'farmer_address' => $r['farmer_address'],
+        'farm_address' => $r['farm_address'] ?? ($r['farmer_address'] ?? ''),
         'gps_location' => $r['gps_location'] ?? '',
         'telephone_no' => $r['telephone_no'],
         'nic' => $r['nic'],
@@ -824,16 +837,15 @@ require_once '../../../includes/header.php';
         <!-- ============================================================== -->
         <div class="tab-pane fade <?= (empty($_GET['view_records']) && empty($_GET['view_poultry'])) ? 'show active' : '' ?>" id="viewFormPanel" role="tabpanel" aria-labelledby="view-form-tab">
 
-            <!-- Progress Tracker Bar (8 Active Sections) -->
+            <!-- Progress Tracker Bar (7 Active Sections) -->
             <div class="category-progress-tracker" id="categoryProgressTracker">
                 <div class="category-progress-segment active" data-index="0" title="1. General Information"></div>
-                <div class="category-progress-segment" data-index="1" title="2. Neat Cattle"></div>
+                <div class="category-progress-segment" data-index="1" title="2. Cattle"></div>
                 <div class="category-progress-segment" data-index="2" title="3. Buffaloes"></div>
-                <div class="category-progress-segment" data-index="3" title="4. Milk Production and Sale"></div>
-                <div class="category-progress-segment" data-index="4" title="5. Fodder / pasture cultivations (Land area) in Perch"></div>
-                <div class="category-progress-segment" data-index="5" title="6. Swine"></div>
-                <div class="category-progress-segment" data-index="6" title="7. Goat"></div>
-                <div class="category-progress-segment" data-index="7" title="8. Sheep"></div>
+                <div class="category-progress-segment" data-index="3" title="4. Goats"></div>
+                <div class="category-progress-segment" data-index="4" title="5. Sheep"></div>
+                <div class="category-progress-segment" data-index="5" title="6. Fodder / pasture cultivations (Land area) in Perch"></div>
+                <div class="category-progress-segment" data-index="6" title="7. Swine"></div>
             </div>
 
             <!-- Master Form Bound to Database -->
@@ -862,7 +874,7 @@ require_once '../../../includes/header.php';
                         <div class="v-tabs-nav">
                             <div class="v-tabs-header d-flex justify-content-between align-items-center">
                                 <h6>Form Categories</h6>
-                                <span class="badge bg-secondary-subtle text-secondary small">8 Sections</span>
+                                <span class="badge bg-secondary-subtle text-secondary small">7 Sections</span>
                             </div>
 
                             <div class="nav flex-column" id="categoryVerticalTabs" role="tablist" aria-orientation="vertical">
@@ -874,11 +886,11 @@ require_once '../../../includes/header.php';
                                     <i class="bi bi-chevron-right tab-chevron"></i>
                                 </button>
 
-                                <!-- 2. Neat Cattle -->
+                                <!-- 2. Cattle -->
                                 <button type="button" class="v-tab-btn" data-target-pane="pane-cattle" data-category-index="1" role="tab" aria-selected="false">
                                     <span class="tab-num">2</span>
                                     <i class="bi bi-shield-check tab-icon"></i>
-                                    <span class="tab-title">2. Neat Cattle</span>
+                                    <span class="tab-title">2. Cattle</span>
                                     <i class="bi bi-chevron-right tab-chevron"></i>
                                 </button>
 
@@ -890,43 +902,35 @@ require_once '../../../includes/header.php';
                                     <i class="bi bi-chevron-right tab-chevron"></i>
                                 </button>
 
-                                <!-- 4. Milk Production and Sale -->
-                                <button type="button" class="v-tab-btn" data-target-pane="pane-milk" data-category-index="3" role="tab" aria-selected="false">
+                                <!-- 4. Goats -->
+                                <button type="button" class="v-tab-btn" data-target-pane="pane-goat" data-category-index="3" role="tab" aria-selected="false">
                                     <span class="tab-num">4</span>
-                                    <i class="bi bi-cup-hot-fill tab-icon"></i>
-                                    <span class="tab-title">4. Milk Production & Sale</span>
-                                    <i class="bi bi-chevron-right tab-chevron"></i>
-                                </button>
-
-                                <!-- 5. Fodder / pasture cultivations (Land area) in Perch -->
-                                <button type="button" class="v-tab-btn" data-target-pane="pane-fodder" data-category-index="4" role="tab" aria-selected="false">
-                                    <span class="tab-num">5</span>
-                                    <i class="bi bi-tree-fill tab-icon"></i>
-                                    <span class="tab-title">5. Fodder / Pasture in Perch</span>
-                                    <i class="bi bi-chevron-right tab-chevron"></i>
-                                </button>
-
-                                <!-- 6. Swine -->
-                                <button type="button" class="v-tab-btn" data-target-pane="pane-swine" data-category-index="5" role="tab" aria-selected="false">
-                                    <span class="tab-num">6</span>
-                                    <i class="bi bi-bookmark-star-fill tab-icon"></i>
-                                    <span class="tab-title">6. Swine</span>
-                                    <i class="bi bi-chevron-right tab-chevron"></i>
-                                </button>
-
-                                <!-- 7. Goat -->
-                                <button type="button" class="v-tab-btn" data-target-pane="pane-goat" data-category-index="6" role="tab" aria-selected="false">
-                                    <span class="tab-num">7</span>
                                     <i class="bi bi-patch-check-fill tab-icon"></i>
-                                    <span class="tab-title">7. Goat</span>
+                                    <span class="tab-title">4. Goats</span>
                                     <i class="bi bi-chevron-right tab-chevron"></i>
                                 </button>
 
-                                <!-- 8. Sheep -->
-                                <button type="button" class="v-tab-btn" data-target-pane="pane-sheep" data-category-index="7" role="tab" aria-selected="false">
-                                    <span class="tab-num">8</span>
+                                <!-- 5. Sheep -->
+                                <button type="button" class="v-tab-btn" data-target-pane="pane-sheep" data-category-index="4" role="tab" aria-selected="false">
+                                    <span class="tab-num">5</span>
                                     <i class="bi bi-circle-square tab-icon"></i>
-                                    <span class="tab-title">8. Sheep</span>
+                                    <span class="tab-title">5. Sheep</span>
+                                    <i class="bi bi-chevron-right tab-chevron"></i>
+                                </button>
+
+                                <!-- 6. Fodder / pasture cultivations (Land area) in Perch -->
+                                <button type="button" class="v-tab-btn" data-target-pane="pane-fodder" data-category-index="5" role="tab" aria-selected="false">
+                                    <span class="tab-num">6</span>
+                                    <i class="bi bi-tree-fill tab-icon"></i>
+                                    <span class="tab-title">6. Fodder / Pasture in Perch</span>
+                                    <i class="bi bi-chevron-right tab-chevron"></i>
+                                </button>
+
+                                <!-- 7. Swine -->
+                                <button type="button" class="v-tab-btn" data-target-pane="pane-swine" data-category-index="6" role="tab" aria-selected="false">
+                                    <span class="tab-num">7</span>
+                                    <i class="bi bi-bookmark-star-fill tab-icon"></i>
+                                    <span class="tab-title">7. Swine</span>
                                     <i class="bi bi-chevron-right tab-chevron"></i>
                                 </button>
                             </div>
@@ -956,7 +960,7 @@ require_once '../../../includes/header.php';
                             <div class="category-pane" id="pane-general" style="display: block;">
                                 <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
-                                        <span class="category-badge-step mb-1">Section 1 of 8</span>
+                                        <span class="category-badge-step mb-1">Section 1 of 7</span>
                                         <h4 class="h5 fw-bold text-dark mb-1">
                                             <i class="bi bi-info-circle-fill text-danger me-2"></i>1. General Information
                                         </h4>
@@ -983,34 +987,69 @@ require_once '../../../includes/header.php';
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Province <span class="text-danger">*</span></label>
-                                                <input type="text" name="general[province]" id="gen_province" class="form-control form-control-sm bg-light" value="<?= htmlspecialchars($edit_rec['province'] ?? $province_name) ?>" required>
+                                                <input type="text" name="general[province]" id="gen_province" class="form-control form-control-sm bg-light" value="<?= htmlspecialchars($edit_rec['province'] ?? $province_name) ?>" required readonly>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">District <span class="text-danger">*</span></label>
-                                                <input type="text" name="general[district]" id="gen_district" class="form-control form-control-sm bg-light" value="<?= htmlspecialchars($edit_rec['district'] ?? $district_name) ?>" required>
+                                                <input type="text" name="general[district]" id="gen_district" class="form-control form-control-sm bg-light" value="<?= htmlspecialchars($edit_rec['district'] ?? $district_name) ?>" required readonly>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">DS Division <span class="text-danger">*</span></label>
                                                 <input type="text" name="general[ds_division]" id="gen_ds_division" class="form-control form-control-sm" placeholder="e.g. Town and Gravets" value="<?= htmlspecialchars($edit_rec['ds_division'] ?? '') ?>" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">VS Division <span class="text-danger">*</span></label>
-                                                <input type="text" name="general[vs_division]" id="gen_vs_division" class="form-control form-control-sm" value="<?= htmlspecialchars($edit_rec['vs_division'] ?? $range_name) ?>" required>
+                                                <label class="form-label">Veterinary Range <span class="text-danger">*</span> <small class="text-muted">(Current Logged-in Range)</small></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-light text-danger"><i class="bi bi-geo-alt-fill"></i></span>
+                                                    <input type="text" name="general[vs_division]" id="gen_vs_division" class="form-control form-control-sm bg-light fw-bold text-dark" value="<?= htmlspecialchars($edit_rec['vs_division'] ?? $range_name) ?>" readonly required>
+                                                    <span class="input-group-text bg-light text-muted" title="Locked to current logged-in Veterinary Range jurisdiction"><i class="bi bi-lock-fill"></i></span>
+                                                </div>
+                                                <small class="text-muted" style="font-size: 0.72rem;">Automatically bound to officer's logged-in range office jurisdiction.</small>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">GN Division <span class="text-danger">*</span></label>
-                                                <input type="text" name="general[gn_division]" id="gen_gn_division" class="form-control form-control-sm" placeholder="e.g. 241B Orr's Hill" value="<?= htmlspecialchars($edit_rec['gn_division'] ?? '') ?>" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">GPS Location Coordinates</label>
-                                                <div class="input-group input-group-sm">
-                                                    <span class="input-group-text bg-white"><i class="bi bi-geo-alt text-danger"></i></span>
-                                                    <input type="text" name="general[gps_location]" id="gen_gps_location" class="form-control" placeholder="e.g. 8.5833, 81.2333" value="<?= htmlspecialchars($edit_rec['gps_location'] ?? '') ?>">
-                                                    <button class="btn btn-outline-secondary" type="button" onclick="getCurrentGPS('gen_gps_location')" title="Fetch My Current Location">
-                                                        <i class="bi bi-crosshair me-1"></i>Current GPS
-                                                    </button>
-                                                </div>
-                                                <small class="text-muted" style="font-size: 0.75rem;">Latitude, Longitude coordinates (optional).</small>
+                                                <select name="general[gn_division]" id="gen_gn_division" class="form-select form-select-sm" required onchange="handleGnDivisionChange(this.value)">
+                                                    <option value="" disabled <?= empty($edit_rec['gn_division']) ? 'selected' : '' ?>>-- Select GN Division --</option>
+                                                    <?php
+                                                    $gn_mock_list = [
+                                                        'GN_01' => ['label' => 'GN_01 (Prefix: 50011)', 'prefix' => '50011'],
+                                                        'GN_02' => ['label' => 'GN_02 (Prefix: 50012)', 'prefix' => '50012'],
+                                                        'GN_03' => ['label' => 'GN_03 (Prefix: 50013)', 'prefix' => '50013'],
+                                                        'GN_04' => ['label' => 'GN_04 (Prefix: 50014)', 'prefix' => '50014'],
+                                                        'GN_05' => ['label' => 'GN_05 (Prefix: 50015)', 'prefix' => '50015'],
+                                                        'GN_06' => ['label' => 'GN_06 (Prefix: 50016)', 'prefix' => '50016'],
+                                                        'GN_07' => ['label' => 'GN_07 (Prefix: 50017)', 'prefix' => '50017'],
+                                                        'GN_08' => ['label' => 'GN_08 (Prefix: 50018)', 'prefix' => '50018'],
+                                                        'GN_09' => ['label' => 'GN_09 (Prefix: 50019)', 'prefix' => '50019'],
+                                                        'GN_10' => ['label' => 'GN_10 (Prefix: 50020)', 'prefix' => '50020'],
+                                                        'GN_11' => ['label' => 'GN_11 (Prefix: 50021)', 'prefix' => '50021'],
+                                                        'GN_12' => ['label' => 'GN_12 (Prefix: 50022)', 'prefix' => '50022'],
+                                                        'GN_13' => ['label' => 'GN_13 (Prefix: 50023)', 'prefix' => '50023'],
+                                                        'GN_14' => ['label' => 'GN_14 (Prefix: 50024)', 'prefix' => '50024'],
+                                                        'GN_15' => ['label' => 'GN_15 (Prefix: 50025)', 'prefix' => '50025'],
+                                                        'GN_16' => ['label' => 'GN_16 (Prefix: 50026)', 'prefix' => '50026'],
+                                                        'GN_17' => ['label' => 'GN_17 (Prefix: 50027)', 'prefix' => '50027'],
+                                                        'GN_18' => ['label' => 'GN_18 (Prefix: 50028)', 'prefix' => '50028'],
+                                                        'GN_19' => ['label' => 'GN_19 (Prefix: 50029)', 'prefix' => '50029'],
+                                                        'GN_20' => ['label' => 'GN_20 (Prefix: 50030)', 'prefix' => '50030'],
+                                                    ];
+                                                    $curr_gn_val = $edit_rec['gn_division'] ?? '';
+                                                    $gn_matched = false;
+                                                    foreach ($gn_mock_list as $gKey => $gMeta):
+                                                        $isSelected = ($curr_gn_val === $gKey);
+                                                        if ($isSelected) $gn_matched = true;
+                                                    ?>
+                                                        <option value="<?= $gKey ?>" data-prefix="<?= $gMeta['prefix'] ?>" <?= $isSelected ? 'selected' : '' ?>>
+                                                            <?= $gMeta['label'] ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                    <?php if (!empty($curr_gn_val) && !$gn_matched): ?>
+                                                        <option value="<?= htmlspecialchars($curr_gn_val) ?>" data-prefix="50011" selected>
+                                                            <?= htmlspecialchars($curr_gn_val) ?> (Custom)
+                                                        </option>
+                                                    <?php endif; ?>
+                                                </select>
+                                                <small class="text-muted" style="font-size: 0.72rem;">Selecting GN Division automatically sets the 5-digit Range/GN prefix.</small>
                                             </div>
                                         </div>
 
@@ -1027,16 +1066,26 @@ require_once '../../../includes/header.php';
                                                 </div>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Address of the Farmer <span class="text-danger">*</span></label>
-                                                <textarea name="general[farmer_address]" id="gen_farmer_address" class="form-control form-control-sm" rows="2" placeholder="Permanent Residential / Holding Address" required><?= htmlspecialchars($edit_rec['farmer_address'] ?? '') ?></textarea>
+                                                <label class="form-label">Permanent Residence Address of the Farmer <span class="text-danger">*</span></label>
+                                                <textarea name="general[farmer_address]" id="gen_farmer_address" class="form-control form-control-sm" rows="2" placeholder="Permanent Residence Address of the Farmer" required><?= htmlspecialchars($edit_rec['farmer_address'] ?? '') ?></textarea>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Registration No (9 Digit no.) <span class="text-danger">*</span></label>
+                                                <label class="form-label">Farm Address <span class="text-danger">*</span></label>
+                                                <textarea name="general[farm_address]" id="gen_farm_address" class="form-control form-control-sm" rows="2" placeholder="Physical Address / Location of the Farm" required><?= htmlspecialchars($edit_rec['farm_address'] ?? ($edit_rec['farmer_address'] ?? '')) ?></textarea>
+                                                <small class="text-muted" style="font-size: 0.72rem;">Physical location where farm animals are held / sited.</small>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Registration No (9-Digit Number) <span class="text-danger">*</span></label>
                                                 <div class="input-group input-group-sm">
-                                                    <span class="input-group-text font-monospace bg-white">#</span>
-                                                    <input type="text" name="general[registration_no]" id="gen_registration_no" class="form-control font-monospace fw-bold" placeholder="e.g. 104829375" pattern="\d{9}" maxlength="9" value="<?= htmlspecialchars($edit_rec['registration_no'] ?? '') ?>" required>
+                                                    <span class="input-group-text font-monospace bg-light fw-bold text-primary" id="gen_reg_prefix_badge" title="5-digit Range / GN Division Prefix">50011</span>
+                                                    <input type="text" name="general[registration_no]" id="gen_registration_no" class="form-control font-monospace fw-bold text-dark" placeholder="e.g. 500110001" pattern="\d{9}" maxlength="9" value="<?= htmlspecialchars($edit_rec['registration_no'] ?? '') ?>" required oninput="validateNineDigitRegNo(this)">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="autoGenerateNineDigitRegNo()" title="Auto-complete / increment 4-digit farm number">
+                                                        <i class="bi bi-magic me-1"></i>Auto Suffix
+                                                    </button>
                                                 </div>
-                                                <small class="text-muted" style="font-size: 0.75rem;">Must be exactly 9 numeric digits.</small>
+                                                <div id="genRegFeedback" class="small mt-1 text-muted">
+                                                    <i class="bi bi-info-circle me-1"></i>Strictly 9 numeric digits: 5-digit Range/GN prefix (<span id="gen_reg_prefix_label" class="fw-bold text-primary">50011</span>) + 4-digit farm suffix.
+                                                </div>
                                             </div>
                                             <div class="row g-2 mb-3">
                                                 <div class="col-6">
@@ -1049,35 +1098,32 @@ require_once '../../../includes/header.php';
                                                 </div>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Type of farm <span class="text-danger">*</span></label>
-                                                <?php $curr_ft = $edit_rec['farm_type'] ?? ''; ?>
+                                                <label class="form-label">Livestock Species Classification <span class="text-danger">*</span></label>
+                                                <?php 
+                                                $curr_ft = $edit_rec['farm_type'] ?? ''; 
+                                                // Map legacy farm types to modern species classification if needed
+                                                if (empty($curr_ft) || in_array($curr_ft, ['Dairy Cattle Farm', 'Dual (Cattle & Buffalo)'], true)) {
+                                                    $sel_ft = ($curr_ft === '') ? '' : 'Cattle';
+                                                } elseif ($curr_ft === 'Buffalo Dairy Farm') {
+                                                    $sel_ft = 'Buffaloes';
+                                                } elseif (in_array($curr_ft, ['Goat / Sheep Ruminant Farm'], true)) {
+                                                    $sel_ft = 'Goats';
+                                                } else {
+                                                    $sel_ft = $curr_ft;
+                                                }
+                                                ?>
                                                 <select name="general[farm_type]" id="gen_farm_type" class="form-select form-select-sm" required>
-                                                    <option value="" disabled <?= empty($curr_ft) ? 'selected' : '' ?>>-- Select Type of Farm --</option>
-                                                    <option value="Dairy Cattle Farm" <?= $curr_ft === 'Dairy Cattle Farm' ? 'selected' : '' ?>>Dairy Cattle Farm</option>
-                                                    <option value="Buffalo Dairy Farm" <?= $curr_ft === 'Buffalo Dairy Farm' ? 'selected' : '' ?>>Buffalo Dairy Farm</option>
-                                                    <option value="Dual (Cattle & Buffalo)" <?= $curr_ft === 'Dual (Cattle & Buffalo)' ? 'selected' : '' ?>>Dual (Cattle & Buffalo)</option>
-                                                    <option value="Goat / Sheep Ruminant Farm" <?= $curr_ft === 'Goat / Sheep Ruminant Farm' ? 'selected' : '' ?>>Goat / Sheep Ruminant Farm</option>
-                                                    <option value="Swine / Piggery Operation" <?= $curr_ft === 'Swine / Piggery Operation' ? 'selected' : '' ?>>Swine / Piggery Operation</option>
-                                                    <option value="Poultry & Mixed Livestock" <?= $curr_ft === 'Poultry & Mixed Livestock' ? 'selected' : '' ?>>Poultry & Mixed Livestock</option>
-                                                    <option value="Commercial Breeding Farm" <?= $curr_ft === 'Commercial Breeding Farm' ? 'selected' : '' ?>>Commercial Breeding Farm</option>
-                                                    <option value="Smallholder Backyard Farm" <?= $curr_ft === 'Smallholder Backyard Farm' ? 'selected' : '' ?>>Smallholder Backyard Farm</option>
+                                                    <option value="" disabled <?= empty($sel_ft) ? 'selected' : '' ?>>-- Select Species Classification --</option>
+                                                    <option value="Cattle" <?= $sel_ft === 'Cattle' ? 'selected' : '' ?>>Cattle</option>
+                                                    <option value="Buffaloes" <?= $sel_ft === 'Buffaloes' ? 'selected' : '' ?>>Buffaloes</option>
+                                                    <option value="Goats" <?= $sel_ft === 'Goats' ? 'selected' : '' ?>>Goats</option>
+                                                    <option value="Sheep" <?= $sel_ft === 'Sheep' ? 'selected' : '' ?>>Sheep</option>
+                                                    <option value="Mixed Livestock" <?= ($sel_ft === 'Mixed Livestock' || strpos($sel_ft, 'Mixed') !== false) ? 'selected' : '' ?>>Mixed Livestock (Multiple Species)</option>
+                                                    <?php if (!empty($curr_ft) && !in_array($curr_ft, ['Cattle', 'Buffaloes', 'Goats', 'Sheep', 'Mixed Livestock', 'Dairy Cattle Farm', 'Buffalo Dairy Farm', 'Dual (Cattle & Buffalo)', 'Goat / Sheep Ruminant Farm'], true)): ?>
+                                                        <option value="<?= htmlspecialchars($curr_ft) ?>" selected><?= htmlspecialchars($curr_ft) ?> (Saved)</option>
+                                                    <?php endif; ?>
                                                 </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Mixed Type of farm <span class="text-danger">*</span></label>
-                                                <?php $curr_mft = $edit_rec['mixed_farm_type'] ?? ''; ?>
-                                                <select name="general[mixed_farm_type]" id="gen_mixed_farm_type" class="form-select form-select-sm" required>
-                                                    <option value="" disabled <?= empty($curr_mft) ? 'selected' : '' ?>>-- Select Mixed Type of Farm --</option>
-                                                    <option value="Cattle + Buffaloes" <?= $curr_mft === 'Cattle + Buffaloes' ? 'selected' : '' ?>>Cattle + Buffaloes</option>
-                                                    <option value="Cattle + Goat" <?= $curr_mft === 'Cattle + Goat' ? 'selected' : '' ?>>Cattle + Goat</option>
-                                                    <option value="Cattle + Crop / Paddy Cultivation" <?= $curr_mft === 'Cattle + Crop / Paddy Cultivation' ? 'selected' : '' ?>>Cattle + Crop / Paddy Cultivation</option>
-                                                    <option value="Cattle + Pasture / Fodder Production" <?= $curr_mft === 'Cattle + Pasture / Fodder Production' ? 'selected' : '' ?>>Cattle + Pasture / Fodder Production</option>
-                                                    <option value="Dairy + Poultry" <?= $curr_mft === 'Dairy + Poultry' ? 'selected' : '' ?>>Dairy + Poultry</option>
-                                                    <option value="Buffalo + Wetland Paddy" <?= $curr_mft === 'Buffalo + Wetland Paddy' ? 'selected' : '' ?>>Buffalo + Wetland Paddy</option>
-                                                    <option value="Swine + Crop Agriculture" <?= $curr_mft === 'Swine + Crop Agriculture' ? 'selected' : '' ?>>Swine + Crop Agriculture</option>
-                                                    <option value="Monoculture / Single Species Only" <?= $curr_mft === 'Monoculture / Single Species Only' ? 'selected' : '' ?>>Monoculture / Single Species Only</option>
-                                                    <option value="Other Mixed Farming" <?= $curr_mft === 'Other Mixed Farming' ? 'selected' : '' ?>>Other Mixed Farming</option>
-                                                </select>
+                                                <input type="hidden" name="general[mixed_farm_type]" id="gen_mixed_farm_type" value="<?= htmlspecialchars($edit_rec['mixed_farm_type'] ?? '') ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -1086,22 +1132,22 @@ require_once '../../../includes/header.php';
                                 <div class="panel-nav-footer">
                                     <div></div>
                                     <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-cattle" data-next-index="1">
-                                        Next: 2. Neat Cattle <i class="bi bi-arrow-right ms-1"></i>
+                                        Next: 2. Cattle <i class="bi bi-arrow-right ms-1"></i>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- ============================================================== -->
-                            <!-- 2. NEAT CATTLE (GRID: European, Indian, Local)                 -->
+                            <!-- 2. CATTLE (GRID: European, Indian, Local)                      -->
                             <!-- ============================================================== -->
                             <div class="category-pane" id="pane-cattle" style="display: none;">
                                 <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
-                                        <span class="category-badge-step mb-1">Section 2 of 8</span>
+                                        <span class="category-badge-step mb-1">Section 2 of 7</span>
                                         <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-shield-check text-primary me-2"></i>2. Neat Cattle
+                                            <i class="bi bi-shield-check text-primary me-2"></i>2. Cattle
                                         </h4>
-                                        <p class="text-muted small mb-0">Demographics grid by breed origin (European, Indian, Local) and livestock age/milking class.</p>
+                                        <p class="text-muted small mb-0">Demographics grid by breed categories (European, Indian, Local), cattle classes, and dairy yield.</p>
                                     </div>
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
                                         Grid: European | Indian | Local
@@ -1122,29 +1168,36 @@ require_once '../../../includes/header.php';
                                             </thead>
                                             <tbody>
                                                 <?php
-                                                $neat_rows = [
-                                                    'cows_milch' => 'Cows (Milch)',
+                                                $cattle_rows = [
+                                                    'cows' => 'Cows',
                                                     'unproductive_cows' => 'Unproductive Cows',
                                                     'heifers' => 'Heifers',
-                                                    'female_under_1' => 'Female Calf',
+                                                    'female_calves' => 'Female Calves',
                                                     'bulls' => 'Bulls',
-                                                    'male_under_1' => 'Male Calf'
+                                                    'male_calves' => 'Male Calves'
                                                 ];
                                                 $edit_cattle = !empty($edit_rec['neat_cattle_data']) ? json_decode($edit_rec['neat_cattle_data'], true) : [];
-                                                foreach ($neat_rows as $rKey => $rLabel):
+                                                foreach ($cattle_rows as $rKey => $rLabel):
+                                                    // Map legacy keys if present
+                                                    $cRow = $edit_cattle[$rKey] ?? [];
+                                                    if (empty($cRow)) {
+                                                        if ($rKey === 'cows' && !empty($edit_cattle['cows_milch'])) $cRow = $edit_cattle['cows_milch'];
+                                                        elseif ($rKey === 'female_calves' && !empty($edit_cattle['female_under_1'])) $cRow = $edit_cattle['female_under_1'];
+                                                        elseif ($rKey === 'male_calves' && !empty($edit_cattle['male_under_1'])) $cRow = $edit_cattle['male_under_1'];
+                                                    }
                                                 ?>
                                                 <tr>
                                                     <td class="fw-semibold"><?= $rLabel ?></td>
-                                                    <td><input type="number" min="0" value="<?= intval($edit_cattle[$rKey]['european'] ?? 0) ?>" name="cattle[<?= $rKey ?>][european]" class="daph-grid-input cattle-calc-input" data-col="euro" data-row="<?= $rKey ?>"></td>
-                                                    <td><input type="number" min="0" value="<?= intval($edit_cattle[$rKey]['indian'] ?? 0) ?>" name="cattle[<?= $rKey ?>][indian]" class="daph-grid-input cattle-calc-input" data-col="indian" data-row="<?= $rKey ?>"></td>
-                                                    <td><input type="number" min="0" value="<?= intval($edit_cattle[$rKey]['local'] ?? 0) ?>" name="cattle[<?= $rKey ?>][local]" class="daph-grid-input cattle-calc-input" data-col="local" data-row="<?= $rKey ?>"></td>
+                                                    <td><input type="number" min="0" value="<?= intval($cRow['european'] ?? 0) ?>" name="cattle[<?= $rKey ?>][european]" class="daph-grid-input cattle-calc-input" data-col="euro" data-row="<?= $rKey ?>"></td>
+                                                    <td><input type="number" min="0" value="<?= intval($cRow['indian'] ?? 0) ?>" name="cattle[<?= $rKey ?>][indian]" class="daph-grid-input cattle-calc-input" data-col="indian" data-row="<?= $rKey ?>"></td>
+                                                    <td><input type="number" min="0" value="<?= intval($cRow['local'] ?? 0) ?>" name="cattle[<?= $rKey ?>][local]" class="daph-grid-input cattle-calc-input" data-col="local" data-row="<?= $rKey ?>"></td>
                                                     <td class="daph-grid-total-cell" id="row_tot_cattle_<?= $rKey ?>">0</td>
                                                 </tr>
                                                 <?php endforeach; ?>
                                             </tbody>
                                             <tfoot>
                                                 <tr>
-                                                    <td class="fw-bold text-dark">Total Neat Cattle</td>
+                                                    <td class="fw-bold text-dark">Total Cattle</td>
                                                     <td class="text-center font-monospace" id="col_tot_cattle_euro">0</td>
                                                     <td class="text-center font-monospace" id="col_tot_cattle_indian">0</td>
                                                     <td class="text-center font-monospace" id="col_tot_cattle_local">0</td>
@@ -1152,6 +1205,58 @@ require_once '../../../includes/header.php';
                                                 </tr>
                                             </tfoot>
                                         </table>
+                                    </div>
+
+                                    <!-- Embedded Cattle Milk Production and Sale Section -->
+                                    <?php
+                                    $edit_milk = !empty($edit_rec['milk_data']) ? json_decode($edit_rec['milk_data'], true) : [];
+                                    ?>
+                                    <div class="mt-4 pt-3 border-top">
+                                        <div class="d-flex align-items-center justify-content-between mb-3">
+                                            <div>
+                                                <h6 class="fw-bold text-primary mb-1">
+                                                    <i class="bi bi-cup-hot-fill me-2"></i>Cattle Milk Production & Sale
+                                                </h6>
+                                                <p class="text-muted small mb-0">Daily cattle milk production, domestic consumption, processing, and sales (L/day).</p>
+                                            </div>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1">
+                                                Cattle Dairy Figures
+                                            </span>
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table daph-entry-grid align-middle" id="cattleMilkGridTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 48%;">Milk Production & Utilization Category</th>
+                                                        <th class="text-center" style="width: 26%;">Daily Amount (L/day)</th>
+                                                        <th class="text-center bg-light" style="width: 26%;">Summary / Remarks</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold">Total Production (L)/day</td>
+                                                        <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['total_production']['cow'] ?? 0.0) ?>" name="milk[total_production][cow]" class="daph-grid-input milk-calc-input font-monospace fw-bold text-primary" data-col="cow" data-row="prod"></td>
+                                                        <td class="text-center font-monospace small text-primary fw-bold" id="cattle_milk_kpi_display"><?= floatval($edit_milk['total_production']['cow'] ?? 0.0) ?> L/day</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Household Consumption (L)/day</td>
+                                                        <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['household_consumption']['cow'] ?? 0.0) ?>" name="milk[household_consumption][cow]" class="daph-grid-input milk-calc-input font-monospace" data-col="cow" data-row="home"></td>
+                                                        <td class="text-center text-muted small">Domestic use</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Used for Processing (L)/day</td>
+                                                        <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['used_for_processing']['cow'] ?? 0.0) ?>" name="milk[used_for_processing][cow]" class="daph-grid-input milk-calc-input font-monospace" data-col="cow" data-row="proc"></td>
+                                                        <td class="text-center text-muted small">Curd / Ghee / Butter</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Sales (L)/day</td>
+                                                        <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['sales']['cow'] ?? 0.0) ?>" name="milk[sales][cow]" class="daph-grid-input milk-calc-input font-monospace text-success fw-semibold" data-col="cow" data-row="sales"></td>
+                                                        <td class="text-center text-success small fw-semibold">Commercial sales</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1166,16 +1271,16 @@ require_once '../../../includes/header.php';
                             </div>
 
                             <!-- ============================================================== -->
-                            <!-- 3. BUFFALOES                                                  -->
+                            <!-- 3. BUFFALOES (GRID: Niliravi, Murah, Cross breed)               -->
                             <!-- ============================================================== -->
                             <div class="category-pane" id="pane-buffaloes" style="display: none;">
                                 <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
-                                        <span class="category-badge-step mb-1">Section 3 of 8</span>
+                                        <span class="category-badge-step mb-1">Section 3 of 7</span>
                                         <h4 class="h5 fw-bold text-dark mb-1">
                                             <i class="bi bi-record-circle-fill text-warning me-2"></i>3. Buffaloes
                                         </h4>
-                                        <p class="text-muted small mb-0">Demographics grid for water buffaloes across Niliravi, Murah, and Cross breed.</p>
+                                        <p class="text-muted small mb-0">Demographics grid by breed categories (Niliravi, Murah, Cross breed), buffalo classes, and dairy yield.</p>
                                     </div>
                                     <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2">
                                         Grid: Niliravi | Murah | Cross breed
@@ -1188,30 +1293,40 @@ require_once '../../../includes/header.php';
                                             <thead>
                                                 <tr>
                                                     <th style="width: 34%;">Livestock Category / Class</th>
-                                                    <th class="text-center" style="width: 18%;">Niliravi</th>
-                                                    <th class="text-center" style="width: 18%;">Murah</th>
-                                                    <th class="text-center" style="width: 18%;">Cross breed</th>
-                                                    <th class="text-center bg-light" style="width: 12%;">Row Total</th>
+                                                    <th class="text-center" style="width: 22%;">Niliravi</th>
+                                                    <th class="text-center" style="width: 22%;">Murah</th>
+                                                    <th class="text-center" style="width: 22%;">Cross breed</th>
+                                                    <th class="text-center bg-light" style="width: 15%;">Row Total</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <?php
                                                 $buf_rows = [
-                                                    'cows_milch' => 'Cows (Milch)',
+                                                    'cows' => 'Cows',
                                                     'unproductive_cows' => 'Unproductive Cows',
                                                     'heifers' => 'Heifers',
-                                                    'female_under_1' => 'less than 1 year Female',
+                                                    'female_calves' => 'Female Calves',
                                                     'bulls' => 'Bulls',
-                                                    'male_under_1' => 'less than 1 year Male'
+                                                    'male_calves' => 'Male Calves'
                                                 ];
                                                 $edit_buf = !empty($edit_rec['buffaloes_data']) ? json_decode($edit_rec['buffaloes_data'], true) : [];
                                                 foreach ($buf_rows as $rKey => $rLabel):
+                                                    // Map legacy keys and buffalo-specific columns if present
+                                                    $bRow = $edit_buf[$rKey] ?? [];
+                                                    if (empty($bRow)) {
+                                                        if ($rKey === 'cows' && !empty($edit_buf['cows_milch'])) $bRow = $edit_buf['cows_milch'];
+                                                        elseif ($rKey === 'female_calves' && !empty($edit_buf['female_under_1'])) $bRow = $edit_buf['female_under_1'];
+                                                        elseif ($rKey === 'male_calves' && !empty($edit_buf['male_under_1'])) $bRow = $edit_buf['male_under_1'];
+                                                    }
+                                                    $val_nili = intval($bRow['niliravi'] ?? ($bRow['indian'] ?? 0));
+                                                    $val_murah = intval($bRow['murah'] ?? 0);
+                                                    $val_cross = intval($bRow['cross_breed'] ?? ($bRow['local'] ?? ($bRow['european'] ?? 0)));
                                                 ?>
                                                 <tr>
                                                     <td class="fw-semibold"><?= $rLabel ?></td>
-                                                    <td><input type="number" min="0" value="<?= intval($edit_buf[$rKey]['niliravi'] ?? ($edit_buf[$rKey]['indian'] ?? 0)) ?>" name="buffalo[<?= $rKey ?>][niliravi]" class="daph-grid-input buffalo-calc-input" data-col="niliravi" data-row="<?= $rKey ?>"></td>
-                                                    <td><input type="number" min="0" value="<?= intval($edit_buf[$rKey]['murah'] ?? 0) ?>" name="buffalo[<?= $rKey ?>][murah]" class="daph-grid-input buffalo-calc-input" data-col="murah" data-row="<?= $rKey ?>"></td>
-                                                    <td><input type="number" min="0" value="<?= intval($edit_buf[$rKey]['cross_breed'] ?? ($edit_buf[$rKey]['local'] ?? 0)) ?>" name="buffalo[<?= $rKey ?>][cross_breed]" class="daph-grid-input buffalo-calc-input" data-col="cross_breed" data-row="<?= $rKey ?>"></td>
+                                                    <td><input type="number" min="0" value="<?= $val_nili ?>" name="buffalo[<?= $rKey ?>][niliravi]" class="daph-grid-input buffalo-calc-input" data-col="niliravi" data-row="<?= $rKey ?>"></td>
+                                                    <td><input type="number" min="0" value="<?= $val_murah ?>" name="buffalo[<?= $rKey ?>][murah]" class="daph-grid-input buffalo-calc-input" data-col="murah" data-row="<?= $rKey ?>"></td>
+                                                    <td><input type="number" min="0" value="<?= $val_cross ?>" name="buffalo[<?= $rKey ?>][cross_breed]" class="daph-grid-input buffalo-calc-input" data-col="cross_breed" data-row="<?= $rKey ?>"></td>
                                                     <td class="daph-grid-total-cell" id="row_tot_buf_<?= $rKey ?>">0</td>
                                                 </tr>
                                                 <?php endforeach; ?>
@@ -1227,76 +1342,149 @@ require_once '../../../includes/header.php';
                                             </tfoot>
                                         </table>
                                     </div>
+
+                                    <!-- Embedded Consolidated Buffalo Milk Production and Sale Section -->
+                                    <div class="mt-4 pt-3 border-top">
+                                        <div class="d-flex align-items-center justify-content-between mb-3">
+                                            <div>
+                                                <h6 class="fw-bold text-warning-emphasis mb-1">
+                                                    <i class="bi bi-cup-hot-fill text-warning me-2"></i>Buffalo Milk Production & Sale (Consolidated)
+                                                </h6>
+                                                <p class="text-muted small mb-0">Consolidated daily buffalo milk production, domestic consumption, processing, and sales (L/day).</p>
+                                            </div>
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1">
+                                                Buffalo Consolidated Yield
+                                            </span>
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table daph-entry-grid align-middle" id="buffaloMilkGridTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 48%;">Milk Production & Utilization Category</th>
+                                                        <th class="text-center" style="width: 26%;">Daily Amount (L/day)</th>
+                                                        <th class="text-center bg-light" style="width: 26%;">Summary / Remarks</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-semibold">Total Production (L)/day</td>
+                                                        <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['total_production']['buffalo'] ?? 0.0) ?>" name="milk[total_production][buffalo]" class="daph-grid-input milk-calc-input font-monospace fw-bold text-warning-emphasis" data-col="buf" data-row="prod"></td>
+                                                        <td class="text-center font-monospace small text-warning-emphasis fw-bold" id="buf_milk_kpi_display"><?= floatval($edit_milk['total_production']['buffalo'] ?? 0.0) ?> L/day</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Household Consumption (L)/day</td>
+                                                        <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['household_consumption']['buffalo'] ?? 0.0) ?>" name="milk[household_consumption][buffalo]" class="daph-grid-input milk-calc-input font-monospace" data-col="buf" data-row="home"></td>
+                                                        <td class="text-center text-muted small">Domestic use</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Used for Processing (L)/day</td>
+                                                        <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['used_for_processing']['buffalo'] ?? 0.0) ?>" name="milk[used_for_processing][buffalo]" class="daph-grid-input milk-calc-input font-monospace" data-col="buf" data-row="proc"></td>
+                                                        <td class="text-center text-muted small">Curd / Ghee / Butter</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-semibold">Sales (L)/day</td>
+                                                        <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['sales']['buffalo'] ?? 0.0) ?>" name="milk[sales][buffalo]" class="daph-grid-input milk-calc-input font-monospace text-success fw-semibold" data-col="buf" data-row="sales"></td>
+                                                        <td class="text-center text-success small fw-semibold">Commercial sales</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="panel-nav-footer">
                                     <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-cattle" data-prev-index="1">
-                                        <i class="bi bi-arrow-left me-1"></i>Previous: 2. Neat Cattle
+                                        <i class="bi bi-arrow-left me-1"></i>Previous: 2. Cattle
                                     </button>
-                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-milk" data-next-index="3">
-                                        Next: 4. Milk Production & Sale <i class="bi bi-arrow-right ms-1"></i>
+                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-goat" data-next-index="3">
+                                        Next: 4. Goats <i class="bi bi-arrow-right ms-1"></i>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- ============================================================== -->
-                            <!-- 4. MILK PRODUCTION AND SALE (GRID: Cow, Buffalo)               -->
+                            <!-- 4. GOATS                                                       -->
                             <!-- ============================================================== -->
-                            <div class="category-pane" id="pane-milk" style="display: none;">
+                            <div class="category-pane" id="pane-goat" style="display: none;">
                                 <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
-                                        <span class="category-badge-step mb-1">Section 4 of 8</span>
+                                        <span class="category-badge-step mb-1">Section 4 of 7</span>
                                         <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-cup-hot-fill text-info me-2"></i>4. Milk Production and Sale
+                                            <i class="bi bi-patch-check-fill text-warning me-2"></i>4. Goats
                                         </h4>
-                                        <p class="text-muted small mb-0">Record daily milk production, home consumption, farm processing, and commercial sales.</p>
+                                        <p class="text-muted small mb-0">Record goat flock counts, kids, fatteners, breeding frequency, and daily milk yield.</p>
                                     </div>
-                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2">
-                                        Grid: Cow | Buffalo (L/day)
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2">
+                                        Caprine Herd
                                     </span>
                                 </div>
 
                                 <div class="p-4">
-                                    <div class="table-responsive">
-                                        <?php
-                                        $edit_milk = !empty($edit_rec['milk_data']) ? json_decode($edit_rec['milk_data'], true) : [];
-                                        ?>
-                                        <table class="table daph-entry-grid align-middle" id="milkGridTable">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width: 40%;">Milk Production & Utilization Category</th>
-                                                    <th class="text-center" style="width: 25%;">Cow (L)/day</th>
-                                                    <th class="text-center" style="width: 25%;">Buffalo (L)/day</th>
-                                                    <th class="text-center bg-light" style="width: 15%;">Total (L)/day</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td class="fw-semibold">Total Production (L)/day</td>
-                                                    <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['total_production']['cow'] ?? 0.0) ?>" name="milk[total_production][cow]" class="daph-grid-input milk-calc-input" data-col="cow" data-row="prod"></td>
-                                                    <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['total_production']['buffalo'] ?? 0.0) ?>" name="milk[total_production][buffalo]" class="daph-grid-input milk-calc-input" data-col="buf" data-row="prod"></td>
-                                                    <td class="daph-grid-total-cell font-monospace text-primary fw-bold" id="row_tot_milk_prod">0.0</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-semibold">Household Consumption (L)/day</td>
-                                                    <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['household_consumption']['cow'] ?? 0.0) ?>" name="milk[household_consumption][cow]" class="daph-grid-input milk-calc-input" data-col="cow" data-row="home"></td>
-                                                    <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['household_consumption']['buffalo'] ?? 0.0) ?>" name="milk[household_consumption][buffalo]" class="daph-grid-input milk-calc-input" data-col="buf" data-row="home"></td>
-                                                    <td class="daph-grid-total-cell font-monospace" id="row_tot_milk_home">0.0</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-semibold">Used for Processing (L)/day</td>
-                                                    <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['used_for_processing']['cow'] ?? 0.0) ?>" name="milk[used_for_processing][cow]" class="daph-grid-input milk-calc-input" data-col="cow" data-row="proc"></td>
-                                                    <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['used_for_processing']['buffalo'] ?? 0.0) ?>" name="milk[used_for_processing][buffalo]" class="daph-grid-input milk-calc-input" data-col="buf" data-row="proc"></td>
-                                                    <td class="daph-grid-total-cell font-monospace" id="row_tot_milk_proc">0.0</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-semibold">Sales (L)/day</td>
-                                                    <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['sales']['cow'] ?? 0.0) ?>" name="milk[sales][cow]" class="daph-grid-input milk-calc-input" data-col="cow" data-row="sales"></td>
-                                                    <td><input type="number" step="0.1" min="0" value="<?= floatval($edit_milk['sales']['buffalo'] ?? 0.0) ?>" name="milk[sales][buffalo]" class="daph-grid-input milk-calc-input" data-col="buf" data-row="sales"></td>
-                                                    <td class="daph-grid-total-cell font-monospace text-success fw-bold" id="row_tot_milk_sales">0.0</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                             <label class="form-label">Breeding Female</label>
+                                             <input type="number" min="0" value="<?= intval($edit_rec['goat_breeding_female'] ?? 0) ?>" name="goat[breeding_female]" id="goat_breeding_female" class="form-control form-control-sm goat-sub-calc" placeholder="0">
+                                        </div>
+                                        <div class="col-md-6">
+                                             <label class="form-label">Breeding Male</label>
+                                             <input type="number" min="0" value="<?= intval($edit_rec['goat_breeding_male'] ?? 0) ?>" name="goat[breeding_male]" id="goat_breeding_male" class="form-control form-control-sm goat-sub-calc" placeholder="0">
+                                        </div>
+                                        <div class="col-md-6">
+                                             <label class="form-label">Weaners fattening</label>
+                                             <input type="number" min="0" value="<?= intval($edit_rec['goat_weaners_fattening'] ?? 0) ?>" name="goat[weaners_fattening]" id="goat_weaners" class="form-control form-control-sm goat-sub-calc" placeholder="0">
+                                        </div>
+                                        <div class="col-md-6">
+                                             <label class="form-label">Pre weaners (Kids)</label>
+                                             <input type="number" min="0" value="<?= intval($edit_rec['goat_pre_weaners'] ?? 0) ?>" name="goat[pre_weaners]" id="goat_pre_weaners" class="form-control form-control-sm goat-sub-calc" placeholder="0">
+                                        </div>
+                                        <div class="col-12">
+                                             <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                                                 <div>
+                                                     <label class="form-label fw-bold text-dark mb-0">Total Goat Flock (Total No)</label>
+                                                     <small class="text-muted d-block">Automatic summation of Breeding Female + Breeding Male + Weaners + Pre weaners (Kids).</small>
+                                                 </div>
+                                                 <div class="text-end">
+                                                     <div class="input-group input-group-sm" style="max-width: 200px;">
+                                                         <input type="number" min="0" readonly value="<?= intval($edit_rec['goat_total_no'] ?? 0) ?>" name="goat[total_no]" id="goat_total_no" class="form-control form-control-sm font-monospace fw-bold text-warning-emphasis fs-6 text-center" placeholder="0">
+                                                         <span class="input-group-text fw-semibold">Heads</span>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                             <label class="form-label">Frequency of animal sales for meat</label>
+                                             <?php $cur_gfm = $edit_rec['goat_freq_meat'] ?? 'Not applicable'; ?>
+                                             <select name="goat[freq_sales_meat]" id="goat_freq_meat" class="form-select form-select-sm">
+                                                 <option value="Not applicable" <?= $cur_gfm === 'Not applicable' ? 'selected' : '' ?>>Not applicable / None</option>
+                                                 <option value="Weekly" <?= $cur_gfm === 'Weekly' ? 'selected' : '' ?>>Weekly</option>
+                                                 <option value="Monthly" <?= $cur_gfm === 'Monthly' ? 'selected' : '' ?>>Monthly</option>
+                                                 <option value="Bi-monthly" <?= $cur_gfm === 'Bi-monthly' ? 'selected' : '' ?>>Bi-monthly</option>
+                                                 <option value="Quarterly" <?= $cur_gfm === 'Quarterly' ? 'selected' : '' ?>>Quarterly</option>
+                                                 <option value="Festive / Seasonal" <?= $cur_gfm === 'Festive / Seasonal' ? 'selected' : '' ?>>Festive / Seasonal (Eid/Festivals)</option>
+                                                 <option value="On demand" <?= $cur_gfm === 'On demand' ? 'selected' : '' ?>>On demand</option>
+                                             </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                             <label class="form-label">Frequency of animal sales for Breeding</label>
+                                             <?php $cur_gfb = $edit_rec['goat_freq_breeding'] ?? 'Not applicable'; ?>
+                                             <select name="goat[freq_sales_breeding]" id="goat_freq_breeding" class="form-select form-select-sm">
+                                                 <option value="Not applicable" <?= $cur_gfb === 'Not applicable' ? 'selected' : '' ?>>Not applicable / None</option>
+                                                 <option value="Monthly" <?= $cur_gfb === 'Monthly' ? 'selected' : '' ?>>Monthly</option>
+                                                 <option value="Quarterly" <?= $cur_gfb === 'Quarterly' ? 'selected' : '' ?>>Quarterly</option>
+                                                 <option value="Biannually" <?= $cur_gfb === 'Biannually' ? 'selected' : '' ?>>Biannually</option>
+                                                 <option value="Annually" <?= $cur_gfb === 'Annually' ? 'selected' : '' ?>>Annually</option>
+                                                 <option value="Seasonal" <?= $cur_gfb === 'Seasonal' ? 'selected' : '' ?>>Seasonal</option>
+                                                 <option value="Rarely" <?= $cur_gfb === 'Rarely' ? 'selected' : '' ?>>Rarely</option>
+                                             </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                             <label class="form-label">Milk Production per day</label>
+                                             <div class="input-group input-group-sm">
+                                                 <input type="number" step="0.1" min="0" value="<?= floatval($edit_rec['goat_milk_per_day'] ?? 0.0) ?>" name="goat[milk_production_per_day]" id="goat_milk_per_day" class="form-control" placeholder="0.0">
+                                                 <span class="input-group-text">L/day</span>
+                                             </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1304,22 +1492,76 @@ require_once '../../../includes/header.php';
                                     <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-buffaloes" data-prev-index="2">
                                         <i class="bi bi-arrow-left me-1"></i>Previous: 3. Buffaloes
                                     </button>
-                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-fodder" data-next-index="4">
-                                        Next: 5. Fodder / Pasture <i class="bi bi-arrow-right ms-1"></i>
+                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-sheep" data-next-index="4">
+                                        Next: 5. Sheep <i class="bi bi-arrow-right ms-1"></i>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- ============================================================== -->
+                            <!-- 5. SHEEP                                                       -->
                             <!-- ============================================================== -->
-                            <!-- 5. FODDER / PASTURE CULTIVATIONS (DYNAMIC 1-TO-MANY ROWS)       -->
+                            <div class="category-pane" id="pane-sheep" style="display: none;">
+                                <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <span class="category-badge-step mb-1">Section 5 of 7</span>
+                                        <h4 class="h5 fw-bold text-dark mb-1">
+                                            <i class="bi bi-circle-square text-secondary me-2"></i>5. Sheep
+                                        </h4>
+                                        <p class="text-muted small mb-0">Record sheep breeding females, breeding males, and sheep maintained for meat.</p>
+                                    </div>
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2">
+                                        Ovine Flock
+                                    </span>
+                                </div>
+
+                                <div class="p-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                             <label class="form-label">Breeding Female</label>
+                                             <input type="number" min="0" value="<?= intval($edit_rec['sheep_breeding_female'] ?? 0) ?>" name="sheep[breeding_female]" id="sheep_breeding_female" class="form-control form-control-sm sheep-calc-input">
+                                        </div>
+                                        <div class="col-md-4">
+                                             <label class="form-label">Breeding Male</label>
+                                             <input type="number" min="0" value="<?= intval($edit_rec['sheep_breeding_male'] ?? 0) ?>" name="sheep[breeding_male]" id="sheep_breeding_male" class="form-control form-control-sm sheep-calc-input">
+                                        </div>
+                                        <div class="col-md-4">
+                                             <label class="form-label">For meat</label>
+                                             <input type="number" min="0" value="<?= intval($edit_rec['sheep_for_meat'] ?? 0) ?>" name="sheep[for_meat]" id="sheep_for_meat" class="form-control form-control-sm sheep-calc-input">
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                             <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                                                 <div>
+                                                     <span class="small fw-bold text-muted text-uppercase">Total Sheep in Flock:</span>
+                                                     <small class="text-muted d-block">Automatic summation of Breeding Female + Breeding Male + For Meat.</small>
+                                                 </div>
+                                                 <h5 id="totalSheepDisplay" class="mb-0 text-secondary fw-bold"><?= intval($edit_rec['sheep_total_no'] ?? 0) ?> Heads</h5>
+                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="panel-nav-footer">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-goat" data-prev-index="3">
+                                        <i class="bi bi-arrow-left me-1"></i>Previous: 4. Goats
+                                    </button>
+                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-fodder" data-next-index="5">
+                                        Next: 6. Fodder / Pasture <i class="bi bi-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+
+
+                            <!-- ============================================================== -->
+                            <!-- 6. FODDER / PASTURE CULTIVATIONS (DYNAMIC 1-TO-MANY ROWS)       -->
                             <!-- ============================================================== -->
                             <div class="category-pane" id="pane-fodder" style="display: none;">
                                 <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
-                                        <span class="category-badge-step mb-1">Section 5 of 8</span>
+                                        <span class="category-badge-step mb-1">Section 6 of 7</span>
                                         <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-tree-fill text-success me-2"></i>5. Fodder / pasture cultivations (Land area) in Perch
+                                            <i class="bi bi-tree-fill text-success me-2"></i>6. Fodder / pasture cultivations (Land area) in Perch
                                         </h4>
                                         <p class="text-muted small mb-0">Record land extent in Perches (160 Perch = 1 Acre). Add multiple crops with custom specifications.</p>
                                     </div>
@@ -1335,28 +1577,31 @@ require_once '../../../includes/header.php';
                                         $initial_fodder_items = json_decode($edit_rec['fodder_data'], true) ?: [];
                                     }
                                     if (empty($initial_fodder_items) && !empty($edit_rec)) {
-                                        if ((float)($edit_rec['fodder_hybrid_napier'] ?? 0) > 0) $initial_fodder_items[] = ['item' => 'Hybrid Napier', 'amount' => (float)$edit_rec['fodder_hybrid_napier'], 'other_specify' => ''];
-                                        if ((float)($edit_rec['fodder_sorghum'] ?? 0) > 0) $initial_fodder_items[] = ['item' => 'Sorghum', 'amount' => (float)$edit_rec['fodder_sorghum'], 'other_specify' => ''];
-                                        if ((float)($edit_rec['fodder_maize'] ?? 0) > 0) $initial_fodder_items[] = ['item' => 'Maize(fodder)', 'amount' => (float)$edit_rec['fodder_maize'], 'other_specify' => ''];
-                                        if ((float)($edit_rec['fodder_other'] ?? 0) > 0) $initial_fodder_items[] = ['item' => 'Other', 'amount' => (float)$edit_rec['fodder_other'], 'other_specify' => $edit_rec['fodder_other_specify'] ?? ''];
+                                        if ((float)($edit_rec['fodder_hybrid_napier'] ?? 0) > 0) $initial_fodder_items[] = ['item' => 'Hybrid Napier', 'amount' => (float)$edit_rec['fodder_hybrid_napier'], 'yield_amount' => 0.0, 'other_specify' => ''];
+                                        if ((float)($edit_rec['fodder_sorghum'] ?? 0) > 0) $initial_fodder_items[] = ['item' => 'Sorghum', 'amount' => (float)$edit_rec['fodder_sorghum'], 'yield_amount' => 0.0, 'other_specify' => ''];
+                                        if ((float)($edit_rec['fodder_maize'] ?? 0) > 0) $initial_fodder_items[] = ['item' => 'Maize(fodder)', 'amount' => (float)$edit_rec['fodder_maize'], 'yield_amount' => 0.0, 'other_specify' => ''];
+                                        if ((float)($edit_rec['fodder_other'] ?? 0) > 0) $initial_fodder_items[] = ['item' => 'Other', 'amount' => (float)$edit_rec['fodder_other'], 'yield_amount' => 0.0, 'other_specify' => $edit_rec['fodder_other_specify'] ?? ''];
                                     }
                                     if (empty($initial_fodder_items)) {
-                                        $initial_fodder_items[] = ['item' => '', 'amount' => '', 'other_specify' => ''];
+                                        $initial_fodder_items[] = ['item' => '', 'amount' => '', 'yield_amount' => '', 'other_specify' => ''];
                                     }
                                     ?>
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered align-middle mb-0" id="fodderItemsTable">
                                             <thead class="table-light small text-uppercase">
                                                 <tr>
-                                                    <th style="width: 32%;">Item / Crop Type <span class="text-danger">*</span></th>
-                                                    <th style="width: 36%;">Specify Other Type <small class="text-muted fw-normal">(If "Other")</small></th>
-                                                    <th style="width: 22%;">Amount (in Perch) <span class="text-danger">*</span></th>
-                                                    <th style="width: 10%;" class="text-center">Action</th>
+                                                    <th style="width: 28%;">Item / Crop Type <span class="text-danger">*</span></th>
+                                                    <th style="width: 28%;">Specify Other Type <small class="text-muted fw-normal">(If "Other")</small></th>
+                                                    <th style="width: 18%;">Land Area (Perches) <span class="text-danger">*</span></th>
+                                                    <th style="width: 18%;">Yield Amount (kg)</th>
+                                                    <th style="width: 8%;" class="text-center">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="fodderItemsTableBody">
                                                 <?php foreach ($initial_fodder_items as $fIdx => $fRow): 
                                                     $isOther = ($fRow['item'] ?? '') === 'Other';
+                                                    $landVal = isset($fRow['amount']) && $fRow['amount'] !== '' ? floatval($fRow['amount']) : (isset($fRow['land_area']) && $fRow['land_area'] !== '' ? floatval($fRow['land_area']) : '');
+                                                    $yieldVal = isset($fRow['yield_amount']) && $fRow['yield_amount'] !== '' ? floatval($fRow['yield_amount']) : '';
                                                 ?>
                                                 <tr class="fodder-row" id="fodder_row_<?= $fIdx ?>">
                                                     <td>
@@ -1381,8 +1626,14 @@ require_once '../../../includes/header.php';
                                                     </td>
                                                     <td>
                                                         <div class="input-group input-group-sm">
-                                                            <input type="number" step="0.1" min="0" name="fodder_items[<?= $fIdx ?>][amount]" class="form-control form-control-sm fodder-amount-input" placeholder="0.0" value="<?= isset($fRow['amount']) && $fRow['amount'] !== '' ? floatval($fRow['amount']) : '' ?>" required oninput="calcFodderTotal();">
+                                                            <input type="number" step="0.1" min="0" name="fodder_items[<?= $fIdx ?>][amount]" class="form-control form-control-sm fodder-amount-input" placeholder="0.0" value="<?= $landVal ?>" required oninput="calcFodderTotal();" title="Land Area (Perches)">
                                                             <span class="input-group-text">P</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="0.1" min="0" name="fodder_items[<?= $fIdx ?>][yield_amount]" class="form-control form-control-sm fodder-yield-input" placeholder="0.0" value="<?= $yieldVal ?>" oninput="calcFodderTotal();" title="Yield Amount (kg)">
+                                                            <span class="input-group-text">kg</span>
                                                         </div>
                                                     </td>
                                                     <td class="text-center">
@@ -1395,11 +1646,17 @@ require_once '../../../includes/header.php';
                                             </tbody>
                                             <tfoot class="table-light fw-bold">
                                                 <tr>
-                                                    <td colspan="2" class="text-end text-dark">Total Land Area (in Perch):</td>
+                                                    <td colspan="2" class="text-end text-dark">Total:</td>
                                                     <td>
                                                         <div class="input-group input-group-sm">
-                                                            <input type="number" step="0.1" min="0" readonly name="fodder[total_land_area]" id="fodder_total_land_area" class="form-control fw-bold text-success font-monospace" placeholder="0.0" value="<?= floatval($edit_rec['fodder_total_land_area'] ?? 0.0) ?>">
-                                                            <span class="input-group-text fw-bold">Perches</span>
+                                                            <input type="number" step="0.1" min="0" readonly name="fodder[total_land_area]" id="fodder_total_land_area" class="form-control fw-bold text-success font-monospace" placeholder="0.0" value="<?= floatval($edit_rec['fodder_total_land_area'] ?? 0.0) ?>" title="Total Land Area (Perches)">
+                                                            <span class="input-group-text fw-bold">P</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="number" step="0.1" min="0" readonly id="fodder_total_yield" class="form-control fw-bold text-primary font-monospace" placeholder="0.0" value="0.0" title="Total Yield Amount (kg)">
+                                                            <span class="input-group-text fw-bold">kg</span>
                                                         </div>
                                                     </td>
                                                     <td class="text-center">
@@ -1420,24 +1677,24 @@ require_once '../../../includes/header.php';
                                 </div>
 
                                 <div class="panel-nav-footer">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-milk" data-prev-index="3">
-                                        <i class="bi bi-arrow-left me-1"></i>Previous: 4. Milk Production & Sale
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-sheep" data-prev-index="4">
+                                        <i class="bi bi-arrow-left me-1"></i>Previous: 5. Sheep
                                     </button>
-                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-swine" data-next-index="5">
-                                        Next: 6. Swine <i class="bi bi-arrow-right ms-1"></i>
+                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-swine" data-next-index="6">
+                                        Next: 7. Swine <i class="bi bi-arrow-right ms-1"></i>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- ============================================================== -->
-                            <!-- 6. SWINE                                                       -->
+                            <!-- 7. SWINE                                                       -->
                             <!-- ============================================================== -->
                             <div class="category-pane" id="pane-swine" style="display: none;">
                                 <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
-                                        <span class="category-badge-step mb-1">Section 6 of 8</span>
+                                        <span class="category-badge-step mb-1">Section 7 of 7</span>
                                         <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-bookmark-star-fill text-danger me-2"></i>6. Swine
+                                            <i class="bi bi-bookmark-star-fill text-danger me-2"></i>7. Swine
                                         </h4>
                                         <p class="text-muted small mb-0">Record swine herd numbers, breeding stock, fatteners, piglings, and sales frequencies.</p>
                                     </div>
@@ -1509,156 +1766,8 @@ require_once '../../../includes/header.php';
                                 </div>
 
                                 <div class="panel-nav-footer">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-fodder" data-prev-index="4">
-                                        <i class="bi bi-arrow-left me-1"></i>Previous: 5. Fodder / Pasture
-                                    </button>
-                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-goat" data-next-index="6">
-                                        Next: 7. Goat <i class="bi bi-arrow-right ms-1"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- ============================================================== -->
-                            <!-- 7. GOAT                                                        -->
-                            <!-- ============================================================== -->
-                            <div class="category-pane" id="pane-goat" style="display: none;">
-                                <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                    <div>
-                                        <span class="category-badge-step mb-1">Section 7 of 8</span>
-                                        <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-patch-check-fill text-warning me-2"></i>7. Goat
-                                        </h4>
-                                        <p class="text-muted small mb-0">Record goat flock counts, kids, fatteners, breeding frequency, and daily milk yield.</p>
-                                    </div>
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2">
-                                        Caprine Herd
-                                    </span>
-                                </div>
-
-                                <div class="p-4">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Breeding Female</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_breeding_female'] ?? 0) ?>" name="goat[breeding_female]" id="goat_breeding_female" class="form-control form-control-sm goat-sub-calc" placeholder="0">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Breeding Male</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_breeding_male'] ?? 0) ?>" name="goat[breeding_male]" id="goat_breeding_male" class="form-control form-control-sm goat-sub-calc" placeholder="0">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Weaners fattening</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_weaners_fattening'] ?? 0) ?>" name="goat[weaners_fattening]" id="goat_weaners" class="form-control form-control-sm goat-sub-calc" placeholder="0">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Pre weaners (Kids)</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['goat_pre_weaners'] ?? 0) ?>" name="goat[pre_weaners]" id="goat_pre_weaners" class="form-control form-control-sm goat-sub-calc" placeholder="0">
-                                        </div>
-                                        <div class="col-12">
-                                            <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <label class="form-label fw-bold text-dark mb-0">Total Goat Flock (Total No)</label>
-                                                    <small class="text-muted d-block">Automatic summation of Breeding Female + Breeding Male + Weaners + Pre weaners (Kids).</small>
-                                                </div>
-                                                <div class="text-end">
-                                                    <div class="input-group input-group-sm" style="max-width: 200px;">
-                                                        <input type="number" min="0" readonly value="<?= intval($edit_rec['goat_total_no'] ?? 0) ?>" name="goat[total_no]" id="goat_total_no" class="form-control form-control-sm font-monospace fw-bold text-warning-emphasis fs-6 text-center" placeholder="0">
-                                                        <span class="input-group-text fw-semibold">Heads</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Frequency of animal sales for meat</label>
-                                            <?php $cur_gfm = $edit_rec['goat_freq_meat'] ?? 'Not applicable'; ?>
-                                            <select name="goat[freq_sales_meat]" id="goat_freq_meat" class="form-select form-select-sm">
-                                                <option value="Not applicable" <?= $cur_gfm === 'Not applicable' ? 'selected' : '' ?>>Not applicable / None</option>
-                                                <option value="Weekly" <?= $cur_gfm === 'Weekly' ? 'selected' : '' ?>>Weekly</option>
-                                                <option value="Monthly" <?= $cur_gfm === 'Monthly' ? 'selected' : '' ?>>Monthly</option>
-                                                <option value="Bi-monthly" <?= $cur_gfm === 'Bi-monthly' ? 'selected' : '' ?>>Bi-monthly</option>
-                                                <option value="Quarterly" <?= $cur_gfm === 'Quarterly' ? 'selected' : '' ?>>Quarterly</option>
-                                                <option value="Festive / Seasonal" <?= $cur_gfm === 'Festive / Seasonal' ? 'selected' : '' ?>>Festive / Seasonal (Eid/Festivals)</option>
-                                                <option value="On demand" <?= $cur_gfm === 'On demand' ? 'selected' : '' ?>>On demand</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Frequency of animal sales for Breeding</label>
-                                            <?php $cur_gfb = $edit_rec['goat_freq_breeding'] ?? 'Not applicable'; ?>
-                                            <select name="goat[freq_sales_breeding]" id="goat_freq_breeding" class="form-select form-select-sm">
-                                                <option value="Not applicable" <?= $cur_gfb === 'Not applicable' ? 'selected' : '' ?>>Not applicable / None</option>
-                                                <option value="Monthly" <?= $cur_gfb === 'Monthly' ? 'selected' : '' ?>>Monthly</option>
-                                                <option value="Quarterly" <?= $cur_gfb === 'Quarterly' ? 'selected' : '' ?>>Quarterly</option>
-                                                <option value="Biannually" <?= $cur_gfb === 'Biannually' ? 'selected' : '' ?>>Biannually</option>
-                                                <option value="Annually" <?= $cur_gfb === 'Annually' ? 'selected' : '' ?>>Annually</option>
-                                                <option value="Seasonal" <?= $cur_gfb === 'Seasonal' ? 'selected' : '' ?>>Seasonal</option>
-                                                <option value="Rarely" <?= $cur_gfb === 'Rarely' ? 'selected' : '' ?>>Rarely</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Milk Production per day</label>
-                                            <div class="input-group input-group-sm">
-                                                <input type="number" step="0.1" min="0" value="<?= floatval($edit_rec['goat_milk_per_day'] ?? 0.0) ?>" name="goat[milk_production_per_day]" id="goat_milk_per_day" class="form-control" placeholder="0.0">
-                                                <span class="input-group-text">L/day</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="panel-nav-footer">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-swine" data-prev-index="5">
-                                        <i class="bi bi-arrow-left me-1"></i>Previous: 6. Swine
-                                    </button>
-                                    <button type="button" class="btn btn-dark btn-sm px-4 fw-semibold btn-next-category" data-next-pane="pane-sheep" data-next-index="7">
-                                        Next: 8. Sheep <i class="bi bi-arrow-right ms-1"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- ============================================================== -->
-                            <!-- 8. SHEEP                                                       -->
-                            <!-- ============================================================== -->
-                            <div class="category-pane" id="pane-sheep" style="display: none;">
-                                <div class="category-panel-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                    <div>
-                                        <span class="category-badge-step mb-1">Section 8 of 8</span>
-                                        <h4 class="h5 fw-bold text-dark mb-1">
-                                            <i class="bi bi-circle-square text-secondary me-2"></i>8. Sheep
-                                        </h4>
-                                        <p class="text-muted small mb-0">Record sheep breeding females, breeding males, and sheep maintained for meat.</p>
-                                    </div>
-                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2">
-                                        Ovine Flock
-                                    </span>
-                                </div>
-
-                                <div class="p-4">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Breeding Female</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['sheep_breeding_female'] ?? 0) ?>" name="sheep[breeding_female]" id="sheep_breeding_female" class="form-control form-control-sm sheep-calc-input">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Breeding Male</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['sheep_breeding_male'] ?? 0) ?>" name="sheep[breeding_male]" id="sheep_breeding_male" class="form-control form-control-sm sheep-calc-input">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">For meat</label>
-                                            <input type="number" min="0" value="<?= intval($edit_rec['sheep_for_meat'] ?? 0) ?>" name="sheep[for_meat]" id="sheep_for_meat" class="form-control form-control-sm sheep-calc-input">
-                                        </div>
-                                        <div class="col-12 mt-3">
-                                            <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <span class="small fw-bold text-muted text-uppercase">Total Sheep in Flock:</span>
-                                                    <small class="text-muted d-block">Automatic summation of Breeding Female + Breeding Male + For Meat.</small>
-                                                </div>
-                                                <h5 id="totalSheepDisplay" class="mb-0 text-secondary fw-bold"><?= intval($edit_rec['sheep_total_no'] ?? 0) ?> Heads</h5>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="panel-nav-footer">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-goat" data-prev-index="6">
-                                        <i class="bi bi-arrow-left me-1"></i>Previous: 7. Goat
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-prev-category" data-prev-pane="pane-fodder" data-prev-index="5">
+                                        <i class="bi bi-arrow-left me-1"></i>Previous: 6. Fodder / Pasture
                                     </button>
                                     <div class="d-flex gap-2">
                                         <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetMasterForm();">
@@ -2844,8 +2953,8 @@ require_once '../../../includes/header.php';
                                             <th class="text-center" style="cursor: pointer;" onclick="toggleBrandingSort(8);" title="Click to sort by Milk Output (ASC/DESC)">
                                                 Milk (L/d) <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_8"></i>
                                             </th>
-                                            <th class="text-center" style="cursor: pointer;" onclick="toggleBrandingSort(9);" title="Click to sort by Pasture (ASC/DESC)">
-                                                Pasture (P) <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_9"></i>
+                                            <th class="text-center" style="cursor: pointer;" onclick="toggleBrandingSort(9);" title="Click to sort by Pasture Land Area (ASC/DESC)">
+                                                Fodder Cultivations <small class="d-block text-muted text-lowercase" style="font-size: 0.65rem;">(Land: P | Yield: kg)</small> <i class="bi bi-arrow-down-up text-muted ms-1 sort-indicator" id="sortIcon_9"></i>
                                             </th>
                                             <th class="text-end pe-4">Actions</th>
                                         </tr>
@@ -2903,21 +3012,27 @@ require_once '../../../includes/header.php';
                                                 <?= number_format((float)$rec['daily_milk_production'], 1) ?>
                                             </td>
                                             <td class="text-center font-monospace" data-sort="<?= (float)$rec['fodder_total_land_area'] ?>">
-                                                <?= number_format((float)$rec['fodder_total_land_area'], 1) ?>
+                                                <span class="fw-bold text-success"><?= number_format((float)$rec['fodder_total_land_area'], 1) ?></span> <small class="text-muted">P</small>
                                                 <?php
                                                 $f_list = !empty($rec['fodder_data']) ? (json_decode($rec['fodder_data'], true) ?: []) : [];
                                                 if (empty($f_list)) {
-                                                    if ((float)$rec['fodder_hybrid_napier'] > 0) $f_list[] = ['item' => 'Hybrid Napier', 'amount' => (float)$rec['fodder_hybrid_napier'], 'other_specify' => ''];
-                                                    if ((float)$rec['fodder_sorghum'] > 0) $f_list[] = ['item' => 'Sorghum', 'amount' => (float)$rec['fodder_sorghum'], 'other_specify' => ''];
-                                                    if ((float)$rec['fodder_maize'] > 0) $f_list[] = ['item' => 'Maize(fodder)', 'amount' => (float)$rec['fodder_maize'], 'other_specify' => ''];
-                                                    if ((float)$rec['fodder_other'] > 0) $f_list[] = ['item' => 'Other', 'amount' => (float)$rec['fodder_other'], 'other_specify' => $rec['fodder_other_specify'] ?? ''];
+                                                    if ((float)$rec['fodder_hybrid_napier'] > 0) $f_list[] = ['item' => 'Hybrid Napier', 'amount' => (float)$rec['fodder_hybrid_napier'], 'yield_amount' => 0.0, 'other_specify' => ''];
+                                                    if ((float)$rec['fodder_sorghum'] > 0) $f_list[] = ['item' => 'Sorghum', 'amount' => (float)$rec['fodder_sorghum'], 'yield_amount' => 0.0, 'other_specify' => ''];
+                                                    if ((float)$rec['fodder_maize'] > 0) $f_list[] = ['item' => 'Maize(fodder)', 'amount' => (float)$rec['fodder_maize'], 'yield_amount' => 0.0, 'other_specify' => ''];
+                                                    if ((float)$rec['fodder_other'] > 0) $f_list[] = ['item' => 'Other', 'amount' => (float)$rec['fodder_other'], 'yield_amount' => 0.0, 'other_specify' => $rec['fodder_other_specify'] ?? ''];
                                                 }
                                                 if (!empty($f_list)):
                                                 ?>
-                                                <div class="text-start mt-1" style="font-size: 0.72rem; line-height: 1.25;">
-                                                    <?php foreach ($f_list as $fItem): ?>
-                                                        <div class="text-nowrap text-secondary">
-                                                            • <?= htmlspecialchars($fItem['item'] === 'Other' && !empty($fItem['other_specify']) ? 'Other (' . $fItem['other_specify'] . ')' : $fItem['item']) ?>: <strong><?= number_format((float)$fItem['amount'], 1) ?>P</strong>
+                                                <div class="text-start mt-2 pt-1 border-top" style="font-size: 0.72rem; line-height: 1.35;">
+                                                    <?php foreach ($f_list as $fItem): 
+                                                        $cName = $fItem['item'] === 'Other' && !empty($fItem['other_specify']) ? 'Other (' . $fItem['other_specify'] . ')' : $fItem['item'];
+                                                        $landAmt = (float)($fItem['amount'] ?? ($fItem['land_area'] ?? 0));
+                                                        $yieldAmt = (float)($fItem['yield_amount'] ?? 0);
+                                                    ?>
+                                                        <div class="text-nowrap text-secondary mb-1">
+                                                            • <span class="fw-semibold text-dark"><?= htmlspecialchars($cName) ?></span>: 
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-1 py-0" style="font-size: 0.68rem;" title="Land Area"><?= number_format($landAmt, 1) ?> P</span>
+                                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1 py-0 ms-1" style="font-size: 0.68rem;" title="Yield Amount"><?= number_format($yieldAmt, 1) ?> kg</span>
                                                         </div>
                                                     <?php endforeach; ?>
                                                 </div>

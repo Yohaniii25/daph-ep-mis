@@ -2174,7 +2174,7 @@ function initAnimalBranding() {
 
     // 2. Real-time Grid & Form Calculations
     function calcNeatCattleGrid() {
-        const rows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
+        const rows = ['cows', 'unproductive_cows', 'heifers', 'female_calves', 'bulls', 'male_calves'];
         let colTotals = { euro: 0, indian: 0, local: 0 };
         let grandTotal = 0;
 
@@ -2205,7 +2205,7 @@ function initAnimalBranding() {
     });
 
     function calcBuffaloGrid() {
-        const rows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
+        const rows = ['cows', 'unproductive_cows', 'heifers', 'female_calves', 'bulls', 'male_calves'];
         let colTotals = { niliravi: 0, murah: 0, cross_breed: 0 };
         let grandTotal = 0;
 
@@ -2235,6 +2235,80 @@ function initAnimalBranding() {
         el.addEventListener('input', calcBuffaloGrid);
     });
 
+    let consolidatedMilkChartInstance = null;
+    function updateConsolidatedMilkChart() {
+        const cowProd = parseFloat(document.querySelector('.milk-calc-input[data-row="prod"][data-col="cow"]')?.value) || 0;
+        const bufProd = parseFloat(document.querySelector('.milk-calc-input[data-row="prod"][data-col="buf"]')?.value) || 0;
+        const totalProd = cowProd + bufProd;
+
+        const cowSales = parseFloat(document.querySelector('.milk-calc-input[data-row="sales"][data-col="cow"]')?.value) || 0;
+        const bufSales = parseFloat(document.querySelector('.milk-calc-input[data-row="sales"][data-col="buf"]')?.value) || 0;
+
+        // Embedded Cattle and Buffalo Milk section inline indicators
+        const cattleKpi = document.getElementById('cattle_milk_kpi_display');
+        if (cattleKpi) cattleKpi.textContent = `${cowProd.toFixed(1)} L/day`;
+        const bufKpi = document.getElementById('buf_milk_kpi_display');
+        if (bufKpi) bufKpi.textContent = `${bufProd.toFixed(1)} L/day`;
+
+        const kpiCow = document.getElementById('kpi_cow_milk');
+        if (kpiCow) kpiCow.innerHTML = `${cowProd.toFixed(1)} <small class="fw-normal text-muted" style="font-size: 0.7rem;">L/d</small>`;
+        const kpiBuf = document.getElementById('kpi_buffalo_milk');
+        if (kpiBuf) kpiBuf.innerHTML = `${bufProd.toFixed(1)} <small class="fw-normal text-muted" style="font-size: 0.7rem;">L/d</small>`;
+        const kpiTot = document.getElementById('kpi_total_milk');
+        if (kpiTot) kpiTot.innerHTML = `${totalProd.toFixed(1)} <small class="fw-normal text-muted" style="font-size: 0.7rem;">L/d</small>`;
+
+        const canvasEl = document.getElementById('consolidatedMilkChart');
+        if (canvasEl && typeof Chart !== 'undefined') {
+            if (!consolidatedMilkChartInstance) {
+                consolidatedMilkChartInstance = Chart.getChart(canvasEl) || null;
+            }
+
+            if (consolidatedMilkChartInstance) {
+                consolidatedMilkChartInstance.data.datasets[0].data = [cowProd, bufProd, cowSales, bufSales];
+                consolidatedMilkChartInstance.update();
+            } else {
+                const ctx = canvasEl.getContext('2d');
+                consolidatedMilkChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Cow Prod', 'Buf Prod', 'Cow Sales', 'Buf Sales'],
+                        datasets: [{
+                            label: 'Liters / Day',
+                            data: [cowProd, bufProd, cowSales, bufSales],
+                            backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#20c997'],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) { return `${ctx.raw.toFixed(1)} L/day`; }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: { display: false },
+                                ticks: { font: { size: 9 } }
+                            },
+                            y: {
+                                grid: { display: false },
+                                ticks: { font: { size: 9, weight: 'bold' } }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
+    window.updateConsolidatedMilkChart = updateConsolidatedMilkChart;
+
     function calcMilkGrid() {
         const rows = ['prod', 'home', 'proc', 'sales'];
         rows.forEach(function (rowKey) {
@@ -2244,6 +2318,7 @@ function initAnimalBranding() {
             const cell = document.getElementById('row_tot_milk_' + rowKey);
             if (cell) cell.textContent = rowTot;
         });
+        updateConsolidatedMilkChart();
     }
     document.querySelectorAll('.milk-calc-input').forEach(function (el) {
         el.addEventListener('input', calcMilkGrid);
@@ -2252,7 +2327,7 @@ function initAnimalBranding() {
     // Dynamic 1-to-Many Fodder Functions
     window.fodderRowIndex = document.querySelectorAll('#fodderItemsTableBody .fodder-row').length || 1;
 
-    window.addFodderRow = function(cropItem = '', amount = '', otherSpecify = '') {
+    window.addFodderRow = function(cropItem = '', amount = '', otherSpecify = '', yieldAmount = '') {
         const tbody = document.getElementById('fodderItemsTableBody');
         if (!tbody) return;
 
@@ -2285,8 +2360,14 @@ function initAnimalBranding() {
             </td>
             <td>
                 <div class="input-group input-group-sm">
-                    <input type="number" step="0.1" min="0" name="fodder_items[${idx}][amount]" class="form-control form-control-sm fodder-amount-input" placeholder="0.0" value="${amount !== '' ? amount : ''}" required oninput="calcFodderTotal();">
+                    <input type="number" step="0.1" min="0" name="fodder_items[${idx}][amount]" class="form-control form-control-sm fodder-amount-input" placeholder="0.0" value="${amount !== '' ? amount : ''}" required oninput="calcFodderTotal();" title="Land Area (Perches)">
                     <span class="input-group-text">P</span>
+                </div>
+            </td>
+            <td>
+                <div class="input-group input-group-sm">
+                    <input type="number" step="0.1" min="0" name="fodder_items[${idx}][yield_amount]" class="form-control form-control-sm fodder-yield-input" placeholder="0.0" value="${yieldAmount !== '' ? yieldAmount : ''}" oninput="calcFodderTotal();" title="Yield Amount (kg)">
+                    <span class="input-group-text">kg</span>
                 </div>
             </td>
             <td class="text-center">
@@ -2337,14 +2418,23 @@ function initAnimalBranding() {
     };
 
     window.calcFodderTotal = function() {
-        let total = 0;
+        let totalLand = 0;
+        let totalYield = 0;
         document.querySelectorAll('.fodder-amount-input').forEach(function(input) {
             const val = parseFloat(input.value) || 0;
-            total += val;
+            totalLand += val;
+        });
+        document.querySelectorAll('.fodder-yield-input').forEach(function(input) {
+            const val = parseFloat(input.value) || 0;
+            totalYield += val;
         });
         const totalInput = document.getElementById('fodder_total_land_area');
         if (totalInput) {
-            totalInput.value = total.toFixed(1);
+            totalInput.value = totalLand.toFixed(1);
+        }
+        const totalYieldInput = document.getElementById('fodder_total_yield');
+        if (totalYieldInput) {
+            totalYieldInput.value = totalYield.toFixed(1);
         }
     };
 
@@ -2399,13 +2489,12 @@ function initAnimalBranding() {
 
     const categoryDefinitions = [
         { id: 'pane-general', num: '1', title: '1. General Information', icon: 'bi-info-circle-fill', color: 'text-danger' },
-        { id: 'pane-cattle', num: '2', title: '2. Neat Cattle', icon: 'bi-shield-check', color: 'text-primary' },
+        { id: 'pane-cattle', num: '2', title: '2. Cattle', icon: 'bi-shield-check', color: 'text-primary' },
         { id: 'pane-buffaloes', num: '3', title: '3. Buffaloes', icon: 'bi-record-circle-fill', color: 'text-warning' },
-        { id: 'pane-milk', num: '4', title: '4. Milk Production and Sale', icon: 'bi-cup-hot-fill', color: 'text-info' },
-        { id: 'pane-fodder', num: '5', title: '5. Fodder / pasture cultivations (Land area) in Perch', icon: 'bi-tree-fill', color: 'text-success' },
-        { id: 'pane-swine', num: '6', title: '6. Swine', icon: 'bi-bookmark-star-fill', color: 'text-danger' },
-        { id: 'pane-goat', num: '7', title: '7. Goat', icon: 'bi-patch-check-fill', color: 'text-warning' },
-        { id: 'pane-sheep', num: '8', title: '8. Sheep', icon: 'bi-circle-square', color: 'text-secondary' }
+        { id: 'pane-goat', num: '4', title: '4. Goats', icon: 'bi-patch-check-fill', color: 'text-warning' },
+        { id: 'pane-sheep', num: '5', title: '5. Sheep', icon: 'bi-circle-square', color: 'text-secondary' },
+        { id: 'pane-fodder', num: '6', title: '6. Fodder / pasture cultivations (Land area) in Perch', icon: 'bi-tree-fill', color: 'text-success' },
+        { id: 'pane-swine', num: '7', title: '7. Swine', icon: 'bi-bookmark-star-fill', color: 'text-danger' }
     ];
 
     let accordionBuilt = false;
@@ -2657,13 +2746,133 @@ window.toggleDaphFeedMfrRegNumber = function(isRegistered) {
     }
 };
 
+// ---- 9-Digit Registration Number & GN Prefix Auto-Generation ----
+window.getGnPrefix = function(gnVal) {
+    const sel = document.getElementById('gen_gn_division');
+    if (sel && sel.selectedIndex >= 0) {
+        const opt = sel.options[sel.selectedIndex];
+        if (opt && opt.dataset && opt.dataset.prefix) {
+            return opt.dataset.prefix;
+        }
+    }
+    if (gnVal && typeof gnVal === 'string') {
+        const match = gnVal.match(/GN_?(\d+)/i);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            return String(50010 + num).padStart(5, '0');
+        }
+    }
+    return '50011';
+};
+
+window.handleGnDivisionChange = function(gnVal, isInitialOrLoad = false) {
+    const prefix = window.getGnPrefix(gnVal);
+    const badge = document.getElementById('gen_reg_prefix_badge');
+    if (badge) badge.textContent = prefix;
+    const label = document.getElementById('gen_reg_prefix_label');
+    if (label) label.textContent = prefix;
+
+    if (isInitialOrLoad) return;
+
+    const regInput = document.getElementById('gen_registration_no');
+    if (!regInput) return;
+
+    let currVal = regInput.value.replace(/\D/g, '');
+    let suffix = '0001';
+
+    if (currVal.length === 9) {
+        suffix = currVal.slice(5);
+    } else if (currVal.length > 5) {
+        suffix = currVal.slice(5).padEnd(4, '0').slice(0, 4);
+    } else if (currVal.length > 0 && currVal.length <= 4) {
+        suffix = currVal.padStart(4, '0');
+    }
+
+    regInput.value = prefix + suffix;
+    window.validateNineDigitRegNo(regInput);
+};
+
+window.autoGenerateNineDigitRegNo = function() {
+    const gnSel = document.getElementById('gen_gn_division');
+    const gnVal = gnSel ? gnSel.value : '';
+    const prefix = window.getGnPrefix(gnVal);
+    const regInput = document.getElementById('gen_registration_no');
+    if (!regInput) return;
+
+    let currVal = regInput.value.replace(/\D/g, '');
+    let suffix = '0001';
+    if (currVal.length === 9) {
+        const curSuffixNum = parseInt(currVal.slice(5), 10);
+        if (!isNaN(curSuffixNum)) {
+            suffix = String(curSuffixNum + 1).padStart(4, '0');
+            if (suffix.length > 4) suffix = '0001';
+        }
+    }
+    regInput.value = prefix + suffix;
+    window.validateNineDigitRegNo(regInput);
+};
+
+window.validateNineDigitRegNo = function(input) {
+    if (!input) input = document.getElementById('gen_registration_no');
+    if (!input) return false;
+
+    // Filter non-digits and cap at 9
+    let raw = input.value.replace(/\D/g, '');
+    if (raw.length > 9) raw = raw.slice(0, 9);
+    if (input.value !== raw) input.value = raw;
+
+    const gnSel = document.getElementById('gen_gn_division');
+    const prefix = window.getGnPrefix(gnSel ? gnSel.value : '');
+    const feedback = document.getElementById('genRegFeedback');
+    const badge = document.getElementById('gen_reg_prefix_badge');
+    if (badge) badge.textContent = prefix;
+    const label = document.getElementById('gen_reg_prefix_label');
+    if (label) label.textContent = prefix;
+
+    if (!raw) {
+        input.classList.remove('is-valid', 'is-invalid');
+        if (feedback) {
+            feedback.className = 'small mt-1 text-muted';
+            feedback.innerHTML = `<i class="bi bi-info-circle me-1"></i>Must be strictly 9 numeric digits: 5-digit Range/GN prefix (<span class="fw-bold text-primary">${prefix}</span>) + 4-digit farm suffix.`;
+        }
+        return false;
+    }
+
+    const startsWithPrefix = raw.startsWith(prefix);
+    const isExactlyNine = (raw.length === 9);
+
+    if (isExactlyNine && startsWithPrefix) {
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+        if (feedback) {
+            feedback.className = 'small mt-1 text-success fw-semibold';
+            feedback.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Valid 9-digit registration number (Prefix: ${prefix}, Suffix: ${raw.slice(5)}).`;
+        }
+        return true;
+    } else if (raw.length === 9 && !startsWithPrefix) {
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+        if (feedback) {
+            feedback.className = 'small mt-1 text-warning fw-semibold';
+            feedback.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>9 digits verified. Note: Prefix (${raw.slice(0,5)}) differs from current GN selection (${prefix}).`;
+        }
+        return true;
+    } else {
+        input.classList.remove('is-valid');
+        input.classList.add('is-invalid');
+        if (feedback) {
+            feedback.className = 'small mt-1 text-danger fw-semibold';
+            feedback.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i>Must be strictly 9 numeric digits (${raw.length}/9 entered). Range/GN Prefix: ${prefix}`;
+        }
+        return false;
+    }
+};
+
 window.resetMasterForm = function() {
     const form = document.getElementById('farmRenewalMasterForm');
     if (form) form.reset();
     const editId = document.getElementById('editingRecordId');
     if (editId) editId.value = '';
-    const gpsInput = document.getElementById('gen_gps_location');
-    if (gpsInput) gpsInput.value = '';
     const banner = document.getElementById('editingStatusBanner');
     if (banner) banner.classList.add('d-none');
     const tabTitle = document.getElementById('formTabTitle');
@@ -2672,6 +2881,23 @@ window.resetMasterForm = function() {
     if (btnText) btnText.textContent = 'Save to Database';
     const bottomBtn = document.getElementById('btnSubmitBottomText');
     if (bottomBtn) bottomBtn.textContent = 'Save to Database';
+
+    // Static logged-in Veterinary Range
+    const vsInput = document.getElementById('gen_vs_division');
+    if (vsInput) vsInput.value = window.brandingRangeName || 'Trincomalee';
+
+    // Reset GN division and auto-prefix 9-digit registration number
+    const gnSelect = document.getElementById('gen_gn_division');
+    if (gnSelect) {
+        gnSelect.value = 'GN_01';
+        window.handleGnDivisionChange('GN_01', false);
+    }
+
+    // Reset address inputs
+    const fAddr = document.getElementById('gen_farmer_address');
+    if (fAddr) fAddr.value = '';
+    const farmAddr = document.getElementById('gen_farm_address');
+    if (farmAddr) farmAddr.value = '';
 
     // Reset Poultry registration input & validation feedback
     const pRegInput = document.getElementById('poultry_registration_no');
@@ -2687,7 +2913,7 @@ window.resetMasterForm = function() {
 
     // Reset grid totals
     document.querySelectorAll('.daph-grid-total-cell').forEach(el => el.textContent = '0');
-    ['col_tot_buf_niliravi', 'col_tot_buf_murah', 'col_tot_buf_cross_breed', 'col_tot_cattle_euro', 'col_tot_cattle_indian', 'col_tot_cattle_local'].forEach(id => {
+    ['col_tot_buf_euro', 'col_tot_buf_indian', 'col_tot_buf_local', 'col_tot_cattle_euro', 'col_tot_cattle_indian', 'col_tot_cattle_local', 'col_tot_buf_niliravi', 'col_tot_buf_murah', 'col_tot_buf_cross_breed'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '0';
     });
@@ -2695,6 +2921,10 @@ window.resetMasterForm = function() {
     if (grandC) grandC.textContent = '0';
     const grandB = document.getElementById('grand_tot_buffaloes');
     if (grandB) grandB.textContent = '0';
+
+    if (typeof window.updateConsolidatedMilkChart === 'function') {
+        window.updateConsolidatedMilkChart();
+    }
 
     const fodderTbody = document.getElementById('fodderItemsTableBody');
     if (fodderTbody) {
@@ -2706,6 +2936,8 @@ window.resetMasterForm = function() {
     }
     const totFodder = document.getElementById('fodder_total_land_area');
     if (totFodder) totFodder.value = '0.0';
+    const totYield = document.getElementById('fodder_total_yield');
+    if (totYield) totYield.value = '0.0';
 };
 
 // ---- Poultry License Toggle ----
@@ -2903,19 +3135,20 @@ window.showRecordDetailModal = function(recordId) {
 
     // Neat Cattle rows with European, Indian, Local breed columns
     const neatRows = [
-        { key: 'cows_milch', label: 'Cows (Milch)' },
+        { key: 'cows', fallback: 'cows_milch', label: 'Cows' },
         { key: 'unproductive_cows', label: 'Unproductive Cows' },
         { key: 'heifers', label: 'Heifers' },
-        { key: 'female_under_1', label: 'Female Calf' },
+        { key: 'female_calves', fallback: 'female_under_1', label: 'Female Calves' },
         { key: 'bulls', label: 'Bulls' },
-        { key: 'male_under_1', label: 'Male Calf' }
+        { key: 'male_calves', fallback: 'male_under_1', label: 'Male Calves' }
     ];
 
     let neatEuroTot = 0, neatIndTot = 0, neatLocTot = 0;
     const neatRowsHtml = neatRows.map(r => {
-        const euro = num(cData[r.key]?.european);
-        const ind = num(cData[r.key]?.indian);
-        const loc = num(cData[r.key]?.local);
+        const rowObj = cData[r.key] || (r.fallback ? cData[r.fallback] : {}) || {};
+        const euro = num(rowObj.european ?? rowObj.euro);
+        const ind = num(rowObj.indian);
+        const loc = num(rowObj.local);
         const rowTot = euro + ind + loc;
         neatEuroTot += euro;
         neatIndTot += ind;
@@ -2931,19 +3164,20 @@ window.showRecordDetailModal = function(recordId) {
 
     // Buffaloes rows with Niliravi, Murah, Cross breed columns
     const bufRows = [
-        { key: 'cows_milch', label: 'Cows (Milch)' },
+        { key: 'cows', fallback: 'cows_milch', label: 'Cows' },
         { key: 'unproductive_cows', label: 'Unproductive Cows' },
         { key: 'heifers', label: 'Heifers' },
-        { key: 'female_under_1', label: 'less than 1 year Female' },
+        { key: 'female_calves', fallback: 'female_under_1', label: 'Female Calves' },
         { key: 'bulls', label: 'Bulls' },
-        { key: 'male_under_1', label: 'less than 1 year Male' }
+        { key: 'male_calves', fallback: 'male_under_1', label: 'Male Calves' }
     ];
 
     let bufNiliTot = 0, bufMurahTot = 0, bufCrossTot = 0;
     const bufRowsHtml = bufRows.map(r => {
-        const nili = num(bData[r.key]?.niliravi ?? bData[r.key]?.indian);
-        const murah = num(bData[r.key]?.murah);
-        const cross = num(bData[r.key]?.cross_breed ?? bData[r.key]?.local);
+        const rowObj = bData[r.key] || (r.fallback ? bData[r.fallback] : {}) || {};
+        const nili = num(rowObj.niliravi ?? rowObj.indian);
+        const murah = num(rowObj.murah);
+        const cross = num(rowObj.cross_breed ?? rowObj.local ?? rowObj.european);
         const rowTot = nili + murah + cross;
         bufNiliTot += nili;
         bufMurahTot += murah;
@@ -2975,7 +3209,8 @@ window.showRecordDetailModal = function(recordId) {
             <div class="row g-2 small">
                 <div class="col-md-6">
                     <div><strong>Farmer:</strong> ${escapeHtml(rec.farmer_name)}</div>
-                    <div><strong>Address:</strong> ${escapeHtml(rec.farmer_address)}</div>
+                    <div><strong>Residence Address:</strong> ${escapeHtml(rec.farmer_address)}</div>
+                    ${rec.farm_address ? `<div><strong>Farm Address:</strong> ${escapeHtml(rec.farm_address)}</div>` : ''}
                     <div><strong>Phone:</strong> ${escapeHtml(rec.telephone_no)} | <strong>NIC:</strong> ${escapeHtml(rec.nic)}</div>
                 </div>
                 <div class="col-md-6">
@@ -2987,13 +3222,13 @@ window.showRecordDetailModal = function(recordId) {
             </div>
         </div>
 
-        <!-- 2. Neat Cattle & 3. Buffaloes Breakdown with Explicit Breed Columns -->
+        <!-- 2. Cattle & 3. Buffaloes Breakdown with Explicit Breed Columns -->
         <div class="row g-3 mb-3">
             <div class="col-lg-6">
                 <div class="border rounded-3 p-3 h-100 bg-white shadow-xs">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="fw-bold text-primary small text-uppercase mb-0">
-                            <i class="bi bi-shield-check me-1"></i>2. Neat Cattle
+                            <i class="bi bi-shield-check me-1"></i>2. Cattle
                         </h6>
                         <span class="badge bg-primary px-2 py-1">${num(rec.total_neat_cattle)} Heads</span>
                     </div>
@@ -3085,22 +3320,37 @@ window.showRecordDetailModal = function(recordId) {
                         if (items.length === 0) {
                             return `<p class="text-muted small mb-0 fst-italic">No fodder cultivations recorded.</p>`;
                         }
+                        let totalLand = 0;
+                        let totalYield = 0;
                         const rows = items.map((it, idx) => {
                             const isOther = it.item === 'Other';
                             const label = isOther && it.other_specify 
                                 ? `Other (<span class="text-success fw-bold">${escapeHtml(it.other_specify)}</span>)` 
                                 : escapeHtml(it.item);
+                            const land = num(it.amount ?? it.land_area);
+                            const yld = num(it.yield_amount);
+                            totalLand += land;
+                            totalYield += yld;
                             return `<tr>
                                 <td>${idx + 1}. ${label}</td>
-                                <td class="text-end fw-bold font-monospace">${num(it.amount).toFixed(1)} P</td>
+                                <td class="text-center fw-bold font-monospace text-success">${land.toFixed(1)} P</td>
+                                <td class="text-end fw-bold font-monospace text-primary">${yld.toFixed(1)} kg</td>
                             </tr>`;
                         }).join('');
-                        return `<table class="table table-sm table-borderless small mb-0">
-                            <tbody>${rows}</tbody>
-                            <tfoot class="border-top fw-bold text-success">
+                        return `<table class="table table-sm table-bordered small mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <td>Total Land Area:</td>
-                                    <td class="text-end font-monospace">${num(rec.fodder_total_land_area).toFixed(1)} Perches</td>
+                                    <th>Crop Item</th>
+                                    <th class="text-center" style="width: 25%;">Land Area</th>
+                                    <th class="text-end" style="width: 25%;">Yield</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                            <tfoot class="border-top fw-bold table-light">
+                                <tr>
+                                    <td>Total:</td>
+                                    <td class="text-center font-monospace text-success">${(num(rec.fodder_total_land_area) || totalLand).toFixed(1)} P</td>
+                                    <td class="text-end font-monospace text-primary">${totalYield.toFixed(1)} kg</td>
                                 </tr>
                             </tfoot>
                         </table>`;
@@ -3645,27 +3895,61 @@ window.loadLivestockRecordIntoForm = function(rec) {
     setVal('gen_province', rec.province);
     setVal('gen_district', rec.district);
     setVal('gen_ds_division', rec.ds_division);
-    setVal('gen_vs_division', rec.vs_division);
-    setVal('gen_gn_division', rec.gn_division);
+    setVal('gen_vs_division', window.brandingRangeName || rec.vs_division || 'Trincomalee');
+
+    // Ensure GN Division is selected or created in dropdown
+    const gnSelect = document.getElementById('gen_gn_division');
+    if (gnSelect && rec.gn_division) {
+        let hasOpt = false;
+        for (let i = 0; i < gnSelect.options.length; i++) {
+            if (gnSelect.options[i].value === rec.gn_division) {
+                hasOpt = true;
+                break;
+            }
+        }
+        if (!hasOpt) {
+            const opt = document.createElement('option');
+            opt.value = rec.gn_division;
+            opt.textContent = `${rec.gn_division} (Saved)`;
+            opt.dataset.prefix = '50011';
+            gnSelect.appendChild(opt);
+        }
+        gnSelect.value = rec.gn_division;
+    }
+    if (typeof window.handleGnDivisionChange === 'function') {
+        window.handleGnDivisionChange(rec.gn_division || 'GN_01', true);
+    }
+
     setVal('gen_farmer_name', rec.farmer_name);
     setVal('gen_farmer_address', rec.farmer_address);
-    setVal('gen_gps_location', rec.gps_location);
+    setVal('gen_farm_address', rec.farm_address || rec.farmer_address);
     setVal('gen_registration_no', rec.registration_no);
+    if (typeof window.validateNineDigitRegNo === 'function') {
+        window.validateNineDigitRegNo(document.getElementById('gen_registration_no'));
+    }
     setVal('gen_telephone_no', rec.telephone_no);
     setVal('gen_nic', rec.nic);
     setVal('gen_farm_type', rec.farm_type);
     setVal('gen_mixed_farm_type', rec.mixed_farm_type);
 
-    // 2.1 Neat Cattle Grid
+    // 2.1 Cattle Grid
     let cData = rec.neat_cattle_data || {};
     if (typeof cData === 'string') { try { cData = JSON.parse(cData); } catch(e) { cData = {}; } }
-    const cattleRows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
-    cattleRows.forEach(rKey => {
+    const cattleRows = [
+        { key: 'cows', fallback: 'cows_milch' },
+        { key: 'unproductive_cows' },
+        { key: 'heifers' },
+        { key: 'female_calves', fallback: 'female_under_1' },
+        { key: 'bulls' },
+        { key: 'male_calves', fallback: 'male_under_1' }
+    ];
+    cattleRows.forEach(r => {
+        const rowData = cData[r.key] || (r.fallback ? cData[r.fallback] : {}) || {};
         ['euro', 'indian', 'local'].forEach(cKey => {
-            const input = document.querySelector(`.cattle-calc-input[data-row="${rKey}"][data-col="${cKey}"]`);
+            const input = document.querySelector(`.cattle-calc-input[data-row="${r.key}"][data-col="${cKey}"]`);
             if (input) {
-                const subKey = (cKey === 'euro') ? 'european' : cKey;
-                input.value = cData[rKey] ? (cData[rKey][subKey] || 0) : 0;
+                const val = (cKey === 'euro') ? (rowData.european ?? rowData.euro ?? 0) : (rowData[cKey] ?? 0);
+                input.value = val;
             }
         });
     });
@@ -3673,17 +3957,28 @@ window.loadLivestockRecordIntoForm = function(rec) {
     // 2.2 Buffaloes Grid
     let bData = rec.buffaloes_data || {};
     if (typeof bData === 'string') { try { bData = JSON.parse(bData); } catch(e) { bData = {}; } }
-    const bufRows = ['cows_milch', 'unproductive_cows', 'heifers', 'female_under_1', 'bulls', 'male_under_1'];
-    bufRows.forEach(rKey => {
+    const bufRows = [
+        { key: 'cows', fallback: 'cows_milch' },
+        { key: 'unproductive_cows' },
+        { key: 'heifers' },
+        { key: 'female_calves', fallback: 'female_under_1' },
+        { key: 'bulls' },
+        { key: 'male_calves', fallback: 'male_under_1' }
+    ];
+    bufRows.forEach(r => {
+        const rowData = bData[r.key] || (r.fallback ? bData[r.fallback] : {}) || {};
         ['niliravi', 'murah', 'cross_breed'].forEach(cKey => {
-            const input = document.querySelector(`.buffalo-calc-input[data-row="${rKey}"][data-col="${cKey}"]`);
+            const input = document.querySelector(`.buffalo-calc-input[data-row="${r.key}"][data-col="${cKey}"]`);
             if (input) {
-                let val = bData[rKey] ? (bData[rKey][cKey] ?? null) : null;
-                if (val === null && bData[rKey]) {
-                    if (cKey === 'niliravi' && bData[rKey]['indian'] !== undefined) val = bData[rKey]['indian'];
-                    else if (cKey === 'cross_breed' && bData[rKey]['local'] !== undefined) val = bData[rKey]['local'];
+                let val = 0;
+                if (cKey === 'niliravi') {
+                    val = (rowData.niliravi !== undefined) ? rowData.niliravi : (rowData.indian ?? 0);
+                } else if (cKey === 'murah') {
+                    val = rowData.murah ?? 0;
+                } else if (cKey === 'cross_breed') {
+                    val = rowData.cross_breed ?? (rowData.local ?? (rowData.european ?? 0));
                 }
-                input.value = val !== null ? val : 0;
+                input.value = val;
             }
         });
     });
@@ -3713,7 +4008,7 @@ window.loadLivestockRecordIntoForm = function(rec) {
         if (fItems.length > 0) {
             fItems.forEach(it => {
                 if (typeof window.addFodderRow === 'function') {
-                    window.addFodderRow(it.item, it.amount, it.other_specify || '');
+                    window.addFodderRow(it.item, it.amount ?? (it.land_area ?? ''), it.other_specify || '', it.yield_amount ?? '');
                 }
             });
         } else {
@@ -4273,22 +4568,22 @@ window.exportBrandingToCSV = function(targetRecordId = null) {
         "GN Division",
         "Farm Type",
         "Mixed Farm Type",
-        // Category 2: Neat Cattle
-        "Total Neat Cattle",
-        "Cattle - Milch Cows (Euro/Ind/Loc)",
+        // Category 2: Cattle
+        "Total Cattle",
+        "Cattle - Cows (Euro/Ind/Loc)",
         "Cattle - Unproductive Cows (Euro/Ind/Loc)",
         "Cattle - Heifers (Euro/Ind/Loc)",
-        "Cattle - Female Calves <1yr (Euro/Ind/Loc)",
+        "Cattle - Female Calves (Euro/Ind/Loc)",
         "Cattle - Bulls (Euro/Ind/Loc)",
-        "Cattle - Male Calves <1yr (Euro/Ind/Loc)",
+        "Cattle - Male Calves (Euro/Ind/Loc)",
         // Category 3: Buffaloes
         "Total Buffaloes",
-        "Buffalo - Milch Cows (Nili/Murah/Cross)",
-        "Buffalo - Unproductive Cows (Nili/Murah/Cross)",
-        "Buffalo - Heifers (Nili/Murah/Cross)",
-        "Buffalo - Female Calves <1yr (Nili/Murah/Cross)",
-        "Buffalo - Bulls (Nili/Murah/Cross)",
-        "Buffalo - Male Calves <1yr (Nili/Murah/Cross)",
+        "Buffalo - Cows (Euro/Ind/Loc)",
+        "Buffalo - Unproductive Cows (Euro/Ind/Loc)",
+        "Buffalo - Heifers (Euro/Ind/Loc)",
+        "Buffalo - Female Calves (Euro/Ind/Loc)",
+        "Buffalo - Bulls (Euro/Ind/Loc)",
+        "Buffalo - Male Calves (Euro/Ind/Loc)",
         // Category 4: Milk Production & Utilization
         "Daily Milk Production Total (L/day)",
         "Cow Milk: Daily Output (L/day)",
@@ -4354,22 +4649,24 @@ window.exportBrandingToCSV = function(targetRecordId = null) {
         const milk = r.milk_data || {};
         const fodder = Array.isArray(r.fodder_data) ? r.fodder_data : [];
 
-        const fmtNeat = (key) => {
-            const eu = neat[key]?.european || 0;
-            const ind = neat[key]?.indian || 0;
-            const loc = neat[key]?.local || 0;
-            return `Euro: ${eu}, Ind: ${ind}, Loc: ${loc} (Total: ${Number(eu) + Number(ind) + Number(loc)})`;
+        const fmtNeat = (key, fallbackKey) => {
+            const rowData = neat[key] || (fallbackKey ? neat[fallbackKey] : {}) || {};
+            const eu = Number(rowData.european ?? rowData.euro ?? 0);
+            const ind = Number(rowData.indian ?? 0);
+            const loc = Number(rowData.local ?? 0);
+            return `Euro: ${eu}, Ind: ${ind}, Loc: ${loc} (Total: ${eu + ind + loc})`;
         };
 
-        const fmtBuf = (key) => {
-            const nili = buf[key]?.niliravi ?? (buf[key]?.indian || 0);
-            const murah = buf[key]?.murah || 0;
-            const cross = buf[key]?.cross_breed ?? (buf[key]?.local || 0);
-            return `Nili: ${nili}, Murah: ${murah}, Cross: ${cross} (Total: ${Number(nili) + Number(murah) + Number(cross)})`;
+        const fmtBuf = (key, fallbackKey) => {
+            const rowData = buf[key] || (fallbackKey ? buf[fallbackKey] : {}) || {};
+            const nili = Number(rowData.niliravi ?? rowData.indian ?? 0);
+            const murah = Number(rowData.murah ?? 0);
+            const cross = Number(rowData.cross_breed ?? (rowData.local ?? (rowData.european ?? 0)));
+            return `Nili: ${nili}, Murah: ${murah}, Cross: ${cross} (Total: ${nili + murah + cross})`;
         };
 
         const fodderStr = fodder.length 
-            ? fodder.map(f => `${f.item === 'Other' && f.other_specify ? 'Other (' + f.other_specify + ')' : f.item}: ${Number(f.amount).toFixed(1)}P`).join('; ')
+            ? fodder.map(f => `${f.item === 'Other' && f.other_specify ? 'Other (' + f.other_specify + ')' : f.item}: Land: ${Number(f.amount ?? f.land_area ?? 0).toFixed(1)}P, Yield: ${Number(f.yield_amount || 0).toFixed(1)}kg`).join('; ')
             : 'None';
 
         const row = [
@@ -4387,22 +4684,22 @@ window.exportBrandingToCSV = function(targetRecordId = null) {
             r.gn_division || '',
             r.farm_type || '',
             r.mixed_farm_type || '',
-            // Neat Cattle
+            // Cattle
             r.total_neat_cattle || 0,
-            fmtNeat('cows_milch'),
+            fmtNeat('cows', 'cows_milch'),
             fmtNeat('unproductive_cows'),
             fmtNeat('heifers'),
-            fmtNeat('female_under_1'),
+            fmtNeat('female_calves', 'female_under_1'),
             fmtNeat('bulls'),
-            fmtNeat('male_under_1'),
+            fmtNeat('male_calves', 'male_under_1'),
             // Buffaloes
             r.total_buffaloes || 0,
-            fmtBuf('cows_milch'),
+            fmtBuf('cows', 'cows_milch'),
             fmtBuf('unproductive_cows'),
             fmtBuf('heifers'),
-            fmtBuf('female_under_1'),
+            fmtBuf('female_calves', 'female_under_1'),
             fmtBuf('bulls'),
-            fmtBuf('male_under_1'),
+            fmtBuf('male_calves', 'male_under_1'),
             // Milk
             Number(r.daily_milk_production || 0).toFixed(1),
             Number(milk.total_production?.cow || 0).toFixed(1),
@@ -4684,10 +4981,10 @@ window.exportBrandingToPDF = function(targetRecordId = null) {
                 margin: [0, 0, 0, 3]
             });
 
-            // Neat Cattle and Buffaloes side-by-side tables
+            // Cattle and Buffaloes side-by-side tables
             const cattleBody = [
                 [
-                    { text: 'Neat Cattle Class', style: 'tableSubHeader' },
+                    { text: 'Cattle Class', style: 'tableSubHeader' },
                     { text: 'European', style: 'tableSubHeader' },
                     { text: 'Indian', style: 'tableSubHeader' },
                     { text: 'Local', style: 'tableSubHeader' },
@@ -4695,19 +4992,20 @@ window.exportBrandingToPDF = function(targetRecordId = null) {
                 ]
             ];
             const cRows = [
-                ['Milch Cows', 'cows_milch'],
-                ['Unproductive', 'unproductive_cows'],
-                ['Heifers', 'heifers'],
-                ['Female <1yr', 'female_under_1'],
-                ['Bulls', 'bulls'],
-                ['Male <1yr', 'male_under_1']
+                { lbl: 'Cows', key: 'cows', fallback: 'cows_milch' },
+                { lbl: 'Unproductive Cows', key: 'unproductive_cows' },
+                { lbl: 'Heifers', key: 'heifers' },
+                { lbl: 'Female Calves', key: 'female_calves', fallback: 'female_under_1' },
+                { lbl: 'Bulls', key: 'bulls' },
+                { lbl: 'Male Calves', key: 'male_calves', fallback: 'male_under_1' }
             ];
-            cRows.forEach(([lbl, key]) => {
-                const eu = Number(neat[key]?.european || 0);
-                const ind = Number(neat[key]?.indian || 0);
-                const loc = Number(neat[key]?.local || 0);
+            cRows.forEach(rItem => {
+                const rowData = neat[rItem.key] || (rItem.fallback ? neat[rItem.fallback] : {}) || {};
+                const eu = Number(rowData.european ?? rowData.euro ?? 0);
+                const ind = Number(rowData.indian ?? 0);
+                const loc = Number(rowData.local ?? 0);
                 cattleBody.push([
-                    { text: lbl, fontSize: 6.5 },
+                    { text: rItem.lbl, fontSize: 6.5 },
                     { text: eu ? eu.toString() : '-', fontSize: 6.5, alignment: 'center' },
                     { text: ind ? ind.toString() : '-', fontSize: 6.5, alignment: 'center' },
                     { text: loc ? loc.toString() : '-', fontSize: 6.5, alignment: 'center' },
@@ -4715,7 +5013,7 @@ window.exportBrandingToPDF = function(targetRecordId = null) {
                 ]);
             });
             cattleBody.push([
-                { text: 'Total Neat Cattle', bold: true, fontSize: 7, fillColor: '#f8fafc' },
+                { text: 'Total Cattle', bold: true, fontSize: 7, fillColor: '#f8fafc' },
                 { text: '', colSpan: 3, fillColor: '#f8fafc' }, {}, {},
                 { text: (r.total_neat_cattle || 0).toString(), bold: true, fontSize: 7, fillColor: '#f8fafc', alignment: 'center' }
             ]);
@@ -4729,12 +5027,13 @@ window.exportBrandingToPDF = function(targetRecordId = null) {
                     { text: 'Total', style: 'tableSubHeader' }
                 ]
             ];
-            cRows.forEach(([lbl, key]) => {
-                const nili = Number(buf[key]?.niliravi ?? (buf[key]?.indian || 0));
-                const murah = Number(buf[key]?.murah || 0);
-                const cross = Number(buf[key]?.cross_breed ?? (buf[key]?.local || 0));
+            cRows.forEach(rItem => {
+                const rowData = buf[rItem.key] || (rItem.fallback ? buf[rItem.fallback] : {}) || {};
+                const nili = Number(rowData.niliravi ?? rowData.indian ?? 0);
+                const murah = Number(rowData.murah ?? 0);
+                const cross = Number(rowData.cross_breed ?? (rowData.local ?? (rowData.european ?? 0)));
                 bufBody.push([
-                    { text: lbl, fontSize: 6.5 },
+                    { text: rItem.lbl, fontSize: 6.5 },
                     { text: nili ? nili.toString() : '-', fontSize: 6.5, alignment: 'center' },
                     { text: murah ? murah.toString() : '-', fontSize: 6.5, alignment: 'center' },
                     { text: cross ? cross.toString() : '-', fontSize: 6.5, alignment: 'center' },
@@ -4774,7 +5073,7 @@ window.exportBrandingToPDF = function(targetRecordId = null) {
 
             // Milk, Fodder and Other Livestock Summary Row
             const fodderSummaryStr = fodder.length 
-                ? fodder.map(f => `${f.item === 'Other' && f.other_specify ? 'Other (' + f.other_specify + ')' : f.item}: ${Number(f.amount).toFixed(1)}P`).join(', ') 
+                ? fodder.map(f => `${f.item === 'Other' && f.other_specify ? 'Other (' + f.other_specify + ')' : f.item}: ${Number(f.amount ?? f.land_area ?? 0).toFixed(1)}P (Yield: ${Number(f.yield_amount || 0).toFixed(1)}kg)`).join(', ') 
                 : 'None recorded';
 
             const summaryTableBody = [
@@ -5647,7 +5946,17 @@ function initGlobalFarmerNICLookup() {
 }
 
 // Expose globally and run on document ready
-window.initGlobalFarmerNICLookup = initGlobalFarmerNICLookup;
 $(document).ready(function() {
     initGlobalFarmerNICLookup();
+
+    // Initialize Livestock Form 9-digit registration prefix and range auto-display if present
+    const gnSel = document.getElementById('gen_gn_division');
+    const regIn = document.getElementById('gen_registration_no');
+    if (gnSel && regIn) {
+        if (!regIn.value.trim() && gnSel.value) {
+            window.handleGnDivisionChange(gnSel.value, false);
+        } else if (regIn.value.trim()) {
+            window.validateNineDigitRegNo(regIn);
+        }
+    }
 });
