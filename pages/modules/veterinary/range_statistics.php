@@ -2,14 +2,27 @@
 session_start();
 
 $allowed_roles = [
-    'veterinary_surgeon'
-
+    'veterinary_surgeon',
+    'government_veterinary_surgeon',
+    'sms',
+    'district_dd',
+    'deputy_director_district',
+    'administrator',
+    'provincial_director',
+    'deputy_director_hq_1',
+    'deputy_director_hq_2',
+    'admin'
 ];
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     header("Location: ../../../index.php");
     exit();
 }
+
+require_once __DIR__ . '/../../../config/db_connect.php';
+
+/** @var mysqli $mysqli */
+global $mysqli;
 
 if (!isset($_SESSION['full_name'])) {
     $_SESSION['full_name'] = $_SESSION['username'] ?? 'Veterinary Surgeon';
@@ -21,13 +34,9 @@ $range_id    = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 $district_id = $_SESSION['district_id'] ?? null;
 
 if (empty($range_id)) {
-    die('<div class="alert alert-danger text-center p-5 m-5">Error: No Veterinary Range specified or assigned.</div>');
+    $first_r = $mysqli->query("SELECT id FROM veterinary_ranges ORDER BY id ASC LIMIT 1")->fetch_assoc();
+    $range_id = $first_r['id'] ?? 1;
 }
-
-require_once __DIR__ . '/../../../config/db_connect.php';
-
-/** @var mysqli $mysqli */
-global $mysqli;
 
 $district_name = 'Unknown District';
 $range_name    = 'Unknown Range';
@@ -69,13 +78,32 @@ if ($range_id) {
 $pop_years = array_unique($pop_years);
 rsort($pop_years);
 
+// Fetch all veterinary ranges for the range switcher
+$all_ranges = [];
+$ranges_res = $mysqli->query("SELECT vr.id, vr.name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id ORDER BY d.name ASC, vr.name ASC");
+if ($ranges_res) {
+    while ($r_row = $ranges_res->fetch_assoc()) {
+        $all_ranges[] = $r_row;
+    }
+}
+
 // Fetch distinct recorded years for animal population (Master Registry farm_registration_renewals prioritized)
 $animal_pop_years = [intval(date('Y'))];
 if ($range_id) {
     // 1. Live Master Registry years from farm_registration_renewals
-    $stmt_myr = $mysqli->prepare("SELECT DISTINCT YEAR(date_of_registration_renewal) AS yr FROM farm_registration_renewals WHERE range_id = ? AND date_of_registration_renewal IS NOT NULL ORDER BY yr DESC");
+    $stmt_myr = $mysqli->prepare("
+        SELECT DISTINCT YEAR(date_of_registration_renewal) AS yr 
+        FROM farm_registration_renewals 
+        WHERE (
+            range_id = ? 
+            OR (vs_division IS NOT NULL AND vs_division != '' AND vs_division = ?)
+            OR (vs_division IS NOT NULL AND vs_division != '' AND vs_division = (SELECT name FROM veterinary_ranges WHERE id = ? LIMIT 1))
+        )
+        AND date_of_registration_renewal IS NOT NULL 
+        ORDER BY yr DESC
+    ");
     if ($stmt_myr) {
-        $stmt_myr->bind_param("i", $range_id);
+        $stmt_myr->bind_param("isi", $range_id, $range_name, $range_id);
         $stmt_myr->execute();
         $myr_res = $stmt_myr->get_result();
         while ($myrow = $myr_res->fetch_assoc()) {
@@ -101,6 +129,226 @@ if ($range_id) {
 }
 $animal_pop_years = array_values(array_unique($animal_pop_years));
 rsort($animal_pop_years);
+
+// ==========================================
+// FARM STATISTICS & VISUALIZATIONS AGGREGATOR
+// ==========================================
+$farm_stats_query = "
+    SELECT 
+        id,
+        farm_type,
+        total_neat_cattle,
+        neat_cattle_data,
+        total_buffaloes,
+        buffaloes_data,
+        poultry_data,
+        daily_milk_production,
+        fodder_total_land_area,
+        fodder_data
+    FROM farm_registration_renewals
+    WHERE (
+        range_id = ? 
+        OR (vs_division IS NOT NULL AND vs_division != '' AND vs_division = ?)
+        OR (vs_division IS NOT NULL AND vs_division != '' AND vs_division = (SELECT name FROM veterinary_ranges WHERE id = ? LIMIT 1))
+    )
+";
+
+$stmt_fs = $mysqli->prepare($farm_stats_query);
+$farm_renewals = [];
+if ($stmt_fs) {
+    $stmt_fs->bind_param("isi", $range_id, $range_name, $range_id);
+    $stmt_fs->execute();
+    $fs_res = $stmt_fs->get_result();
+    while ($fs_row = $fs_res->fetch_assoc()) {
+        $farm_renewals[] = $fs_row;
+    }
+    $stmt_fs->close();
+}
+
+// Chart 1: Farmers by Animal Type (strictly Cattle, Buffalo, Poultry)
+$cattle_farmers_count = 0;
+$buffalo_farmers_count = 0;
+$poultry_farmers_count = 0;
+
+// Chart 2: Milk Production Volume Buckets
+$milk_buckets = [
+    'Below 5 liters' => 0,
+    '5 to 10 liters' => 0,
+    '10 to 20 liters' => 0,
+    '20 to 40 liters' => 0,
+    '40 to 100 liters' => 0,
+    'More than 100 liters' => 0
+];
+$total_dairy_farmers = 0;
+$renewal_ids = [];
+
+foreach ($farm_renewals as $fr) {
+    $renewal_ids[] = intval($fr['id']);
+
+    // Check Cattle
+    $c_count = intval($fr['total_neat_cattle']);
+    if ($c_count <= 0 && !empty($fr['neat_cattle_data'])) {
+        $c_json = is_string($fr['neat_cattle_data']) ? json_decode($fr['neat_cattle_data'], true) : $fr['neat_cattle_data'];
+        if (is_array($c_json)) {
+            foreach ($c_json as $sub) {
+                if (is_array($sub)) {
+                    foreach ($sub as $val) $c_count += intval($val);
+                }
+            }
+        }
+    }
+    if ($c_count > 0 || stripos($fr['farm_type'] ?? '', 'cattle') !== false) {
+        $cattle_farmers_count++;
+    }
+
+    // Check Buffalo
+    $b_count = intval($fr['total_buffaloes']);
+    if ($b_count <= 0 && !empty($fr['buffaloes_data'])) {
+        $b_json = is_string($fr['buffaloes_data']) ? json_decode($fr['buffaloes_data'], true) : $fr['buffaloes_data'];
+        if (is_array($b_json)) {
+            foreach ($b_json as $sub) {
+                if (is_array($sub)) {
+                    foreach ($sub as $val) $b_count += intval($val);
+                }
+            }
+        }
+    }
+    if ($b_count > 0 || stripos($fr['farm_type'] ?? '', 'buffalo') !== false) {
+        $buffalo_farmers_count++;
+    }
+
+    // Check Poultry
+    $is_poultry = (stripos($fr['farm_type'] ?? '', 'poultry') !== false);
+    if (!$is_poultry && !empty($fr['poultry_data']) && $fr['poultry_data'] !== '[]' && $fr['poultry_data'] !== 'null') {
+        $p_json = is_string($fr['poultry_data']) ? json_decode($fr['poultry_data'], true) : $fr['poultry_data'];
+        if (!empty($p_json)) $is_poultry = true;
+    }
+    if ($is_poultry) {
+        $poultry_farmers_count++;
+    }
+
+    // Milk volume buckets
+    $m_vol = floatval($fr['daily_milk_production']);
+    if ($m_vol > 0) {
+        $total_dairy_farmers++;
+        if ($m_vol < 5.0) {
+            $milk_buckets['Below 5 liters']++;
+        } elseif ($m_vol <= 10.0) {
+            $milk_buckets['5 to 10 liters']++;
+        } elseif ($m_vol <= 20.0) {
+            $milk_buckets['10 to 20 liters']++;
+        } elseif ($m_vol <= 40.0) {
+            $milk_buckets['20 to 40 liters']++;
+        } elseif ($m_vol <= 100.0) {
+            $milk_buckets['40 to 100 liters']++;
+        } else {
+            $milk_buckets['More than 100 liters']++;
+        }
+    }
+}
+
+// Fodder Cultivation Summary
+$fodder_crops_summary = [];
+$fodder_cultivating_farmers_set = [];
+$total_fodder_land_area = 0.0;
+$total_fodder_yield_amount = 0.0;
+
+if (!empty($renewal_ids)) {
+    $id_list_str = implode(',', $renewal_ids);
+    // Query child table farm_registration_fodder_items
+    $fod_query = "
+        SELECT farm_registration_id, crop_item, other_specify, amount_perches, yield_amount_kg 
+        FROM farm_registration_fodder_items 
+        WHERE farm_registration_id IN ($id_list_str)
+        ORDER BY crop_item ASC
+    ";
+    $fod_res = $mysqli->query($fod_query);
+    $has_child_fodder = false;
+    if ($fod_res && $fod_res->num_rows > 0) {
+        $has_child_fodder = true;
+        while ($frow = $fod_res->fetch_assoc()) {
+            $crop = trim($frow['crop_item']);
+            if (empty($crop)) continue;
+            if ($crop === 'Other' && !empty($frow['other_specify'])) {
+                $crop = 'Other (' . trim($frow['other_specify']) . ')';
+            }
+            $perches = floatval($frow['amount_perches']);
+            $yield_kg = floatval($frow['yield_amount_kg']);
+            $f_id = intval($frow['farm_registration_id']);
+
+            // If yield is 0 in child table, check if parent fodder_data JSON has yield_amount
+            if ($yield_kg <= 0) {
+                foreach ($farm_renewals as $pRen) {
+                    if (intval($pRen['id']) === $f_id && !empty($pRen['fodder_data'])) {
+                        $p_fod = is_string($pRen['fodder_data']) ? json_decode($pRen['fodder_data'], true) : $pRen['fodder_data'];
+                        if (is_array($p_fod)) {
+                            foreach ($p_fod as $pItem) {
+                                if (($pItem['item'] ?? '') === $frow['crop_item'] && !empty($pItem['yield_amount'])) {
+                                    $yield_kg = floatval($pItem['yield_amount']);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            $fodder_cultivating_farmers_set[$f_id] = true;
+            $total_fodder_land_area += $perches;
+            $total_fodder_yield_amount += $yield_kg;
+
+            if (!isset($fodder_crops_summary[$crop])) {
+                $fodder_crops_summary[$crop] = [
+                    'crop_name' => $crop,
+                    'farmers' => [],
+                    'land_area' => 0.0,
+                    'yield_amount' => 0.0
+                ];
+            }
+            $fodder_crops_summary[$crop]['farmers'][$f_id] = true;
+            $fodder_crops_summary[$crop]['land_area'] += $perches;
+            $fodder_crops_summary[$crop]['yield_amount'] += $yield_kg;
+        }
+    }
+
+    // Fallback to JSON fodder_data if child table empty
+    if (!$has_child_fodder) {
+        foreach ($farm_renewals as $pRen) {
+            $f_id = intval($pRen['id']);
+            if (!empty($pRen['fodder_data'])) {
+                $p_fod = is_string($pRen['fodder_data']) ? json_decode($pRen['fodder_data'], true) : $pRen['fodder_data'];
+                if (is_array($p_fod)) {
+                    foreach ($p_fod as $pItem) {
+                        $crop = trim($pItem['item'] ?? '');
+                        if (empty($crop)) continue;
+                        if ($crop === 'Other' && !empty($pItem['other_specify'])) {
+                            $crop = 'Other (' . trim($pItem['other_specify']) . ')';
+                        }
+                        $perches = floatval($pItem['amount'] ?? ($pItem['land_area'] ?? 0));
+                        $yield_kg = floatval($pItem['yield_amount'] ?? 0);
+
+                        $fodder_cultivating_farmers_set[$f_id] = true;
+                        $total_fodder_land_area += $perches;
+                        $total_fodder_yield_amount += $yield_kg;
+
+                        if (!isset($fodder_crops_summary[$crop])) {
+                            $fodder_crops_summary[$crop] = [
+                                'crop_name' => $crop,
+                                'farmers' => [],
+                                'land_area' => 0.0,
+                                'yield_amount' => 0.0
+                            ];
+                        }
+                        $fodder_crops_summary[$crop]['farmers'][$f_id] = true;
+                        $fodder_crops_summary[$crop]['land_area'] += $perches;
+                        $fodder_crops_summary[$crop]['yield_amount'] += $yield_kg;
+                    }
+                }
+            }
+        }
+    }
+}
+$total_cultivating_farmers = count($fodder_cultivating_farmers_set);
 
 // ==========================================
 // AUTOMATED SUMMARY CALCULATOR & AGGREGATOR
@@ -251,11 +499,23 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../../../assets/css/veterinary.css">
 
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- Header with Range Selector Dropdown -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
                 <h2 class="h4 mb-0 fw-bold" style="color: #370709;">Range Statistics & Overview</h2>
-                <small class="text-muted"><?= htmlspecialchars($range_name) ?> | DAPH Eastern Province</small>
+                <small class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($range_name) ?> (<?= htmlspecialchars($district_name) ?>) | DAPH Eastern Province</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <form method="GET" class="d-flex align-items-center gap-2 m-0 bg-white p-2 rounded-3 border shadow-xs">
+                    <label class="form-label small fw-bold text-secondary mb-0 text-nowrap"><i class="bi bi-buildings text-primary me-1"></i>Veterinary Range:</label>
+                    <select name="range_id" class="form-select form-select-sm fw-semibold" onchange="this.form.submit()" style="min-width: 220px;">
+                        <?php foreach ($all_ranges as $r_opt): ?>
+                            <option value="<?= $r_opt['id'] ?>" <?= intval($r_opt['id']) === intval($range_id) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($r_opt['name']) ?> (<?= htmlspecialchars($r_opt['district_name'] ?? '') ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
             </div>
         </div>
 
@@ -411,32 +671,28 @@ require_once '../../../includes/header.php';
                                         </div>
                                         <hr class="dropdown-divider my-1">
                                         <div class="form-check mb-1">
-                                            <input class="form-check-input animal-option" type="checkbox" value="Cow" id="animCow" checked>
-                                            <label class="form-check-label small" for="animCow">Cow</label>
+                                            <input class="form-check-input animal-option" type="checkbox" value="Cattle" id="animCattle" checked>
+                                            <label class="form-check-label small" for="animCattle">Cattle</label>
                                         </div>
                                         <div class="form-check mb-1">
-                                            <input class="form-check-input animal-option" type="checkbox" value="Buffalo" id="animBuffalo" checked>
-                                            <label class="form-check-label small" for="animBuffalo">Buffalo</label>
+                                            <input class="form-check-input animal-option" type="checkbox" value="Buffaloes" id="animBuffaloes" checked>
+                                            <label class="form-check-label small" for="animBuffaloes">Buffaloes</label>
                                         </div>
                                         <div class="form-check mb-1">
-                                            <input class="form-check-input animal-option" type="checkbox" value="Goat" id="animGoat" checked>
-                                            <label class="form-check-label small" for="animGoat">Goat</label>
+                                            <input class="form-check-input animal-option" type="checkbox" value="Goats" id="animGoats" checked>
+                                            <label class="form-check-label small" for="animGoats">Goats</label>
                                         </div>
                                         <div class="form-check mb-1">
                                             <input class="form-check-input animal-option" type="checkbox" value="Sheep" id="animSheep" checked>
                                             <label class="form-check-label small" for="animSheep">Sheep</label>
                                         </div>
                                         <div class="form-check mb-1">
-                                            <input class="form-check-input animal-option" type="checkbox" value="Poultry" id="animChicken" checked>
-                                            <label class="form-check-label small" for="animChicken">Poultry</label>
-                                        </div>
-                                        <div class="form-check mb-1">
-                                            <input class="form-check-input animal-option" type="checkbox" value="Pig" id="animPig" checked>
-                                            <label class="form-check-label small" for="animPig">Pig</label>
+                                            <input class="form-check-input animal-option" type="checkbox" value="Swine" id="animSwine" checked>
+                                            <label class="form-check-label small" for="animSwine">Swine</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input animal-option" type="checkbox" value="Others" id="animOthers" checked>
-                                            <label class="form-check-label small" for="animOthers">Others</label>
+                                            <input class="form-check-input animal-option" type="checkbox" value="Poultry" id="animPoultry" checked>
+                                            <label class="form-check-label small" for="animPoultry">Poultry</label>
                                         </div>
                                     </div>
                                 </div>
@@ -467,6 +723,213 @@ require_once '../../../includes/header.php';
                             </div>
                         </div>
 
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- NEW FARM STATISTICS VISUALIZATIONS & FODDER CULTIVATION        -->
+        <!-- ============================================================== -->
+        <div class="row g-4 mb-4">
+            <!-- New Chart 1: Farmers by Animal Type (Cattle, Buffalo, Poultry) -->
+            <div class="col-12 col-lg-6">
+                <div class="card gov-card h-100 shadow-sm border-0">
+                    <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold mb-1" style="color: #370709;">
+                                <i class="bi bi-people-fill text-danger me-2"></i>Farmers by Animal Type
+                            </h5>
+                            <p class="text-muted small mb-0">Total farmers rearing specific livestock (Cattle, Buffalo, Poultry).</p>
+                        </div>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 fw-semibold">
+                            Live Master Registry
+                        </span>
+                    </div>
+                    <div class="card-body px-4 pb-4 d-flex flex-column">
+                        <div class="position-relative flex-grow-1" style="min-height: 270px; max-height: 310px;">
+                            <canvas id="farmersByAnimalChart"></canvas>
+                        </div>
+                        <div class="row g-2 mt-3 pt-3 border-top text-center">
+                            <div class="col-4">
+                                <div class="p-2 rounded bg-light border">
+                                    <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Cattle</small>
+                                    <span class="fw-bold fs-6 text-dark"><?= number_format($cattle_farmers_count) ?></span>
+                                    <small class="text-secondary d-block" style="font-size: 0.7rem;">Farmers</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 rounded bg-light border">
+                                    <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Buffalo</small>
+                                    <span class="fw-bold fs-6 text-dark"><?= number_format($buffalo_farmers_count) ?></span>
+                                    <small class="text-secondary d-block" style="font-size: 0.7rem;">Farmers</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 rounded bg-light border">
+                                    <small class="text-muted d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Poultry</small>
+                                    <span class="fw-bold fs-6 text-dark"><?= number_format($poultry_farmers_count) ?></span>
+                                    <small class="text-secondary d-block" style="font-size: 0.7rem;">Farmers</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Chart 2: Milk Production Volume Distribution -->
+            <div class="col-12 col-lg-6">
+                <div class="card gov-card h-100 shadow-sm border-0">
+                    <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold mb-1" style="color: #370709;">
+                                <i class="bi bi-droplet-half text-primary me-2"></i>Milk Production Volume
+                            </h5>
+                            <p class="text-muted small mb-0">Daily milk production volume buckets across registered dairy farmers.</p>
+                        </div>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 fw-semibold">
+                            <?= number_format($total_dairy_farmers) ?> Active Producers
+                        </span>
+                    </div>
+                    <div class="card-body px-4 pb-4 d-flex flex-column">
+                        <div class="position-relative flex-grow-1" style="min-height: 270px; max-height: 310px;">
+                            <canvas id="milkVolumeBucketsChart"></canvas>
+                        </div>
+                        <div class="row g-2 mt-3 pt-3 border-top text-center" style="font-size: 0.72rem;">
+                            <?php foreach ($milk_buckets as $bucketLabel => $bucketCount): ?>
+                                <div class="col-4 col-md-2">
+                                    <div class="p-1 rounded bg-light border">
+                                        <span class="text-muted d-block text-truncate" title="<?= htmlspecialchars($bucketLabel) ?>"><?= htmlspecialchars($bucketLabel) ?></span>
+                                        <span class="fw-bold text-dark"><?= number_format($bucketCount) ?></span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fodder Cultivation Summary Block & Table -->
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <div class="card gov-card shadow-sm border-0">
+                    <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold mb-1" style="color: #370709;">
+                                <i class="bi bi-flower1 text-success me-2"></i>Fodder / Pasture Cultivation Summary
+                            </h5>
+                            <p class="text-muted small mb-0">Aggregated land area and yield figures pulled directly from farm pasture cultivation records.</p>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-semibold">
+                            <i class="bi bi-check2-circle me-1"></i>Cultivator Registry Summary
+                        </span>
+                    </div>
+                    <div class="card-body px-4 pb-4">
+                        <!-- KPI Metric Highlights -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-md-4">
+                                <div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #16a34a !important;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-uppercase fw-bold small text-success">Cultivating Farmers</span>
+                                        <i class="bi bi-people fs-4 text-success opacity-75"></i>
+                                    </div>
+                                    <h3 class="fw-bold my-2 text-dark">
+                                        <?= number_format($total_cultivating_farmers) ?> <small class="fs-6 text-muted">Farmers</small>
+                                    </h3>
+                                    <small class="text-muted">Distinct farmers registered with fodder cultivation</small>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); border-left: 4px solid #0891b2 !important;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-uppercase fw-bold small text-info" style="color: #0891b2 !important;">Total Cultivated Land Area</span>
+                                        <i class="bi bi-aspect-ratio fs-4 text-info opacity-75"></i>
+                                    </div>
+                                    <h3 class="fw-bold my-2 text-dark">
+                                        <?= number_format($total_fodder_land_area, 1) ?> <small class="fs-6 text-muted">Perches</small>
+                                    </h3>
+                                    <small class="text-muted">Equivalent to <strong><?= number_format($total_fodder_land_area / 160, 2) ?></strong> Acres (160 Perches = 1 Acre)</small>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); border-left: 4px solid #ca8a04 !important;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-uppercase fw-bold small text-warning" style="color: #ca8a04 !important;">Total Estimated Yield</span>
+                                        <i class="bi bi-basket fs-4 text-warning opacity-75"></i>
+                                    </div>
+                                    <h3 class="fw-bold my-2 text-dark">
+                                        <?= number_format($total_fodder_yield_amount, 1) ?> <small class="fs-6 text-muted">kg</small>
+                                    </h3>
+                                    <small class="text-muted">Total harvest biomass output (<strong><?= number_format($total_fodder_yield_amount / 1000, 2) ?></strong> MT)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Breakdown Table by Crop / Pasture Variety -->
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered align-middle w-100 m-0" style="border-color: #e2e8f0;">
+                                <thead class="table-light text-secondary small">
+                                    <tr style="background-color: #f8fafc;">
+                                        <th class="py-3 px-3">Crop / Pasture Variety</th>
+                                        <th class="py-3 px-3 text-center">Cultivating Farmers</th>
+                                        <th class="py-3 px-3 text-end">Land Area (Perches)</th>
+                                        <th class="py-3 px-3 text-end">Land Area (Acres)</th>
+                                        <th class="py-3 px-3 text-end">Total Yield (kg)</th>
+                                        <th class="py-3 px-3 text-end">Avg Yield / Perch (kg/P)</th>
+                                        <th class="py-3 px-3 text-center">Share of Land Area</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!empty($fodder_crops_summary)): ?>
+                                        <?php foreach ($fodder_crops_summary as $fc): 
+                                            $f_count = count($fc['farmers']);
+                                            $c_area = floatval($fc['land_area']);
+                                            $c_yield = floatval($fc['yield_amount']);
+                                            $c_acres = $c_area / 160;
+                                            $avg_y_perch = ($c_area > 0) ? ($c_yield / $c_area) : 0;
+                                            $share_pct = ($total_fodder_land_area > 0) ? (($c_area / $total_fodder_land_area) * 100) : 0;
+                                        ?>
+                                            <tr>
+                                                <td class="fw-bold text-dark px-3">
+                                                    <i class="bi bi-patch-check-fill text-success me-2"></i><?= htmlspecialchars($fc['crop_name']) ?>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-secondary-subtle text-secondary px-3 py-1 fw-semibold"><?= number_format($f_count) ?></span>
+                                                </td>
+                                                <td class="text-end fw-semibold text-dark px-3"><?= number_format($c_area, 1) ?></td>
+                                                <td class="text-end text-muted px-3"><?= number_format($c_acres, 2) ?></td>
+                                                <td class="text-end fw-semibold text-success px-3"><?= number_format($c_yield, 1) ?></td>
+                                                <td class="text-end text-muted px-3"><?= number_format($avg_y_perch, 2) ?></td>
+                                                <td class="text-center px-3">
+                                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                                        <div class="progress flex-grow-1" style="height: 6px; max-width: 80px;">
+                                                            <div class="progress-bar bg-success" role="progressbar" style="width: <?= min(100, $share_pct) ?>%" aria-valuenow="<?= round($share_pct) ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                                        </div>
+                                                        <small class="text-muted" style="min-width: 40px;"><?= number_format($share_pct, 1) ?>%</small>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        <tr class="table-light fw-bold border-top-2">
+                                            <td class="px-3 text-uppercase">Total Aggregated</td>
+                                            <td class="text-center"><?= number_format($total_cultivating_farmers) ?></td>
+                                            <td class="text-end px-3"><?= number_format($total_fodder_land_area, 1) ?></td>
+                                            <td class="text-end px-3"><?= number_format($total_fodder_land_area / 160, 2) ?></td>
+                                            <td class="text-end px-3 text-success"><?= number_format($total_fodder_yield_amount, 1) ?></td>
+                                            <td class="text-end px-3"><?= $total_fodder_land_area > 0 ? number_format($total_fodder_yield_amount / $total_fodder_land_area, 2) : '0.00' ?></td>
+                                            <td class="text-center px-3">100.0%</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>No fodder / pasture cultivation records registered for this veterinary range yet.
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1012,6 +1475,134 @@ $(document).ready(function() {
             }
         });
     });
+
+    // ==========================================
+    // INITIALIZE NEW FARM CHARTS (CHART.JS)
+    // ==========================================
+    // Chart 1: Farmers by Animal Type (Cattle, Buffalo, Poultry)
+    const farmersCanvasEl = document.getElementById('farmersByAnimalChart');
+    if (farmersCanvasEl && typeof Chart !== 'undefined') {
+        new Chart(farmersCanvasEl.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Cattle', 'Buffalo', 'Poultry'],
+                datasets: [{
+                    label: 'Registered Farmers',
+                    data: [<?= (int)$cattle_farmers_count ?>, <?= (int)$buffalo_farmers_count ?>, <?= (int)$poultry_farmers_count ?>],
+                    backgroundColor: ['#820100', '#0284c7', '#f59e0b'],
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    barThickness: 46
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleFont: { size: 13, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 10,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(ctx) {
+                                return ` ${ctx.parsed.y} Farmers`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            font: { size: 11, family: 'Inter, system-ui, sans-serif' },
+                            color: '#64748b'
+                        },
+                        grid: {
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: {
+                            font: { weight: '600', size: 12, family: 'Inter, system-ui, sans-serif' },
+                            color: '#334155'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Chart 2: Milk Production Volume Distribution Buckets
+    const milkCanvasEl = document.getElementById('milkVolumeBucketsChart');
+    if (milkCanvasEl && typeof Chart !== 'undefined') {
+        new Chart(milkCanvasEl.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: <?= json_encode(array_keys($milk_buckets)) ?>,
+                datasets: [{
+                    label: 'Dairy Farmers',
+                    data: <?= json_encode(array_values($milk_buckets)) ?>,
+                    backgroundColor: [
+                        '#38bdf8', // Below 5 liters
+                        '#0284c7', // 5 to 10 liters
+                        '#0369a1', // 10 to 20 liters
+                        '#059669', // 20 to 40 liters
+                        '#10b981', // 40 to 100 liters
+                        '#820100'  // More than 100 liters
+                    ],
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barThickness: 34
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleFont: { size: 13, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 10,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(ctx) {
+                                return ` ${ctx.parsed.y} Farmers`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            font: { size: 11, family: 'Inter, system-ui, sans-serif' },
+                            color: '#64748b'
+                        },
+                        grid: {
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: {
+                            font: { weight: '600', size: 11, family: 'Inter, system-ui, sans-serif' },
+                            color: '#334155'
+                        }
+                    }
+                }
+            }
+        });
+    }
 
 });
 </script>

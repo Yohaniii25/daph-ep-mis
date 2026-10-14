@@ -267,8 +267,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } else if (selected.length === totalOptions) {
             btn.textContent = `All Animals Selected (${totalOptions})`;
         } else {
-            const displaySelected = selected.map(s => s === 'Chicken' ? 'Poultry' : s);
-            btn.textContent = displaySelected.join(', ');
+            btn.textContent = selected.join(', ');
         }
     }
 
@@ -298,7 +297,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const processedTableRows = data.map(item => [
                     item.year,
-                    item.animal_type === 'Chicken' ? 'Poultry' : item.animal_type,
+                    item.animal_type,
                     item.count.toLocaleString(),
                     runningTotalSum.toLocaleString()
                 ]);
@@ -331,7 +330,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                     text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF'
                                 }
                             ],
-                            pageLength: 5,
+                            pageLength: 6,
                             lengthChange: false,
                             ordering: false,
                             language: {
@@ -342,8 +341,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
 
-                const chartLabels = data.map(item => item.animal_type === 'Chicken' ? 'Poultry' : item.animal_type);
+                const chartLabels = data.map(item => item.animal_type);
                 const chartValues = data.map(item => item.count);
+                const speciesColorPalette = {
+                    'Cattle': '#820100',
+                    'Buffaloes': '#0284c7',
+                    'Goats': '#10b981',
+                    'Sheep': '#eab308',
+                    'Swine': '#ec4899',
+                    'Poultry': '#f97316'
+                };
+                const chartColors = data.map(item => speciesColorPalette[item.animal_type] || '#64748b');
 
                 const animalCanvasEl = document.getElementById('animalPopulationPieChart');
                 if (animalCanvasEl && typeof Chart !== 'undefined') {
@@ -354,6 +362,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (animalPieChartInstance) {
                         animalPieChartInstance.data.labels = chartLabels;
                         animalPieChartInstance.data.datasets[0].data = chartValues;
+                        animalPieChartInstance.data.datasets[0].backgroundColor = chartColors;
                         if (animalPieChartInstance.options.plugins && animalPieChartInstance.options.plugins.centerTotalText) {
                             animalPieChartInstance.options.plugins.centerTotalText.text = 'Total Population';
                             animalPieChartInstance.options.plugins.centerTotalText.value = runningTotalSum;
@@ -367,7 +376,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 labels: chartLabels,
                                 datasets: [{
                                     data: chartValues,
-                                    backgroundColor: ['#370709', '#820100', '#ea580c', '#eab308', '#10b981', '#0284c7', '#64748b'],
+                                    backgroundColor: chartColors,
                                     borderWidth: 2,
                                     borderColor: '#ffffff'
                                 }]

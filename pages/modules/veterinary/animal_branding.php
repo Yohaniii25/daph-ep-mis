@@ -7,6 +7,7 @@ global $mysqli;
 
 $allowed_roles = [
     'veterinary_surgeon',
+    'government_veterinary_surgeon',
     'sms',
     'district_dd',
     'deputy_director_district',
