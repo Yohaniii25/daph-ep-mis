@@ -217,4 +217,371 @@ textarea:focus-visible {
     }
 }
 
+/* =========================================================================
+   Centralized Global Table Spacing & Container Architecture
+   ========================================================================= */
+
+/* 1. Main Table Wrapper Spacing */
+.dataTables_wrapper {
+    position: relative;
+    clear: both;
+    width: 100%;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Harmonious integration when .dataTables_wrapper is inside cards or tab panes */
+.card > .dataTables_wrapper,
+.card-body > .dataTables_wrapper {
+    padding: 1rem 1.25rem 1.25rem 1.25rem;
+    margin-bottom: 0.25rem;
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.tab-pane > .dataTables_wrapper {
+    padding: 1.25rem 0.5rem;
+    background-color: transparent;
+    box-shadow: none;
+}
+
+/* Outer wrapper when ancestor .table-responsive is relieved of scroll overflow */
+.dt-table-outer-wrapper {
+    width: 100%;
+    position: relative;
+    overflow: visible !important;
+}
+
+/* 2. Scrollable Table Container (Wraps ONLY the <table> element) */
+.table-responsive.dt-table-container,
+.dt-table-container {
+    width: 100%;
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.6rem;
+    background-color: #ffffff;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Standalone non-DataTables table wrapper spacing */
+.card > .table-responsive:not(.dt-table-container),
+.card-body > .table-responsive:not(.dt-table-container) {
+    margin: 1rem 1.25rem 1.25rem 1.25rem;
+    width: calc(100% - 2.5rem);
+    border: 1px solid #e2e8f0;
+    border-radius: 0.6rem;
+}
+
+/* Table element styling inside the scrollable container */
+.dt-table-container > table.dataTable,
+.dt-table-container > table.table {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    width: 100% !important;
+}
+
+/* Ensure clean inner borders without conflicting with container boundary */
+.dt-table-container > table.table-bordered {
+    border: none !important;
+}
+
+.dt-table-container > table.table-bordered > :not(caption) > * > :first-child {
+    border-left: none;
+}
+
+.dt-table-container > table.table-bordered > :not(caption) > * > :last-child {
+    border-right: none;
+}
+
+.dt-table-container > table.table-bordered > thead > tr:first-child > * {
+    border-top: none;
+}
+
+.dt-table-container > table.table-bordered > tbody > tr:last-child > * {
+    border-bottom: none;
+}
+
+/* 3. Top Controls Row (Search, Length, Export Buttons) - Fixed & Stationary */
+.dataTables_wrapper .dt-controls-row-top,
+.dataTables_wrapper > .row:first-child {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 0.75rem;
+    align-items: center;
+}
+
+/* 4. Bottom Controls Row (Info, Pagination) - Fixed & Stationary */
+.dataTables_wrapper .dt-controls-row-bottom,
+.dataTables_wrapper > .row:last-child {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0.75rem;
+    align-items: center;
+}
+
+/* =========================================================================
+   Centralized Global Search Filter (.dataTables_filter)
+   ========================================================================= */
+.dataTables_wrapper .dataTables_filter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 0;
+}
+
+@media (max-width: 767.98px) {
+    .dataTables_wrapper .dataTables_filter {
+        justify-content: center;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+.dataTables_wrapper .dataTables_filter label {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 0;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #475569;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-end;
+}
+
+@media (max-width: 767.98px) {
+    .dataTables_wrapper .dataTables_filter label {
+        justify-content: center;
+    }
+}
+
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_filter input[type="search"] {
+    margin-left: 0.5rem !important;
+    padding: 0.45rem 1rem 0.45rem 2.25rem !important;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #1e293b;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' class='bi bi-search' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.75rem center;
+    background-size: 0.875rem 0.875rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px !important;
+    min-width: 220px;
+    max-width: 100%;
+    outline: none !important;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.dataTables_wrapper .dataTables_filter input:hover {
+    border-color: #94a3b8;
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: #820100 !important;
+    box-shadow: 0 0 0 3px rgba(130, 1, 0, 0.15) !important;
+    background-color: #ffffff;
+}
+
+.dataTables_wrapper .dataTables_filter input::-webkit-search-cancel-button {
+    cursor: pointer;
+}
+
+/* =========================================================================
+   Centralized Global Pagination Controls (.dataTables_paginate)
+   ========================================================================= */
+.dataTables_wrapper .dataTables_paginate {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin: 0 !important;
+    padding-top: 0;
+}
+
+@media (max-width: 767.98px) {
+    .dataTables_wrapper .dataTables_paginate {
+        justify-content: center;
+        width: 100%;
+        margin-top: 0.5rem !important;
+    }
+}
+
+.dataTables_wrapper .dataTables_paginate ul.pagination {
+    margin: 0 !important;
+    gap: 4px;
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding-left: 0;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-item {
+    margin: 0;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 0.65rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1;
+    color: #334155;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px !important;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.dataTables_wrapper .dataTables_paginate .page-link:hover {
+    color: #820100;
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
+    color: #ffffff !important;
+    background-color: #820100 !important;
+    border-color: #820100 !important;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(130, 1, 0, 0.28) !important;
+    transform: none;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-item.disabled .page-link {
+    color: #94a3b8 !important;
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+    box-shadow: none;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-link:focus,
+.dataTables_wrapper .dataTables_paginate .page-link:focus-visible {
+    outline: none !important;
+    border-color: #820100 !important;
+    box-shadow: 0 0 0 3px rgba(130, 1, 0, 0.15) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-item.previous .page-link,
+.dataTables_wrapper .dataTables_paginate .page-item.next .page-link {
+    padding: 0 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* =========================================================================
+   Centralized Global Length Dropdown & Info Counter
+   ========================================================================= */
+.dataTables_wrapper .dataTables_length {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+@media (max-width: 767.98px) {
+    .dataTables_wrapper .dataTables_length {
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.dataTables_wrapper .dataTables_length label {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 0;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #475569;
+    gap: 0.35rem;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    display: inline-block;
+    width: auto;
+    padding: 0.35rem 1.75rem 0.35rem 0.75rem !important;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1e293b;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px !important;
+    outline: none !important;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.dataTables_wrapper .dataTables_length select:focus {
+    border-color: #820100 !important;
+    box-shadow: 0 0 0 3px rgba(130, 1, 0, 0.15) !important;
+}
+
+.dataTables_wrapper .dataTables_info {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+    padding-top: 0;
+    margin-bottom: 0;
+}
+
+@media (max-width: 767.98px) {
+    .dataTables_wrapper .dataTables_info {
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Centralized Export Buttons (.dt-buttons) */
+.dataTables_wrapper .dt-buttons {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0;
+}
+
+.dataTables_wrapper .dt-buttons .btn {
+    border-radius: 8px !important;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+}
+
+.dataTables_wrapper .dt-buttons .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 

@@ -18,6 +18,141 @@
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
+    <!-- Global DataTables DOM Restructuring & Layout Standardization -->
+    <script>
+    (function($) {
+        if (!$) return;
+
+        // 1. Centralized DataTables Defaults
+        if ($.fn && $.fn.dataTable) {
+            $.extend(true, $.fn.dataTable.defaults, {
+                dom: "<'row dt-controls-row-top align-items-center mb-3'<'col-12 col-md-6 d-flex align-items-center flex-wrap gap-2'lB><'col-12 col-md-6 d-flex justify-content-md-end align-items-center'f>>" +
+                     "<'table-responsive dt-table-container'tr>" +
+                     "<'row dt-controls-row-bottom align-items-center mt-3'<'col-12 col-md-5 d-flex align-items-center'i><'col-12 col-md-7 d-flex justify-content-md-end'p>>",
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search records...",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "Showing 0 to 0 of 0 entries",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
+                    paginate: {
+                        first: '<i class="bi bi-chevron-double-left"></i>',
+                        previous: '<i class="bi bi-chevron-left"></i>',
+                        next: '<i class="bi bi-chevron-right"></i>',
+                        last: '<i class="bi bi-chevron-double-right"></i>'
+                    }
+                }
+            });
+        }
+
+        // 2. Global DOM Restructuring Engine
+        // Wraps ONLY the <table> in an overflow-x: auto container (.table-responsive.dt-table-container)
+        // Keeps Search bar (top) and Pagination (bottom) stationary and completely outside the scroll wrapper.
+        function restructureDataTableDOM(tableEl) {
+            if (!tableEl) return;
+            const $table = $(tableEl);
+            if (!$table.length) return;
+
+            const $wrapper = $table.closest('.dataTables_wrapper');
+            if (!$wrapper.length) return;
+
+            // Remove horizontal overflow constraints from any ancestor .table-responsive
+            // so search bar and pagination do not scroll horizontally
+            $wrapper.parents('.table-responsive').each(function() {
+                const $p = $(this);
+                $p.removeClass('table-responsive')
+                  .removeClass('has-scroll-right')
+                  .removeClass('has-scroll-left')
+                  .addClass('dt-table-outer-wrapper');
+            });
+
+            // Ensure ONLY the <table> element is wrapped inside the scroll container
+            let $scrollContainer = $table.parent('.dt-table-container');
+            if (!$scrollContainer.length) {
+                const $directParent = $table.parent();
+                if ($directParent.hasClass('table-responsive') && $wrapper.find($directParent).length) {
+                    $directParent.addClass('dt-table-container');
+                    $scrollContainer = $directParent;
+                } else {
+                    $table.wrap('<div class="table-responsive dt-table-container"></div>');
+                    $scrollContainer = $table.parent();
+                }
+            }
+
+            // Station top controls (search, length, export buttons) strictly above the scrollable table
+            const $topControls = $wrapper.find('.dataTables_length, .dataTables_filter, .dt-buttons');
+            if ($topControls.length && $scrollContainer.length) {
+                const $topRow = $topControls.closest('.row');
+                if ($topRow.length) {
+                    if ($scrollContainer.find($topRow).length > 0) {
+                        $topRow.insertBefore($scrollContainer);
+                    } else {
+                        const $scrollRow = $scrollContainer.closest('.row');
+                        if ($scrollRow.length && $scrollRow[0] !== $topRow[0]) {
+                            if ($topRow.index() > $scrollRow.index()) {
+                                $topRow.insertBefore($scrollRow);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Station bottom controls (info counter, pagination) strictly below the scrollable table
+            const $bottomControls = $wrapper.find('.dataTables_info, .dataTables_paginate');
+            if ($bottomControls.length && $scrollContainer.length) {
+                const $bottomRow = $bottomControls.closest('.row');
+                if ($bottomRow.length) {
+                    if ($scrollContainer.find($bottomRow).length > 0) {
+                        $bottomRow.insertAfter($scrollContainer);
+                    } else {
+                        const $scrollRow = $scrollContainer.closest('.row');
+                        if ($scrollRow.length && $scrollRow[0] !== $bottomRow[0]) {
+                            if ($bottomRow.index() < $scrollRow.index()) {
+                                $bottomRow.insertAfter($scrollRow);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Re-apply WCAG scroll indicators to the table scroll container
+            if (typeof updateTableScrollCues === 'function' && $scrollContainer.length) {
+                updateTableScrollCues($scrollContainer[0]);
+            }
+        }
+        window.restructureDataTableDOM = restructureDataTableDOM;
+
+        // Auto-hook into all DataTables events across the system
+        $(document).on('init.dt', function(e, settings) {
+            restructureDataTableDOM(settings.nTable);
+        });
+
+        $(document).on('draw.dt', function(e, settings) {
+            restructureDataTableDOM(settings.nTable);
+        });
+
+        function scanAndRestructureAllTables() {
+            $('table.dataTable, .dataTables_wrapper table').each(function() {
+                restructureDataTableDOM(this);
+            });
+        }
+
+        $(document).ready(function() {
+            scanAndRestructureAllTables();
+            setTimeout(scanAndRestructureAllTables, 200);
+            setTimeout(scanAndRestructureAllTables, 800);
+        });
+
+        $(window).on('load', scanAndRestructureAllTables);
+
+        // Run when switching Bootstrap tabs, opening modals, or completing AJAX
+        $(document).on('shown.bs.tab shown.bs.modal ajaxComplete', function() {
+            setTimeout(scanAndRestructureAllTables, 100);
+        });
+    })(window.jQuery);
+    </script>
+
     <?php
     $project_root = realpath(__DIR__ . '/..');
     $current_dir = realpath(getcwd() ?: __DIR__);

@@ -329,12 +329,6 @@
     color: #dc3545;
 }
 
-.dataTables_filter input {
-    border-radius: 20px;
-    padding-left: 15px;
-    border: 1px solid #ddd;
-}
-
 /* =========================================================================
    6. Counterfoil Registry & Navigation Tabs (counter_foilage.php)
    ========================================================================= */
@@ -1410,50 +1404,7 @@
     border-radius: 10px;
 }
 
-/* View Added Details DataTables Spacing */
-#addedDetailsDataTable_wrapper .dataTables_length,
-#addedDetailsDataTable_wrapper .dataTables_filter {
-    margin-bottom: 1rem;
-}
 
-#addedDetailsDataTable_wrapper .dataTables_info,
-#addedDetailsDataTable_wrapper .dataTables_paginate {
-    margin-top: 1.25rem;
-    padding-top: 0.5rem;
-}
-
-#addedDetailsDataTable_wrapper .dataTables_filter input {
-    border-radius: 8px;
-    padding: 6px 14px;
-    border: 1px solid #cbd5e1;
-    margin-left: 8px;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-#addedDetailsDataTable_wrapper .dataTables_filter input:focus,
-#poultryDetailsDataTable_wrapper .dataTables_filter input:focus {
-    border-color: var(--daph-maroon);
-    box-shadow: 0 0 0 3px rgba(130, 1, 0, 0.12);
-}
-
-#addedDetailsDataTable_wrapper .dataTables_filter input,
-#poultryDetailsDataTable_wrapper .dataTables_filter input {
-    border-radius: 8px;
-    padding: 6px 14px;
-    border: 1px solid #cbd5e1;
-    font-size: 0.875rem;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-#addedDetailsDataTable_wrapper .dataTables_length select,
-#poultryDetailsDataTable_wrapper .dataTables_length select {
-    border-radius: 8px;
-    padding: 6px 12px;
-    border: 1px solid #cbd5e1;
-    margin: 0 6px;
-}
 
 #addedDetailsDataTable thead th,
 #poultryDetailsDataTable thead th {
