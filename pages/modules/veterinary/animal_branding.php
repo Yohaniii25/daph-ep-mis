@@ -444,7 +444,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $poultry_post = $_POST['poultry'] ?? [];
         $reg_no = trim($poultry_post['registration_no'] ?? '');
         $farmer_name = trim($poultry_post['farmer_name'] ?? ($poultry_post['owner_name'] ?? ''));
-        $farmer_addr = trim($poultry_post['farmer_address'] ?? ($poultry_post['farm_address'] ?? ''));
+        $farmer_addr = trim($poultry_post['farmer_address'] ?? '');
+        $farm_addr = trim($poultry_post['farm_address'] ?? ($poultry_post['farmer_address'] ?? ''));
+        if (empty($farmer_addr) && !empty($farm_addr)) {
+            $farmer_addr = $farm_addr;
+        }
         $phone = trim($poultry_post['telephone_no'] ?? '');
         $nic = trim($poultry_post['nic'] ?? ($poultry_post['owner_nic'] ?? ''));
         $prov = trim($poultry_post['province'] ?? $province_name);
@@ -461,7 +465,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $poultry_post['farmer_name'] = $farmer_name;
         $poultry_post['owner_name'] = $farmer_name;
         $poultry_post['farmer_address'] = $farmer_addr;
-        $poultry_post['farm_address'] = $farmer_addr;
+        $poultry_post['farm_address'] = $farm_addr;
         $poultry_post['nic'] = $nic;
         $poultry_post['owner_nic'] = $nic;
         $poultry_post['date_of_registration_renewal'] = $reg_date;
@@ -495,14 +499,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($edit_id) {
             $upd_stmt = $mysqli->prepare("
                 UPDATE `farm_registration_renewals` SET
-                    `farmer_name` = ?, `farmer_address` = ?, `registration_no` = ?,
+                    `farmer_name` = ?, `farmer_address` = ?, `farm_address` = ?, `registration_no` = ?,
                     `telephone_no` = ?, `nic` = ?, `farm_type` = ?,
                     `ds_division` = ?, `gn_division` = ?, `poultry_data` = ?,
                     `date_of_registration_renewal` = ?, `province` = ?, `district` = ?, `vs_division` = ?
                 WHERE `id` = ?
             ");
             if ($upd_stmt) {
-                $upd_stmt->bind_param("sssssssssssssi", $farmer_name, $farmer_addr, $reg_no, $phone, $nic, $farm_type, $ds_div, $gn_div, $poultry_json, $reg_date, $prov, $dist, $vs_div, $edit_id);
+                $upd_stmt->bind_param("ssssssssssssssi", $farmer_name, $farmer_addr, $farm_addr, $reg_no, $phone, $nic, $farm_type, $ds_div, $gn_div, $poultry_json, $reg_date, $prov, $dist, $vs_div, $edit_id);
                 $upd_stmt->execute();
                 $upd_stmt->close();
                 $alert_status = 'success';
@@ -515,7 +519,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $ins_stmt = $mysqli->prepare("
                 INSERT INTO `farm_registration_renewals` (
                     `range_id`, `district_id`, `date_of_registration_renewal`, `province`, `district`,
-                    `ds_division`, `vs_division`, `gn_division`, `farmer_name`, `farmer_address`, `gps_location`,
+                    `ds_division`, `vs_division`, `gn_division`, `farmer_name`, `farmer_address`, `farm_address`, `gps_location`,
                     `registration_no`, `telephone_no`, `nic`, `farm_type`, `mixed_farm_type`,
                     `neat_cattle_data`, `total_neat_cattle`, `buffaloes_data`, `total_buffaloes`,
                     `milk_data`, `daily_milk_production`, `fodder_hybrid_napier`, `fodder_sorghum`,
@@ -525,13 +529,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     `goat_breeding_female`, `goat_breeding_male`, `goat_weaners_fattening`, `goat_pre_weaners`,
                     `goat_freq_meat`, `goat_freq_breeding`, `goat_milk_per_day`, `sheep_breeding_female`,
                     `sheep_breeding_male`, `sheep_for_meat`, `sheep_total_no`, `poultry_data`, `created_by`
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             if ($ins_stmt) {
                 $ins_stmt->bind_param(
-                    "iisssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
+                    "iissssssssssssssssisisdddddsdsiiiiissiiiiissdiiiisi",
                     $range_context, $district_context, $reg_date, $prov, $dist,
-                    $ds_div, $vs_div, $gn_div, $farmer_name, $farmer_addr, $gps_location,
+                    $ds_div, $vs_div, $gn_div, $farmer_name, $farmer_addr, $farm_addr, $gps_location,
                     $reg_no, $phone, $nic, $farm_type, $mixed_type,
                     $neat_cattle_json, $total_neat_cattle, $buffalo_json, $total_buffaloes,
                     $milk_json, $daily_milk_prod, $fod_napier, $fod_sorghum,
@@ -713,6 +717,7 @@ if (isset($_GET['edit_poultry_id']) && is_numeric($_GET['edit_poultry_id'])) {
             $poultry_rec['id'] = $p_edit['id'];
             if (empty($poultry_rec['farmer_name']) && !empty($p_edit['farmer_name'])) $poultry_rec['farmer_name'] = $p_edit['farmer_name'];
             if (empty($poultry_rec['farmer_address']) && !empty($p_edit['farmer_address'])) $poultry_rec['farmer_address'] = $p_edit['farmer_address'];
+            if (empty($poultry_rec['farm_address']) && !empty($p_edit['farm_address'])) $poultry_rec['farm_address'] = $p_edit['farm_address'];
             if (empty($poultry_rec['registration_no']) && !empty($p_edit['registration_no'])) $poultry_rec['registration_no'] = $p_edit['registration_no'];
             if (empty($poultry_rec['telephone_no']) && !empty($p_edit['telephone_no'])) $poultry_rec['telephone_no'] = $p_edit['telephone_no'];
             if (empty($poultry_rec['nic']) && !empty($p_edit['nic'])) $poultry_rec['nic'] = $p_edit['nic'];
@@ -1950,15 +1955,49 @@ require_once '../../../includes/header.php';
                                                 <label class="form-label small fw-bold">DS Division <span class="text-danger">*</span></label>
                                                 <input type="text" name="poultry[ds_division]" id="poultry_ds_division" class="form-control form-control-sm" placeholder="e.g. Town and Gravets" value="<?= htmlspecialchars($poultry_rec['ds_division'] ?? ($edit_rec['ds_division'] ?? '')) ?>" required>
                                             </div>
-                                            <!-- VS Division -->
+                                            <!-- Veterinary Range -->
                                             <div class="mb-3">
-                                                <label class="form-label small fw-bold">VS Division <span class="text-danger">*</span></label>
-                                                <input type="text" name="poultry[vs_division]" id="poultry_vs_division" class="form-control form-control-sm" value="<?= htmlspecialchars($poultry_rec['vs_division'] ?? ($edit_rec['vs_division'] ?? $range_name)) ?>" required>
+                                                <label class="form-label small fw-bold">Veterinary Range <span class="text-danger">*</span> <small class="text-muted fw-normal">(Current Logged-in Range)</small></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-light text-warning"><i class="bi bi-geo-alt-fill"></i></span>
+                                                    <input type="text" name="poultry[vs_division]" id="poultry_vs_division" class="form-control form-control-sm bg-light fw-bold text-dark" value="<?= htmlspecialchars($poultry_rec['vs_division'] ?? ($edit_rec['vs_division'] ?? $range_name)) ?>" readonly required>
+                                                    <span class="input-group-text bg-light text-muted" title="Locked to current logged-in Veterinary Range jurisdiction"><i class="bi bi-lock-fill"></i></span>
+                                                </div>
+                                                <small class="text-muted" style="font-size: 0.72rem;">Automatically bound to officer's logged-in range office jurisdiction.</small>
                                             </div>
                                             <!-- GN Division -->
                                             <div class="mb-3">
                                                 <label class="form-label small fw-bold">GN Division <span class="text-danger">*</span></label>
-                                                <input type="text" name="poultry[gn_division]" id="poultry_gn_division" class="form-control form-control-sm" placeholder="e.g. 241B Orr's Hill" value="<?= htmlspecialchars($poultry_rec['gn_division'] ?? ($edit_rec['gn_division'] ?? '')) ?>" required>
+                                                <select name="poultry[gn_division]" id="poultry_gn_division" class="form-select form-select-sm" required onchange="handlePoultryGnDivisionChange(this.value)">
+                                                    <?php
+                                                    $curr_p_gn_val = $poultry_rec['gn_division'] ?? ($edit_rec['gn_division'] ?? '');
+                                                    if (!isset($gn_mock_list)) {
+                                                        $gn_mock_list = [];
+                                                        for ($i = 1; $i <= 20; $i++) {
+                                                            $k = sprintf('GN_%02d', $i);
+                                                            $p = 50010 + $i;
+                                                            $gn_mock_list[$k] = ['label' => "$k (Prefix: $p)", 'prefix' => (string)$p];
+                                                        }
+                                                    }
+                                                    ?>
+                                                    <option value="" disabled <?= empty($curr_p_gn_val) ? 'selected' : '' ?>>-- Select GN Division --</option>
+                                                    <?php
+                                                    $p_gn_matched = false;
+                                                    foreach ($gn_mock_list as $gKey => $gMeta):
+                                                        $isSelected = ($curr_p_gn_val === $gKey);
+                                                        if ($isSelected) $p_gn_matched = true;
+                                                    ?>
+                                                        <option value="<?= $gKey ?>" data-prefix="<?= $gMeta['prefix'] ?>" <?= $isSelected ? 'selected' : '' ?>>
+                                                            <?= $gMeta['label'] ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                    <?php if (!empty($curr_p_gn_val) && !$p_gn_matched): ?>
+                                                        <option value="<?= htmlspecialchars($curr_p_gn_val) ?>" data-prefix="50011" selected>
+                                                            <?= htmlspecialchars($curr_p_gn_val) ?> (Custom)
+                                                        </option>
+                                                    <?php endif; ?>
+                                                </select>
+                                                <small class="text-muted" style="font-size: 0.72rem;">Selecting GN Division automatically sets the 5-digit Range/GN prefix.</small>
                                             </div>
                                         </div>
 
@@ -1974,11 +2013,6 @@ require_once '../../../includes/header.php';
                                                     <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
                                                     <input type="text" name="poultry[farmer_name]" id="poultry_farmer_name" class="form-control form-control-sm" placeholder="Full Name of Farmer" value="<?= htmlspecialchars($poultry_rec['farmer_name'] ?? ($poultry_rec['owner_name'] ?? ($edit_rec['farmer_name'] ?? ''))) ?>" required>
                                                 </div>
-                                            </div>
-                                            <!-- Address of the Farmer -->
-                                            <div class="mb-3">
-                                                <label class="form-label small fw-bold">Address of the Farmer <span class="text-danger">*</span></label>
-                                                <textarea name="poultry[farmer_address]" id="poultry_farmer_address" class="form-control form-control-sm" rows="2" placeholder="Permanent Residential / Holding Address" required><?= htmlspecialchars($poultry_rec['farmer_address'] ?? ($poultry_rec['farm_address'] ?? ($edit_rec['farmer_address'] ?? ''))) ?></textarea>
                                             </div>
                                             <!-- Registration No (must start with "P") -->
                                             <div class="mb-3">
@@ -2001,6 +2035,17 @@ require_once '../../../includes/header.php';
                                                 <div id="poultryRegFeedback" class="small mt-1 text-muted" style="font-size: 0.75rem;">
                                                     <i class="bi bi-info-circle me-1"></i>Official poultry registration number must begin with prefix "P".
                                                 </div>
+                                            </div>
+                                            <!-- Permanent Residence Address of the Farmer -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Permanent Residence Address of the Farmer <span class="text-danger">*</span></label>
+                                                <textarea name="poultry[farmer_address]" id="poultry_farmer_address" class="form-control form-control-sm" rows="2" placeholder="Permanent Residence Address of the Farmer" required><?= htmlspecialchars($poultry_rec['farmer_address'] ?? ($edit_rec['farmer_address'] ?? '')) ?></textarea>
+                                            </div>
+                                            <!-- Farm Address -->
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Farm Address <span class="text-danger">*</span></label>
+                                                <textarea name="poultry[farm_address]" id="poultry_farm_address" class="form-control form-control-sm" rows="2" placeholder="Physical Address / Location of the Farm" required><?= htmlspecialchars($poultry_rec['farm_address'] ?? ($edit_rec['farm_address'] ?? ($poultry_rec['farmer_address'] ?? ($edit_rec['farmer_address'] ?? '')))) ?></textarea>
+                                                <small class="text-muted" style="font-size: 0.72rem;">Physical location where farm animals are held / sited.</small>
                                             </div>
                                             <!-- Telephone No & NIC in a row -->
                                             <div class="row g-2 mb-3">

@@ -2756,8 +2756,10 @@ window.toggleDaphFeedMfrRegNumber = function(isRegistered) {
 };
 
 // ---- 9-Digit Registration Number & GN Prefix Auto-Generation ----
-window.getGnPrefix = function(gnVal) {
-    const sel = document.getElementById('gen_gn_division');
+window.getGnPrefix = function(gnVal, selId = null) {
+    const sel = (selId ? document.getElementById(selId) : null) || 
+                document.getElementById('gen_gn_division') || 
+                document.getElementById('poultry_gn_division');
     if (sel && sel.selectedIndex >= 0) {
         const opt = sel.options[sel.selectedIndex];
         if (opt && opt.dataset && opt.dataset.prefix) {
@@ -2772,6 +2774,25 @@ window.getGnPrefix = function(gnVal) {
         }
     }
     return '50011';
+};
+
+window.handlePoultryGnDivisionChange = function(gnVal, isInitialOrLoad = false) {
+    const prefix = window.getGnPrefix(gnVal, 'poultry_gn_division');
+    if (isInitialOrLoad) return;
+
+    const regInput = document.getElementById('poultry_registration_no');
+    if (!regInput) return;
+
+    let currVal = regInput.value.trim();
+    if (!currVal || currVal === 'P' || currVal === 'P-') {
+        regInput.value = 'P' + prefix + '0001';
+    } else if (/^P\d{9}$/i.test(currVal)) {
+        const suffix = currVal.slice(6);
+        regInput.value = 'P' + prefix + suffix;
+    }
+    if (typeof window.validatePoultryRegPrefix === 'function') {
+        window.validatePoultryRegPrefix(regInput);
+    }
 };
 
 window.handleGnDivisionChange = function(gnVal, isInitialOrLoad = false) {
@@ -3102,6 +3123,13 @@ window.resetPoultryMasterForm = function() {
     }
     if (typeof window.toggleDaphFeedMfrRegNumber === 'function') {
         window.toggleDaphFeedMfrRegNumber(false);
+    }
+
+    const pVsInput = document.getElementById('poultry_vs_division');
+    if (pVsInput) pVsInput.value = window.brandingRangeName || 'Ampara';
+    const pGnSelect = document.getElementById('poultry_gn_division');
+    if (pGnSelect) {
+        pGnSelect.value = '';
     }
 
     if (typeof window.activatePoultryPane === 'function') {
@@ -3602,7 +3630,8 @@ window.loadPoultryRecordIntoForm = function(rec, pData) {
 
     // 4. Section 1: General Information & Farmer Profile
     const fName = pData.farmer_name || pData.owner_name || rec.farmer_name || '';
-    const fAddr = pData.farmer_address || pData.farm_address || rec.farmer_address || '';
+    const fAddr = pData.farmer_address || rec.farmer_address || '';
+    const farmAddr = pData.farm_address || rec.farm_address || fAddr;
     const fNic  = pData.nic || pData.owner_nic || rec.nic || '';
     const fPhone = pData.telephone_no || rec.telephone_no || '';
     const fDate = pData.date_of_registration_renewal || rec.date_of_registration_renewal || '';
@@ -3616,17 +3645,39 @@ window.loadPoultryRecordIntoForm = function(rec, pData) {
     setVal('poultry_province', fProv);
     setVal('poultry_district', fDist);
     setVal('poultry_ds_division', fDs);
-    setVal('poultry_vs_division', fVs);
-    setVal('poultry_gn_division', fGn);
+    setVal('poultry_vs_division', window.brandingRangeName || fVs || 'Ampara');
+
+    // Ensure GN Division is selected or created in dropdown
+    const pGnSelect = document.getElementById('poultry_gn_division');
+    if (pGnSelect && fGn) {
+        let hasOpt = false;
+        for (let i = 0; i < pGnSelect.options.length; i++) {
+            if (pGnSelect.options[i].value === fGn) {
+                hasOpt = true;
+                break;
+            }
+        }
+        if (!hasOpt) {
+            const opt = document.createElement('option');
+            opt.value = fGn;
+            opt.textContent = `${fGn} (Saved)`;
+            opt.dataset.prefix = '50011';
+            pGnSelect.appendChild(opt);
+        }
+        pGnSelect.value = fGn;
+    }
+    if (typeof window.handlePoultryGnDivisionChange === 'function') {
+        window.handlePoultryGnDivisionChange(fGn || 'GN_01', true);
+    }
 
     setVal('poultry_farmer_name', fName);
     setVal('poultry_farmer_address', fAddr);
+    setVal('poultry_farm_address', farmAddr);
     setVal('poultry_telephone_no', fPhone);
     setVal('poultry_nic', fNic);
 
     // Fallback/Legacy element IDs
     setVal('poultry_owner_name', fName);
-    setVal('poultry_farm_address', fAddr);
     setVal('poultry_owner_nic', fNic);
 
     // 1.12 Environmental License
@@ -5857,7 +5908,7 @@ function initGlobalFarmerNICLookup() {
 
                     // 3. Address
                     const $addrFields = $scope.find([
-                        '#gen_farmer_address', '#poultry_farmer_address', '#leaf_location_address',
+                        '#gen_farmer_address', '#gen_farm_address', '#poultry_farmer_address', '#poultry_farm_address', '#leaf_location_address',
                         '#prog_address', '#issue_form_address', '#add_hc_applicant_name_address',
                         '#edit_applicant_name_address',
                         'textarea[name*="farmer_address"]', 'input[name*="farmer_address"]',
