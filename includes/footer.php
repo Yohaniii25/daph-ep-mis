@@ -26,9 +26,14 @@
         // 1. Centralized DataTables Defaults
         if ($.fn && $.fn.dataTable) {
             $.extend(true, $.fn.dataTable.defaults, {
-                dom: "<'row dt-controls-row-top align-items-center mb-3'<'col-12 col-md-6 d-flex align-items-center flex-wrap gap-2'lB><'col-12 col-md-6 d-flex justify-content-md-end align-items-center'f>>" +
+                // DOM layout: length (l) on left, search (f) on right - unstyled default 'B' removed
+                dom: "<'row dt-controls-row-top align-items-center mb-3'<'col-12 col-md-6 d-flex align-items-center flex-wrap gap-2'l><'col-12 col-md-6 d-flex justify-content-md-end align-items-center'f>>" +
                      "<'table-responsive dt-table-container'tr>" +
                      "<'row dt-controls-row-bottom align-items-center mt-3'<'col-12 col-md-5 d-flex align-items-center'i><'col-12 col-md-7 d-flex justify-content-md-end'p>>",
+                buttons: [
+                    { extend: 'csvHtml5', className: 'd-none' },
+                    { extend: 'pdfHtml5', className: 'd-none' }
+                ],
                 language: {
                     search: "",
                     searchPlaceholder: "Search records...",
@@ -80,8 +85,11 @@
                 }
             }
 
-            // Station top controls (search, length, export buttons) strictly above the scrollable table
-            const $topControls = $wrapper.find('.dataTables_length, .dataTables_filter, .dt-buttons');
+            // Remove any unstyled DataTables default export button groups from the DOM
+            $wrapper.find('.dt-buttons:not(.custom-toolbar-buttons)').remove();
+
+            // Station top controls (search, length) strictly above the scrollable table
+            const $topControls = $wrapper.find('.dataTables_length, .dataTables_filter');
             if ($topControls.length && $scrollContainer.length) {
                 const $topRow = $topControls.closest('.row');
                 if ($topRow.length) {
@@ -120,16 +128,66 @@
             if (typeof updateTableScrollCues === 'function' && $scrollContainer.length) {
                 updateTableScrollCues($scrollContainer[0]);
             }
+
+            // Synchronize custom action toolbar (export & dynamic badge count)
+            syncTableToolbar(tableEl);
         }
         window.restructureDataTableDOM = restructureDataTableDOM;
+
+        // 3. Global Action Toolbar & Dynamic Record Count Engine
+        function syncTableToolbar(tableEl) {
+            if (!tableEl) return;
+            const $table = $(tableEl);
+            const tableId = $table.attr('id');
+            if (!tableId || !$.fn.DataTable || !$.fn.DataTable.isDataTable(tableEl)) return;
+
+            let dt;
+            try {
+                dt = $table.DataTable();
+            } catch(e) {
+                return;
+            }
+
+            const $card = $table.closest('.card, .tab-pane, .dataTables_wrapper').parent();
+
+            // Find dynamic record count badge by ID, data attribute, or class
+            const $badge = $(`#${tableId}RecordCountBadge, #${tableId}_recordCountBadge, [data-dt-count-for="${tableId}"]`).add(
+                $card.find('.table-record-count-badge, .badge-record-count')
+            ).first();
+
+            if ($badge.length) {
+                const info = dt.page.info();
+                const count = info.recordsDisplay;
+                const total = info.recordsTotal;
+                const entityName = $badge.data('entity') || ($badge.text().includes('Poultry') ? 'Registered Poultry Farms' : ($badge.text().includes('Farm') ? 'Registered Farms' : 'Records'));
+                const countText = (count === total) 
+                    ? `${count} ${entityName}`
+                    : `${count} of ${total} ${entityName}`;
+
+                const $innerCount = $badge.find('.count-val, [id$="RecordCountText"]');
+                if ($innerCount.length) {
+                    $innerCount.text(countText);
+                } else {
+                    const $icon = $badge.find('i');
+                    if ($icon.length) {
+                        $badge.html($icon[0].outerHTML + ' ' + countText);
+                    } else {
+                        $badge.text(countText);
+                    }
+                }
+            }
+        }
+        window.syncTableToolbar = syncTableToolbar;
 
         // Auto-hook into all DataTables events across the system
         $(document).on('init.dt', function(e, settings) {
             restructureDataTableDOM(settings.nTable);
+            syncTableToolbar(settings.nTable);
         });
 
         $(document).on('draw.dt', function(e, settings) {
             restructureDataTableDOM(settings.nTable);
+            syncTableToolbar(settings.nTable);
         });
 
         function scanAndRestructureAllTables() {

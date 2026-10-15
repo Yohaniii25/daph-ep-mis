@@ -146,6 +146,12 @@ require_once '../../../includes/header.php';
                                 <span class="text-center">Cattle Voucher</span>
                             </a>
                         </div>
+                        <!-- <div class="col">
+                            <a href="ear_tag_balance.php?tab=identification" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #00695c; min-height: 105px;">
+                                <i class="bi bi-tag-fill fs-3 mb-1"></i>
+                                <span class="text-center">Animal Identification</span>
+                            </a>
+                        </div> -->
                         <div class="col">
                             <a href="health_certificate.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #1565c0; min-height: 105px;">
                                 <i class="bi bi-hospital fs-3 mb-1"></i>

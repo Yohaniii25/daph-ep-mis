@@ -8,10 +8,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const centerTotalTextPlugin = {
         id: 'centerTotalText',
         afterDraw: function (chart) {
-            if (chart.config.options.plugins.centerTotalText) {
+            const configOptions = chart.config?.options?.plugins?.centerTotalText;
+            if (configOptions && configOptions.text && typeof configOptions.value !== 'undefined') {
                 const ctx = chart.ctx;
                 const chartArea = chart.chartArea;
-                const configOptions = chart.config.options.plugins.centerTotalText;
+                if (!ctx || !chartArea) return;
 
                 ctx.save();
                 ctx.font = "bold 11px system-ui, sans-serif";
@@ -20,11 +21,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 ctx.textBaseline = "middle";
                 const centerX = (chartArea.left + chartArea.right) / 2;
                 const centerY = (chartArea.top + chartArea.bottom) / 2;
-                ctx.fillText(configOptions.text.toUpperCase(), centerX, centerY - 10);
+                ctx.fillText(String(configOptions.text).toUpperCase(), centerX, centerY - 10);
 
                 ctx.font = "bold 20px system-ui, sans-serif";
                 ctx.fillStyle = "#370709"; // Maroon Accent Indicator Text
-                ctx.fillText(configOptions.value.toLocaleString(), centerX, centerY + 12);
+                ctx.fillText(Number(configOptions.value).toLocaleString(), centerX, centerY + 12);
                 ctx.restore();
             }
         }
@@ -3040,18 +3041,29 @@ window.addFlockAgeGroupRow = function() {
     if (!tbody) return;
     const existingRows = tbody.querySelectorAll('tr.flock-age-group-row');
     const nextIndex = existingRows.length;
+
+    // Clone the exact same <option> elements from the primary dropdown
+    const primarySelect = tbody.querySelector('tr.flock-age-group-row select') || document.querySelector('#flockAgeGroupBody select');
+    let selectHtml = '';
+    if (primarySelect && primarySelect.options.length > 0) {
+        const clonedSelect = primarySelect.cloneNode(true);
+        clonedSelect.name = `poultry[flock_age_groups][${nextIndex}][age_group]`;
+        clonedSelect.selectedIndex = 0;
+        selectHtml = clonedSelect.outerHTML;
+    } else {
+        selectHtml = `
+            <select name="poultry[flock_age_groups][${nextIndex}][age_group]" class="form-select form-select-sm">
+                <option value="Chicks (&lt;8 weeks)">Chicks (&lt;8 weeks)</option>
+                <option value="Growers (8-17 weeks)">Growers (8-17 weeks old)</option>
+                <option value="Hens (&gt;18 weeks)">Hens (&gt;18 Weeks)</option>
+            </select>`;
+    }
+
     const tr = document.createElement('tr');
     tr.className = 'flock-age-group-row';
     tr.innerHTML = `
         <td>
-            <select name="poultry[flock_age_groups][${nextIndex}][age_group]" class="form-select form-select-sm">
-                <option value="Chicks">Chicks</option>
-                <option value="Growers">Growers</option>
-                <option value="Hens">Hens</option>
-                <option value="Roosters">Roosters</option>
-                <option value="Pullets">Pullets</option>
-                <option value="Cockerels">Cockerels</option>
-            </select>
+            ${selectHtml}
         </td>
         <td>
             <input type="number" min="0" name="poultry[flock_age_groups][${nextIndex}][quantity]" class="form-control form-control-sm text-end font-monospace" placeholder="0">
@@ -3130,6 +3142,28 @@ window.resetPoultryMasterForm = function() {
     const pGnSelect = document.getElementById('poultry_gn_division');
     if (pGnSelect) {
         pGnSelect.value = '';
+    }
+
+    const flockBody = document.getElementById('flockAgeGroupBody');
+    if (flockBody) {
+        flockBody.innerHTML = `
+            <tr class="flock-age-group-row">
+                <td>
+                    <select name="poultry[flock_age_groups][0][age_group]" class="form-select form-select-sm">
+                        <option value="Chicks (&lt;8 weeks)" selected>Chicks (&lt;8 weeks)</option>
+                        <option value="Growers (8-17 weeks)">Growers (8-17 weeks old)</option>
+                        <option value="Hens (&gt;18 weeks)">Hens (&gt;18 Weeks)</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" min="0" name="poultry[flock_age_groups][0][quantity]" class="form-control form-control-sm text-end font-monospace" placeholder="0" value="">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFlockAgeGroupRow(this)" title="Remove row">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
     }
 
     if (typeof window.activatePoultryPane === 'function') {
@@ -3878,13 +3912,14 @@ window.loadPoultryRecordIntoForm = function(rec, pData) {
     if (meatSpec) meatSpec.value = meatMkt.other_specify || '';
 
     const eggMkt = mkt.eggs || {};
-    ['table_eggs', 'hatching_eggs'].forEach(r => {
+    ['table_eggs', 'pullet_eggs'].forEach(r => {
+        const rowData = eggMkt[r] || (r === 'pullet_eggs' ? (eggMkt.hatching_eggs || {}) : {});
         ['farm_gate', 'wholesale', 'retail'].forEach(col => {
             const chk = document.querySelector('input[name="poultry[marketing][eggs][' + r + '][' + col + ']"]');
-            if (chk) chk.checked = !!(eggMkt[r] && eggMkt[r][col]);
+            if (chk) chk.checked = !!(rowData && rowData[col]);
         });
         const specIn = document.querySelector('input[name="poultry[marketing][eggs][' + r + '][other_specify]"]');
-        if (specIn) specIn.value = (eggMkt[r] && eggMkt[r].other_specify) || '';
+        if (specIn) specIn.value = (rowData && rowData.other_specify) || '';
     });
 
     // 9. Switch to Section 1 pane & scroll to top
@@ -4381,6 +4416,42 @@ function initAddedDetailsTable() {
                     columnDefs: [
                         { targets: [10], orderable: false, searchable: false } // Actions column not sortable
                     ],
+                    buttons: [
+                        {
+                            extend: 'csvHtml5',
+                            className: 'd-none',
+                            filename: function () {
+                                const rangeName = (window.brandingRangeName || 'Range').replace(/\s+/g, '_');
+                                return `Livestock_Farmers_Summary_${rangeName}_${new Date().toISOString().slice(0, 10)}`;
+                            },
+                            title: `Livestock Farmers Registry - ${window.brandingRangeName || 'Range'}`,
+                            exportOptions: {
+                                columns: ':visible:not(:last-child)'
+                            }
+                        },
+                        {
+                            extend: 'pdfHtml5',
+                            className: 'd-none',
+                            orientation: 'landscape',
+                            pageSize: 'A4',
+                            filename: function () {
+                                const rangeName = (window.brandingRangeName || 'Range').replace(/\s+/g, '_');
+                                return `Livestock_Farmers_Summary_${rangeName}_${new Date().toISOString().slice(0, 10)}`;
+                            },
+                            title: `Livestock Farmers Registry - ${window.brandingRangeName || 'Range'}`,
+                            exportOptions: {
+                                columns: ':visible:not(:last-child)'
+                            },
+                            customize: function (doc) {
+                                doc.defaultStyle.fontSize = 8;
+                                if (doc.styles && doc.styles.tableHeader) {
+                                    doc.styles.tableHeader.fontSize = 9;
+                                    doc.styles.tableHeader.fillColor = '#701a23';
+                                    doc.styles.tableHeader.color = '#ffffff';
+                                }
+                            }
+                        }
+                    ],
                     language: {
                         search: "_INPUT_",
                         searchPlaceholder: "Search livestock farms...",
@@ -4394,6 +4465,17 @@ function initAddedDetailsTable() {
                             next: '<i class="bi bi-chevron-right"></i>',
                             last: '<i class="bi bi-chevron-double-right"></i>'
                         }
+                    }
+                });
+
+                // Dynamic Record Count synchronization for Livestock
+                window.addedDetailsTableInstance.on('draw.dt init.dt', function () {
+                    const info = window.addedDetailsTableInstance.page.info();
+                    const count = info.recordsDisplay;
+                    const total = info.recordsTotal;
+                    const badgeText = $('#livestockRecordCountText');
+                    if (badgeText.length) {
+                        badgeText.text(count === total ? `${count} Registered Farms` : `${count} of ${total} Registered Farms`);
                     }
                 });
 
@@ -4427,6 +4509,42 @@ function initAddedDetailsTable() {
                     columnDefs: [
                         { targets: [9], orderable: false, searchable: false } // Actions column not sortable
                     ],
+                    buttons: [
+                        {
+                            extend: 'csvHtml5',
+                            className: 'd-none',
+                            filename: function () {
+                                const rangeName = (window.brandingRangeName || 'Range').replace(/\s+/g, '_');
+                                return `Poultry_Farmers_Summary_${rangeName}_${new Date().toISOString().slice(0, 10)}`;
+                            },
+                            title: `Poultry Farmers Registry - ${window.brandingRangeName || 'Range'}`,
+                            exportOptions: {
+                                columns: ':visible:not(:last-child)'
+                            }
+                        },
+                        {
+                            extend: 'pdfHtml5',
+                            className: 'd-none',
+                            orientation: 'landscape',
+                            pageSize: 'A4',
+                            filename: function () {
+                                const rangeName = (window.brandingRangeName || 'Range').replace(/\s+/g, '_');
+                                return `Poultry_Farmers_Summary_${rangeName}_${new Date().toISOString().slice(0, 10)}`;
+                            },
+                            title: `Poultry Farmers Registry - ${window.brandingRangeName || 'Range'}`,
+                            exportOptions: {
+                                columns: ':visible:not(:last-child)'
+                            },
+                            customize: function (doc) {
+                                doc.defaultStyle.fontSize = 8;
+                                if (doc.styles && doc.styles.tableHeader) {
+                                    doc.styles.tableHeader.fontSize = 9;
+                                    doc.styles.tableHeader.fillColor = '#854d0e';
+                                    doc.styles.tableHeader.color = '#ffffff';
+                                }
+                            }
+                        }
+                    ],
                     language: {
                         search: "_INPUT_",
                         searchPlaceholder: "Search poultry farms...",
@@ -4440,6 +4558,17 @@ function initAddedDetailsTable() {
                             next: '<i class="bi bi-chevron-right"></i>',
                             last: '<i class="bi bi-chevron-double-right"></i>'
                         }
+                    }
+                });
+
+                // Dynamic Record Count synchronization for Poultry
+                window.poultryDetailsTableInstance.on('draw.dt init.dt', function () {
+                    const info = window.poultryDetailsTableInstance.page.info();
+                    const count = info.recordsDisplay;
+                    const total = info.recordsTotal;
+                    const badgeText = $('#poultryRecordCountText');
+                    if (badgeText.length) {
+                        badgeText.text(count === total ? `${count} Registered Poultry Farms` : `${count} of ${total} Registered Poultry Farms`);
                     }
                 });
 
@@ -5285,6 +5414,13 @@ function getPoultrySummaryRecords() {
 
 // 1. Livestock Farmers Registry - Summary Export to CSV
 window.exportLivestockFarmerListCSV = function() {
+    if (window.addedDetailsTableInstance && typeof window.addedDetailsTableInstance.button === 'function') {
+        const btn = window.addedDetailsTableInstance.button('.buttons-csv');
+        if (btn && btn.length) {
+            btn.trigger();
+            return;
+        }
+    }
     const records = getLivestockSummaryRecords();
     if (!records.length) {
         if (typeof Swal !== 'undefined') {
@@ -5370,6 +5506,13 @@ window.exportLivestockFarmerListCSV = function() {
 
 // 2. Livestock Farmers Registry - Summary Export to PDF
 window.exportLivestockFarmerListPDF = function() {
+    if (window.addedDetailsTableInstance && typeof window.addedDetailsTableInstance.button === 'function') {
+        const btn = window.addedDetailsTableInstance.button('.buttons-pdf');
+        if (btn && btn.length) {
+            btn.trigger();
+            return;
+        }
+    }
     if (typeof pdfMake === 'undefined') {
         alert('PDF generation library is still loading. Please try again in a few moments.');
         return;
@@ -5514,6 +5657,13 @@ window.exportLivestockFarmerListPDF = function() {
 
 // 3. Poultry Farmers Registry - Summary Export to CSV
 window.exportPoultryFarmerListCSV = function() {
+    if (window.poultryDetailsTableInstance && typeof window.poultryDetailsTableInstance.button === 'function') {
+        const btn = window.poultryDetailsTableInstance.button('.buttons-csv');
+        if (btn && btn.length) {
+            btn.trigger();
+            return;
+        }
+    }
     const records = getPoultrySummaryRecords();
     if (!records.length) {
         if (typeof Swal !== 'undefined') {
@@ -5607,6 +5757,13 @@ window.exportPoultryFarmerListCSV = function() {
 
 // 4. Poultry Farmers Registry - Summary Export to PDF
 window.exportPoultryFarmerListPDF = function() {
+    if (window.poultryDetailsTableInstance && typeof window.poultryDetailsTableInstance.button === 'function') {
+        const btn = window.poultryDetailsTableInstance.button('.buttons-pdf');
+        if (btn && btn.length) {
+            btn.trigger();
+            return;
+        }
+    }
     if (typeof pdfMake === 'undefined') {
         alert('PDF generation library is still loading. Please try again in a few moments.');
         return;
@@ -6020,3 +6177,228 @@ $(document).ready(function() {
         }
     }
 });
+
+// ==============================================================
+// CR80 PRINTABLE FARM REGISTRATION CARD GENERATOR & MODAL
+// ==============================================================
+window.openFarmRegistrationCardModal = function(recordId) {
+    if (!recordId && typeof window.currentModalRecordId !== 'undefined') {
+        recordId = window.currentModalRecordId;
+    }
+    if (!recordId) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'warning', title: 'Card Generation', text: 'No farm registration record selected.' });
+        }
+        return;
+    }
+
+    const list = (typeof window.liveDatabaseRecords !== 'undefined' && Array.isArray(window.liveDatabaseRecords)) 
+        ? window.liveDatabaseRecords 
+        : ((typeof liveDatabaseRecords !== 'undefined' && Array.isArray(liveDatabaseRecords)) ? liveDatabaseRecords : []);
+    
+    let rec = list.find(r => Number(r.id) === Number(recordId));
+
+    if (!rec) {
+        // Fallback: Fetch via AJAX if not in preloaded memory
+        $.ajax({
+            url: 'animal_branding.php',
+            method: 'GET',
+            data: { action: 'get_record', id: recordId },
+            dataType: 'json',
+            success: function(resp) {
+                if (resp && resp.status === 'success' && resp.record) {
+                    window.renderAndShowCr80Card(resp.record);
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Record Not Found', text: 'Could not load registration card data.' });
+                    }
+                }
+            },
+            error: function() {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Network Error', text: 'Unable to communicate with the registry database.' });
+                }
+            }
+        });
+        return;
+    }
+
+    window.renderAndShowCr80Card(rec);
+};
+
+window.renderAndShowCr80Card = function(rec) {
+    const escapeHtml = function(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
+
+    const pData = rec.poultry_data || {};
+    const regNo = rec.registration_no || pData.registration_no || 'REG-PENDING';
+    const ownerName = rec.farmer_name || pData.farmer_name || pData.owner_name || 'Registered Farmer';
+    const ownerNic = rec.nic || pData.nic || pData.owner_nic || 'N/A';
+    const farmAddr = rec.farm_address || rec.farmer_address || pData.farm_address || pData.farmer_address || 'Registered Range Jurisdiction';
+    const vsRange = rec.vs_division || window.brandingRangeName || 'Veterinary Range';
+    const regDate = rec.date_of_registration_renewal || pData.date_of_registration_renewal || new Date().toISOString().split('T')[0];
+
+    // Determine Registered Animal Categories & counts
+    const categories = [];
+    const neatCount = parseInt(rec.total_neat_cattle, 10) || 0;
+    if (neatCount > 0 || (rec.neat_cattle_data && Object.keys(rec.neat_cattle_data).length > 0)) {
+        categories.push({ name: neatCount > 0 ? `Cattle (${neatCount})` : 'Cattle', class: 'cattle' });
+    }
+
+    const bufCount = parseInt(rec.total_buffaloes, 10) || 0;
+    if (bufCount > 0 || (rec.buffaloes_data && Object.keys(rec.buffaloes_data).length > 0)) {
+        categories.push({ name: bufCount > 0 ? `Buffalo (${bufCount})` : 'Buffalo', class: 'buffalo' });
+    }
+
+    const isPoultry = (String(rec.farm_type || '').toLowerCase().indexOf('poultry') !== -1) || 
+                      (pData && (pData.poultry_farm_type || (pData.flock_age_groups && pData.flock_age_groups.length > 0)));
+    if (isPoultry) {
+        let pLabel = 'Poultry';
+        if (pData.poultry_farm_type) {
+            pLabel = `Poultry (${pData.poultry_farm_type})`;
+        }
+        categories.push({ name: pLabel, class: 'poultry' });
+    }
+
+    const fodderArea = parseFloat(rec.fodder_total_land_area) || 0;
+    if (fodderArea > 0 || (rec.fodder_data && rec.fodder_data.length > 0)) {
+        categories.push({ name: fodderArea > 0 ? `Fodder (${fodderArea.toFixed(1)}P)` : 'Fodder', class: 'fodder' });
+    }
+
+    const goatCount = parseInt(rec.goat_total_no, 10) || 0;
+    if (goatCount > 0) {
+        categories.push({ name: `Goats (${goatCount})`, class: 'goat' });
+    }
+
+    const swineCount = parseInt(rec.swine_total_no, 10) || 0;
+    if (swineCount > 0) {
+        categories.push({ name: `Swine (${swineCount})`, class: 'swine' });
+    }
+
+    const sheepCount = parseInt(rec.sheep_total_no, 10) || 0;
+    if (sheepCount > 0) {
+        categories.push({ name: `Sheep (${sheepCount})`, class: 'sheep' });
+    }
+
+    if (categories.length === 0) {
+        categories.push({ name: rec.farm_type || 'Livestock Farm', class: 'cattle' });
+    }
+
+    // Build categories badges HTML
+    const catHtml = categories.map(c => `<span class="cr80-category-pill ${c.class}">${escapeHtml(c.name)}</span>`).join('');
+
+    // Verification URL & QR code
+    const verifyUrl = `https://daph.ep.gov.lk/verify?reg=${encodeURIComponent(regNo)}&nic=${encodeURIComponent(ownerNic)}`;
+    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=2&data=${encodeURIComponent(verifyUrl)}`;
+
+    const cardTemplate = `
+        <div class="cr80-card">
+            <div class="cr80-header">
+                <img src="../../../assets/img/logo.png" alt="DAPH Logo" class="cr80-header-logo">
+                <div class="cr80-header-titles">
+                    <div class="cr80-header-gov">Government of Sri Lanka • Eastern Province</div>
+                    <div class="cr80-header-dept">Department of Animal Production &amp; Health</div>
+                    <div class="cr80-header-sub">Official Farm &amp; Breeder Identity Registration Card</div>
+                </div>
+                <div class="cr80-header-badge">DAPH / EP</div>
+            </div>
+
+            <div class="cr80-body">
+                <img src="../../../assets/img/logo.png" alt="" class="cr80-watermark">
+
+                <!-- Left Column: 1:1 Photo Box & Security Seal -->
+                <div class="cr80-col-photo">
+                    <div class="cr80-photo-box">
+                        <div class="cr80-photo-placeholder">
+                            <i class="bi bi-person-fill"></i>
+                            <span>PHOTO (1:1)</span>
+                        </div>
+                    </div>
+                    <div class="cr80-security-seal">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <span class="cr80-security-seal-text">DAPH VERIFIED</span>
+                    </div>
+                </div>
+
+                <!-- Center Column: Key Card Details -->
+                <div class="cr80-col-info">
+                    <div class="cr80-reg-number-badge">
+                        <i class="bi bi-patch-check-fill"></i> REG: <span>${escapeHtml(regNo)}</span>
+                    </div>
+
+                    <div class="cr80-data-grid">
+                        <span class="cr80-label">Owner:</span>
+                        <span class="cr80-value fw-bold text-dark" title="${escapeHtml(ownerName)}">${escapeHtml(ownerName)}</span>
+
+                        <span class="cr80-label">Owner NIC:</span>
+                        <span class="cr80-value font-monospace">${escapeHtml(ownerNic)}</span>
+
+                        <span class="cr80-label">Address:</span>
+                        <span class="cr80-value" title="${escapeHtml(farmAddr)}">${escapeHtml(farmAddr)}</span>
+
+                        <span class="cr80-label">VS Range:</span>
+                        <span class="cr80-value">${escapeHtml(vsRange)}</span>
+
+                        <span class="cr80-label">Reg. Date:</span>
+                        <span class="cr80-value font-monospace">${escapeHtml(regDate)}</span>
+                    </div>
+
+                    <div class="cr80-categories-container">
+                        ${catHtml}
+                    </div>
+                </div>
+
+                <!-- Right Column: Live QR Code & VS Signature Line -->
+                <div class="cr80-col-qr">
+                    <div class="cr80-qr-wrapper">
+                        <img src="${qrImgUrl}" alt="Verification QR" onerror="this.src='https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${encodeURIComponent(verifyUrl)}'">
+                    </div>
+                    <div class="cr80-qr-caption">Scan to Verify</div>
+
+                    <div class="cr80-signature-block">
+                        <div class="cr80-signature-line"></div>
+                        <div class="cr80-signature-title">Veterinary Surgeon</div>
+                        <div class="cr80-signature-sub">Authorized Reviewer</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cr80-footer">
+                <span>CR80 ISO 85.6&times;54mm</span>
+                <span class="cr80-footer-gold">Official DAPH Registration Card</span>
+                <span>EP-MIS</span>
+            </div>
+        </div>
+    `;
+
+    // Populate interactive preview (scaled for easy reading)
+    const previewWrapper = document.getElementById('cardPreviewWrapper');
+    if (previewWrapper) {
+        previewWrapper.innerHTML = `<div class="cr80-scaled-view">${cardTemplate}</div>`;
+    }
+
+    // Populate isolated print container (exact unscaled 1:1)
+    const printSection = document.getElementById('cr80CardPrintSection');
+    if (printSection) {
+        printSection.innerHTML = cardTemplate;
+    }
+
+    // Launch modal
+    const cardModalEl = document.getElementById('farmRegistrationCardModal');
+    if (cardModalEl && typeof bootstrap !== 'undefined') {
+        const modal = bootstrap.Modal.getInstance(cardModalEl) || new bootstrap.Modal(cardModalEl);
+        modal.show();
+    }
+};
+
+window.printFarmRegistrationCard = function() {
+    window.print();
+};
+

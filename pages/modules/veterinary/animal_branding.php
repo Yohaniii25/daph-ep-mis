@@ -2189,20 +2189,20 @@ require_once '../../../includes/header.php';
 							</thead>
 							<tbody id="flockAgeGroupBody">
 								<?php
-								$flock_groups = $poultry_rec['flock_age_groups'] ?? [['age_group' => 'Chicks', 'quantity' => '']];
+								$flock_groups = $poultry_rec['flock_age_groups'] ?? [['age_group' => 'Chicks (<8 weeks)', 'quantity' => '']];
 								if (!is_array($flock_groups) || empty($flock_groups)) {
-									$flock_groups = [['age_group' => 'Chicks', 'quantity' => '']];
+									$flock_groups = [['age_group' => 'Chicks (<8 weeks)', 'quantity' => '']];
 								}
 								foreach ($flock_groups as $fg_i => $fg_row):
-									$fg_age = $fg_row['age_group'] ?? 'Chicks';
+									$fg_age = $fg_row['age_group'] ?? 'Chicks (<8 weeks)';
 									$fg_qty = $fg_row['quantity'] ?? '';
 								?>
 								<tr class="flock-age-group-row">
 									<td>
 										<select name="poultry[flock_age_groups][<?= $fg_i ?>][age_group]" class="form-select form-select-sm">
-											<option value="Chicks (&lt;8 weeks)" <?= ($fg_age === 'Chicks (&lt;8 weeks)') ? 'selected' : '' ?>>Chicks (&lt;8 weeks)</option>
-											<option value="Growers (8-17 weeks)" <?= ($fg_age === 'Growers (8-17 weeks)') ? 'selected' : '' ?>>Growers (8-17 weeks old)</option>
-											<option value="Hens (&gt;18 weeks)" <?= ($fg_age === 'Hens (&gt;18 weeks)') ? 'selected' : '' ?>>Hens (&gt;18 Weeks)</option>
+											<option value="Chicks (&lt;8 weeks)" <?= ($fg_age === 'Chicks (<8 weeks)' || $fg_age === 'Chicks (&lt;8 weeks)' || $fg_age === 'Chicks') ? 'selected' : '' ?>>Chicks (&lt;8 weeks)</option>
+											<option value="Growers (8-17 weeks)" <?= ($fg_age === 'Growers (8-17 weeks)' || $fg_age === 'Growers (8-17 weeks old)' || $fg_age === 'Growers') ? 'selected' : '' ?>>Growers (8-17 weeks old)</option>
+											<option value="Hens (&gt;18 weeks)" <?= ($fg_age === 'Hens (>18 weeks)' || $fg_age === 'Hens (&gt;18 weeks)' || $fg_age === 'Hens (>18 Weeks)' || $fg_age === 'Hens') ? 'selected' : '' ?>>Hens (&gt;18 Weeks)</option>
 										</select>
 									</td>
 									<td>
@@ -2826,10 +2826,10 @@ require_once '../../../includes/header.php';
                                                                 <?php
                                                                 $egg_rows = [
                                                                     'table_eggs' => 'Table eggs',
-                                                                    'hatching_eggs' => 'Hatching eggs'
+                                                                    'pullet_eggs' => 'Pullet eggs'
                                                                 ];
                                                                 foreach ($egg_rows as $er_key => $er_label):
-                                                                    $er_data = $poultry_rec['marketing']['eggs'][$er_key] ?? [];
+                                                                    $er_data = $poultry_rec['marketing']['eggs'][$er_key] ?? ($er_key === 'pullet_eggs' ? ($poultry_rec['marketing']['eggs']['hatching_eggs'] ?? []) : []);
                                                                 ?>
                                                                 <tr>
                                                                     <td class="text-start fw-semibold bg-light-subtle"><?= $er_label ?></td>
@@ -2937,15 +2937,15 @@ require_once '../../../includes/header.php';
                                 <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-shield-shaded text-danger me-2"></i>Livestock Farmers Registry</h5>
                                 <small class="text-muted">Master database records for cattle, buffaloes, swine, goats, sheep and fodder cultivations in <?= htmlspecialchars($range_name) ?> range.</small>
                             </div>
-                            <div class="d-flex gap-2 flex-wrap align-items-center">
-                                <button type="button" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-xs" onclick="exportLivestockFarmerListCSV();" title="Export Livestock Farmers Summary List to CSV">
+                            <div class="custom-table-toolbar d-flex gap-2 flex-wrap align-items-center">
+                                <button type="button" class="btn btn-sm btn-table-export-csv" onclick="exportLivestockFarmerListCSV();" title="Export Livestock Farmers Summary List to CSV">
                                     <i class="bi bi-file-earmark-spreadsheet"></i> <span>Export to CSV</span>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-xs" onclick="exportLivestockFarmerListPDF();" title="Export Livestock Farmers Summary List to PDF">
+                                <button type="button" class="btn btn-sm btn-table-export-pdf" onclick="exportLivestockFarmerListPDF();" title="Export Livestock Farmers Summary List to PDF">
                                     <i class="bi bi-file-earmark-pdf"></i> <span>Export to PDF</span>
                                 </button>
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="sortMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Sort Livestock Records">
+                                    <button class="btn btn-sm btn-table-sort dropdown-toggle" type="button" id="sortMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Sort Livestock Records">
                                         <i class="bi bi-sort-down me-1"></i>Sort
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="sortMenuBtn">
@@ -2962,8 +2962,8 @@ require_once '../../../includes/header.php';
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAddedDetails(2, 'desc');"><i class="bi bi-sort-alpha-down-alt me-2 text-success"></i>Farmer Name (Z to A)</a></li>
                                     </ul>
                                 </div>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fw-semibold">
-                                    <i class="bi bi-check2-circle me-1"></i><?= count($livestock_records) ?> Registered Farms
+                                <span class="badge table-record-count-badge" id="livestockRecordCountBadge" data-entity="Registered Farms">
+                                    <i class="bi bi-check2-circle me-1"></i><span id="livestockRecordCountText"><?= count($livestock_records) ?> Registered Farms</span>
                                 </span>
                             </div>
                         </div>
@@ -3086,6 +3086,9 @@ require_once '../../../includes/header.php';
                                             </td>
                                             <td class="text-end pe-4">
                                                 <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-success" onclick="openFarmRegistrationCardModal(<?= $rec['id'] ?>);" title="Print Official Farm Registration Card (CR80 ID)">
+                                                        <i class="bi bi-credit-card-2-front"></i> Card
+                                                    </button>
                                                     <button type="button" class="btn btn-outline-primary" onclick="showRecordDetailModal(<?= $rec['id'] ?>);" title="View Full Details">
                                                         <i class="bi bi-eye-fill"></i> View
                                                     </button>
@@ -3117,15 +3120,15 @@ require_once '../../../includes/header.php';
                                 <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-egg-fried text-warning me-2"></i>Poultry Farmers Registry</h5>
                                 <small class="text-muted">Master database records for layer, broiler, breeder farms, flock capacity and production in <?= htmlspecialchars($range_name) ?> range.</small>
                             </div>
-                            <div class="d-flex gap-2 flex-wrap align-items-center">
-                                <button type="button" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1 shadow-xs" onclick="exportPoultryFarmerListCSV();" title="Export Poultry Farmers Summary List to CSV">
+                            <div class="custom-table-toolbar d-flex gap-2 flex-wrap align-items-center">
+                                <button type="button" class="btn btn-sm btn-table-export-csv" onclick="exportPoultryFarmerListCSV();" title="Export Poultry Farmers Summary List to CSV">
                                     <i class="bi bi-file-earmark-spreadsheet"></i> <span>Export to CSV</span>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 shadow-xs" onclick="exportPoultryFarmerListPDF();" title="Export Poultry Farmers Summary List to PDF">
+                                <button type="button" class="btn btn-sm btn-table-export-pdf" onclick="exportPoultryFarmerListPDF();" title="Export Poultry Farmers Summary List to PDF">
                                     <i class="bi bi-file-earmark-pdf"></i> <span>Export to PDF</span>
                                 </button>
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="poultrySortMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Sort Poultry Records">
+                                    <button class="btn btn-sm btn-table-sort dropdown-toggle" type="button" id="poultrySortMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Sort Poultry Records">
                                         <i class="bi bi-sort-down me-1"></i>Sort
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="poultrySortMenuBtn">
@@ -3142,8 +3145,8 @@ require_once '../../../includes/header.php';
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortPoultryDetails(2, 'desc');"><i class="bi bi-sort-alpha-down-alt me-2 text-success"></i>Owner Name (Z to A)</a></li>
                                     </ul>
                                 </div>
-                                <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
-                                    <i class="bi bi-egg-fill text-warning me-1"></i><?= count($poultry_records) ?> Registered Poultry Farms
+                                <span class="badge table-record-count-badge" id="poultryRecordCountBadge" data-entity="Registered Poultry Farms">
+                                    <i class="bi bi-egg-fill me-1"></i><span id="poultryRecordCountText"><?= count($poultry_records) ?> Registered Poultry Farms</span>
                                 </span>
                             </div>
                         </div>
@@ -3315,6 +3318,9 @@ require_once '../../../includes/header.php';
                                             </td>
                                             <td class="text-end pe-4">
                                                 <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-success" onclick="openFarmRegistrationCardModal(<?= $p_row['id'] ?>);" title="Print Official Farm Registration Card (CR80 ID)">
+                                                        <i class="bi bi-credit-card-2-front"></i> Card
+                                                    </button>
                                                     <button type="button" class="btn btn-outline-primary" onclick="showRecordDetailModal(<?= $p_row['id'] ?>);" title="View Full Details">
                                                         <i class="bi bi-eye-fill"></i> View
                                                     </button>
@@ -3366,6 +3372,9 @@ require_once '../../../includes/header.php';
                     </button>
                 </div>
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-warning btn-sm text-dark fw-bold" onclick="openFarmRegistrationCardModal(window.currentModalRecordId);" title="Print Official Farm Registration Card (CR80 ID)">
+                        <i class="bi bi-credit-card-2-front me-1"></i>Print ID Card
+                    </button>
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-dark btn-sm" onclick="window.print();">
                         <i class="bi bi-printer me-1"></i>Print Record Summary
@@ -3375,6 +3384,56 @@ require_once '../../../includes/header.php';
         </div>
     </div>
 </div>
+
+<!-- Modal: Printable CR80 Farm Registration Card -->
+<div class="modal fade" id="farmRegistrationCardModal" tabindex="-1" aria-labelledby="farmRegistrationCardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #701a23 0%, #4a0e14 100%); border-bottom: 2.5px solid #c59b27;">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="../../../assets/img/logo.png" alt="DAPH" style="height: 30px; width: auto;" class="me-1">
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0 text-white" id="farmRegistrationCardModalLabel">Official Farm Registration Card (CR80 ID)</h6>
+                        <small class="text-warning-emphasis" style="font-size: 0.72rem;">Department of Animal Production and Health • Eastern Province</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="alert alert-light border shadow-sm d-flex align-items-center gap-2 py-2 px-3 mb-4 small text-secondary">
+                    <i class="bi bi-patch-check-fill text-warning fs-5"></i>
+                    <div>
+                        <strong>CR80 Standard ID-1 Format (85.6mm &times; 53.98mm):</strong> Standard credit-card size. Equipped with 1:1 passport photo container, live QR verification, digital security emblem, and authorized Veterinary Surgeon review stamp.
+                    </div>
+                </div>
+
+                <!-- Interactive Preview Container -->
+                <div class="cr80-card-preview-container py-4">
+                    <div id="cardPreviewWrapper">
+                        <!-- Populated dynamically via JS openFarmRegistrationCardModal() -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1 small">
+                        <i class="bi bi-shield-check me-1 text-warning"></i>DAPH Security Verified
+                    </span>
+                    <small class="text-muted">Exact 85.6mm &times; 53.98mm on print</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-dark btn-sm fw-bold px-3" onclick="printFarmRegistrationCard();" style="background: linear-gradient(135deg, #701a23 0%, #4a0e14 100%); border-color: #701a23;">
+                        <i class="bi bi-printer-fill text-warning me-1"></i>Print Registration Card
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Isolated Print Container (CR80 ID exact 85.6mm x 53.98mm) -->
+<div id="cr80CardPrintSection" style="display: none;"></div>
 
 <!-- Client-side Data Binding & Veterinary JS Module -->
 <script>

@@ -495,9 +495,8 @@
 /* =========================================================================
    11. Strategic Action Indicators (strategic_indicators.php)
    ========================================================================= */
-.dt-buttons .btn {
-    border-radius: 6px !important;
-    margin-right: 6px !important;
+.dataTables_wrapper .dt-buttons {
+    display: none !important;
 }
 
 /* =========================================================================
@@ -1464,6 +1463,453 @@
     background-color: #ffffff !important;
     color: #b45309 !important;
 }
+
+/* ============================================================== */
+/* CR80 OFFICIAL FARM REGISTRATION CARD (85.6mm x 53.98mm)        */
+/* ============================================================== */
+.cr80-card-preview-container {
+    background: #f1f5f9;
+    padding: 24px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: auto;
+}
+
+/* CR80 Base Dimensions: Exactly 85.6mm x 53.98mm */
+.cr80-card {
+    width: 85.6mm;
+    height: 53.98mm;
+    box-sizing: border-box;
+    background: #ffffff;
+    border-radius: 3.18mm;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+    border: 1px solid #d1d5db;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #1e293b;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+/* Card Header (Maroon and Gold Top Bar) */
+.cr80-header {
+    background: linear-gradient(135deg, #701a23 0%, #4a0e14 100%) !important;
+    color: #ffffff;
+    padding: 1.8mm 2.5mm 1.5mm 2.5mm;
+    border-bottom: 0.9mm solid #c59b27;
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    position: relative;
+}
+
+.cr80-header-logo {
+    width: 6.5mm;
+    height: 6.5mm;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    flex-shrink: 0;
+}
+
+.cr80-header-titles {
+    flex-grow: 1;
+    line-height: 1.1;
+}
+
+.cr80-header-gov {
+    font-size: 4pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #facc15;
+}
+
+.cr80-header-dept {
+    font-size: 5pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.cr80-header-sub {
+    font-size: 3.6pt;
+    font-weight: 600;
+    color: #e2e8f0;
+    letter-spacing: 0.1px;
+}
+
+.cr80-header-badge {
+    background: #c59b27;
+    color: #370709;
+    font-size: 3.5pt;
+    font-weight: 800;
+    padding: 0.6mm 1.4mm;
+    border-radius: 1mm;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Card Body Layout */
+.cr80-body {
+    flex-grow: 1;
+    display: flex;
+    padding: 1.6mm 2.5mm 1mm 2.5mm;
+    gap: 2mm;
+    background: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Background watermark emblem */
+.cr80-watermark {
+    position: absolute;
+    right: 15mm;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28mm;
+    height: 28mm;
+    opacity: 0.045;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Column 1: Photo & Security Seal */
+.cr80-col-photo {
+    width: 17.5mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2mm;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.cr80-photo-box {
+    width: 17.5mm;
+    height: 17.5mm;
+    border: 0.3mm solid #cbd5e1;
+    background: #f8fafc;
+    border-radius: 1.2mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.cr80-photo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cr80-photo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    line-height: 1;
+}
+
+.cr80-photo-placeholder i {
+    font-size: 14pt;
+    margin-bottom: 0.8mm;
+}
+
+.cr80-photo-placeholder span {
+    font-size: 3.2pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.2px;
+}
+
+/* Hologram / Digital Security Seal */
+.cr80-security-seal {
+    width: 17.5mm;
+    height: 6mm;
+    background: linear-gradient(135deg, #fef08a 0%, #ca8a04 50%, #facc15 100%) !important;
+    border: 0.3mm solid #a16207;
+    border-radius: 1mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1mm;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.cr80-security-seal i {
+    font-size: 5pt;
+    color: #713f12;
+}
+
+.cr80-security-seal-text {
+    font-size: 3.2pt;
+    font-weight: 800;
+    color: #713f12;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1;
+}
+
+/* Column 2: Farmer & Farm Data Fields */
+.cr80-col-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.cr80-reg-number-badge {
+    background: #fdf2f2;
+    border: 0.3mm solid #fca5a5;
+    color: #701a23;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-weight: 800;
+    font-size: 5.6pt;
+    padding: 0.6mm 1.5mm;
+    border-radius: 1mm;
+    display: inline-flex;
+    align-items: center;
+    gap: 1mm;
+    margin-bottom: 0.8mm;
+    letter-spacing: 0.4px;
+    width: fit-content;
+}
+
+.cr80-data-grid {
+    display: grid;
+    grid-template-columns: 14mm 1fr;
+    row-gap: 0.7mm;
+    column-gap: 1mm;
+    font-size: 4.2pt;
+    line-height: 1.15;
+}
+
+.cr80-label {
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1px;
+}
+
+.cr80-value {
+    color: #0f172a;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cr80-categories-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6mm;
+    margin-top: 0.6mm;
+}
+
+.cr80-category-pill {
+    font-size: 3.2pt;
+    font-weight: 700;
+    padding: 0.3mm 1mm;
+    border-radius: 0.8mm;
+    background: #f1f5f9;
+    color: #334155;
+    border: 0.2mm solid #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.1px;
+}
+
+.cr80-category-pill.cattle { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.cr80-category-pill.buffalo { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc; }
+.cr80-category-pill.poultry { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.cr80-category-pill.fodder { background: #dcfce7; color: #166534; border-color: #86efac; }
+.cr80-category-pill.goat { background: #ffedd5; color: #9a3412; border-color: #fdba74; }
+.cr80-category-pill.swine { background: #fce7f3; color: #9d174d; border-color: #fbcfe8; }
+
+/* Column 3: Verification QR Code & Authorized Signature */
+.cr80-col-qr {
+    width: 17mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.cr80-qr-wrapper {
+    width: 16.5mm;
+    height: 16.5mm;
+    background: #ffffff;
+    border: 0.3mm solid #cbd5e1;
+    border-radius: 1mm;
+    padding: 0.6mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.cr80-qr-wrapper img {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+.cr80-qr-caption {
+    font-size: 2.8pt;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    margin-top: 0.4mm;
+    text-align: center;
+}
+
+.cr80-signature-block {
+    width: 100%;
+    text-align: center;
+    margin-top: 0.6mm;
+}
+
+.cr80-signature-line {
+    border-bottom: 0.3mm dashed #475569;
+    width: 100%;
+    margin-bottom: 0.6mm;
+    height: 3mm;
+}
+
+.cr80-signature-title {
+    font-size: 3.3pt;
+    font-weight: 800;
+    color: #1e293b;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.cr80-signature-sub {
+    font-size: 2.8pt;
+    font-weight: 600;
+    color: #64748b;
+    line-height: 1;
+}
+
+/* Card Bottom Micro-Bar */
+.cr80-footer {
+    background: #f8fafc;
+    border-top: 0.3mm solid #e2e8f0;
+    padding: 0.6mm 2.5mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 3pt;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+}
+
+.cr80-footer-gold {
+    color: #b45309;
+    font-weight: 800;
+}
+
+/* Screen Scaled View */
+.cr80-scaled-view {
+    transform: scale(1.45);
+    transform-origin: top center;
+    margin: 15px auto 45px auto;
+}
+
+/* ============================================================== */
+/* PRINT MEDIA STYLING (CR80 ID CARD EXACT 85.6mm x 53.98mm)      */
+/* ============================================================== */
+@page {
+    size: 85.6mm 53.98mm;
+    margin: 0;
+}
+
+@media print {
+    html, body {
+        width: 85.6mm !important;
+        height: 53.98mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    #cr80CardPrintSection,
+    #cr80CardPrintSection * {
+        visibility: visible !important;
+    }
+
+    #cr80CardPrintSection {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 85.6mm !important;
+        height: 53.98mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        display: block !important;
+        overflow: hidden !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    #cr80CardPrintSection .cr80-card {
+        width: 85.6mm !important;
+        height: 53.98mm !important;
+        box-shadow: none !important;
+        border: 0.2mm solid #cbd5e1 !important;
+        margin: 0 !important;
+    }
+}
+
+/* ============================================================== */
+/* SPECIALTY DISTRIBUTION CHARTS & CANVASES                       */
+/* ============================================================== */
+#farmersByAnimalChart,
+#milkVolumeBucketsChart,
+#poultrySpecialtyChart {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+}
+
+.farm-chart-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 280px;
+    height: 280px;
+    max-height: 320px;
+}
+
+
 
 
 

@@ -143,6 +143,7 @@ $farm_stats_query = "
         buffaloes_data,
         poultry_data,
         daily_milk_production,
+        milk_data,
         fodder_total_land_area,
         fodder_data
     FROM farm_registration_renewals
@@ -170,20 +171,38 @@ $cattle_farmers_count = 0;
 $buffalo_farmers_count = 0;
 $poultry_farmers_count = 0;
 
-// Chart 2: Milk Production Volume Buckets
+// Specialty Poultry Farmers Aggregator
+$poultry_specialty_farmers = [
+    'Broiler Farmers' => [],
+    'Layer Farmers' => [],
+    'Free-Ranging / Local Farmers' => [],
+    'Farmers involved in Feed Manufacturing' => []
+];
+$total_poultry_birds = 0;
+$flock_age_totals = [
+    'Chicks (<8 weeks)' => 0,
+    'Growers (8-17 weeks old)' => 0,
+    'Hens (>18 Weeks)' => 0,
+    'Other / Unclassified' => 0
+];
+$total_poultry_monthly_feed_kg = 0.0;
+$daph_registered_feed_mfr_count = 0;
+
+// Chart 2: Milk Production Volume Buckets (<5L, 5-10L, 10-20L, 20-40L, 40-100L, >100L)
 $milk_buckets = [
-    'Below 5 liters' => 0,
-    '5 to 10 liters' => 0,
-    '10 to 20 liters' => 0,
-    '20 to 40 liters' => 0,
-    '40 to 100 liters' => 0,
-    'More than 100 liters' => 0
+    '<5L' => 0,
+    '5-10L' => 0,
+    '10-20L' => 0,
+    '20-40L' => 0,
+    '40-100L' => 0,
+    '>100L' => 0
 ];
 $total_dairy_farmers = 0;
 $renewal_ids = [];
 
 foreach ($farm_renewals as $fr) {
-    $renewal_ids[] = intval($fr['id']);
+    $f_id = intval($fr['id']);
+    $renewal_ids[] = $f_id;
 
     // Check Cattle
     $c_count = intval($fr['total_neat_cattle']);
@@ -217,35 +236,159 @@ foreach ($farm_renewals as $fr) {
         $buffalo_farmers_count++;
     }
 
-    // Check Poultry
+    // Check Poultry & Specialty Sub-categories
     $is_poultry = (stripos($fr['farm_type'] ?? '', 'poultry') !== false);
-    if (!$is_poultry && !empty($fr['poultry_data']) && $fr['poultry_data'] !== '[]' && $fr['poultry_data'] !== 'null') {
+    $p_json = [];
+    if (!empty($fr['poultry_data']) && $fr['poultry_data'] !== '[]' && $fr['poultry_data'] !== 'null') {
         $p_json = is_string($fr['poultry_data']) ? json_decode($fr['poultry_data'], true) : $fr['poultry_data'];
-        if (!empty($p_json)) $is_poultry = true;
-    }
-    if ($is_poultry) {
-        $poultry_farmers_count++;
+        if (is_array($p_json) && !empty($p_json)) {
+            $is_poultry = true;
+        } else {
+            $p_json = [];
+        }
     }
 
-    // Milk volume buckets
+    if ($is_poultry) {
+        $poultry_farmers_count++;
+
+        $p_ft = trim($p_json['poultry_farm_type'] ?? ($fr['farm_type'] ?? ''));
+
+        // 1. Broiler Farmers
+        $is_broiler = false;
+        if (stripos($p_ft, 'broiler') !== false) {
+            $is_broiler = true;
+        } elseif (!empty($p_json['purchase_animals']['broiler']) && is_array($p_json['purchase_animals']['broiler'])) {
+            foreach ($p_json['purchase_animals']['broiler'] as $pv) {
+                if (!empty($pv)) { $is_broiler = true; break; }
+            }
+        }
+        if (!$is_broiler && !empty($p_json['prod']['avg_weight_broiler'])) {
+            $is_broiler = true;
+        }
+        if ($is_broiler) {
+            $poultry_specialty_farmers['Broiler Farmers'][$f_id] = true;
+        }
+
+        // 2. Layer Farmers
+        $is_layer = false;
+        if (stripos($p_ft, 'layer') !== false) {
+            $is_layer = true;
+        } elseif (!empty($p_json['purchase_animals']['layer']) && is_array($p_json['purchase_animals']['layer'])) {
+            foreach ($p_json['purchase_animals']['layer'] as $pv) {
+                if (!empty($pv)) { $is_layer = true; break; }
+            }
+        }
+        if (!$is_layer && (!empty($p_json['prod']['avg_egg_hen_year']) || !empty($p_json['marketing']['table_eggs']['sold_qty']))) {
+            $is_layer = true;
+        }
+        if ($is_layer) {
+            $poultry_specialty_farmers['Layer Farmers'][$f_id] = true;
+        }
+
+        // 3. Free-Ranging / Local Farmers
+        $is_local = false;
+        if (stripos($p_ft, 'local') !== false || stripos($p_ft, 'free') !== false) {
+            $is_local = true;
+        } elseif (!empty($p_json['purchase_animals']['local_free']) && is_array($p_json['purchase_animals']['local_free'])) {
+            foreach ($p_json['purchase_animals']['local_free'] as $pv) {
+                if (!empty($pv)) { $is_local = true; break; }
+            }
+        }
+        if ($is_local) {
+            $poultry_specialty_farmers['Free-Ranging / Local Farmers'][$f_id] = true;
+        }
+
+        // Default fallback if poultry registered but no specialty selected: assign Broiler or Free-Ranging
+        if (!$is_broiler && !$is_layer && !$is_local) {
+            if (stripos($p_ft, 'other') !== false) {
+                $poultry_specialty_farmers['Free-Ranging / Local Farmers'][$f_id] = true;
+            } else {
+                $poultry_specialty_farmers['Broiler Farmers'][$f_id] = true;
+            }
+        }
+
+        // 4. Farmers involved in Feed Manufacturing
+        $is_feed_mfg = false;
+        if (($p_json['daph_feed_mfr_registered'] ?? '') === 'Yes' || !empty($p_json['daph_feed_mfr_reg_no'])) {
+            $is_feed_mfg = true;
+            $daph_registered_feed_mfr_count++;
+        }
+        if (!empty($p_json['feed_mfg']) && is_array($p_json['feed_mfg'])) {
+            foreach ($p_json['feed_mfg'] as $mfg_entry) {
+                $prod_qty = floatval($mfg_entry['monthly_prod'] ?? 0);
+                if ($prod_qty > 0) {
+                    $is_feed_mfg = true;
+                    $unit = strtolower($mfg_entry['unit'] ?? 'kg');
+                    $total_poultry_monthly_feed_kg += ($unit === 'mt' ? $prod_qty * 1000 : $prod_qty);
+                }
+            }
+        }
+        if (!$is_feed_mfg && !empty($p_json['feed_method']) && is_array($p_json['feed_method'])) {
+            foreach ($p_json['feed_method'] as $fm_row) {
+                if (!empty($fm_row['self_prep'])) {
+                    $is_feed_mfg = true;
+                    break;
+                }
+            }
+        }
+        if ($is_feed_mfg) {
+            $poultry_specialty_farmers['Farmers involved in Feed Manufacturing'][$f_id] = true;
+        }
+
+        // Flock Age Groups & Headcounts
+        if (!empty($p_json['flock_age_groups']) && is_array($p_json['flock_age_groups'])) {
+            foreach ($p_json['flock_age_groups'] as $fg_item) {
+                $qty = intval($fg_item['quantity'] ?? 0);
+                if ($qty > 0) {
+                    $total_poultry_birds += $qty;
+                    $grp_name = trim($fg_item['age_group'] ?? '');
+                    if (stripos($grp_name, '<8') !== false || stripos($grp_name, 'chick') !== false) {
+                        $flock_age_totals['Chicks (<8 weeks)'] += $qty;
+                    } elseif (stripos($grp_name, '8-17') !== false || stripos($grp_name, 'grower') !== false) {
+                        $flock_age_totals['Growers (8-17 weeks old)'] += $qty;
+                    } elseif (stripos($grp_name, '>18') !== false || stripos($grp_name, 'hen') !== false) {
+                        $flock_age_totals['Hens (>18 Weeks)'] += $qty;
+                    } else {
+                        $flock_age_totals['Other / Unclassified'] += $qty;
+                    }
+                }
+            }
+        }
+    }
+
+    // Milk volume buckets (<5L, 5-10L, 10-20L, 20-40L, 40-100L, >100L)
     $m_vol = floatval($fr['daily_milk_production']);
+    if ($m_vol <= 0 && !empty($fr['milk_data'])) {
+        $m_json = is_string($fr['milk_data']) ? json_decode($fr['milk_data'], true) : $fr['milk_data'];
+        if (is_array($m_json) && isset($m_json['total_production'])) {
+            $m_vol = floatval($m_json['total_production']['cow'] ?? 0) + floatval($m_json['total_production']['buffalo'] ?? 0);
+        }
+    }
     if ($m_vol > 0) {
         $total_dairy_farmers++;
         if ($m_vol < 5.0) {
-            $milk_buckets['Below 5 liters']++;
+            $milk_buckets['<5L']++;
         } elseif ($m_vol <= 10.0) {
-            $milk_buckets['5 to 10 liters']++;
+            $milk_buckets['5-10L']++;
         } elseif ($m_vol <= 20.0) {
-            $milk_buckets['10 to 20 liters']++;
+            $milk_buckets['10-20L']++;
         } elseif ($m_vol <= 40.0) {
-            $milk_buckets['20 to 40 liters']++;
+            $milk_buckets['20-40L']++;
         } elseif ($m_vol <= 100.0) {
-            $milk_buckets['40 to 100 liters']++;
+            $milk_buckets['40-100L']++;
         } else {
-            $milk_buckets['More than 100 liters']++;
+            $milk_buckets['>100L']++;
         }
     }
 }
+
+$poultry_specialty_counts = [
+    'Broiler Farmers' => count($poultry_specialty_farmers['Broiler Farmers']),
+    'Layer Farmers' => count($poultry_specialty_farmers['Layer Farmers']),
+    'Free-Ranging / Local Farmers' => count($poultry_specialty_farmers['Free-Ranging / Local Farmers']),
+    'Farmers involved in Feed Manufacturing' => count($poultry_specialty_farmers['Farmers involved in Feed Manufacturing'])
+];
+
 
 // Fodder Cultivation Summary
 $fodder_crops_summary = [];
@@ -509,11 +652,7 @@ require_once '../../../includes/header.php';
                 <form method="GET" class="d-flex align-items-center gap-2 m-0 bg-white p-2 rounded-3 border shadow-xs">
                     <label class="form-label small fw-bold text-secondary mb-0 text-nowrap"><i class="bi bi-buildings text-primary me-1"></i>Veterinary Range:</label>
                     <select name="range_id" class="form-select form-select-sm fw-semibold" onchange="this.form.submit()" style="min-width: 220px;">
-                        <?php foreach ($all_ranges as $r_opt): ?>
-                            <option value="<?= $r_opt['id'] ?>" <?= intval($r_opt['id']) === intval($range_id) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($r_opt['name']) ?> (<?= htmlspecialchars($r_opt['district_name'] ?? '') ?>)
-                            </option>
-                        <?php endforeach; ?>
+                        <option value="<?= $range_id ?>"><?= htmlspecialchars($range_name) ?></option>
                     </select>
                 </form>
             </div>
@@ -747,8 +886,8 @@ require_once '../../../includes/header.php';
                         </span>
                     </div>
                     <div class="card-body px-4 pb-4 d-flex flex-column">
-                        <div class="position-relative flex-grow-1" style="min-height: 270px; max-height: 310px;">
-                            <canvas id="farmersByAnimalChart"></canvas>
+                        <div class="position-relative flex-grow-1" style="min-height: 280px; max-height: 320px; height: 280px; width: 100%;">
+                            <canvas id="farmersByAnimalChart" style="display: block; width: 100% !important; height: 100% !important;"></canvas>
                         </div>
                         <div class="row g-2 mt-3 pt-3 border-top text-center">
                             <div class="col-4">
@@ -792,8 +931,8 @@ require_once '../../../includes/header.php';
                         </span>
                     </div>
                     <div class="card-body px-4 pb-4 d-flex flex-column">
-                        <div class="position-relative flex-grow-1" style="min-height: 270px; max-height: 310px;">
-                            <canvas id="milkVolumeBucketsChart"></canvas>
+                        <div class="position-relative flex-grow-1" style="min-height: 280px; max-height: 320px; height: 280px; width: 100%;">
+                            <canvas id="milkVolumeBucketsChart" style="display: block; width: 100% !important; height: 100% !important;"></canvas>
                         </div>
                         <div class="row g-2 mt-3 pt-3 border-top text-center" style="font-size: 0.72rem;">
                             <?php foreach ($milk_buckets as $bucketLabel => $bucketCount): ?>
@@ -930,6 +1069,262 @@ require_once '../../../includes/header.php';
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dedicated Poultry Statistics & Specialty Farmer Profiles Section -->
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <div class="card gov-card shadow-sm border-0">
+                    <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold mb-1" style="color: #370709;">
+                                <i class="bi bi-egg-fill text-warning me-2"></i>Poultry Statistics &amp; Specialty Farmer Profiles
+                            </h5>
+                            <p class="text-muted small mb-0">
+                                Dynamic analytics tracking specialty poultry farmers across Broiler, Layer, Free-Ranging/Local rearing, and Feed Manufacturing in <strong><?= htmlspecialchars($range_name) ?></strong> range.
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 fw-semibold">
+                                <i class="bi bi-patch-check-fill text-warning me-1"></i>Master Branding Registry
+                            </span>
+                            <span class="badge bg-light text-secondary border px-3 py-2 fw-semibold">
+                                Total Poultry Farmers: <?= number_format($poultry_farmers_count) ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body px-4 pb-4">
+                        <!-- 4 Top Specialty Metric Cards -->
+                        <div class="row g-3 mb-4">
+                            <!-- Broiler Farmers -->
+                            <div class="col-12 col-sm-6 col-xl-3">
+                                <div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 4px solid #f59e0b !important;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-uppercase fw-bold small text-dark">Broiler Farmers</span>
+                                        <i class="bi bi-fire fs-4 text-warning opacity-75"></i>
+                                    </div>
+                                    <h3 class="fw-bold my-2 text-dark">
+                                        <?= number_format($poultry_specialty_counts['Broiler Farmers']) ?> <small class="fs-6 text-muted">Holdings</small>
+                                    </h3>
+                                    <div class="d-flex justify-content-between align-items-center small text-muted">
+                                        <span>Commercial Meat Production</span>
+                                        <span class="badge bg-warning text-dark fw-semibold">
+                                            <?= $poultry_farmers_count > 0 ? round(($poultry_specialty_counts['Broiler Farmers'] / $poultry_farmers_count) * 100, 1) : 0 ?>%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Layer Farmers -->
+                            <div class="col-12 col-sm-6 col-xl-3">
+                                <div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-left: 4px solid #8b5cf6 !important;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-uppercase fw-bold small" style="color: #7c3aed;">Layer Farmers</span>
+                                        <i class="bi bi-egg-fried fs-4 text-purple opacity-75" style="color: #8b5cf6;"></i>
+                                    </div>
+                                    <h3 class="fw-bold my-2 text-dark">
+                                        <?= number_format($poultry_specialty_counts['Layer Farmers']) ?> <small class="fs-6 text-muted">Holdings</small>
+                                    </h3>
+                                    <div class="d-flex justify-content-between align-items-center small text-muted">
+                                        <span>Table &amp; Pullet Egg Sales</span>
+                                        <span class="badge text-white fw-semibold" style="background-color: #8b5cf6;">
+                                            <?= $poultry_farmers_count > 0 ? round(($poultry_specialty_counts['Layer Farmers'] / $poultry_farmers_count) * 100, 1) : 0 ?>%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Free-Ranging / Local Farmers -->
+                            <div class="col-12 col-sm-6 col-xl-3">
+                                <div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #10b981 !important;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-uppercase fw-bold small text-success">Free-Range / Local</span>
+                                        <i class="bi bi-tree fs-4 text-success opacity-75"></i>
+                                    </div>
+                                    <h3 class="fw-bold my-2 text-dark">
+                                        <?= number_format($poultry_specialty_counts['Free-Ranging / Local Farmers']) ?> <small class="fs-6 text-muted">Holdings</small>
+                                    </h3>
+                                    <div class="d-flex justify-content-between align-items-center small text-muted">
+                                        <span>Indigenous &amp; Backyard Flocks</span>
+                                        <span class="badge bg-success text-white fw-semibold">
+                                            <?= $poultry_farmers_count > 0 ? round(($poultry_specialty_counts['Free-Ranging / Local Farmers'] / $poultry_farmers_count) * 100, 1) : 0 ?>%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Farmers in Feed Manufacturing -->
+                            <div class="col-12 col-sm-6 col-xl-3">
+                                <div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 4px solid #3b82f6 !important;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-uppercase fw-bold small text-primary">Feed Manufacturing</span>
+                                        <i class="bi bi-gear-wide-connected fs-4 text-primary opacity-75"></i>
+                                    </div>
+                                    <h3 class="fw-bold my-2 text-dark">
+                                        <?= number_format($poultry_specialty_counts['Farmers involved in Feed Manufacturing']) ?> <small class="fs-6 text-muted">Producers</small>
+                                    </h3>
+                                    <div class="d-flex justify-content-between align-items-center small text-muted">
+                                        <span>DAPH Registered &amp; Self-Mix</span>
+                                        <span class="badge bg-primary text-white fw-semibold">
+                                            <?= $poultry_farmers_count > 0 ? round(($poultry_specialty_counts['Farmers involved in Feed Manufacturing'] / $poultry_farmers_count) * 100, 1) : 0 ?>%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visual Breakdown: Chart & Detailed Table -->
+                        <div class="row g-4 align-items-stretch">
+                            <!-- Doughnut Distribution Chart -->
+                            <div class="col-12 col-lg-5">
+                                <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-pie-chart-fill text-warning me-1"></i>Specialty Distribution
+                                        </h6>
+                                        <span class="badge bg-white text-secondary border small">By Specialty Category</span>
+                                    </div>
+                                    <div class="position-relative flex-grow-1" style="min-height: 260px; max-height: 290px; height: 260px; width: 100%;">
+                                        <canvas id="poultrySpecialtyChart" style="display: block; width: 100% !important; height: 100% !important;"></canvas>
+                                    </div>
+                                    <div class="row g-2 mt-3 pt-3 border-top text-center" style="font-size: 0.75rem;">
+                                        <div class="col-6 col-md-4">
+                                            <div class="p-2 bg-white rounded border">
+                                                <div class="text-muted small">Total Flock Headcount</div>
+                                                <div class="fw-bold text-dark fs-6"><?= number_format($total_poultry_birds) ?></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <div class="p-2 bg-white rounded border">
+                                                <div class="text-muted small">Monthly Feed Mfg</div>
+                                                <div class="fw-bold text-primary fs-6"><?= number_format($total_poultry_monthly_feed_kg, 0) ?> <small>kg</small></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <div class="p-2 bg-white rounded border">
+                                                <div class="text-muted small">DAPH Reg. Feed Mills</div>
+                                                <div class="fw-bold text-success fs-6"><?= number_format($daph_registered_feed_mfr_count) ?></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Specialty Breakdown Table -->
+                            <div class="col-12 col-lg-7">
+                                <div class="table-responsive border rounded-3 h-100">
+                                    <table class="table table-hover align-middle mb-0 w-100" style="border-color: #f1f5f9;">
+                                        <thead class="table-light text-secondary small">
+                                            <tr>
+                                                <th class="py-3 px-3">Specialty Category</th>
+                                                <th class="py-3 px-3 text-center">Farmers</th>
+                                                <th class="py-3 px-3">Production Focus / Key Details</th>
+                                                <th class="py-3 px-3 text-center">Share</th>
+                                                <th class="py-3 px-3 text-end">Compliance Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $specialty_meta = [
+                                                'Broiler Farmers' => [
+                                                    'icon' => 'bi-fire',
+                                                    'color' => '#f59e0b',
+                                                    'badge' => 'bg-warning-subtle text-dark border border-warning',
+                                                    'focus' => 'Commercial broiler meat, daily gain, feed conversion & contract buyback',
+                                                    'status' => 'Commercial / Intensive'
+                                                ],
+                                                'Layer Farmers' => [
+                                                    'icon' => 'bi-egg-fried',
+                                                    'color' => '#8b5cf6',
+                                                    'badge' => 'bg-purple-subtle text-purple border',
+                                                    'focus' => 'Commercial table egg & pullet egg production, laying hen flocks',
+                                                    'status' => 'Egg Marketing Active'
+                                                ],
+                                                'Free-Ranging / Local Farmers' => [
+                                                    'icon' => 'bi-tree',
+                                                    'color' => '#10b981',
+                                                    'badge' => 'bg-success-subtle text-success border border-success-subtle',
+                                                    'focus' => 'Village scavenging chickens, dual-purpose indigenous breeds & backyard pens',
+                                                    'status' => 'Semi-intensive / Free'
+                                                ],
+                                                'Farmers involved in Feed Manufacturing' => [
+                                                    'icon' => 'bi-gear-wide-connected',
+                                                    'color' => '#3b82f6',
+                                                    'badge' => 'bg-primary-subtle text-primary border border-primary-subtle',
+                                                    'focus' => 'On-farm feed preparation, feed formulation & commercial mill distribution',
+                                                    'status' => $daph_registered_feed_mfr_count > 0 ? ($daph_registered_feed_mfr_count . ' DAPH Certified') : 'On-Farm Mixing'
+                                                ]
+                                            ];
+
+                                            foreach ($poultry_specialty_counts as $specName => $specCount):
+                                                $meta = $specialty_meta[$specName] ?? [];
+                                                $pct = $poultry_farmers_count > 0 ? (($specCount / $poultry_farmers_count) * 100) : 0;
+                                            ?>
+                                                <tr>
+                                                    <td class="py-3 px-3 fw-bold text-dark">
+                                                        <i class="bi <?= $meta['icon'] ?> me-2" style="color: <?= $meta['color'] ?>;"></i>
+                                                        <?= htmlspecialchars($specName) ?>
+                                                    </td>
+                                                    <td class="py-3 px-3 text-center">
+                                                        <span class="badge px-3 py-1 fw-bold fs-6" style="background-color: <?= $meta['color'] ?>20; color: <?= $meta['color'] ?>; border: 1px solid <?= $meta['color'] ?>40;">
+                                                            <?= number_format($specCount) ?>
+                                                        </span>
+                                                    </td>
+                                                    <td class="py-3 px-3 small text-secondary">
+                                                        <?= htmlspecialchars($meta['focus']) ?>
+                                                    </td>
+                                                    <td class="py-3 px-3 text-center">
+                                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                                            <div class="progress flex-grow-1" style="height: 6px; max-width: 60px;">
+                                                                <div class="progress-bar" role="progressbar" style="width: <?= min(100, $pct) ?>%; background-color: <?= $meta['color'] ?>;" aria-valuenow="<?= round($pct) ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                                            </div>
+                                                            <small class="fw-semibold text-dark"><?= number_format($pct, 1) ?>%</small>
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-3 px-3 text-end">
+                                                        <span class="badge bg-light text-dark border px-2 py-1 small">
+                                                            <?= htmlspecialchars($meta['status']) ?>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Flock Age Groups Headcount Breakdown (If Recorded) -->
+                        <?php if ($total_poultry_birds > 0): ?>
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                <span class="small fw-bold text-dark text-uppercase">
+                                    <i class="bi bi-diagram-3 me-1 text-primary"></i>Flock Age Group Distribution Across Registered Holdings:
+                                </span>
+                                <span class="text-muted small">Total: <strong><?= number_format($total_poultry_birds) ?></strong> birds</span>
+                            </div>
+                            <div class="row g-2">
+                                <?php foreach ($flock_age_totals as $ageName => $ageQty): 
+                                    $agePct = $total_poultry_birds > 0 ? round(($ageQty / $total_poultry_birds) * 100, 1) : 0;
+                                ?>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 border rounded bg-white d-flex justify-content-between align-items-center">
+                                            <span class="small text-truncate" title="<?= htmlspecialchars($ageName) ?>"><?= htmlspecialchars($ageName) ?></span>
+                                            <div class="text-end">
+                                                <span class="fw-bold text-dark"><?= number_format($ageQty) ?></span>
+                                                <small class="text-muted ms-1">(<?= $agePct ?>%)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
                     </div>
                 </div>
             </div>
@@ -1476,135 +1871,249 @@ $(document).ready(function() {
         });
     });
 
-    // ==========================================
-    // INITIALIZE NEW FARM CHARTS (CHART.JS)
-    // ==========================================
+    // End of $(document).ready modal & population scripts
+});
+
+// ==========================================
+// INITIALIZE SPECIALTY & FARM CHARTS (CHART.JS)
+// ==========================================
+function initFarmDistributionCharts(retryCount = 0) {
+    if (typeof Chart === 'undefined') {
+        if (retryCount < 30) {
+            setTimeout(function() {
+                initFarmDistributionCharts(retryCount + 1);
+            }, 100);
+        } else {
+            console.warn("[FarmCharts] Chart.js failed to load within timeout period.");
+        }
+        return;
+    }
+
     // Chart 1: Farmers by Animal Type (Cattle, Buffalo, Poultry)
-    const farmersCanvasEl = document.getElementById('farmersByAnimalChart');
-    if (farmersCanvasEl && typeof Chart !== 'undefined') {
-        new Chart(farmersCanvasEl.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Cattle', 'Buffalo', 'Poultry'],
-                datasets: [{
-                    label: 'Registered Farmers',
-                    data: [<?= (int)$cattle_farmers_count ?>, <?= (int)$buffalo_farmers_count ?>, <?= (int)$poultry_farmers_count ?>],
-                    backgroundColor: ['#820100', '#0284c7', '#f59e0b'],
-                    borderRadius: 8,
-                    borderSkipped: false,
-                    barThickness: 46
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1e293b',
-                        titleFont: { size: 13, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                        padding: 10,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(ctx) {
-                                return ` ${ctx.parsed.y} Farmers`;
+    try {
+        const farmersCanvasEl = document.getElementById('farmersByAnimalChart');
+        if (farmersCanvasEl) {
+            const existingInstance = Chart.getChart(farmersCanvasEl);
+            if (existingInstance) {
+                existingInstance.destroy();
+            }
+
+            new Chart(farmersCanvasEl.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Cattle', 'Buffalo', 'Poultry'],
+                    datasets: [{
+                        label: 'Registered Farmers',
+                        data: [<?= (int)$cattle_farmers_count ?>, <?= (int)$buffalo_farmers_count ?>, <?= (int)$poultry_farmers_count ?>],
+                        backgroundColor: ['#820100', '#0284c7', '#f59e0b'],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        barThickness: 46
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { size: 13, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ` ${ctx.parsed.y} Farmers`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            ticks: {
+                                precision: 0,
+                                font: { size: 11, family: 'Inter, system-ui, sans-serif' },
+                                color: '#64748b'
+                            },
+                            grid: {
+                                color: '#f1f5f9'
+                            }
+                        },
+                        x: {
+                            border: { display: false },
+                            grid: { display: false },
+                            ticks: {
+                                font: { weight: '600', size: 12, family: 'Inter, system-ui, sans-serif' },
+                                color: '#334155'
                             }
                         }
                     }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0,
-                            font: { size: 11, family: 'Inter, system-ui, sans-serif' },
-                            color: '#64748b'
-                        },
-                        grid: {
-                            color: '#f1f5f9',
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        grid: { display: false, drawBorder: false },
-                        ticks: {
-                            font: { weight: '600', size: 12, family: 'Inter, system-ui, sans-serif' },
-                            color: '#334155'
-                        }
-                    }
                 }
-            }
-        });
+            });
+        }
+    } catch (e1) {
+        console.error("[FarmCharts] Error rendering farmersByAnimalChart:", e1);
     }
 
     // Chart 2: Milk Production Volume Distribution Buckets
-    const milkCanvasEl = document.getElementById('milkVolumeBucketsChart');
-    if (milkCanvasEl && typeof Chart !== 'undefined') {
-        new Chart(milkCanvasEl.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: <?= json_encode(array_keys($milk_buckets)) ?>,
-                datasets: [{
-                    label: 'Dairy Farmers',
-                    data: <?= json_encode(array_values($milk_buckets)) ?>,
-                    backgroundColor: [
-                        '#38bdf8', // Below 5 liters
-                        '#0284c7', // 5 to 10 liters
-                        '#0369a1', // 10 to 20 liters
-                        '#059669', // 20 to 40 liters
-                        '#10b981', // 40 to 100 liters
-                        '#820100'  // More than 100 liters
-                    ],
-                    borderRadius: 6,
-                    borderSkipped: false,
-                    barThickness: 34
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1e293b',
-                        titleFont: { size: 13, weight: 'bold' },
-                        bodyFont: { size: 12 },
-                        padding: 10,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(ctx) {
-                                return ` ${ctx.parsed.y} Farmers`;
+    try {
+        const milkCanvasEl = document.getElementById('milkVolumeBucketsChart');
+        if (milkCanvasEl) {
+            const existingInstance = Chart.getChart(milkCanvasEl);
+            if (existingInstance) {
+                existingInstance.destroy();
+            }
+
+            new Chart(milkCanvasEl.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: <?= json_encode(array_keys($milk_buckets)) ?>,
+                    datasets: [{
+                        label: 'Dairy Farmers',
+                        data: <?= json_encode(array_values($milk_buckets)) ?>,
+                        backgroundColor: [
+                            '#38bdf8', // Below 5 liters (<5L)
+                            '#0284c7', // 5 to 10 liters (5-10L)
+                            '#0369a1', // 10 to 20 liters (10-20L)
+                            '#059669', // 20 to 40 liters (20-40L)
+                            '#10b981', // 40 to 100 liters (40-100L)
+                            '#820100'  // More than 100 liters (>100L)
+                        ],
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        barThickness: 34
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { size: 13, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ` ${ctx.parsed.y} Farmers`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            ticks: {
+                                precision: 0,
+                                font: { size: 11, family: 'Inter, system-ui, sans-serif' },
+                                color: '#64748b'
+                            },
+                            grid: {
+                                color: '#f1f5f9'
+                            }
+                        },
+                        x: {
+                            border: { display: false },
+                            grid: { display: false },
+                            ticks: {
+                                font: { weight: '600', size: 11, family: 'Inter, system-ui, sans-serif' },
+                                color: '#334155'
                             }
                         }
                     }
+                }
+            });
+        }
+    } catch (e2) {
+        console.error("[FarmCharts] Error rendering milkVolumeBucketsChart:", e2);
+    }
+
+    // Chart 3: Dedicated Poultry Specialty Distribution Chart
+    try {
+        const poultrySpecialtyCanvasEl = document.getElementById('poultrySpecialtyChart');
+        if (poultrySpecialtyCanvasEl) {
+            const existingInstance = Chart.getChart(poultrySpecialtyCanvasEl);
+            if (existingInstance) {
+                existingInstance.destroy();
+            }
+
+            new Chart(poultrySpecialtyCanvasEl.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: <?= json_encode(array_keys($poultry_specialty_counts)) ?>,
+                    datasets: [{
+                        data: <?= json_encode(array_values($poultry_specialty_counts)) ?>,
+                        backgroundColor: [
+                            '#f59e0b', // Broiler (Amber)
+                            '#8b5cf6', // Layer (Purple)
+                            '#10b981', // Free-Range / Local (Emerald)
+                            '#3b82f6'  // Feed Manufacturing (Blue)
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0,
-                            font: { size: 11, family: 'Inter, system-ui, sans-serif' },
-                            color: '#64748b'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 12,
+                                font: { size: 11, family: 'Inter, system-ui, sans-serif', weight: '600' },
+                                color: '#334155'
+                            }
                         },
-                        grid: {
-                            color: '#f1f5f9',
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        grid: { display: false, drawBorder: false },
-                        ticks: {
-                            font: { weight: '600', size: 11, family: 'Inter, system-ui, sans-serif' },
-                            color: '#334155'
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { size: 13, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(ctx) {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const val = ctx.parsed;
+                                    const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                                    return ` ${ctx.label}: ${val} Farmers (${pct}%)`;
+                                }
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
+    } catch (e3) {
+        console.error("[FarmCharts] Error rendering poultrySpecialtyChart:", e3);
     }
+}
 
+// Ensure execution across all browser readiness phases
+initFarmDistributionCharts();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        initFarmDistributionCharts();
+    });
+}
+window.addEventListener('load', function() {
+    initFarmDistributionCharts();
 });
+if (typeof $ !== 'undefined') {
+    $(document).ready(function() {
+        initFarmDistributionCharts();
+    });
+}
 </script>
 <?php
 $pageScripts = ob_get_clean();

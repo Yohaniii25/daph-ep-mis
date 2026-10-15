@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once __DIR__ . '/../../../config/db_connect.php';
 
@@ -122,6 +122,9 @@ require_once '../../../includes/header.php';
                         ?>
                     </select>
                 </form>
+                <a href="ear_tag_balance.php?tab=identification" class="btn btn-outline-primary shadow-sm text-nowrap">
+                    <i class="bi bi-tag-fill me-1"></i> Animal Identification
+                </a>
                 <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
                     <i class="bi bi-arrow-left me-2"></i>Back
                 </a>
