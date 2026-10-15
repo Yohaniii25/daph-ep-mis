@@ -1,7 +1,12 @@
 <!-- Modal: Issue / Edit Vehicle Fitness Certificate (Tab 2, Schedule - 04) -->
 <div class="modal fade" id="modalIssueVehicleFitness" tabindex="-1" aria-labelledby="modalIssueVehicleFitnessLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content shadow-lg border-0">
+    <div class="modal-dialog modal-xl modal-fullscreen-lg-down modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content shadow-lg border-0" id="formIssueVehicleFitness" onsubmit="submitVehicleFitnessForm(event)">
+            <input type="hidden" name="id" id="vfc_edit_id" value="0">
+            <input type="hidden" name="report_year" id="vfc_report_year" value="<?= $selected_year ?>">
+            <input type="hidden" name="report_month" id="vfc_report_month" value="<?= (int)date('m') ?>">
+            <input type="hidden" name="action" value="save_vehicle_fitness">
+
             <div class="modal-header text-white" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);">
                 <div class="d-flex align-items-center gap-3">
                     <div class="rounded-circle bg-white bg-opacity-25 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
@@ -15,13 +20,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form id="formIssueVehicleFitness" onsubmit="submitVehicleFitnessForm(event)">
-                <input type="hidden" name="id" id="vfc_edit_id" value="0">
-                <input type="hidden" name="report_year" id="vfc_report_year" value="<?= $selected_year ?>">
-                <input type="hidden" name="report_month" id="vfc_report_month" value="<?= (int)date('m') ?>">
-                <input type="hidden" name="action" value="save_vehicle_fitness">
-
-                <div class="modal-body p-4 bg-light">
+            <div class="modal-body p-4 bg-light">
                     <!-- SECTION 1: AUTO-POPULATION (LINKED HEALTH CERTIFICATE OR FARM REG) -->
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -306,7 +305,6 @@
                         </button>
                     </div>
                 </div>
-            </form>
-        </div>
+        </form>
     </div>
 </div>

@@ -1,6 +1,6 @@
 <!-- Modal: Official Schedule - 03 Printable Certificate -->
 <div class="modal fade" id="modalPrintSchedule03" tabindex="-1" aria-labelledby="modalPrintSchedule03Label" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-fullscreen-lg-down modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow-lg border-0">
             <div class="modal-header bg-dark text-white d-print-none">
                 <div class="d-flex align-items-center gap-2">

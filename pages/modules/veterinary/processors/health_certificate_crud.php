@@ -31,7 +31,24 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 }
 
 $user_id = (int)($_SESSION['user_id'] ?? 0);
+if ($user_id > 0) {
+    $u_chk = $mysqli->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
+    if ($u_chk) {
+        $u_chk->bind_param("i", $user_id);
+        $u_chk->execute();
+        if (!$u_chk->get_result()->fetch_assoc()) {
+            $user_id = null;
+        }
+        $u_chk->close();
+    }
+} else {
+    $user_id = null;
+}
+
 $range_id = (int)($_SESSION['range_id'] ?? 0);
+if ($range_id <= 0) {
+    $range_id = 1; // Default to Ampara range for testing
+}
 
 // Resolve District ID for the range
 $district_id = null;
@@ -46,6 +63,9 @@ if (!empty($range_id)) {
         }
         $r_query->close();
     }
+}
+if (empty($district_id)) {
+    $district_id = 1;
 }
 
 $action = trim($_REQUEST['action'] ?? '');
@@ -271,7 +291,7 @@ if ($action === 'save_health_certificate') {
                 throw new Exception("Prepare failed: " . $mysqli->error);
             }
             $u_stmt->bind_param(
-                "iissssssissiii",
+                "iissssssisssii",
                 $report_year,
                 $report_month,
                 $health_certificate_no,
@@ -313,7 +333,7 @@ if ($action === 'save_health_certificate') {
                 throw new Exception("Insert prepare failed: " . $mysqli->error);
             }
             $i_stmt->bind_param(
-                "iiiissssssissis",
+                "iiiissssssisssi",
                 $district_id,
                 $range_id,
                 $report_year,
@@ -331,7 +351,7 @@ if ($action === 'save_health_certificate') {
                 $user_id
             );
             $i_stmt->execute();
-            $hc_id = $i_stmt->insert_id;
+            $hc_id = (int)($i_stmt->insert_id ?: $mysqli->insert_id);
             $i_stmt->close();
         }
 
@@ -396,7 +416,7 @@ if ($action === 'save_health_certificate') {
                     (8, ?, ?, 'Health Certificate', ?, 'farmer', ?, ?, ?, ?, ?, ?, ?, ?, 'health_certs', 'Schedule-03 Health Certificate Issued', ?)
             ");
             if ($c_ins) {
-                $c_ins->bind_param("iissssssssi", $district_id, $range_id, $health_certificate_no, $farmer_nic, $applicant_name, $farm_reg_no, $applicant_address, $animal_summary_str, $date_of_issue, $purpose, $total_animals, $user_id);
+                $c_ins->bind_param("iisssssssiii", $district_id, $range_id, $health_certificate_no, $farmer_nic, $applicant_name, $farm_reg_no, $applicant_address, $animal_summary_str, $date_of_issue, $purpose, $total_animals, $user_id);
                 $c_ins->execute();
                 $c_ins->close();
             }
@@ -412,7 +432,7 @@ if ($action === 'save_health_certificate') {
             'message' => 'Health Certificate (Schedule - 03) saved successfully with counterfoil integration.'
         ]);
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         $mysqli->rollback();
         sendJson(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
@@ -635,7 +655,7 @@ if ($action === 'save_vehicle_fitness') {
                 throw new Exception("Update prepare failed: " . $mysqli->error);
             }
             $u_stmt->bind_param(
-                "iisssssssssssisssssssssssii",
+                "iisissssssssssissssssssssssii",
                 $report_year, $report_month, $certificate_no, $health_cert_id, $health_cert_no,
                 $farm_reg_no, $farmer_nic, $applicant_name, $applicant_address,
                 $vehicle_reg_no, $vehicle_type, $driver_name, $driver_license_no,
@@ -664,7 +684,7 @@ if ($action === 'save_vehicle_fitness') {
                 throw new Exception("Insert prepare failed: " . $mysqli->error);
             }
             $i_stmt->bind_param(
-                "iiiisssssssssssissssssssssssi",
+                "iiiisissssssssssissssssssssssi",
                 $district_id, $range_id, $report_year, $report_month, $certificate_no, $health_cert_id, $health_cert_no,
                 $farm_reg_no, $farmer_nic, $applicant_name, $applicant_address,
                 $vehicle_reg_no, $vehicle_type, $driver_name, $driver_license_no,
@@ -673,7 +693,7 @@ if ($action === 'save_vehicle_fitness') {
                 $cond_06, $cond_07, $approval_status, $remarks, $user_id
             );
             $i_stmt->execute();
-            $vfc_id = $i_stmt->insert_id;
+            $vfc_id = (int)($i_stmt->insert_id ?: $mysqli->insert_id);
             $i_stmt->close();
         }
 
@@ -715,7 +735,7 @@ if ($action === 'save_vehicle_fitness') {
             ");
             if ($c_ins) {
                 $purpose_v = "Animal Transport Vehicle Fitness: " . $vehicle_reg_no;
-                $c_ins->bind_param("iissssssssi", $district_id, $range_id, $certificate_no, $farmer_nic, $applicant_name, $farm_reg_no, $applicant_address, $summary_str, $issue_date, $purpose_v, $total_animals, $user_id);
+                $c_ins->bind_param("iisssssssiii", $district_id, $range_id, $certificate_no, $farmer_nic, $applicant_name, $farm_reg_no, $applicant_address, $summary_str, $issue_date, $purpose_v, $total_animals, $user_id);
                 $c_ins->execute();
                 $c_ins->close();
             }
@@ -742,7 +762,7 @@ if ($action === 'save_vehicle_fitness') {
             'message' => "Vehicle Fitness Certificate (Schedule - 04) saved successfully with status: {$approval_status}."
         ]);
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         $mysqli->rollback();
         sendJson(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }

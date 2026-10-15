@@ -153,6 +153,8 @@ require_once '../../../includes/header.php';
 .animal-pick-card {
     cursor: pointer;
     transition: all 0.15s ease-in-out;
+    word-break: break-word;
+    user-select: none;
 }
 .animal-pick-card:hover {
     border-color: #820100 !important;
@@ -161,6 +163,30 @@ require_once '../../../includes/header.php';
 .animal-pick-card.selected {
     border-color: #820100 !important;
     background-color: #fee2e2 !important;
+}
+@media (max-width: 991.98px) {
+    .modal-fullscreen-lg-down {
+        width: 100vw;
+        max-width: none;
+        height: 100%;
+        margin: 0;
+    }
+    .modal-fullscreen-lg-down .modal-content {
+        height: 100%;
+        border: 0;
+        border-radius: 0;
+    }
+}
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style>
 
@@ -613,7 +639,11 @@ $(document).ready(function() {
         queryVal = (queryVal || "").trim();
         if (!queryVal) return;
 
-        $("#hcLookupBadge").html('<span class="spinner-border spinner-border-sm me-1 text-primary"></span>Verifying...');
+        const btn = $("#btnHcLookup");
+        btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span><span class="d-none d-sm-inline">Lookup</span>');
+
+        $("#hcLookupBadge").attr("class", "badge bg-info-subtle text-info border border-info-subtle px-2 py-1 text-wrap")
+                           .html('<span class="spinner-border spinner-border-sm me-1"></span>Verifying...');
         $("#hc_lookup_status").html('<span class="text-primary"><span class="spinner-border spinner-border-sm me-1"></span>Locating farmer and registered animals...</span>');
 
         $.ajax({
@@ -622,13 +652,14 @@ $(document).ready(function() {
             data: { query: queryVal },
             dataType: "json",
             success: function(resp) {
+                btn.prop("disabled", false).html('<i class="bi bi-search me-1"></i>Lookup');
                 if (resp.success && resp.farmer) {
                     const f = resp.farmer;
                     $("#hc_applicant_name").val(f.farmer_name || "");
                     $("#hc_farmer_nic").val(f.farmer_nic || "");
                     $("#hc_farm_reg_no").val(f.farm_reg_no || "");
                     $("#hc_applicant_address").val(f.location_address || "");
-                    $("#hcLookupBadge").attr("class", "badge bg-success-subtle text-success border border-success-subtle px-2 py-1")
+                    $("#hcLookupBadge").attr("class", "badge bg-success-subtle text-success border border-success-subtle px-2 py-1 text-wrap")
                                        .html(`<i class="bi bi-check-circle-fill me-1"></i>Verified: ${f.farmer_name}`);
                     $("#hc_lookup_status").html(`<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Farmer profile loaded (${f.vs_range || 'Assigned Range'}).</span>`);
 
@@ -636,7 +667,7 @@ $(document).ready(function() {
                     loadedFarmerAnimals = resp.animals || [];
                     renderHcAnimalPicker(loadedFarmerAnimals);
                 } else {
-                    $("#hcLookupBadge").attr("class", "badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1")
+                    $("#hcLookupBadge").attr("class", "badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1 text-wrap")
                                        .html('<i class="bi bi-exclamation-triangle me-1"></i>Manual Entry Mode');
                     $("#hc_lookup_status").html('<span class="text-warning-emphasis"><i class="bi bi-info-circle me-1"></i>Farmer not found in master records. Enter manual details below.</span>');
                     loadedFarmerAnimals = [];
@@ -644,8 +675,9 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                $("#hcLookupBadge").attr("class", "badge bg-danger text-white px-2 py-1").text("Lookup Error");
-                $("#hc_lookup_status").html('<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Communication error connecting to server.</span>');
+                btn.prop("disabled", false).html('<i class="bi bi-search me-1"></i>Lookup');
+                $("#hcLookupBadge").attr("class", "badge bg-danger text-white px-2 py-1 text-wrap").text("Lookup Error");
+                $("#hc_lookup_status").html('<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Communication error connecting to server. Please try again or enter details manually.</span>');
             }
         });
     }
@@ -658,6 +690,14 @@ $(document).ready(function() {
             hcLookupTimer = setTimeout(function() {
                 performHcFarmerLookup(val);
             }, 350);
+        }
+    });
+
+    $(document).on("keydown", "#hc_lookup_input", function(e) {
+        if (e.key === "Enter" || e.keyCode === 13) {
+            e.preventDefault();
+            clearTimeout(hcLookupTimer);
+            performHcFarmerLookup($(this).val().trim());
         }
     });
 
@@ -682,14 +722,14 @@ $(document).ready(function() {
         animals.forEach((an, idx) => {
             const isChecked = selectedAnimalsSet.has(String(an.ear_tag_no));
             const card = `
-                <div class="col-md-4 col-lg-3">
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                     <div class="p-2 rounded border animal-pick-card ${isChecked ? 'selected' : ''}" data-tag="${an.ear_tag_no}" data-idx="${idx}">
                         <div class="form-check mb-0">
                             <input class="form-check-input hc-animal-checkbox" type="checkbox" value="${an.ear_tag_no}" id="hc_chk_${idx}" ${isChecked ? 'checked' : ''}>
                             <label class="form-check-label w-100 cursor-pointer" for="hc_chk_${idx}">
                                 <strong class="font-monospace text-primary d-block">${an.ear_tag_no}</strong>
-                                <small class="text-muted d-block">${an.species} | ${an.breed}</small>
-                                <small class="text-secondary" style="font-size: 11px;">Age: ${an.age} | ${an.colour}</small>
+                                <small class="text-muted d-block text-truncate">${an.species} | ${an.breed || 'Standard'}</small>
+                                <small class="text-secondary d-block" style="font-size: 11px;">Age: ${an.age || '—'} | ${an.colour || '—'}</small>
                             </label>
                         </div>
                     </div>
@@ -941,9 +981,10 @@ $(document).ready(function() {
                     Swal.fire("Error", resp.message || "Failed to save certificate.", "error");
                 }
             },
-            error: function() {
+            error: function(xhr) {
                 Swal.close();
-                Swal.fire("Error", "Server communication error.", "error");
+                const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : "Server communication error. Please try again.";
+                Swal.fire("Error", msg, "error");
             }
         });
     };
@@ -1259,9 +1300,10 @@ $(document).ready(function() {
                     Swal.fire("Error", resp.message || "Failed to save certificate.", "error");
                 }
             },
-            error: function() {
+            error: function(xhr) {
                 Swal.close();
-                Swal.fire("Error", "Server communication error.", "error");
+                const msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : "Server communication error. Please try again.";
+                Swal.fire("Error", msg, "error");
             }
         });
     };
