@@ -21,106 +21,171 @@
             </div>
 
             <div class="modal-body p-3 p-md-4" style="overflow-y: auto;">
-                <!-- Section 1: Farmer & Operational Jurisdiction -->
-                <div class="card border-0 bg-light mb-3 shadow-xs rounded-3">
-                    <div class="card-body p-2 p-md-3">
-                        <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
-                            <i class="bi bi-geo-alt-fill text-danger"></i> 1. Location &amp; Farmer Information
+                <!-- ========================================================= -->
+                <!-- STEP 1 (TRIGGER): FARM REGISTRATION NO.                   -->
+                <!-- ========================================================= -->
+                <div class="card border border-primary-subtle shadow-xs rounded-3 mb-3 bg-white">
+                    <div class="card-header bg-primary-subtle border-primary-subtle py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h6 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
+                            <span class="badge bg-primary text-white rounded-pill px-2 py-1">Step 1</span>
+                            <span>Farm Registration No. <span class="badge bg-warning text-dark ms-1">Trigger</span></span>
                         </h6>
-                        <div class="row g-2 g-md-3">
-                            <!-- District -->
-                            <div class="col-12 col-sm-6 col-md-3">
-                                <label class="form-label small fw-bold text-dark mb-1">District <span class="text-danger">*</span></label>
-                                <input type="text" name="district" id="ai_district" class="form-control form-control-sm bg-white" value="<?= htmlspecialchars($district_name ?? 'Ampara') ?>" required readonly>
-                            </div>
-
-                            <!-- VS Range -->
-                            <div class="col-12 col-sm-6 col-md-3">
-                                <label class="form-label small fw-bold text-dark mb-1">VS Range <span class="text-danger">*</span></label>
-                                <input type="text" name="vs_range" id="ai_vs_range" class="form-control form-control-sm bg-white" value="<?= htmlspecialchars($range_name ?? 'Ampara') ?>" required readonly>
-                            </div>
-
-                            <!-- VS Range Number / Code (Element 1 of concatenation) -->
-                            <div class="col-12 col-sm-6 col-md-2">
-                                <label class="form-label small fw-bold text-primary mb-1">
-                                    VS Range No. <span class="badge bg-primary-subtle text-primary py-0 px-1">El. 1</span>
-                                </label>
-                                <input type="text" name="range_code" id="ai_range_code" class="form-control form-control-sm font-monospace text-uppercase fw-bold" value="<?= htmlspecialchars($range_code ?? '01') ?>" placeholder="e.g. 01" required>
-                            </div>
-
-                            <!-- Identification Date -->
-                            <div class="col-12 col-sm-6 col-md-4">
-                                <label class="form-label small fw-bold text-dark mb-1">Date of Identification <span class="text-danger">*</span></label>
-                                <input type="date" name="identification_date" id="ai_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>" required>
-                            </div>
-
-                            <!-- Farmer Search / Auto-Complete -->
-                            <div class="col-12 col-md-6">
+                        <small class="text-muted d-none d-sm-inline"><i class="bi bi-info-circle me-1"></i>Primary key for automatic farmer &amp; jurisdiction retrieval</small>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12 col-md-7">
                                 <label class="form-label small fw-bold text-dark mb-1">
-                                    Farmer's Name <span class="text-danger">*</span>
-                                    <span class="text-muted fw-normal small">(Type to search registered farmers)</span>
+                                    Enter Farm Registration No. <span class="text-danger">*</span>
+                                    <span class="text-muted fw-normal small">(Type or pick from registered farms)</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-primary"><i class="bi bi-search"></i></span>
+                                    <input type="text" name="farm_reg_no" id="ai_farm_reg_no" class="form-control form-control-sm font-monospace text-uppercase fw-bold" placeholder="e.g. 104829375" required autocomplete="off" list="registeredFarmsList">
+                                    <button type="button" class="btn btn-primary btn-sm px-3 fw-semibold" id="btnFetchFarmByReg">
+                                        <i class="bi bi-arrow-repeat me-1"></i>Fetch Farm
+                                    </button>
+                                </div>
+                                <datalist id="registeredFarmsList">
+                                    <?php if (!empty($registered_farms)): ?>
+                                        <?php foreach ($registered_farms as $rfm): ?>
+                                            <option value="<?= htmlspecialchars($rfm['farm_reg_no']) ?>" label="<?= htmlspecialchars($rfm['farmer_name'] . ' (' . ($rfm['vs_range'] ?? '') . ')') ?>">
+                                                <?= htmlspecialchars($rfm['farmer_name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </datalist>
+                            </div>
+                            <div class="col-12 col-md-5">
+                                <div id="farmFetchStatus" class="p-2 rounded bg-light border text-muted small d-flex align-items-center gap-2">
+                                    <i class="bi bi-info-circle text-primary flex-shrink-0" id="farmFetchStatusIcon"></i>
+                                    <span id="farmFetchStatusText">Enter Farm Registration No. to auto-fetch farmer and location details.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- STEP 2 (AUTO-FETCH): READ-ONLY LOCATION & FARMER DETAILS   -->
+                <!-- ========================================================= -->
+                <div class="card border-0 bg-light rounded-3 mb-3 shadow-xs">
+                    <div class="card-header bg-light border-bottom py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                            <span class="badge bg-secondary text-white rounded-pill px-2 py-1">Step 2</span>
+                            <span>Location &amp; Farmer Details</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle ms-1"><i class="bi bi-lock-fill me-1"></i>Auto-Fetched (Read-Only)</span>
+                        </h6>
+                        <small class="text-muted d-none d-sm-inline">Populated automatically from farm registry</small>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-2 g-md-3">
+                            <!-- Farmer's Name (Read-Only) -->
+                            <div class="col-12 col-md-5">
+                                <label class="form-label small fw-bold text-dark mb-1">
+                                    Farmer's Name <span class="badge bg-secondary-subtle text-secondary py-0 px-1"><i class="bi bi-lock-fill"></i> Read-Only</span>
                                 </label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-white"><i class="bi bi-person-fill text-secondary"></i></span>
-                                    <input type="text" name="farmer_name" id="ai_farmer_name" class="form-control form-control-sm" placeholder="e.g. M. N. Mohamed Rasheed" required autocomplete="off" list="registeredFarmersList">
-                                    <datalist id="registeredFarmersList">
-                                        <?php if (!empty($registered_farmers)): ?>
-                                            <?php foreach ($registered_farmers as $rfm): ?>
-                                                <option value="<?= htmlspecialchars($rfm['farmer_name']) ?>" data-reg="<?= htmlspecialchars($rfm['farm_reg_no'] ?? '') ?>">
-                                                    Reg: <?= htmlspecialchars($rfm['farm_reg_no'] ?? '') ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </datalist>
+                                    <input type="text" name="farmer_name" id="ai_farmer_name" class="form-control form-control-sm bg-white fw-bold text-dark" placeholder="Auto-populated upon entering Farm Reg No." required readonly>
                                 </div>
-                                <small id="farmerLookupHint" class="text-muted d-block mt-1" style="font-size: 0.72rem;">Selecting a farmer auto-populates Farm Registration No.</small>
                             </div>
 
-                            <!-- Farm Registration Number (Element 2 of concatenation) -->
+                            <!-- District (Read-Only) -->
                             <div class="col-12 col-sm-6 col-md-3">
-                                <label class="form-label small fw-bold text-primary mb-1">
-                                    Farm Reg. No. <span class="badge bg-primary-subtle text-primary py-0 px-1">El. 2</span> <span class="text-danger">*</span>
+                                <label class="form-label small fw-bold text-dark mb-1">
+                                    District <span class="badge bg-secondary-subtle text-secondary py-0 px-1"><i class="bi bi-lock-fill"></i> Read-Only</span>
                                 </label>
-                                <input type="text" name="farm_reg_no" id="ai_farm_reg_no" class="form-control form-control-sm font-monospace text-uppercase fw-bold" placeholder="e.g. 104829375" required>
+                                <input type="text" name="district" id="ai_district" class="form-control form-control-sm bg-white" value="<?= htmlspecialchars($district_name ?? 'Ampara') ?>" required readonly>
+                            </div>
+
+                            <!-- VS Range (Read-Only) -->
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label class="form-label small fw-bold text-dark mb-1">
+                                    VS Range <span class="badge bg-secondary-subtle text-secondary py-0 px-1"><i class="bi bi-lock-fill"></i> Read-Only</span>
+                                </label>
+                                <input type="text" name="vs_range" id="ai_vs_range" class="form-control form-control-sm bg-white" value="<?= htmlspecialchars($range_name ?? 'Ampara') ?>" required readonly>
+                            </div>
+
+                            <!-- VS Range Code (Element 1 of concatenation) -->
+                            <div class="col-12 col-sm-6 col-md-1">
+                                <label class="form-label small fw-bold text-primary mb-1">
+                                    Range No.
+                                </label>
+                                <input type="text" name="range_code" id="ai_range_code" class="form-control form-control-sm font-monospace text-uppercase fw-bold bg-white" value="5314" readonly required>
+                            </div>
+                        </div>
+
+                        <!-- Assigned Sequential Voucher Block Indicator -->
+                        <div class="card border border-primary-subtle bg-primary-subtle mt-2 rounded-3 py-2 px-3 d-none" id="farmerBlockCard">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary text-white text-uppercase px-2 py-1 fw-bold">
+                                        <i class="bi bi-link-45deg me-1"></i>Assigned Sequential Block
+                                    </span>
+                                    <span class="small text-dark">
+                                        Allocated Range: <strong id="fBlockRangeText" class="font-monospace text-primary">—</strong>
+                                    </span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="small text-dark">Remaining in Block: <strong id="fBlockRemText" class="badge bg-success font-monospace fs-6">0</strong></span>
+                                    <span class="small text-dark">Next Serial: <strong id="fBlockNextText" class="badge bg-dark font-monospace fs-6">—</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- STEP 3 (GLOBAL MANUAL INPUTS): DATE & IO NUMBER           -->
+                <!-- ========================================================= -->
+                <div class="card border-0 bg-light rounded-3 mb-3 shadow-xs">
+                    <div class="card-header bg-light border-bottom py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                            <span class="badge bg-primary text-white rounded-pill px-2 py-1">Step 3</span>
+                            <span>Global Identification Parameters</span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1">Manual Input</span>
+                        </h6>
+                        <small class="text-muted d-none d-sm-inline">Applies to all animals in this registration batch</small>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-2 g-md-3">
+                            <!-- Date of Identification -->
+                            <div class="col-12 col-sm-6 col-md-6">
+                                <label class="form-label small fw-bold text-dark mb-1">
+                                    Date of Identification <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="bi bi-calendar-event text-secondary"></i></span>
+                                    <input type="date" name="identification_date" id="ai_date" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>" required>
+                                </div>
                             </div>
 
                             <!-- Inspecting Officer (IO) Number -->
-                            <div class="col-12 col-sm-6 col-md-3">
-                                <label class="form-label small fw-bold text-dark mb-1">IO Number <span class="text-muted fw-normal">(Optional)</span></label>
-                                <input type="text" name="io_number" id="ai_io_number" class="form-control form-control-sm font-monospace" placeholder="e.g. IO-AMP-2026-001">
+                            <div class="col-12 col-sm-6 col-md-6">
+                                <label class="form-label small fw-bold text-dark mb-1">
+                                    IO Number <span class="text-muted fw-normal">(Inspecting Officer Reference - Optional)</span>
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="bi bi-person-badge text-secondary"></i></span>
+                                    <input type="text" name="io_number" id="ai_io_number" class="form-control form-control-sm font-monospace" placeholder="e.g. IO-AMP-2026-001">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 2: Ear Tag Auto-Generation Live Concatenation Engine (Compact Banner) -->
-                <div class="card border border-info-subtle bg-info-subtle mb-3 rounded-3 py-2 px-3">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span class="badge bg-primary text-white text-uppercase px-2 py-1 fw-bold">
-                                <i class="bi bi-magic me-1"></i>Concatenation Engine
-                            </span>
-                            <span class="small text-dark">
-                                <code>[VS Range No.]</code> - <code>[Farm Reg No.]</code> - <code>[Seq No.]</code>
-                            </span>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="small text-muted">Live Preview:</span>
-                            <div class="tag-preview-badge py-1 px-2" id="liveTagPreview">
-                                <i class="bi bi-tag-fill me-1"></i><span id="previewTagText"><?= htmlspecialchars($range_code ?? '01') ?>-FARM-001</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 3: Animal Identification Details Grid (Multi-Row / Batch Enabled) -->
+                <!-- ========================================================= -->
+                <!-- STEP 4 (ANIMAL DETAILS): DYNAMIC GRID ROW SYSTEM          -->
+                <!-- ========================================================= -->
                 <div class="card border rounded-3 shadow-xs mb-2">
                     <div class="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom">
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">
-                                <i class="bi bi-card-checklist text-success me-1"></i>2. Animal Identification &amp; Voucher Data Entry
+                            <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1">Step 4</span>
+                                <span>Animal Specific Details</span>
                             </h6>
-                            <small class="text-muted d-none d-sm-inline">Enter individual animal particulars. Ear Tag numbers dynamically auto-concatenate.</small>
+                            <small class="text-muted d-none d-sm-inline">Enter individual animal particulars. Ear Tag numbers dynamically concatenate.</small>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" id="animalsCountBadge">
@@ -132,31 +197,40 @@
                         </div>
                     </div>
 
-                    <!-- Horizontal Scroll Guidance for Mobile / Tablet Viewports -->
-                    <div class="bg-light px-3 py-1 border-bottom d-flex justify-content-between align-items-center small text-muted">
-                        <span><i class="bi bi-arrows-expand me-1 text-primary"></i> <span class="d-none d-md-inline">Scroll horizontally within table to review and fill all animal specifications</span><span class="d-inline d-md-none">Scroll table horizontally for all 12 columns</span></span>
-                        <span class="badge bg-white text-secondary border">12 Columns</span>
+                    <!-- Concatenation Engine preview banner -->
+                    <div class="bg-info-subtle border-bottom px-3 py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge bg-primary text-white text-uppercase px-2 py-1 fw-bold">
+                                <i class="bi bi-magic me-1"></i>Ear Tag Concatenation Formula
+                            </span>
+                            <span class="small text-dark font-monospace">
+                                <code>[Range No. (5314)]</code> + <code>[Last 5 Digits of Farm Reg No.]</code> + <code>[Ear Tag Serial No.]</code>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small text-muted fw-bold">Live Preview:</span>
+                            <div class="tag-preview-badge py-1 px-2" id="liveTagPreview">
+                                <i class="bi bi-tag-fill me-1"></i><span id="previewTagText">531456789999</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card-body p-0">
                         <div class="table-responsive modal-table-scroll-container" style="overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch;">
-                            <table class="table table-bordered table-hover align-middle mb-0" id="tableBatchGrid" style="min-width: 1220px;">
+                            <table class="table table-bordered table-hover align-middle mb-0" id="tableBatchGrid" style="min-width: 1250px;">
                                 <thead class="table-light small text-secondary sticky-top">
                                     <tr>
                                         <th style="width: 35px;" class="text-center">#</th>
-                                        <th style="width: 75px;">Seq No.</th>
+                                        <th style="min-width: 100px;">Ear Tag Serial Number <span class="text-danger">*</span></th>
                                         <th style="min-width: 170px;">Ear Tag No. <span class="badge bg-info-subtle text-info py-0 px-1">Auto</span></th>
-                                        <th style="min-width: 150px;">Cattle Voucher S.No. <span class="text-danger">*</span></th>
-                                        <th style="min-width: 105px;">Gender <span class="text-danger">*</span></th>
+                                        <th style="min-width: 155px;">Cattle Voucher S.No. <span class="text-danger">*</span></th>
+                                        <th style="min-width: 110px;">Gender <span class="text-danger">*</span></th>
                                         <th style="min-width: 110px;">Colour</th>
                                         <th style="min-width: 110px;">Species</th>
-                                        <th style="min-width: 120px;">Breed</th>
+                                        <th style="min-width: 130px;">Breed</th>
                                         <th style="min-width: 85px;">Age</th>
                                         <th style="min-width: 130px;">Purpose</th>
-                                        <!-- Strict Present Status Dropdown -->
-                                        <th style="min-width: 165px;" class="table-warning">
-                                            Present Status <span class="text-danger">*</span>
-                                        </th>
+                                        <th style="min-width: 165px;" class="table-warning">Present Status <span class="text-danger">*</span></th>
                                         <th style="width: 40px;" class="text-center">Del</th>
                                     </tr>
                                 </thead>
@@ -165,13 +239,13 @@
                                     <tr class="grid-animal-row" data-row="0">
                                         <td class="text-center text-muted fw-bold row-idx">1</td>
                                         <td>
-                                            <input type="text" name="animals[0][animal_seq_no]" class="form-control form-control-sm font-monospace text-center input-seq" value="001" style="max-width: 70px;" required>
+                                            <input type="text" name="animals[0][animal_seq_no]" class="form-control form-control-sm font-monospace text-center input-seq fw-bold" value="" placeholder="e.g. 999" required>
                                         </td>
                                         <td>
-                                            <input type="text" name="animals[0][ear_tag_no]" class="form-control form-control-sm font-monospace text-uppercase fw-bold text-primary input-tag bg-light" readonly required>
+                                            <input type="text" name="animals[0][ear_tag_no]" class="form-control form-control-sm font-monospace text-uppercase fw-bold text-primary input-tag bg-light" placeholder="5314..." readonly required>
                                         </td>
                                         <td>
-                                            <input type="text" name="animals[0][voucher_serial_no]" class="form-control form-control-sm font-monospace text-uppercase input-voucher" placeholder="e.g. A-918059" required>
+                                            <input type="text" name="animals[0][voucher_serial_no]" class="form-control form-control-sm font-monospace text-uppercase input-voucher fw-bold" placeholder="e.g. A-918059" required>
                                         </td>
                                         <td>
                                             <select name="animals[0][gender]" class="form-select form-select-sm">
@@ -191,7 +265,7 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="text" name="animals[0][breed]" class="form-control form-control-sm" placeholder="e.g. Friesian, Jersey" list="breedPresets">
+                                            <input type="text" name="animals[0][breed]" class="form-control form-control-sm" placeholder="e.g. Friesian Cross" list="breedPresets">
                                         </td>
                                         <td>
                                             <input type="text" name="animals[0][age]" class="form-control form-control-sm" placeholder="e.g. 2 Yrs">
@@ -199,12 +273,12 @@
                                         <td>
                                             <input type="text" name="animals[0][purpose]" class="form-control form-control-sm" placeholder="e.g. Dairy, Draught" value="Dairy Production">
                                         </td>
-                                        <!-- Strict Dropdown Menu -->
                                         <td class="table-warning">
                                             <select name="animals[0][present_status]" class="form-select form-select-sm fw-bold">
                                                 <option value="Sold or transferred" selected>Sold or transferred</option>
                                                 <option value="Slaughter">Slaughter</option>
                                                 <option value="Died">Died</option>
+                                                <option value="Tag Damaged / Removed" class="text-danger fw-bold">Tag Damaged / Removed</option>
                                             </select>
                                         </td>
                                         <td class="text-center">

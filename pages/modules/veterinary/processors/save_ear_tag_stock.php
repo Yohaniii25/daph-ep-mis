@@ -41,29 +41,47 @@ $report_year     = intval($_POST['report_year'] ?? date('Y'));
 $report_month    = intval($_POST['report_month'] ?? date('n'));
 $opening_balance = intval($_POST['opening_balance'] ?? 0);
 $received_qty    = intval($_POST['received_qty'] ?? 0);
+$spoilt_qty      = intval($_POST['spoilt_qty'] ?? 0);
+$damaged_qty     = intval($_POST['damaged_qty'] ?? 0);
 $transferred_qty = intval($_POST['transferred_qty'] ?? 0);
 
-// Calculate dynamic real-time tags used and spoiled from ear_tag_programs for this month
+// Calculate dynamic real-time tags used from animal_identifications for this range & month
+$ai_used = 0;
+$ai_stmt = $mysqli->prepare("SELECT COUNT(*) AS total_used FROM animal_identifications WHERE range_id = ? AND YEAR(identification_date) = ? AND MONTH(identification_date) = ?");
+if ($ai_stmt) {
+    $ai_stmt->bind_param("iii", $range_id, $report_year, $report_month);
+    $ai_stmt->execute();
+    $ai_res = $ai_stmt->get_result();
+    if ($arow = $ai_res->fetch_assoc()) {
+        $ai_used = intval($arow['total_used']);
+    }
+    $ai_stmt->close();
+}
+
+// Also check legacy ear_tag_programs if applicable
+$prog_used = 0;
 $sum_stmt = $mysqli->prepare("
-    SELECT COALESCE(SUM(tags_used), 0) AS total_used, 
-           COALESCE(SUM(tags_spoiled), 0) AS total_spoiled 
+    SELECT COALESCE(SUM(tags_used), 0) AS total_used 
     FROM ear_tag_programs 
     WHERE range_id = ? AND YEAR(program_date) = ? AND MONTH(program_date) = ?
 ");
-$used_qty = 0;
-$spoilt_qty = 0;
 if ($sum_stmt) {
     $sum_stmt->bind_param("iii", $range_id, $report_year, $report_month);
     $sum_stmt->execute();
     $sum_res = $sum_stmt->get_result();
     if ($s_row = $sum_res->fetch_assoc()) {
-        $used_qty   = intval($s_row['total_used']);
-        $spoilt_qty = intval($s_row['total_spoiled']);
+        $prog_used = intval($s_row['total_used']);
     }
     $sum_stmt->close();
 }
 
-$closing_balance = ($opening_balance + $received_qty) - ($used_qty + $spoilt_qty + $transferred_qty);
+$used_qty = max($ai_used, $prog_used);
+if ($used_qty === 0 && isset($_POST['used_qty']) && intval($_POST['used_qty']) > 0) {
+    $used_qty = intval($_POST['used_qty']);
+}
+
+// Calculate dynamic closing balance
+$closing_balance = ($opening_balance + $received_qty) - ($used_qty + $spoilt_qty + $damaged_qty + $transferred_qty);
 
 // Check if a record already exists for this range, year, and month
 $chk = $mysqli->prepare("SELECT id FROM ear_tag_usage WHERE range_id = ? AND report_year = ? AND report_month = ?");
@@ -81,22 +99,22 @@ if ($chk) {
 if ($existing_id) {
     $upd = $mysqli->prepare("
         UPDATE ear_tag_usage 
-        SET opening_balance = ?, received_qty = ?, used_qty = ?, spoilt_qty = ?, transferred_qty = ?, closing_balance = ?, updated_at = NOW() 
+        SET opening_balance = ?, received_qty = ?, used_qty = ?, spoilt_qty = ?, damaged_qty = ?, transferred_qty = ?, closing_balance = ?, updated_at = NOW() 
         WHERE id = ?
     ");
     if ($upd) {
-        $upd->bind_param("iiiiiii", $opening_balance, $received_qty, $used_qty, $spoilt_qty, $transferred_qty, $closing_balance, $existing_id);
+        $upd->bind_param("iiiiiiii", $opening_balance, $received_qty, $used_qty, $spoilt_qty, $damaged_qty, $transferred_qty, $closing_balance, $existing_id);
         $upd->execute();
         $upd->close();
     }
 } else {
     $ins = $mysqli->prepare("
         INSERT INTO ear_tag_usage 
-        (district_id, range_id, report_year, report_month, opening_balance, received_qty, used_qty, spoilt_qty, transferred_qty, closing_balance, created_by) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (district_id, range_id, report_year, report_month, opening_balance, received_qty, used_qty, spoilt_qty, damaged_qty, transferred_qty, closing_balance, created_by) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     if ($ins) {
-        $ins->bind_param("iiiiiiiiiii", $district_id, $range_id, $report_year, $report_month, $opening_balance, $received_qty, $used_qty, $spoilt_qty, $transferred_qty, $closing_balance, $user_id);
+        $ins->bind_param("iiiiiiiiiiii", $district_id, $range_id, $report_year, $report_month, $opening_balance, $received_qty, $used_qty, $spoilt_qty, $damaged_qty, $transferred_qty, $closing_balance, $user_id);
         $ins->execute();
         $ins->close();
     }

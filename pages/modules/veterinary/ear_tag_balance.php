@@ -42,7 +42,7 @@ $requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) 
 $range_id = ($is_supervisory && $requested_range_id) ? $requested_range_id : ($session_range_id ?: 1);
 
 $range_name = 'Ampara';
-$range_code = '01';
+$range_code = '5314'; // 4-digit Range Number: Hardcoded temporarily to 5314 for Ampara range
 $district_name = 'Ampara';
 $district_id = 1;
 
@@ -66,7 +66,7 @@ if (!empty($range_id)) {
         $details_result = $details_query->get_result();
         if ($data = $details_result->fetch_assoc()) {
             $range_name = $data['range_name'] ?? 'Your Assigned Range';
-            $range_code = !empty($data['range_code']) ? $data['range_code'] : sprintf('%02d', $range_id);
+            $range_code = '5314'; // Hardcoded temporarily to 5314 for Ampara veterinary range
             $district_name = $data['district_name'] ?? 'Your District';
             $district_id = (int)($data['district_id'] ?? 1);
         }
@@ -76,25 +76,50 @@ if (!empty($range_id)) {
 
 // Active year and active tab
 $selected_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
-$active_tab = isset($_GET['tab']) && $_GET['tab'] === 'summary' ? 'summary' : 'identification';
+if (isset($_GET['tab']) && $_GET['tab'] === 'vouchers') {
+    header("Location: cattle_voucher.php" . (isset($_GET['year']) ? "?year=" . intval($_GET['year']) : ""));
+    exit();
+}
+$active_tab = isset($_GET['tab']) && in_array($_GET['tab'], ['summary', 'identification'], true) 
+    ? $_GET['tab'] 
+    : 'identification';
 
 // Strict Status Definitions for Animal Identification
-$VALID_AI_STATUSES = ['Sold or transferred', 'Slaughter', 'Died'];
+$VALID_AI_STATUSES = ['Active', 'Sold or transferred', 'Slaughter', 'Died', 'Tag Damaged / Removed'];
 $selected_ai_status = isset($_GET['ai_status']) ? trim($_GET['ai_status']) : 'All';
 
-// Fetch registered farmers for auto-complete datalist
-$registered_farmers = [];
+// Fetch registered farms for auto-complete datalist (Step 1 modal auto-fetch)
+$registered_farms = [];
 $rf_res = $mysqli->query("
-    SELECT DISTINCT full_name AS farmer_name, farm_registration_no AS farm_reg_no 
+    SELECT DISTINCT registration_no AS farm_reg_no, farmer_name, district, vs_division AS vs_range, range_id, district_id 
     FROM farm_registration_renewals 
-    WHERE full_name IS NOT NULL AND full_name != ''
-    LIMIT 150
+    WHERE registration_no IS NOT NULL AND registration_no != ''
+    ORDER BY registration_no ASC
+    LIMIT 300
 ");
 if ($rf_res) {
     while ($rf = $rf_res->fetch_assoc()) {
-        $registered_farmers[] = $rf;
+        $registered_farms[] = $rf;
     }
 }
+// Merge any registered farms from animal_identifications not in renewals
+$ai_farms_res = $mysqli->query("
+    SELECT DISTINCT farm_reg_no, farmer_name, district, vs_range, range_id, district_id 
+    FROM animal_identifications 
+    WHERE farm_reg_no IS NOT NULL AND farm_reg_no != ''
+    ORDER BY farm_reg_no ASC
+    LIMIT 100
+");
+if ($ai_farms_res) {
+    $existing_farm_keys = array_column($registered_farms, 'farm_reg_no');
+    while ($aif = $ai_farms_res->fetch_assoc()) {
+        if (!in_array($aif['farm_reg_no'], $existing_farm_keys, true)) {
+            $registered_farms[] = $aif;
+            $existing_farm_keys[] = $aif['farm_reg_no'];
+        }
+    }
+}
+$registered_farmers = $registered_farms;
 
 // Query records from animal_identifications
 $ai_records = [];
@@ -141,7 +166,8 @@ $ai_stats_query = "
         COUNT(*) AS total_count,
         SUM(CASE WHEN present_status = 'Sold or transferred' THEN 1 ELSE 0 END) AS sold_count,
         SUM(CASE WHEN present_status = 'Slaughter' THEN 1 ELSE 0 END) AS slaughter_count,
-        SUM(CASE WHEN present_status = 'Died' THEN 1 ELSE 0 END) AS died_count
+        SUM(CASE WHEN present_status = 'Died' THEN 1 ELSE 0 END) AS died_count,
+        SUM(CASE WHEN present_status = 'Tag Damaged / Removed' THEN 1 ELSE 0 END) AS damaged_count
     FROM animal_identifications
     WHERE 1=1
 ";
@@ -149,12 +175,13 @@ if (!$is_supervisory || $range_id) {
     $ai_stats_query .= " AND (range_id = " . intval($range_id) . " OR range_id IS NULL OR range_id = 0)";
 }
 $ai_stats_res = $mysqli->query($ai_stats_query);
-$ai_stats = $ai_stats_res ? $ai_stats_res->fetch_assoc() : ['total_count' => 0, 'sold_count' => 0, 'slaughter_count' => 0, 'died_count' => 0];
+$ai_stats = $ai_stats_res ? $ai_stats_res->fetch_assoc() : ['total_count' => 0, 'sold_count' => 0, 'slaughter_count' => 0, 'died_count' => 0, 'damaged_count' => 0];
 
 $ai_total_count = (int)($ai_stats['total_count'] ?? 0);
 $ai_sold_count = (int)($ai_stats['sold_count'] ?? 0);
 $ai_slaughter_count = (int)($ai_stats['slaughter_count'] ?? 0);
 $ai_died_count = (int)($ai_stats['died_count'] ?? 0);
+$ai_damaged_count = (int)($ai_stats['damaged_count'] ?? 0);
 
 $month_names = [
     1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
@@ -162,69 +189,35 @@ $month_names = [
     9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
 ];
 
-// 1. Fetch Tagging Programs for the selected year and range
-$tagging_programs = [];
-$total_programs_tags_used = 0;
-$total_programs_tags_spoiled = 0;
+// =========================================================================
+// SECTION A: EAR TAG INVENTORY & SPOILAGE DATA AGGREGATION
+// =========================================================================
 
+// 1. Fetch Real-Time Aggregated Ear Tags Used from Animal Identifications
+$realtime_et_used = array_fill(1, 12, 0);
 if (!empty($range_id)) {
-    $prog_sql = "
-        SELECT p.*, 
-               (SELECT COUNT(*) FROM cattle_vouchers cv WHERE cv.tag_program_id = p.id) AS voucher_count 
-        FROM ear_tag_programs p 
-        WHERE p.range_id = ? AND YEAR(p.program_date) = ? 
-        ORDER BY p.program_date DESC, p.id DESC
-    ";
-    $p_stmt = $mysqli->prepare($prog_sql);
-    if ($p_stmt) {
-        $p_stmt->bind_param("ii", $range_id, $selected_year);
-        $p_stmt->execute();
-        $p_res = $p_stmt->get_result();
-        while ($row = $p_res->fetch_assoc()) {
-            $tagging_programs[] = $row;
-            $total_programs_tags_used += intval($row['tags_used']);
-            $total_programs_tags_spoiled += intval($row['tags_spoiled']);
+    $et_agg_stmt = $mysqli->prepare("
+        SELECT MONTH(identification_date) AS m, COUNT(*) AS total_used 
+        FROM animal_identifications 
+        WHERE range_id = ? AND YEAR(identification_date) = ? 
+        GROUP BY MONTH(identification_date)
+    ");
+    if ($et_agg_stmt) {
+        $et_agg_stmt->bind_param("ii", $range_id, $selected_year);
+        $et_agg_stmt->execute();
+        $et_res = $et_agg_stmt->get_result();
+        while ($row = $et_res->fetch_assoc()) {
+            $realtime_et_used[intval($row['m'])] = intval($row['total_used']);
         }
-        $p_stmt->close();
+        $et_agg_stmt->close();
     }
 }
 
-// 2. Fetch Real-Time Aggregated Program Usage per Month
-$realtime_month_usage = []; // [month => ['used' => int, 'spoiled' => int]]
-for ($m = 1; $m <= 12; $m++) {
-    $realtime_month_usage[$m] = ['used' => 0, 'spoiled' => 0];
-}
-
-if (!empty($range_id)) {
-    $agg_sql = "
-        SELECT MONTH(program_date) AS m, 
-               COALESCE(SUM(tags_used), 0) AS total_used, 
-               COALESCE(SUM(tags_spoiled), 0) AS total_spoiled 
-        FROM ear_tag_programs 
-        WHERE range_id = ? AND YEAR(program_date) = ? 
-        GROUP BY MONTH(program_date)
-    ";
-    $a_stmt = $mysqli->prepare($agg_sql);
-    if ($a_stmt) {
-        $a_stmt->bind_param("ii", $range_id, $selected_year);
-        $a_stmt->execute();
-        $a_res = $a_stmt->get_result();
-        while ($row = $a_res->fetch_assoc()) {
-            $m = intval($row['m']);
-            $realtime_month_usage[$m] = [
-                'used' => intval($row['total_used']),
-                'spoiled' => intval($row['total_spoiled'])
-            ];
-        }
-        $a_stmt->close();
-    }
-}
-
-// 3. Fetch Stock Baseline & Movements from ear_tag_usage
+// 2. Fetch Ear Tag Stock Baseline & Movements from ear_tag_usage (including damaged_qty)
 $raw_usage_records = [];
 if (!empty($range_id)) {
     $u_sql = "
-        SELECT id, report_year, report_month, opening_balance, received_qty, used_qty, spoilt_qty, transferred_qty, closing_balance 
+        SELECT id, report_year, report_month, opening_balance, received_qty, used_qty, spoilt_qty, damaged_qty, transferred_qty, closing_balance 
         FROM ear_tag_usage 
         WHERE range_id = ? AND report_year = ? 
         ORDER BY report_month ASC
@@ -241,16 +234,17 @@ if (!empty($range_id)) {
     }
 }
 
-// 4. Build Automated Dynamic 12-Month Real-Time Summary
+// 3. Build Automated Dynamic 12-Month Real-Time Ear Tag Summary
 $monthly_summary = [];
 $running_balance = 0;
 $grand_total_received = 0;
 $grand_total_used = 0;
 $grand_total_spoiled = 0;
+$grand_total_damaged = 0;
 $grand_total_transferred = 0;
 $first_opening_balance = 0;
 
-// Check if previous year month 12 has a closing balance to seed January opening
+// Seed January opening from previous year December if exists
 if (!empty($range_id)) {
     $prev_y = $selected_year - 1;
     $seed_sql = "SELECT closing_balance FROM ear_tag_usage WHERE range_id = ? AND report_year = ? AND report_month = 12 LIMIT 1";
@@ -270,7 +264,6 @@ for ($m = 1; $m <= 12; $m++) {
     $has_record = isset($raw_usage_records[$m]);
     $rec_id = $has_record ? $raw_usage_records[$m]['id'] : 0;
     
-    // Opening balance: either recorded or roll-over from previous month's ending
     if ($has_record && $raw_usage_records[$m]['opening_balance'] > 0) {
         $opening = intval($raw_usage_records[$m]['opening_balance']);
     } else {
@@ -283,23 +276,22 @@ for ($m = 1; $m <= 12; $m++) {
 
     $received = $has_record ? intval($raw_usage_records[$m]['received_qty']) : 0;
     $transferred = $has_record ? intval($raw_usage_records[$m]['transferred_qty']) : 0;
+    $spoiled = $has_record ? intval($raw_usage_records[$m]['spoilt_qty']) : 0;
+    $damaged = $has_record ? intval($raw_usage_records[$m]['damaged_qty']) : 0;
 
-    // Real-time dynamic calculation from ear_tag_programs even mid-month!
-    $real_used = $realtime_month_usage[$m]['used'];
-    $real_spoiled = $realtime_month_usage[$m]['spoiled'];
-
-    // If no programs logged yet for this month but a manual usage was logged previously in ear_tag_usage, respect it as fallback
-    if ($real_used === 0 && $real_spoiled === 0 && $has_record) {
+    // Real-time dynamic calculation from animal_identifications
+    $real_used = $realtime_et_used[$m];
+    if ($real_used === 0 && $has_record) {
         $real_used = intval($raw_usage_records[$m]['used_qty']);
-        $real_spoiled = intval($raw_usage_records[$m]['spoilt_qty']);
     }
 
-    $ending = ($opening + $received) - ($real_used + $real_spoiled + $transferred);
+    $ending = ($opening + $received) - ($real_used + $spoiled + $damaged + $transferred);
     $running_balance = $ending;
 
     $grand_total_received += $received;
     $grand_total_used += $real_used;
-    $grand_total_spoiled += $real_spoiled;
+    $grand_total_spoiled += $spoiled;
+    $grand_total_damaged += $damaged;
     $grand_total_transferred += $transferred;
 
     $monthly_summary[$m] = [
@@ -309,10 +301,11 @@ for ($m = 1; $m <= 12; $m++) {
         'opening_balance' => $opening,
         'received_qty'    => $received,
         'used_qty'        => $real_used,
-        'spoilt_qty'      => $real_spoiled,
+        'spoilt_qty'      => $spoiled,
+        'damaged_qty'     => $damaged,
         'transferred_qty' => $transferred,
         'ending_balance'  => $ending,
-        'has_entry'       => ($has_record || $real_used > 0 || $real_spoiled > 0 || $received > 0 || $transferred > 0)
+        'has_entry'       => ($has_record || $real_used > 0 || $spoiled > 0 || $damaged > 0 || $received > 0 || $transferred > 0)
     ];
 }
 
@@ -409,6 +402,11 @@ require_once '../../../includes/header.php';
     background-color: #fee2e2;
     color: #b91c1c;
     border: 1px solid #fecaca;
+}
+.status-pill-damaged {
+    background-color: #fce7f3;
+    color: #9d174d;
+    border: 1px solid #fbcfe8;
 }
 .quick-status-select {
     font-size: 0.78rem;
@@ -546,43 +544,48 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- ============================================================ -->
-<!-- THREE-SECTION INTERFACE SPLIT (TABS) -->
+<!-- TWO-SECTION INTERFACE SPLIT (TABS) -->
 <!-- ============================================================ -->
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white p-3 border-bottom">
-        <ul class="nav nav-pills nav-pills-letter-h" id="earTagTabs" role="tablist">
-            <!-- TAB 1: ANIMAL IDENTIFICATION & VOUCHERS -->
-            <li class="nav-item" role="presentation">
-                <button class="nav-link <?= $active_tab === 'identification' ? 'active' : '' ?>" 
-                        id="tab-identification-btn" 
-                        data-bs-toggle="pill" 
-                        data-bs-target="#tab-identification-content" 
-                        type="button" 
-                        role="tab" 
-                        aria-controls="tab-identification-content" 
-                        aria-selected="<?= $active_tab === 'identification' ? 'true' : 'false' ?>">
-                    <i class="bi bi-tag-fill me-1"></i>
-                    Animal Identification &amp; Vouchers
-                    <span class="badge-tab-count"><?= count($ai_records) ?></span>
-                </button>
-            </li>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <ul class="nav nav-pills nav-pills-letter-h" id="earTagTabs" role="tablist">
+                <!-- TAB 1: ANIMAL IDENTIFICATION & VOUCHERS -->
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link <?= $active_tab === 'identification' ? 'active' : '' ?>" 
+                            id="tab-identification-btn" 
+                            data-bs-toggle="pill" 
+                            data-bs-target="#tab-identification-content" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="tab-identification-content" 
+                            aria-selected="<?= $active_tab === 'identification' ? 'true' : 'false' ?>">
+                        <i class="bi bi-tag-fill me-1"></i>
+                        Animal Identification &amp; Vouchers
+                        <span class="badge-tab-count"><?= count($ai_records) ?></span>
+                    </button>
+                </li>
 
-            <!-- TAB 2: MONTHLY SUMMARY -->
-            <li class="nav-item" role="presentation">
-                <button class="nav-link <?= $active_tab === 'summary' ? 'active' : '' ?>" 
-                        id="tab-summary-btn" 
-                        data-bs-toggle="pill" 
-                        data-bs-target="#tab-summary-content" 
-                        type="button" 
-                        role="tab" 
-                        aria-controls="tab-summary-content" 
-                        aria-selected="<?= $active_tab === 'summary' ? 'true' : 'false' ?>">
-                    <i class="bi bi-calendar3 me-1"></i>
-                    Monthly Summary
-                    <span class="badge-tab-count">12 Months</span>
-                </button>
-            </li>
-        </ul>
+                <!-- TAB 2: EAR TAG INVENTORY & SPOILAGE TRACKING -->
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link <?= $active_tab === 'summary' ? 'active' : '' ?>" 
+                            id="tab-summary-btn" 
+                            data-bs-toggle="pill" 
+                            data-bs-target="#tab-summary-content" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="tab-summary-content" 
+                            aria-selected="<?= $active_tab === 'summary' ? 'true' : 'false' ?>">
+                        <i class="bi bi-box-seam me-1"></i>
+                        Ear Tag Inventory &amp; Spoilage Tracking
+                        <span class="badge-tab-count">12 Months</span>
+                    </button>
+                </li>
+            </ul>
+            <a href="cattle_voucher.php?year=<?= $selected_year ?>" class="btn btn-outline-primary btn-sm fw-semibold shadow-xs">
+                <i class="bi bi-receipt-cutoff me-1"></i>Cattle Voucher Monthly Summary &rarr;
+            </a>
+        </div>
     </div>
 
     <div class="tab-content" id="earTagTabsContent">
@@ -603,20 +606,13 @@ require_once '../../../includes/header.php';
                     <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-tag-fill me-2 text-danger"></i>Animal Identification Program &amp; Cattle Vouchers - <?= $selected_year ?></h6>
                     <small class="text-muted">Auto-concatenates VS Range, Farm Registration, and Animal Sequences for ear tag generation, and manages individual cattle vouchers</small>
                 </div>
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <button type="button" class="btn btn-sm btn-maroon fw-semibold shadow-sm" id="btnOpenAddModal" data-bs-toggle="modal" data-bs-target="#modalAddAnimalIdentification" data-mode="single">
-                        <i class="bi bi-plus-circle-fill me-1"></i>Register Animal Identification
-                    </button>
-                    <button type="button" class="btn btn-sm btn-success fw-semibold shadow-sm" id="btnOpenBatchModal" data-bs-toggle="modal" data-bs-target="#modalAddAnimalIdentification" data-mode="batch">
-                        <i class="bi bi-layers-fill me-1"></i>Batch Tagging Grid
-                    </button>
-                </div>
+
             </div>
 
             <!-- KPI STATS CARDS FOR ANIMAL IDENTIFICATION -->
             <div class="p-3 bg-white border-bottom">
                 <div class="row g-3">
-                    <div class="col-6 col-md-3">
+                    <div class="col-6 col-md-4 col-xl">
                         <div class="card ai-kpi-card shadow-sm p-3 h-100" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #370709 !important;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-uppercase fw-bold small text-muted">Total Identified</span>
@@ -626,34 +622,44 @@ require_once '../../../includes/header.php';
                             <small class="text-muted">Cattle vouchers &amp; tags issued</small>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
+                    <div class="col-6 col-md-4 col-xl">
                         <div class="card ai-kpi-card shadow-sm p-3 h-100" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0284c7 !important;">
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-uppercase fw-bold small text-primary">Sold or Transferred</span>
+                                <span class="text-uppercase fw-bold small text-primary">Sold / Transferred</span>
                                 <i class="bi bi-arrow-left-right fs-4 text-primary opacity-75"></i>
                             </div>
                             <h4 class="fw-bold my-1 text-dark font-monospace"><?= number_format($ai_sold_count) ?></h4>
                             <small class="text-muted"><?= $ai_total_count > 0 ? round(($ai_sold_count / $ai_total_count) * 100, 1) : 0 ?>% of tagged inventory</small>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
+                    <div class="col-6 col-md-4 col-xl">
                         <div class="card ai-kpi-card shadow-sm p-3 h-100" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 4px solid #d97706 !important;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-uppercase fw-bold small text-warning">Slaughter</span>
                                 <i class="bi bi-scissors fs-4 text-warning opacity-75"></i>
                             </div>
                             <h4 class="fw-bold my-1 text-dark font-monospace"><?= number_format($ai_slaughter_count) ?></h4>
-                            <small class="text-muted"><?= $ai_total_count > 0 ? round(($ai_slaughter_count / $ai_total_count) * 100, 1) : 0 ?>% meat production / disposal</small>
+                            <small class="text-muted"><?= $ai_total_count > 0 ? round(($ai_slaughter_count / $ai_total_count) * 100, 1) : 0 ?>% meat production</small>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
+                    <div class="col-6 col-md-4 col-xl">
                         <div class="card ai-kpi-card shadow-sm p-3 h-100" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-left: 4px solid #dc2626 !important;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-uppercase fw-bold small text-danger">Died</span>
                                 <i class="bi bi-x-circle-fill fs-4 text-danger opacity-75"></i>
                             </div>
                             <h4 class="fw-bold my-1 text-danger font-monospace"><?= number_format($ai_died_count) ?></h4>
-                            <small class="text-muted"><?= $ai_total_count > 0 ? round(($ai_died_count / $ai_total_count) * 100, 1) : 0 ?>% natural / disease mortality</small>
+                            <small class="text-muted"><?= $ai_total_count > 0 ? round(($ai_died_count / $ai_total_count) * 100, 1) : 0 ?>% natural / disease</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl">
+                        <div class="card ai-kpi-card shadow-sm p-3 h-100" style="background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); border-left: 4px solid #db2777 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-uppercase fw-bold small text-danger">Damaged Tags</span>
+                                <i class="bi bi-exclamation-diamond-fill fs-4 text-danger opacity-75"></i>
+                            </div>
+                            <h4 class="fw-bold my-1 text-danger font-monospace"><?= number_format($ai_damaged_count) ?></h4>
+                            <small class="text-danger fw-semibold"><i class="bi bi-lock-fill me-1"></i>Permanent Pairing</small>
                         </div>
                     </div>
                 </div>
@@ -662,7 +668,7 @@ require_once '../../../includes/header.php';
             <!-- CUSTOM ACTION TOOLBAR -->
             <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <span class="fw-bold text-dark"><i class="bi bi-table me-1 text-primary"></i>Animal Identification Details Grid</span>
+                    <span class="fw-bold text-dark"><i class="bi bi-table me-1 text-primary"></i>Cattle Vouchers Issuance Data Grid</span>
                 </div>
                 <div class="custom-table-toolbar d-flex gap-2 flex-wrap align-items-center">
                     <button type="button" class="btn btn-sm btn-table-export-csv" onclick="exportAnimalIdentificationCSV();" title="Export Animal Identification Records to CSV">
@@ -677,8 +683,8 @@ require_once '../../../includes/header.php';
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="aiSortMenuBtn">
                             <li><h6 class="dropdown-header">Identification Date</h6></li>
-                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAnimalIdentification(7, 'desc');"><i class="bi bi-sort-numeric-down-alt me-2 text-danger"></i>Date (Newest first)</a></li>
-                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAnimalIdentification(7, 'asc');"><i class="bi bi-sort-numeric-down me-2 text-secondary"></i>Date (Oldest first)</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAnimalIdentification(8, 'desc');"><i class="bi bi-sort-numeric-down-alt me-2 text-danger"></i>Date (Newest first)</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAnimalIdentification(8, 'asc');"><i class="bi bi-sort-numeric-down me-2 text-secondary"></i>Date (Oldest first)</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><h6 class="dropdown-header">Ear Tag Number</h6></li>
                             <li><a class="dropdown-item" href="javascript:void(0)" onclick="sortAnimalIdentification(5, 'asc');"><i class="bi bi-sort-numeric-down me-2 text-primary"></i>Ear Tag (Ascending)</a></li>
@@ -695,10 +701,10 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
 
-            <!-- 14-COLUMN DATA GRID TABLE -->
+            <!-- 15-COLUMN DATA GRID TABLE: STRICT ORDER PER REQUIREMENTS -->
             <div class="p-3">
                 <div class="table-responsive">
-                    <table id="animalIdentificationTable" class="table table-hover table-striped align-middle mb-0 w-100" style="min-width: 1400px;">
+                    <table id="animalIdentificationTable" class="table table-hover table-striped align-middle mb-0 w-100" style="min-width: 1450px;">
                         <thead class="table-light text-secondary small">
                             <tr>
                                 <th class="text-center" style="width: 40px;">#</th>
@@ -706,10 +712,11 @@ require_once '../../../includes/header.php';
                                 <th>VS Range</th>
                                 <th>Farmer's Name</th>
                                 <th>Farm Registration No.</th>
-                                <th>Ear Tag No. (Auto-generated)</th>
-                                <th>Cattle Voucher S.No. / Tag Serial</th>
+                                <th>Ear Tag No.</th>
+                                <th>Ear Tag Serial Number</th>
+                                <th>Cattle Voucher S.No.</th>
                                 <th>Date of Identification</th>
-                                <th>Gender</th>
+                                <th>Gender (Male / Female)</th>
                                 <th>Colour</th>
                                 <th>Species</th>
                                 <th>Breed</th>
@@ -723,7 +730,7 @@ require_once '../../../includes/header.php';
                         <tbody class="small">
                             <?php if (empty($ai_records)): ?>
                                 <tr>
-                                    <td colspan="17" class="text-center py-5 text-muted">
+                                    <td colspan="18" class="text-center py-5 text-muted">
                                         <i class="bi bi-tag fs-2 d-block mb-2 text-secondary opacity-50"></i>
                                         No animal identification records found for the selected criteria.
                                         <div class="mt-2">
@@ -740,9 +747,22 @@ require_once '../../../includes/header.php';
                                         <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($r['district'] ?: $district_name) ?></span></td>
                                         <td><span class="fw-semibold text-dark"><?= htmlspecialchars($r['vs_range'] ?: $range_name) ?></span></td>
                                         <td><strong class="text-dark"><?= htmlspecialchars($r['farmer_name']) ?></strong></td>
-                                        <td><span class="font-monospace text-secondary small bg-light px-2 py-1 rounded border"><?= htmlspecialchars($r['farm_reg_no']) ?></span></td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none font-monospace fw-bold text-primary btn-view-farmer-summary" 
+                                                    data-farm-reg="<?= htmlspecialchars($r['farm_reg_no']) ?>" 
+                                                    data-farmer-name="<?= htmlspecialchars($r['farmer_name']) ?>"
+                                                    title="Click to view total animal summary for <?= htmlspecialchars($r['farm_reg_no']) ?>">
+                                                <span class="badge bg-light text-primary border border-primary-subtle px-2 py-1"><i class="bi bi-person-lines-fill me-1"></i><?= htmlspecialchars($r['farm_reg_no']) ?></span>
+                                            </button>
+                                        </td>
                                         <td><strong class="font-monospace text-primary bg-primary-subtle px-2 py-1 rounded border border-primary-subtle d-inline-block"><?= htmlspecialchars($r['ear_tag_no']) ?></strong></td>
-                                        <td><span class="font-monospace fw-bold text-dark"><?= htmlspecialchars($r['voucher_serial_no']) ?></span></td>
+                                        <td><span class="font-monospace fw-bold text-dark bg-light px-2 py-1 rounded border"><?= htmlspecialchars(!empty($r['animal_seq_no']) ? str_pad($r['animal_seq_no'], 3, '0', STR_PAD_LEFT) : (substr(strrchr($r['ear_tag_no'], '-'), 1) ?: '001')) ?></span></td>
+                                        <td>
+                                            <span class="font-monospace fw-bold text-dark"><?= htmlspecialchars($r['voucher_serial_no']) ?></span>
+                                            <?php if ($r['present_status'] === 'Tag Damaged / Removed'): ?>
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1" title="Strict Lifecycle: Permanent Pairing with Cattle Voucher Retained"><i class="bi bi-lock-fill me-1"></i>Paired</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="text-nowrap text-secondary"><i class="bi bi-calendar-event me-1"></i><?= date('d M Y', strtotime($r['identification_date'])) ?></td>
                                         <td>
                                             <?php if ($r['gender'] === 'Male'): ?>
@@ -760,12 +780,14 @@ require_once '../../../includes/header.php';
                                         <td class="text-center">
                                             <!-- Strict Present Status Dropdown (Mandatory Requirement) -->
                                             <div class="input-group input-group-sm justify-content-center">
-                                                <select class="form-select quick-status-select <?= $r['present_status'] === 'Sold or transferred' ? 'status-pill-sold' : ($r['present_status'] === 'Slaughter' ? 'status-pill-slaughter' : 'status-pill-died') ?>"
+                                                <select class="form-select quick-status-select <?= $r['present_status'] === 'Sold or transferred' ? 'status-pill-sold' : ($r['present_status'] === 'Slaughter' ? 'status-pill-slaughter' : ($r['present_status'] === 'Tag Damaged / Removed' ? 'status-pill-damaged' : 'status-pill-died')) ?>"
                                                         data-record-id="<?= $r['id'] ?>" 
+                                                        data-voucher="<?= htmlspecialchars($r['voucher_serial_no']) ?>"
                                                         onchange="updateAnimalStatus(<?= $r['id'] ?>, this.value, this)">
                                                     <option value="Sold or transferred" <?= $r['present_status'] === 'Sold or transferred' ? 'selected' : '' ?>>Sold or transferred</option>
                                                     <option value="Slaughter" <?= $r['present_status'] === 'Slaughter' ? 'selected' : '' ?>>Slaughter</option>
                                                     <option value="Died" <?= $r['present_status'] === 'Died' ? 'selected' : '' ?>>Died</option>
+                                                    <option value="Tag Damaged / Removed" <?= $r['present_status'] === 'Tag Damaged / Removed' ? 'selected' : '' ?>>Tag Damaged / Removed</option>
                                                 </select>
                                             </div>
                                         </td>
@@ -777,7 +799,12 @@ require_once '../../../includes/header.php';
                                                 <button type="button" class="btn btn-outline-success btn-print-card" data-id="<?= $r['id'] ?>" title="Print Voucher Card">
                                                     <i class="bi bi-printer"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-outline-danger btn-delete-record" data-id="<?= $r['id'] ?>" data-tag="<?= htmlspecialchars($r['ear_tag_no']) ?>" title="Delete">
+                                                <button type="button" class="btn btn-outline-danger btn-delete-record <?= $r['present_status'] === 'Tag Damaged / Removed' ? 'disabled opacity-50' : '' ?>" 
+                                                        data-id="<?= $r['id'] ?>" 
+                                                        data-tag="<?= htmlspecialchars($r['ear_tag_no']) ?>" 
+                                                        data-status="<?= htmlspecialchars($r['present_status']) ?>"
+                                                        data-voucher="<?= htmlspecialchars($r['voucher_serial_no']) ?>"
+                                                        title="<?= $r['present_status'] === 'Tag Damaged / Removed' ? 'Permanent Pairing Retained: Cannot delete damaged tag' : 'Delete Record' ?>">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -792,22 +819,72 @@ require_once '../../../includes/header.php';
         </div>
 
         <!-- ============================================================ -->
-        <!-- TAB 2 CONTENT: AUTOMATED REAL-TIME MONTHLY SUMMARY           -->
+        <!-- TAB 2 CONTENT: EAR TAG INVENTORY & SPOILAGE TRACKING         -->
         <!-- ============================================================ -->
         <div class="tab-pane fade <?= $active_tab === 'summary' ? 'show active' : '' ?>" 
              id="tab-summary-content" 
              role="tabpanel" 
              aria-labelledby="tab-summary-btn">
             
-            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-calendar-check me-2 text-success"></i>Monthly Ear Tag Stock Returns &amp; Real-Time Balances - <?= $selected_year ?></h6>
-                    <small class="text-muted">Dynamically aggregates stock, usage, and spoilage balances</small>
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-box-seam me-2 text-success"></i>Monthly Ear Tag Inventory &amp; Spoilage Tracking - <?= $selected_year ?></h6>
+                    <small class="text-muted">Dynamically aggregates stock receipts, system-tagged usage, spoiled units, damaged units, and ending balances</small>
                 </div>
                 <div>
-                    <button class="btn btn-sm btn-outline-dark fw-semibold" data-bs-toggle="modal" data-bs-target="#modalStockAdjustment">
-                        <i class="bi bi-box-arrow-in-down me-1"></i>Log Stock Movement / Baseline
+                    <button class="btn btn-sm btn-outline-dark fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalStockAdjustment">
+                        <i class="bi bi-box-arrow-in-down me-1"></i>Log Ear Tag Stock Movement
                     </button>
+                </div>
+            </div>
+
+            <!-- EAR TAG KPI STATS CARDS -->
+            <div class="p-3 bg-white border-bottom">
+                <div class="row g-3">
+                    <div class="col-6 col-md-3 col-xl">
+                        <div class="card shadow-sm p-3 h-100 border-0 border-start border-primary border-4" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                            <span class="text-uppercase fw-bold small text-muted">Opening Stock</span>
+                            <h4 class="fw-bold my-1 text-primary font-monospace"><?= number_format($first_opening_balance) ?></h4>
+                            <small class="text-muted">Jan 1 inventory</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 col-xl">
+                        <div class="card shadow-sm p-3 h-100 border-0 border-start border-success border-4" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                            <span class="text-uppercase fw-bold small text-success">Total Received</span>
+                            <h4 class="fw-bold my-1 text-success font-monospace">+<?= number_format($grand_total_received) ?></h4>
+                            <small class="text-muted">Shipments in <?= $selected_year ?></small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 col-xl">
+                        <div class="card shadow-sm p-3 h-100 border-0 border-start border-info border-4" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+                            <span class="text-uppercase fw-bold small text-info">Total Used</span>
+                            <h4 class="fw-bold my-1 text-info font-monospace">-<?= number_format($grand_total_used) ?></h4>
+                            <small class="text-muted">System animal tags</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 col-xl">
+                        <div class="card shadow-sm p-3 h-100 border-0 border-start border-warning border-4" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
+                            <span class="text-uppercase fw-bold small text-warning">Spoiled Units</span>
+                            <h4 class="fw-bold my-1 text-warning font-monospace">-<?= number_format($grand_total_spoiled) ?></h4>
+                            <small class="text-muted">Procedure spoilage</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 col-xl">
+                        <div class="card shadow-sm p-3 h-100 border-0 border-start border-danger border-4" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+                            <span class="text-uppercase fw-bold small text-danger">Damaged Units</span>
+                            <h4 class="fw-bold my-1 text-danger font-monospace">-<?= number_format($grand_total_damaged) ?></h4>
+                            <small class="text-muted">Broken / Storage</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 col-xl">
+                        <div class="card shadow-sm p-3 h-100 border-0 border-start border-dark border-4" style="background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);">
+                            <span class="text-uppercase fw-bold small text-dark">Ending Balance</span>
+                            <h4 class="fw-bold my-1 font-monospace <?= $latest_inventory_balance < 0 ? 'text-danger' : 'text-dark' ?>">
+                                <?= number_format($latest_inventory_balance) ?>
+                            </h4>
+                            <small class="text-muted">Available range tags</small>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -816,14 +893,15 @@ require_once '../../../includes/header.php';
                     <table class="table table-hover align-middle mb-0" id="monthlySummaryTable" style="width: 100%;">
                         <thead class="table-light text-secondary small uppercase">
                             <tr>
-                                <th style="width: 14%;" class="text-center">Month</th>
-                                <th style="width: 12%;" class="text-end">Opening Balance</th>
-                                <th style="width: 12%;" class="text-end">Received Quantity</th>
-                                <th style="width: 12%;" class="text-end">Used Quantity</th>
-                                <th style="width: 12%;" class="text-end">Spoiled Quantity</th>
-                                <th style="width: 12%;" class="text-end">Transferred Amounts</th>
-                                <th style="width: 14%;" class="text-end">Ending Balance</th>
-                                <th style="width: 12%;" class="text-center">Actions</th>
+                                <th style="width: 13%;" class="text-center">Month</th>
+                                <th style="width: 11%;" class="text-end">Opening Balance</th>
+                                <th style="width: 11%;" class="text-end">Received (+)</th>
+                                <th style="width: 11%;" class="text-end">Used (-) [System]</th>
+                                <th style="width: 11%;" class="text-end">Spoiled (-)</th>
+                                <th style="width: 11%;" class="text-end">Damaged (-)</th>
+                                <th style="width: 10%;" class="text-end">Transferred (-)</th>
+                                <th style="width: 11%;" class="text-end">Ending Balance</th>
+                                <th style="width: 11%;" class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="small">
@@ -833,6 +911,9 @@ require_once '../../../includes/header.php';
                                     data-id="<?= $m_data['id'] ?>"
                                     data-opening="<?= $m_data['opening_balance'] ?>"
                                     data-received="<?= $m_data['received_qty'] ?>"
+                                    data-used="<?= $m_data['used_qty'] ?>"
+                                    data-spoilt="<?= $m_data['spoilt_qty'] ?>"
+                                    data-damaged="<?= $m_data['damaged_qty'] ?>"
                                     data-transferred="<?= $m_data['transferred_qty'] ?>"
                                     class="<?= $m_data['has_entry'] ? '' : 'text-muted' ?>">
                                     
@@ -848,8 +929,11 @@ require_once '../../../includes/header.php';
                                     <td class="text-end font-monospace text-info fw-bold">
                                         <?= $m_data['used_qty'] > 0 ? '-' . number_format($m_data['used_qty']) : '0' ?>
                                     </td>
-                                    <td class="text-end font-monospace text-warning fw-bold">
+                                    <td class="text-end font-monospace text-danger fw-bold">
                                         <?= $m_data['spoilt_qty'] > 0 ? '-' . number_format($m_data['spoilt_qty']) : '0' ?>
+                                    </td>
+                                    <td class="text-end font-monospace text-danger fw-bold">
+                                        <?= $m_data['damaged_qty'] > 0 ? '-' . number_format($m_data['damaged_qty']) : '0' ?>
                                     </td>
                                     <td class="text-end font-monospace text-secondary">
                                         <?= $m_data['transferred_qty'] > 0 ? '-' . number_format($m_data['transferred_qty']) : '0' ?>
@@ -864,6 +948,9 @@ require_once '../../../includes/header.php';
                                                 data-id="<?= $m_data['id'] ?>"
                                                 data-opening="<?= $m_data['opening_balance'] ?>"
                                                 data-received="<?= $m_data['received_qty'] ?>"
+                                                data-used="<?= $m_data['used_qty'] ?>"
+                                                data-spoilt="<?= $m_data['spoilt_qty'] ?>"
+                                                data-damaged="<?= $m_data['damaged_qty'] ?>"
                                                 data-transferred="<?= $m_data['transferred_qty'] ?>"
                                                 title="Log / Edit Stock Details for <?= $m_data['month_name'] ?>">
                                             <i class="bi bi-sliders me-1"></i>Stock
@@ -878,7 +965,8 @@ require_once '../../../includes/header.php';
                                 <td class="text-end font-monospace"><?= number_format($first_opening_balance) ?></td>
                                 <td class="text-end font-monospace text-success">+<?= number_format($grand_total_received) ?></td>
                                 <td class="text-end font-monospace text-info">-<?= number_format($grand_total_used) ?></td>
-                                <td class="text-end font-monospace text-warning">-<?= number_format($grand_total_spoiled) ?></td>
+                                <td class="text-end font-monospace text-danger">-<?= number_format($grand_total_spoiled) ?></td>
+                                <td class="text-end font-monospace text-danger">-<?= number_format($grand_total_damaged) ?></td>
                                 <td class="text-end font-monospace text-secondary">-<?= number_format($grand_total_transferred) ?></td>
                                 <td class="text-end font-monospace <?= $latest_inventory_balance < 0 ? 'text-danger' : 'text-dark' ?>">
                                     <?= number_format($latest_inventory_balance) ?>
@@ -890,6 +978,7 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -898,20 +987,19 @@ require_once '../../../includes/header.php';
 <!-- ============================================================ -->
 <?php include __DIR__ . '/model/modal_ear_tag_stock.php'; ?>
 <?php include __DIR__ . '/model/modal_animal_identification.php'; ?>
+<?php include __DIR__ . '/model/modal_farmer_animal_summary.php'; ?>
 
 <?php
-$pageScripts = '
+ob_start();
+?>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
 
     // Preserve and switch tab parameter in URL without page refresh
-    $(\'#earTagTabs button[data-bs-toggle="pill"]\').on(\'shown.bs.tab\', function (e) {
+    $('#earTagTabs button[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
         var target = $(e.target).attr("data-bs-target");
-        var tabParam = "identification";
-        if (target.indexOf("summary") !== -1) {
-            tabParam = "summary";
-        }
+        var tabParam = (target.indexOf("summary") !== -1) ? "summary" : "identification";
         var newUrl = new URL(window.location.href);
         newUrl.searchParams.set("tab", tabParam);
         window.history.replaceState(null, "", newUrl.toString());
@@ -920,7 +1008,7 @@ $(document).ready(function() {
         $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
     });
 
-    // Monthly Summary DataTable
+    // 1. Ear Tag Monthly Summary DataTable
     if ($.fn.DataTable.isDataTable("#monthlySummaryTable")) {
         $("#monthlySummaryTable").DataTable().destroy();
     }
@@ -929,21 +1017,21 @@ $(document).ready(function() {
         "paging": false,
         "info": false,
         "searching": false,
-        "dom": \'<"d-flex justify-content-end mb-2"B>t\',
+        "dom": '<"d-flex justify-content-end mb-2"B>t',
         "buttons": [
             {
                 extend: "csv",
-                text: "<i class=\\"bi bi-file-earmark-spreadsheet\\"></i> CSV Summary",
+                text: '<i class="bi bi-file-earmark-spreadsheet"></i> CSV Summary',
                 className: "btn btn-sm btn-success me-2"
             },
             {
                 extend: "pdf",
-                text: "<i class=\\"bi bi-file-pdf\\"></i> PDF Summary",
+                text: '<i class="bi bi-file-pdf"></i> PDF Summary',
                 className: "btn btn-sm btn-danger me-2"
             },
             {
                 extend: "print",
-                text: "<i class=\\"bi bi-printer\\"></i> Print Summary",
+                text: '<i class="bi bi-printer"></i> Print Summary',
                 className: "btn btn-sm btn-dark"
             }
         ]
@@ -978,52 +1066,89 @@ $(document).ready(function() {
         window.history.replaceState({}, document.title, cleanUrl);
     }
 
-    // MONTHLY SUMMARY: LOG / EDIT STOCK BUTTON
+    // Live Calculation for Ear Tag Stock Modal
+    function recalculateEarTagEndingPreview() {
+        var op = parseInt($("#stock_opening_balance").val(), 10) || 0;
+        var rec = parseInt($("#stock_received_qty").val(), 10) || 0;
+        var used = parseInt($("#stock_used_qty").val(), 10) || 0;
+        var sp = parseInt($("#stock_spoilt_qty").val(), 10) || 0;
+        var dam = parseInt($("#stock_damaged_qty").val(), 10) || 0;
+        var tr = parseInt($("#stock_transferred_qty").val(), 10) || 0;
+        var ending = (op + rec) - (used + sp + dam + tr);
+        $("#stock_calc_ending_preview").text(ending);
+    }
+    $(document).on("input change", ".stock-calc-trigger", recalculateEarTagEndingPreview);
+
+    // EAR TAG SUMMARY: LOG / EDIT STOCK BUTTON
     $(document).on("click", ".btn-edit-stock", function() {
         var mId = $(this).data("id") || 0;
         var monthNum = $(this).data("month");
         var opening = $(this).data("opening") || 0;
         var received = $(this).data("received") || 0;
+        var used = $(this).data("used") || 0;
+        var spoilt = $(this).data("spoilt") || 0;
+        var damaged = $(this).data("damaged") || 0;
         var transferred = $(this).data("transferred") || 0;
 
         $("#stock_id").val(mId);
-        $("#stock_year").val("' . $selected_year . '");
+        $("#stock_year").val("<?= $selected_year ?>");
         $("#stock_month").val(monthNum);
         $("#stock_opening_balance").val(opening);
         $("#stock_received_qty").val(received);
+        $("#stock_used_qty").val(used);
+        $("#stock_spoilt_qty").val(spoilt);
+        $("#stock_damaged_qty").val(damaged);
         $("#stock_transferred_qty").val(transferred);
+
+        recalculateEarTagEndingPreview();
 
         var mEl = document.getElementById("modalStockAdjustment");
         if (mEl) {
             bootstrap.Modal.getOrCreateInstance(mEl).show();
         }
     });
-
 });
-</script>
-';
 
-ob_start();
-?>
-<script>
 let gridRowIndex = 0;
-let currentRangeCode = <?= json_encode($range_code ?? '01') ?>;
+let currentRangeCode = "5314";
+
+// Helper: Extract last 5 digits of Farm Registration Number
+function getFarmRegLast5(farmRegNo) {
+    if (!farmRegNo) return "";
+    const digits = String(farmRegNo).replace(/\D/g, "");
+    if (digits.length >= 5) {
+        return digits.slice(-5);
+    } else if (digits.length > 0) {
+        return digits.padStart(5, "0");
+    }
+    const clean = String(farmRegNo).replace(/[^A-Za-z0-9]/g, "");
+    return clean.length >= 5 ? clean.slice(-5) : clean.padStart(5, "0");
+}
 
 // Function: Concatenate Ear Tag Number
+// Exact Rule:
+// Part 1: The logged-in user's 4-digit Range Number (5314 for Ampara range)
+// Part 2: The last 5 digits of the entered Farm Registration Number
+// Part 3: The user-inputted Ear Tag Serial Number
+// Format Example: If Farm Reg is 123456789 and Ear Tag Serial is 999 -> 5314 + 56789 + 999 = 531456789999
 function computeEarTagNumber(rangeCode, farmRegNo, seqNo) {
-    const cleanRange = (rangeCode || "01").trim();
-    const cleanReg = (farmRegNo || "FARM").trim().replace(/[^A-Za-z0-9_-]/g, "");
-    const cleanSeq = String(seqNo || "001").trim();
-    return `${cleanRange}-${cleanReg}-${cleanSeq}`;
+    const rangePart = "5314";
+    const farmPart = getFarmRegLast5(farmRegNo);
+    const seqPart = String(seqNo !== undefined && seqNo !== null ? seqNo : "").trim();
+
+    if (!farmPart && !seqPart) {
+        return rangePart;
+    }
+    return `${rangePart}${farmPart}${seqPart}`;
 }
 
 // Function: Update all rows in modal grid
 function refreshGridConcatenations() {
-    const rangeCode = $("#ai_range_code").val().trim() || "01";
-    const farmReg = $("#ai_farm_reg_no").val().trim() || "FARM";
+    const rangeCode = "5314";
+    const farmReg = $("#ai_farm_reg_no").val().trim();
 
     $("#batchGridBody tr.grid-animal-row").each(function(idx) {
-        const seqVal = $(this).find(".input-seq").val().trim() || String(idx + 1).padStart(3, "0");
+        const seqVal = $(this).find(".input-seq").val();
         const computedTag = computeEarTagNumber(rangeCode, farmReg, seqVal);
         $(this).find(".input-tag").val(computedTag);
     });
@@ -1033,6 +1158,11 @@ function refreshGridConcatenations() {
         $("#previewTagText").text(firstTag);
     }
 }
+
+// Listen to user input on Ear Tag Serial Number
+$(document).on("input", ".input-seq", function() {
+    refreshGridConcatenations();
+});
 
 // Function: Recalculate row numbering & badges
 function updateGridRowMetadata() {
@@ -1048,25 +1178,52 @@ function updateGridRowMetadata() {
     $("#animalsCountBadge").text(`${rows.length} Animal Entry${rows.length > 1 ? "ies" : ""}`);
 }
 
-// Function: Fetch next sequence number for selected farm
+// Function: Fetch sequential voucher block for selected farm (previous Ear Tag auto-generation removed)
 function fetchNextSequenceForFarm(farmRegNo) {
     if (!farmRegNo) return;
     const rangeCode = $("#ai_range_code").val();
     const rangeId = $("#ai_range_id").val();
+    const farmerName = $("#ai_farmer_name").val();
 
     $.ajax({
         url: "processors/animal_identification_crud.php?action=get_next_seq",
         type: "GET",
-        data: { farm_reg_no: farmRegNo, range_code: rangeCode, range_id: rangeId },
+        data: { farm_reg_no: farmRegNo, farmer_name: farmerName, range_code: rangeCode, range_id: rangeId },
         dataType: "json",
         success: function(res) {
             if (res.success) {
-                let startSeq = parseInt(res.next_seq_num) || 1;
-                $("#batchGridBody tr.grid-animal-row").each(function(i) {
-                    const nextVal = String(startSeq + i).padStart(3, "0");
-                    $(this).find(".input-seq").val(nextVal);
-                });
+                // User-inputted serial numbers are preserved (auto-generation removed)
                 refreshGridConcatenations();
+
+                // Sequential Cattle Voucher Block Tracking
+                if (res.has_assigned_block && res.block_info) {
+                    $("#farmerBlockCard").removeClass("d-none");
+                    $("#fBlockRangeText").text(res.block_info.formatted_block);
+                    $("#fBlockRemText").text(res.block_info.remaining_balance + " available");
+                    $("#fBlockNextText").text(res.block_info.next_available || "Depleted");
+
+                    // If in new entry mode (not editing existing record), auto-populate assigned sequential block
+                    if ($("#ai_edit_id").val() === "0" || !$("#ai_edit_id").val()) {
+                        let nextSerialStr = res.block_info.next_available;
+                        if (nextSerialStr) {
+                            let prefix = nextSerialStr.startsWith("A-") ? "A-" : "";
+                            let nextNum = parseInt(nextSerialStr.replace(/\D/g, "")) || 0;
+                            $("#batchGridBody tr.grid-animal-row").each(function(i) {
+                                let vNum = nextNum + i;
+                                let formattedV = prefix + (vNum >= 100000 ? String(vNum) : String(vNum).padStart(6, "0"));
+                                $(this).find(".input-voucher").val(formattedV);
+                            });
+                        }
+                    }
+                } else {
+                    $("#farmerBlockCard").addClass("d-none");
+                    if (res.suggested_voucher && ($("#ai_edit_id").val() === "0" || !$("#ai_edit_id").val())) {
+                        let firstVoucher = $("#batchGridBody tr:first .input-voucher");
+                        if (!firstVoucher.val() || firstVoucher.val().startsWith("A-")) {
+                            firstVoucher.val(res.suggested_voucher);
+                        }
+                    }
+                }
             }
         }
     });
@@ -1076,12 +1233,22 @@ function fetchNextSequenceForFarm(farmRegNo) {
 function updateAnimalStatus(recordId, newStatus, selectEl) {
     if (!recordId || !newStatus) return;
 
+    let confirmTitle = "Update Present Status?";
+    let confirmText = `Change animal status to "${newStatus}"?`;
+    let confirmIcon = "question";
+
+    if (newStatus === "Tag Damaged / Removed") {
+        confirmTitle = "Mark Ear Tag as Damaged / Removed?";
+        confirmText = "STRICT LIFECYCLE RULE: Under statutory regulations, this damaged Ear Tag Number will permanently retain its pairing with its issued Cattle Voucher Serial Number. The voucher CANNOT be unlinked, deleted, or returned to the available stock pool.";
+        confirmIcon = "warning";
+    }
+
     Swal.fire({
-        title: "Update Present Status?",
-        text: `Change animal status to "${newStatus}"?`,
-        icon: "question",
+        title: confirmTitle,
+        text: confirmText,
+        icon: confirmIcon,
         showCancelButton: true,
-        confirmButtonColor: "#820100",
+        confirmButtonColor: newStatus === "Tag Damaged / Removed" ? "#dc2626" : "#820100",
         confirmButtonText: "Yes, Update",
         cancelButtonText: "Cancel"
     }).then((result) => {
@@ -1097,15 +1264,20 @@ function updateAnimalStatus(recordId, newStatus, selectEl) {
                             icon: "success",
                             title: "Status Updated",
                             text: resp.message,
-                            timer: 1500,
+                            timer: 1800,
                             showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
                         });
-                        $(selectEl).removeClass("status-pill-sold status-pill-slaughter status-pill-died");
+                        $(selectEl).removeClass("status-pill-sold status-pill-slaughter status-pill-died status-pill-damaged");
                         if (newStatus === "Sold or transferred") $(selectEl).addClass("status-pill-sold");
                         else if (newStatus === "Slaughter") $(selectEl).addClass("status-pill-slaughter");
                         else if (newStatus === "Died") $(selectEl).addClass("status-pill-died");
+                        else if (newStatus === "Tag Damaged / Removed") $(selectEl).addClass("status-pill-damaged");
                     } else {
-                        Swal.fire("Update Failed", resp.message || "Could not update status.", "error");
+                        Swal.fire("Update Failed", resp.message || "Could not update status.", "error").then(() => {
+                            location.reload();
+                        });
                     }
                 },
                 error: function() {
@@ -1117,70 +1289,76 @@ function updateAnimalStatus(recordId, newStatus, selectEl) {
         }
     });
 }
+window.updateAnimalStatus = updateAnimalStatus;
 
 $(document).ready(function() {
 
     // Initialize Animal Identification DataTable
-    if ($.fn.DataTable.isDataTable("#animalIdentificationTable")) {
-        $("#animalIdentificationTable").DataTable().destroy();
-    }
-    const aiTable = $("#animalIdentificationTable").DataTable({
-        pageLength: 15,
-        lengthMenu: [10, 15, 25, 50, 100],
-        order: [[7, "desc"]],
-        responsive: false,
-        buttons: [
-            {
-                extend: "csvHtml5",
-                className: "d-none",
-                filename: function() {
-                    return "Animal_Identification_Records_" + new Date().toISOString().slice(0, 10);
+    let aiTable = null;
+    const hasEmptyColspan = $("#animalIdentificationTable tbody tr td[colspan]").length > 0;
+    if ($("#animalIdentificationTable").length && !hasEmptyColspan) {
+        if ($.fn.DataTable.isDataTable("#animalIdentificationTable")) {
+            $("#animalIdentificationTable").DataTable().destroy();
+        }
+        aiTable = $("#animalIdentificationTable").DataTable({
+            pageLength: 15,
+            lengthMenu: [10, 15, 25, 50, 100],
+            order: [[8, "desc"]],
+            columnDefs: [{ orderable: false, targets: [0, 16, 17] }],
+            responsive: false,
+            buttons: [
+                {
+                    extend: "csvHtml5",
+                    className: "d-none",
+                    filename: function() {
+                        return "Animal_Identification_Records_" + new Date().toISOString().slice(0, 10);
+                    },
+                    title: "Animal Identification Register - Cattle Vouchers & Ear Tagging",
+                    exportOptions: {
+                        columns: ":visible:not(:first-child):not(:last-child)"
+                    }
                 },
-                title: "Animal Identification Register - Cattle Vouchers & Ear Tagging",
-                exportOptions: {
-                    columns: ":visible:not(:first-child):not(:last-child)"
-                }
-            },
-            {
-                extend: "pdfHtml5",
-                className: "d-none",
-                orientation: "landscape",
-                pageSize: "A4",
-                filename: function() {
-                    return "Animal_Identification_Records_" + new Date().toISOString().slice(0, 10);
-                },
-                title: "Animal Identification Register - Cattle Vouchers & Ear Tagging",
-                exportOptions: {
-                    columns: ":visible:not(:first-child):not(:last-child)"
-                },
-                customize: function (doc) {
-                    doc.defaultStyle.fontSize = 8;
-                    if (doc.styles && doc.styles.tableHeader) {
-                        doc.styles.tableHeader.fontSize = 9;
-                        doc.styles.tableHeader.fillColor = "#370709";
-                        doc.styles.tableHeader.color = "#ffffff";
+                {
+                    extend: "pdfHtml5",
+                    className: "d-none",
+                    orientation: "landscape",
+                    pageSize: "A4",
+                    filename: function() {
+                        return "Animal_Identification_Records_" + new Date().toISOString().slice(0, 10);
+                    },
+                    title: "Animal Identification Register - Cattle Vouchers & Ear Tagging",
+                    exportOptions: {
+                        columns: ":visible:not(:first-child):not(:last-child)"
+                    },
+                    customize: function (doc) {
+                        doc.defaultStyle.fontSize = 8;
+                        if (doc.styles && doc.styles.tableHeader) {
+                            doc.styles.tableHeader.fontSize = 9;
+                            doc.styles.tableHeader.fillColor = "#370709";
+                            doc.styles.tableHeader.color = "#ffffff";
+                        }
                     }
                 }
+            ],
+            language: {
+                search: "",
+                searchPlaceholder: "Search identified animals...",
+                emptyTable: "No records found in this view."
             }
-        ],
-        language: {
-            search: "",
-            searchPlaceholder: "Search identified animals...",
-            emptyTable: "No records found in this view."
-        }
-    });
-    window.aiTableInstance = aiTable;
+        });
+        window.aiTableInstance = aiTable;
 
-    // Dynamic Record Count sync
-    aiTable.on("draw.dt init.dt", function() {
-        const info = aiTable.page.info();
-        const count = info.recordsDisplay;
-        const total = info.recordsTotal;
-        const badgeText = $("#animalIdentificationRecordCountText");
-        if (badgeText.length) {
-            badgeText.text(count === total ? `${count} Identified Animals` : `${count} of ${total} Identified Animals`);
-        }
-    });
+        // Dynamic Record Count sync
+        aiTable.on("draw.dt init.dt", function() {
+            const info = aiTable.page.info();
+            const count = info.recordsDisplay;
+            const total = info.recordsTotal;
+            const badgeText = $("#animalIdentificationRecordCountText");
+            if (badgeText.length) {
+                badgeText.text(count === total ? `${count} Identified Animals` : `${count} of ${total} Identified Animals`);
+            }
+        });
+    }
 
     window.exportAnimalIdentificationCSV = function() {
         if (window.aiTableInstance && typeof window.aiTableInstance.button === "function") {
@@ -1223,21 +1401,37 @@ $(document).ready(function() {
     function addGridRow() {
         gridRowIndex++;
         const currentCount = $("#batchGridBody tr.grid-animal-row").length;
-        const lastSeq = parseInt($("#batchGridBody tr.grid-animal-row:last .input-seq").val()) || currentCount;
-        const nextSeq = String(lastSeq + 1).padStart(3, "0");
-        const suggestedVoucher = "A-" + Math.floor(100000 + Math.random() * 900000);
+        const lastSeqVal = $("#batchGridBody tr.grid-animal-row:last .input-seq").val();
+        let nextSeq = "";
+        if (lastSeqVal && !isNaN(parseInt(lastSeqVal))) {
+            nextSeq = parseInt(lastSeqVal) + 1;
+        }
+        
+        // Auto-increment voucher sequentially from previous row
+        const lastVoucher = $("#batchGridBody tr.grid-animal-row:last .input-voucher").val() || "";
+        let suggestedVoucher = "";
+        if (lastVoucher) {
+            let cleanNum = lastVoucher.replace(/\D/g, "");
+            if (cleanNum) {
+                let nextNum = parseInt(cleanNum) + 1;
+                suggestedVoucher = "A-" + (nextNum >= 100000 ? String(nextNum) : String(nextNum).padStart(6, "0"));
+            }
+        }
+        if (!suggestedVoucher) {
+            suggestedVoucher = "A-" + Math.floor(100000 + Math.random() * 900000);
+        }
 
         const tr = `
             <tr class="grid-animal-row" data-row="${gridRowIndex}">
                 <td class="text-center text-muted fw-bold row-idx">${currentCount + 1}</td>
                 <td>
-                    <input type="text" name="animals[${gridRowIndex}][animal_seq_no]" class="form-control form-control-sm font-monospace text-center input-seq" value="${nextSeq}" style="max-width: 70px;" required>
+                    <input type="text" name="animals[${gridRowIndex}][animal_seq_no]" class="form-control form-control-sm font-monospace text-center input-seq fw-bold" value="${nextSeq}" placeholder="e.g. 999" required>
                 </td>
                 <td>
                     <input type="text" name="animals[${gridRowIndex}][ear_tag_no]" class="form-control form-control-sm font-monospace text-uppercase fw-bold text-primary input-tag bg-light" readonly required>
                 </td>
                 <td>
-                    <input type="text" name="animals[${gridRowIndex}][voucher_serial_no]" class="form-control form-control-sm font-monospace text-uppercase input-voucher" value="${suggestedVoucher}" placeholder="e.g. A-918059" required>
+                    <input type="text" name="animals[${gridRowIndex}][voucher_serial_no]" class="form-control form-control-sm font-monospace text-uppercase input-voucher fw-bold" value="${suggestedVoucher}" placeholder="e.g. A-918059" required>
                 </td>
                 <td>
                     <select name="animals[${gridRowIndex}][gender]" class="form-select form-select-sm">
@@ -1246,7 +1440,7 @@ $(document).ready(function() {
                     </select>
                 </td>
                 <td>
-                    <input type="text" name="animals[${gridRowIndex}][colour]" class="form-control form-control-sm" placeholder="e.g. Brown">
+                    <input type="text" name="animals[${gridRowIndex}][colour]" class="form-control form-control-sm" placeholder="e.g. Black/White">
                 </td>
                 <td>
                     <select name="animals[${gridRowIndex}][species]" class="form-select form-select-sm">
@@ -1257,7 +1451,7 @@ $(document).ready(function() {
                     </select>
                 </td>
                 <td>
-                    <input type="text" name="animals[${gridRowIndex}][breed]" class="form-control form-control-sm" placeholder="e.g. Jersey" list="breedPresets">
+                    <input type="text" name="animals[${gridRowIndex}][breed]" class="form-control form-control-sm" placeholder="e.g. Friesian Cross" list="breedPresets">
                 </td>
                 <td>
                     <input type="text" name="animals[${gridRowIndex}][age]" class="form-control form-control-sm" placeholder="e.g. 2 Yrs">
@@ -1270,6 +1464,7 @@ $(document).ready(function() {
                         <option value="Sold or transferred" selected>Sold or transferred</option>
                         <option value="Slaughter">Slaughter</option>
                         <option value="Died">Died</option>
+                        <option value="Tag Damaged / Removed" class="text-danger fw-bold">Tag Damaged / Removed</option>
                     </select>
                 </td>
                 <td class="text-center">
@@ -1297,48 +1492,93 @@ $(document).ready(function() {
         }
     });
 
-    // Auto-complete search registered farmers
-    let farmerTimer = null;
-    $("#ai_farmer_name").on("input", function() {
-        const val = $(this).val().trim();
-        if (val.length < 2) return;
+    // =========================================================================
+    // STEP 1 (TRIGGER) & STEP 2 (AUTO-FETCH): Farm Registration No. Lookup
+    // =========================================================================
+    function autoFetchFarmDetails(farmRegNo, showFeedback) {
+        farmRegNo = (farmRegNo || "").trim();
+        if (!farmRegNo) {
+            $("#farmFetchStatusText").html("Enter Farm Registration No. to auto-fetch farmer and location details.");
+            $("#farmFetchStatusIcon").attr("class", "bi bi-info-circle text-primary flex-shrink-0");
+            return;
+        }
 
-        clearTimeout(farmerTimer);
-        farmerTimer = setTimeout(function() {
-            $.ajax({
-                url: "processors/animal_identification_crud.php?action=search_farmers",
-                type: "GET",
-                data: { term: val, range_id: $("#ai_range_id").val() },
-                dataType: "json",
-                success: function(resp) {
-                    if (resp.success && resp.farmers) {
-                        const dl = $("#registeredFarmersList").empty();
-                        resp.farmers.forEach(function(f) {
-                            dl.append(`<option value="${f.farmer_name}" data-reg="${f.farm_reg_no}" data-dist="${f.district}" data-range="${f.vs_range}">Reg: ${f.farm_reg_no} | ${f.vs_range}</option>`);
+        $("#farmFetchStatusText").html(`<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Fetching farmer & location details...`);
+        $("#farmFetchStatusIcon").attr("class", "bi bi-arrow-repeat text-primary flex-shrink-0");
+
+        $.ajax({
+            url: "processors/animal_identification_crud.php?action=get_farmer_by_reg",
+            type: "GET",
+            data: { farm_reg_no: farmRegNo },
+            dataType: "json",
+            success: function(resp) {
+                if (resp.success && resp.farmer) {
+                    const f = resp.farmer;
+                    $("#ai_farmer_name").val(f.farmer_name);
+                    $("#ai_district").val(f.district);
+                    $("#ai_vs_range").val(f.vs_range);
+                    $("#ai_range_code").val("5314");
+                    if (f.range_id) {
+                        $("#ai_range_id").val(f.range_id);
+                    }
+                    if (f.district_id) {
+                        $("#ai_district_id").val(f.district_id);
+                    }
+                    $("#farmFetchStatusText").html(`<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Verified:</span> ${f.farmer_name} (${f.vs_range})`);
+                    $("#farmFetchStatusIcon").attr("class", "bi bi-check-circle-fill text-success flex-shrink-0");
+
+                    // Trigger sequence and voucher block lookup for this farm
+                    fetchNextSequenceForFarm(farmRegNo);
+                    refreshGridConcatenations();
+                } else {
+                    $("#farmFetchStatusText").html(`<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Unregistered Farm Reg No.</span> Auto-fetch found no registered profile.`);
+                    $("#farmFetchStatusIcon").attr("class", "bi bi-exclamation-circle text-danger flex-shrink-0");
+                    if (showFeedback) {
+                        Swal.fire({
+                            icon: "info",
+                            title: "Farm Not Found",
+                            text: resp.message || "No registered farm found for the entered registration number.",
+                            confirmButtonColor: "#820100"
                         });
                     }
+                    refreshGridConcatenations();
                 }
-            });
-        }, 300);
-    });
-
-    // When farmer is picked, auto-populate farm reg no and fetch next sequence
-    $("#ai_farmer_name").on("change", function() {
-        const selectedVal = $(this).val();
-        const opt = $(`#registeredFarmersList option[value="${selectedVal}"]`);
-        if (opt.length) {
-            const regNo = opt.data("reg");
-            if (regNo) {
-                $("#ai_farm_reg_no").val(regNo);
-                fetchNextSequenceForFarm(regNo);
+            },
+            error: function() {
+                $("#farmFetchStatusText").html(`<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Error connecting to server.</span>`);
+                $("#farmFetchStatusIcon").attr("class", "bi bi-x-circle text-danger flex-shrink-0");
             }
-        } else if ($("#ai_farm_reg_no").val()) {
-            fetchNextSequenceForFarm($("#ai_farm_reg_no").val());
+        });
+    }
+    window.autoFetchFarmDetails = autoFetchFarmDetails;
+
+    // Step 1: Input & change events on Farm Registration No. (delegated for modal reliability)
+    let farmRegTimer = null;
+    $(document).on("input", "#ai_farm_reg_no", function() {
+        const val = $(this).val().trim();
+        refreshGridConcatenations();
+        clearTimeout(farmRegTimer);
+        if (val.length >= 3) {
+            farmRegTimer = setTimeout(function() {
+                autoFetchFarmDetails(val, false);
+            }, 300);
         }
     });
 
-    $("#ai_farm_reg_no").on("blur", function() {
-        fetchNextSequenceForFarm($(this).val());
+    $(document).on("change blur", "#ai_farm_reg_no", function() {
+        const val = $(this).val().trim();
+        if (val) {
+            autoFetchFarmDetails(val, false);
+        }
+    });
+
+    $(document).on("click", "#btnFetchFarmByReg", function() {
+        const val = $("#ai_farm_reg_no").val().trim();
+        if (!val) {
+            Swal.fire("Enter Registration Number", "Please enter a Farm Registration No. to auto-fetch details.", "warning");
+            return;
+        }
+        autoFetchFarmDetails(val, true);
     });
 
     // Prepare Modal Form & State (Single vs Batch)
@@ -1354,6 +1594,9 @@ $(document).ready(function() {
         $("#ai_edit_id").val("0");
         $("#ai_range_code").val(currentRangeCode || "01");
         $("#ai_date").val(new Date().toISOString().split("T")[0]);
+        $("#farmFetchStatusText").html("Enter Farm Registration No. to auto-fetch farmer and location details.");
+        $("#farmFetchStatusIcon").attr("class", "bi bi-info-circle text-primary flex-shrink-0");
+        $("#farmerBlockCard").addClass("d-none");
         $("#batchGridBody tr.grid-animal-row:gt(0)").remove();
 
         // Auto-generate suggested voucher serial starting with A- if empty
@@ -1487,7 +1730,7 @@ $(document).ready(function() {
                 // Reset grid to single row populated with record data
                 $("#batchGridBody tr.grid-animal-row:gt(0)").remove();
                 const row = $("#batchGridBody tr.grid-animal-row:first");
-                row.find(".input-seq").val(r.animal_seq_no || "001");
+                row.find(".input-seq").val(r.animal_seq_no || "");
                 row.find(".input-tag").val(r.ear_tag_no);
                 row.find("input[name*=\"[voucher_serial_no]\"]").val(r.voucher_serial_no);
                 row.find("select[name*=\"[gender]\"]").val(r.gender);
@@ -1497,6 +1740,17 @@ $(document).ready(function() {
                 row.find("input[name*=\"[age]\"]").val(r.age);
                 row.find("input[name*=\"[purpose]\"]").val(r.purpose);
                 row.find("select[name*=\"[present_status]\"]").val(r.present_status);
+
+                const isDamaged = (r.present_status === 'Tag Damaged / Removed');
+                if (isDamaged) {
+                    $("#modalAddAnimalIdentificationLabel").html(`<span class="badge bg-danger me-2"><i class="bi bi-lock-fill"></i> PERMANENT PAIRING</span> Edit Animal Record: ${r.ear_tag_no}`);
+                    row.find(".input-tag").prop("readonly", true).addClass("bg-danger-subtle border-danger text-danger");
+                    row.find("input[name*=\"[voucher_serial_no]\"]").prop("readonly", true).addClass("bg-danger-subtle border-danger text-danger");
+                } else {
+                    $("#modalAddAnimalIdentificationLabel").text("Edit Animal Identification Record: " + r.ear_tag_no);
+                    row.find(".input-tag").prop("readonly", true).removeClass("bg-danger-subtle border-danger text-danger");
+                    row.find("input[name*=\"[voucher_serial_no]\"]").prop("readonly", false).removeClass("bg-danger-subtle border-danger text-danger");
+                }
 
                 updateGridRowMetadata();
                 refreshGridConcatenations();
@@ -1515,6 +1769,18 @@ $(document).ready(function() {
     $(document).on("click", ".btn-delete-record", function() {
         const id = $(this).data("id");
         const tag = $(this).data("tag");
+        const status = $(this).data("status");
+        const voucher = $(this).data("voucher");
+
+        if (status === "Tag Damaged / Removed") {
+            Swal.fire({
+                icon: "error",
+                title: "Permanent Pairing Retained",
+                text: `Strict Lifecycle Rule: Ear Tag ${tag} is marked as Damaged/Removed and retains permanent statutory pairing with Cattle Voucher ${voucher || "Serial"}. It cannot be unlinked, deleted, or returned to the available stock pool.`,
+                confirmButtonColor: "#820100"
+            });
+            return;
+        }
 
         Swal.fire({
             title: "Delete Record?",
@@ -1577,12 +1843,106 @@ $(document).ready(function() {
         });
     });
 
+    // Farmer Total Animal Summary Modal Handler (Click on Farm Reg No)
+    $(document).on("click", ".btn-view-farmer-summary", function(e) {
+        e.preventDefault();
+        const farmReg = $(this).data("farm-reg");
+        if (!farmReg) return;
+        openFarmerAnimalSummary(farmReg);
+    });
+
+    window.openFarmerAnimalSummary = function(farmReg) {
+        $("#fas_farmer_name").text("Loading...");
+        $("#fas_farm_reg_no").text(farmReg);
+        $("#fas_nic").text("—");
+        $("#fas_address").text("—");
+        $("#fas_range_district").text("—");
+        $("#fas_animals_table_body").html('<tr><td colspan="10" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Loading complete animal summary...</td></tr>');
+        
+        const modalEl = document.getElementById("modalFarmerAnimalSummary");
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        $.ajax({
+            url: "processors/animal_identification_crud.php?action=get_farmer_animal_summary",
+            type: "GET",
+            data: { farm_reg_no: farmReg },
+            dataType: "json",
+            success: function(resp) {
+                if (resp.success && resp.farmer) {
+                    const f = resp.farmer;
+                    const mc = resp.master_census || {};
+                    const ai = resp.ear_tag_summary || {};
+                    const animals = resp.animals_list || [];
+
+                    $("#fas_farmer_name").text(f.farmer_name || "Unregistered Farmer");
+                    $("#fas_farm_reg_no").text(f.farm_reg_no || farmReg);
+                    $("#fas_nic").text(f.nic || "—");
+                    $("#fas_address").text(f.address ? `${f.address}${f.telephone ? ' | Tel: ' + f.telephone : ''}` : "—");
+                    $("#fas_range_district").text(`${f.vs_range || '—'} / ${f.district || '—'}`);
+
+                    // Master census
+                    $("#fas_master_total_badge").text(`Total: ${mc.total || 0} Animals`);
+                    $("#fas_mc_cattle").text(mc.cattle || 0);
+                    $("#fas_mc_buffalo").text(mc.buffalo || 0);
+                    $("#fas_mc_goat").text(mc.goat || 0);
+                    $("#fas_mc_swine").text(mc.swine || 0);
+                    $("#fas_mc_sheep").text(mc.sheep || 0);
+                    $("#fas_mc_poultry").text(mc.poultry || 0);
+
+                    // Ear Tag Summary
+                    $("#fas_ai_total_badge").text(`Identified: ${ai.total || 0} Tags`);
+                    $("#fas_ai_active").text(ai.active || 0);
+                    $("#fas_ai_sold").text(ai.sold || 0);
+                    $("#fas_ai_slaughter").text(ai.slaughter || 0);
+                    $("#fas_ai_died").text(ai.died || 0);
+                    $("#fas_ai_damaged").text(ai.damaged || 0);
+
+                    // Animals Table
+                    $("#fas_animals_table_count").text(`${animals.length} registered animal record${animals.length !== 1 ? 's' : ''}`);
+                    if (animals.length === 0) {
+                        $("#fas_animals_table_body").html('<tr><td colspan="10" class="text-center py-4 text-muted">No individual identified ear tags found for this farm registration.</td></tr>');
+                    } else {
+                        let trHtml = "";
+                        animals.forEach((an, idx) => {
+                            let statusBadge = `<span class="badge bg-success-subtle text-success border">Active</span>`;
+                            if (an.present_status === 'Sold or transferred') statusBadge = `<span class="badge bg-primary-subtle text-primary border">Sold</span>`;
+                            else if (an.present_status === 'Slaughter') statusBadge = `<span class="badge bg-danger-subtle text-danger border">Slaughter</span>`;
+                            else if (an.present_status === 'Died') statusBadge = `<span class="badge bg-warning-subtle text-dark border">Died</span>`;
+                            else if (an.present_status === 'Tag Damaged / Removed') statusBadge = `<span class="badge bg-danger text-white"><i class="bi bi-lock-fill me-1"></i>Damaged</span>`;
+
+                            trHtml += `
+                                <tr>
+                                    <td class="text-center text-muted fw-bold">${idx + 1}</td>
+                                    <td><span class="font-monospace fw-bold text-primary">${an.ear_tag_no}</span></td>
+                                    <td class="font-monospace">${an.animal_seq_no || '—'}</td>
+                                    <td class="font-monospace fw-semibold">${an.voucher_serial_no || '—'}</td>
+                                    <td>${an.species || 'Cattle'}</td>
+                                    <td>${an.breed || '—'}</td>
+                                    <td>${an.gender || '—'}</td>
+                                    <td>${an.colour || '—'}</td>
+                                    <td class="text-nowrap text-secondary">${an.identification_date || '—'}</td>
+                                    <td class="text-center">${statusBadge}</td>
+                                </tr>
+                            `;
+                        });
+                        $("#fas_animals_table_body").html(trHtml);
+                    }
+                } else {
+                    $("#fas_animals_table_body").html('<tr><td colspan="10" class="text-center py-4 text-danger">Could not load summary.</td></tr>');
+                }
+            },
+            error: function() {
+                $("#fas_animals_table_body").html('<tr><td colspan="10" class="text-center py-4 text-danger">Error connecting to server.</td></tr>');
+            }
+        });
+    };
+
     // Initialize initial preview
     refreshGridConcatenations();
 });
 </script>
 <?php
-$pageScripts .= ob_get_clean();
+$pageScripts = ob_get_clean();
 
 require_once '../../../includes/footer.php';
 ?>
