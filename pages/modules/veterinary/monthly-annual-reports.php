@@ -161,9 +161,9 @@ require_once '../../../includes/header.php';
 
 
                         <div class="col">
-                            <a href="mobile_clinic_reports.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #283593; min-height: 105px;">
-                                <i class="bi bi-folder-fill fs-3 mb-1"></i>
-                                <span class="text-center">Mobile Clinic Reports</span>
+                            <a href="mobile_clinics.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #283593; min-height: 105px;">
+                                <i class="bi bi-truck fs-3 mb-1"></i>
+                                <span class="text-center">Mobile Clinics &amp; Drugs</span>
                             </a>
                         </div>
 
