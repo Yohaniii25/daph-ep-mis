@@ -751,13 +751,13 @@ require_once '../../../includes/header.php';
                                     </td>
                                     <td class="text-center text-nowrap">
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <button class="btn btn-outline-info btn-view" title="View Details"><i class="bi bi-eye"></i></button>
-                                            <button class="btn btn-outline-primary btn-edit" title="Edit Society"><i class="bi bi-pencil-square"></i></button>
-                                            <button class="btn btn-success btn-meetings position-relative" data-id="<?= $row['id'] ?>" data-name="<?= htmlspecialchars($row['name_address']) ?>" title="Meetings & Resolutions Tracker">
+                                            <button class="btn btn-outline-info btn-view" title="View Details" data-bs-toggle="modal" data-bs-target="#viewSocModal"><i class="bi bi-eye"></i></button>
+                                            <button class="btn btn-outline-primary btn-edit" title="Edit Society" data-bs-toggle="modal" data-bs-target="#editSocModal"><i class="bi bi-pencil-square"></i></button>
+                                            <button class="btn btn-success btn-meetings position-relative" data-id="<?= $row['id'] ?>" data-name="<?= htmlspecialchars($row['name_address']) ?>" title="Meetings & Resolutions Tracker" data-bs-toggle="modal" data-bs-target="#viewSocModal">
                                                 <i class="bi bi-calendar-check me-1"></i>Meetings
                                                 <span class="badge bg-light text-success fw-bold ms-1 meeting-badge-<?= $row['id'] ?>"><?= $meeting_counts[$row['id']] ?? 0 ?></span>
                                             </button>
-                                            <button class="btn btn-warning text-dark btn-committee position-relative" data-id="<?= $row['id'] ?>" data-name="<?= htmlspecialchars($row['name_address']) ?>" data-total="<?= (int)$row['total_members'] ?>" title="Committee & Org Chart">
+                                            <button class="btn btn-warning text-dark btn-committee position-relative" data-id="<?= $row['id'] ?>" data-name="<?= htmlspecialchars($row['name_address']) ?>" data-total="<?= (int)$row['total_members'] ?>" title="Committee & Org Chart" data-bs-toggle="modal" data-bs-target="#viewSocModal">
                                                 <i class="bi bi-diagram-3-fill me-1"></i>Committee
                                                 <span class="badge bg-dark text-white ms-1 committee-badge-<?= $row['id'] ?>"><?= $committee_counts[$row['id']] ?? 0 ?></span>
                                             </button>
@@ -1315,7 +1315,7 @@ require_once '../../../includes/header.php';
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<?php ob_start(); ?>
 <script>
 $(document).ready(function() {
     // Initialize Societies DataTable
@@ -1398,54 +1398,72 @@ $(document).ready(function() {
     var cachedMeetings = [];
 
     // Open Profile Modal on Tab 1 (Details)
-    $(document).on('click', '.btn-view', function() {
+    $(document).on('click', '.btn-view', function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         var $row = $(this).closest('tr');
-        var id = $row.data('id');
+        var id = $(this).data('id') || $row.data('id');
         activeSocietyId = id;
         populateProfileFields($row);
-        var tab = new bootstrap.Tab(document.querySelector('#soc-info-tab'));
-        tab.show();
+        var tabEl = document.querySelector('#soc-info-tab');
+        if (tabEl && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(tabEl).show();
+        }
         loadSocietyData(id);
-        new bootstrap.Modal(document.getElementById('viewSocModal')).show();
+        var modalEl = document.getElementById('viewSocModal');
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     });
 
     // Open Profile Modal on Tab 2 (Meetings Tracker)
-    $(document).on('click', '.btn-meetings', function() {
-        var id = $(this).data('id');
+    $(document).on('click', '.btn-meetings', function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         var $row = $(this).closest('tr');
+        var id = $(this).data('id') || $row.data('id');
         activeSocietyId = id;
         populateProfileFields($row);
-        var tab = new bootstrap.Tab(document.querySelector('#soc-meetings-tab'));
-        tab.show();
+        var tabEl = document.querySelector('#soc-meetings-tab');
+        if (tabEl && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(tabEl).show();
+        }
         loadSocietyData(id);
-        new bootstrap.Modal(document.getElementById('viewSocModal')).show();
+        var modalEl = document.getElementById('viewSocModal');
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     });
 
     // Open Profile Modal on Tab 3 (Committee & Org Chart)
-    $(document).on('click', '.btn-committee', function() {
-        var id = $(this).data('id');
+    $(document).on('click', '.btn-committee', function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         var $row = $(this).closest('tr');
+        var id = $(this).data('id') || $row.data('id');
         activeSocietyId = id;
         populateProfileFields($row);
-        var tab = new bootstrap.Tab(document.querySelector('#soc-committee-tab'));
-        tab.show();
+        var tabEl = document.querySelector('#soc-committee-tab');
+        if (tabEl && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(tabEl).show();
+        }
         loadSocietyData(id);
-        new bootstrap.Modal(document.getElementById('viewSocModal')).show();
+        var modalEl = document.getElementById('viewSocModal');
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     });
 
     function populateProfileFields($row) {
         var name = $row.data('name_address') || 'Society #' + $row.data('id');
         $('#profile_society_name').text(name);
-        $('#profile_society_range').text($row.data('vs_range') + ' Range' + ($row.data('gn_division') ? ' | ' + $row.data('gn_division') : ''));
-        $('#view_vs_range').text($row.data('vs_range'));
+        $('#profile_society_range').text(($row.data('vs_range') || '') + ' Range' + ($row.data('gn_division') ? ' | ' + $row.data('gn_division') : ''));
+        $('#view_vs_range').text($row.data('vs_range') || 'N/A');
         $('#view_gn_division').text($row.data('gn_division') || 'N/A');
-        $('#view_name_address').html(($row.data('name_address') || '').replace(/\n/g, '<br>'));
-        $('#view_overall_objective').html(($row.data('overall_objective') || '').replace(/\n/g, '<br>'));
-        $('#view_total_members').text($row.data('total_members'));
+        $('#view_name_address').html(String($row.data('name_address') || '').replace(/\n/g, '<br>'));
+        $('#view_overall_objective').html(String($row.data('overall_objective') || '').replace(/\n/g, '<br>'));
+        $('#view_total_members').text($row.data('total_members') || 0);
         $('#view_reg_no').text($row.data('reg_no') || 'N/A');
         $('#view_reg_department').text($row.data('reg_department') || 'N/A');
-        $('#view_major_activities').html(($row.data('major_activities') || '').replace(/\n/g, '<br>'));
-        $('#view_financial_records_availability').text($row.data('financial_records_availability'));
+        $('#view_major_activities').html(String($row.data('major_activities') || '').replace(/\n/g, '<br>'));
+        $('#view_financial_records_availability').text($row.data('financial_records_availability') || 'N/A');
         $('#view_regulated_by').text($row.data('regulated_by') || 'N/A');
         $('#view_tp_no').text($row.data('tp_no') || 'N/A');
 
@@ -1661,7 +1679,8 @@ $(document).ready(function() {
     });
 
     // Edit Modal Open
-    $(document).on('click', '.btn-edit', function() {
+    $(document).on('click', '.btn-edit', function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         var $row = $(this).closest('tr');
         var id = $row.data('id');
         $('#edit_id').val(id);
@@ -1688,7 +1707,10 @@ $(document).ready(function() {
         $('#editModalAddMemberCard').addClass('d-none');
         loadEditModalCommittee(id);
 
-        new bootstrap.Modal(document.getElementById('editSocModal')).show();
+        var modalEl = document.getElementById('editSocModal');
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     });
 
     function loadEditModalCommittee(societyId) {

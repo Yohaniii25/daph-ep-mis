@@ -172,6 +172,14 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/sweetalert2.min.css">
 
 <style>
+    @keyframes autoFillPulse {
+        0% { background-color: #d1e7dd; border-color: #198754; box-shadow: 0 0 8px rgba(25, 135, 84, 0.4); }
+        50% { background-color: #d1e7dd; border-color: #198754; }
+        100% { background-color: inherit; border-color: inherit; }
+    }
+    .auto-fill-flash {
+        animation: autoFillPulse 1.4s ease-in-out !important;
+    }
     .dairy-hub-header {
         background: linear-gradient(135deg, #370709 0%, #631215 50%, #820100 100%);
         color: #ffffff;
@@ -696,13 +704,13 @@ require_once '../../../includes/header.php';
                         </label>
                         <div class="input-group">
                             <input type="text" id="add_farm_reg_no" name="farm_reg_no" class="form-control font-monospace fw-bold" placeholder="Enter Farm Registration Number (e.g. 530112345 or FRN-AMP-001)" required autocomplete="off">
-                            <button class="btn text-light fw-bold px-3" type="button" id="btnAutoFetch" style="background-color: #820100;">
-                                <span class="spinner-border spinner-border-sm auto-fetch-spinner me-1" role="status" aria-hidden="true"></span>
-                                <i class="bi bi-cloud-arrow-down-fill me-1 fetch-icon"></i> Auto-Fetch
+                            <button class="btn text-light fw-bold px-3 d-flex align-items-center" type="button" id="btnAutoFetch" style="background-color: #820100;">
+                                <span class="spinner-border spinner-border-sm auto-fetch-spinner me-1" role="status" aria-hidden="true" style="display: none;"></span>
+                                <i class="bi bi-cloud-arrow-down-fill me-1 fetch-icon"></i> <span class="fetch-btn-label">Auto-Fetch</span>
                             </button>
                         </div>
                         <div id="fetchFeedback" class="small mt-1 text-muted">
-                            <i class="bi bi-info-circle me-1"></i>Enter Farm Registration No or NIC and click Auto-Fetch. Beneficiary's Name, Address, NIC, and Phone will automatically populate from the Master Registry.
+                            <i class="bi bi-info-circle me-1"></i>Enter Farm Registration No or NIC. Details will automatically fetch from Master Registry upon typing, leaving the field, or pressing Enter.
                         </div>
                     </div>
 
@@ -847,7 +855,13 @@ require_once '../../../includes/header.php';
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold mb-1">Farm Registration Number <span class="text-danger">*</span></label>
-                            <input type="text" id="edit_farm_reg_no" name="farm_reg_no" class="form-control form-control-sm font-monospace fw-bold" required>
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="edit_farm_reg_no" name="farm_reg_no" class="form-control form-control-sm font-monospace fw-bold" required autocomplete="off">
+                                <button class="btn btn-outline-secondary" type="button" id="btnEditAutoFetch" title="Auto-fetch from Master Registry">
+                                    <span class="spinner-border spinner-border-sm edit-fetch-spinner me-1" role="status" aria-hidden="true" style="display: none;"></span>
+                                    <i class="bi bi-cloud-arrow-down-fill edit-fetch-icon"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold mb-1">Beneficiary Name <span class="text-danger">*</span></label>
@@ -936,51 +950,66 @@ if (file_exists(__DIR__ . '/model/add_dairy_record_modal.php')) {
 }
 ?>
 
-<script src="../../../assets/js/jquery.min.js"></script>
-<script src="../../../assets/js/bootstrap.bundle.min.js"></script>
-<script src="../../../assets/js/jquery.dataTables.min.js"></script>
-<script src="../../../assets/js/dataTables.bootstrap5.min.js"></script>
-<script src="../../../assets/js/sweetalert2.all.min.js"></script>
-
+<?php
+// Buffer page-specific scripts to be injected by includes/footer.php after jQuery & Bootstrap load
+ob_start();
+?>
 <script>
 $(document).ready(function() {
     // 1. Initialize Beneficiaries Summary Table
-    $('#beneficiarySummaryTable').DataTable({
-        pageLength: 20,
-        responsive: true,
-        order: [[0, 'asc']],
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search beneficiaries..."
-        }
-    });
+    if ($('#beneficiarySummaryTable').length) {
+        $('#beneficiarySummaryTable').DataTable({
+            pageLength: 20,
+            responsive: true,
+            order: [[0, 'asc']],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search beneficiaries..."
+            }
+        });
+    }
 
     // 2. Initialize Milk Collection Table
-    $('#dairyTable').DataTable({
-        pageLength: 15,
-        responsive: true,
-        order: [[0, 'desc']],
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search collections..."
-        }
-    });
+    if ($('#dairyTable').length) {
+        $('#dairyTable').DataTable({
+            pageLength: 15,
+            responsive: true,
+            order: [[0, 'desc']],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search collections..."
+            }
+        });
+    }
 
-    // Auto-Fetch implementation for Add Modal
-    function triggerAutoFetch() {
+    // =========================================================================
+    // Auto-Fetch for Enroll Beneficiary (Add Modal)
+    // =========================================================================
+    let addLastFetchedReg = '';
+    let addAutoFetchTimer = null;
+
+    function triggerAutoFetch(isManual = false) {
         const regVal = $('#add_farm_reg_no').val().trim();
         if (!regVal) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Registration Number Required',
-                text: 'Please input a Farm Registration Number or NIC before fetching.',
-                confirmButtonColor: '#820100'
-            });
+            if (isManual) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Registration Number Required',
+                    text: 'Please input a Farm Registration Number or NIC before fetching.',
+                    confirmButtonColor: '#820100'
+                });
+            }
+            return;
+        }
+
+        // Avoid re-fetching identical value unless manually triggered
+        if (!isManual && regVal === addLastFetchedReg) {
             return;
         }
 
         $('.auto-fetch-spinner').show();
         $('.fetch-icon').hide();
+        $('.fetch-btn-label').text('Fetching...');
         $('#fetchFeedback').html('<span class="text-primary"><i class="bi bi-hourglass-split me-1"></i>Searching master registry...</span>');
 
         $.ajax({
@@ -994,8 +1023,10 @@ $(document).ready(function() {
             success: function(res) {
                 $('.auto-fetch-spinner').hide();
                 $('.fetch-icon').show();
+                $('.fetch-btn-label').text('Auto-Fetch');
 
                 if (res.success && res.found) {
+                    addLastFetchedReg = regVal;
                     const f = res.farmer;
                     $('#add_beneficiary_name').val(f.farmer_name || '');
                     $('#add_nic').val(f.nic || '');
@@ -1018,8 +1049,23 @@ $(document).ready(function() {
                         $('#add_category').val('5L');
                     }
 
+                    // Flash animation on auto-filled elements
+                    const $flashed = $('#add_beneficiary_name, #add_nic, #add_phone, #add_address, #add_daily_milk_current, #add_category');
+                    $flashed.addClass('auto-fill-flash');
+                    setTimeout(() => { $flashed.removeClass('auto-fill-flash'); }, 1400);
+
                     $('#regSourceBadge').text(f.source).removeClass('bg-light text-dark').addClass('bg-success text-white');
-                    $('#fetchFeedback').html(`<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Farmer details populated from ${f.source}!</span>`);
+                    $('#fetchFeedback').html(`<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Found: <strong>${f.farmer_name}</strong> &bull; Auto-populated from ${f.source}!</span>`);
+
+                    if (isManual) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Farmer Located!',
+                            text: `Auto-populated data for ${f.farmer_name} from ${f.source}.`,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
 
                     if (res.existing_summary) {
                         Swal.fire({
@@ -1032,23 +1078,158 @@ $(document).ready(function() {
                 } else {
                     $('#regSourceBadge').text('Manual Entry').removeClass('bg-success text-white').addClass('bg-light text-dark');
                     $('#fetchFeedback').html(`<span class="text-warning fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i>${res.message || 'Farmer not found in master registry. Please enter details manually.'}</span>`);
+
+                    if (isManual) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Not Found in Registry',
+                            text: res.message || 'No matching farmer found for this registration number. You may enter details manually.',
+                            confirmButtonColor: '#820100'
+                        });
+                    }
                 }
             },
             error: function() {
                 $('.auto-fetch-spinner').hide();
                 $('.fetch-icon').show();
+                $('.fetch-btn-label').text('Auto-Fetch');
                 $('#fetchFeedback').html('<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Network error connecting to master registry.</span>');
+                if (isManual) {
+                    Swal.fire('Network Error', 'Could not connect to master registry service.', 'error');
+                }
             }
         });
     }
 
-    $('#btnAutoFetch').on('click', triggerAutoFetch);
+    // Auto-fetch triggers for Add Modal
+    $('#btnAutoFetch').on('click', function(e) {
+        e.preventDefault();
+        triggerAutoFetch(true);
+    });
 
-    // Auto-calculate Department Contribution when Total Cost and Beneficiary Contribution change
+    $('#add_farm_reg_no').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            triggerAutoFetch(true);
+        }
+    });
+
+    $('#add_farm_reg_no').on('blur', function() {
+        const val = $(this).val().trim();
+        if (val.length >= 3) {
+            triggerAutoFetch(false);
+        }
+    });
+
+    $('#add_farm_reg_no').on('input', function() {
+        clearTimeout(addAutoFetchTimer);
+        const val = $(this).val().trim();
+        if (val.length >= 4) {
+            addAutoFetchTimer = setTimeout(function() {
+                triggerAutoFetch(false);
+            }, 600);
+        }
+    });
+
+    // =========================================================================
+    // Auto-Fetch for Update Beneficiary (Edit Modal)
+    // =========================================================================
+    let editLastFetchedReg = '';
+    let editAutoFetchTimer = null;
+
+    function triggerEditAutoFetch(isManual = false) {
+        const regVal = $('#edit_farm_reg_no').val().trim();
+        if (!regVal) return;
+
+        if (!isManual && regVal === editLastFetchedReg) return;
+
+        $('.edit-fetch-spinner').show();
+        $('.edit-fetch-icon').hide();
+
+        $.ajax({
+            url: 'processors/dairy_project_crud.php',
+            method: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'lookup_farmer',
+                farm_reg_no: regVal
+            },
+            success: function(res) {
+                $('.edit-fetch-spinner').hide();
+                $('.edit-fetch-icon').show();
+
+                if (res.success && res.found) {
+                    editLastFetchedReg = regVal;
+                    const f = res.farmer;
+                    $('#edit_beneficiary_name').val(f.farmer_name || '');
+                    $('#edit_nic').val(f.nic || '');
+                    $('#edit_phone').val(f.phone || '');
+                    $('#edit_address').val(f.address || '');
+
+                    if (f.daily_milk > 0 && parseFloat($('#edit_daily_milk_current').val() || 0) === 0) {
+                        $('#edit_daily_milk_current').val(f.daily_milk);
+                    }
+
+                    const $flashed = $('#edit_beneficiary_name, #edit_nic, #edit_phone, #edit_address, #edit_daily_milk_current');
+                    $flashed.addClass('auto-fill-flash');
+                    setTimeout(() => { $flashed.removeClass('auto-fill-flash'); }, 1400);
+
+                    if (isManual) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Details Updated',
+                            text: `Populated details for ${f.farmer_name} from ${f.source}.`,
+                            timer: 1400,
+                            showConfirmButton: false
+                        });
+                    }
+                } else if (isManual) {
+                    Swal.fire('Not Found', 'No farmer match in master registry.', 'info');
+                }
+            },
+            error: function() {
+                $('.edit-fetch-spinner').hide();
+                $('.edit-fetch-icon').show();
+            }
+        });
+    }
+
+    $('#btnEditAutoFetch').on('click', function(e) {
+        e.preventDefault();
+        triggerEditAutoFetch(true);
+    });
+
+    $('#edit_farm_reg_no').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            triggerEditAutoFetch(true);
+        }
+    });
+
+    $('#edit_farm_reg_no').on('blur', function() {
+        const val = $(this).val().trim();
+        if (val.length >= 3) {
+            triggerEditAutoFetch(false);
+        }
+    });
+
+    $('#edit_farm_reg_no').on('input', function() {
+        clearTimeout(editAutoFetchTimer);
+        const val = $(this).val().trim();
+        if (val.length >= 4) {
+            editAutoFetchTimer = setTimeout(function() {
+                triggerEditAutoFetch(false);
+            }, 600);
+        }
+    });
+
+    // =========================================================================
+    // Auto-calculate Department Contribution
+    // =========================================================================
     $('#add_total_cost, #add_beneficiary_contribution').on('input', function() {
         const total = parseFloat($('#add_total_cost').val()) || 0;
         const ben = parseFloat($('#add_beneficiary_contribution').val()) || 0;
-        if (total >= ben && ben > 0) {
+        if (total >= ben && ben >= 0) {
             $('#add_department_contribution').val((total - ben).toFixed(2));
         }
     });
@@ -1056,12 +1237,14 @@ $(document).ready(function() {
     $('#edit_total_cost, #edit_beneficiary_contribution').on('input', function() {
         const total = parseFloat($('#edit_total_cost').val()) || 0;
         const ben = parseFloat($('#edit_beneficiary_contribution').val()) || 0;
-        if (total >= ben && ben > 0) {
+        if (total >= ben && ben >= 0) {
             $('#edit_department_contribution').val((total - ben).toFixed(2));
         }
     });
 
+    // =========================================================================
     // Submit Add Summary Form via AJAX
+    // =========================================================================
     $('#addSummaryForm').on('submit', function(e) {
         e.preventDefault();
         const formData = $(this).serialize();
@@ -1095,7 +1278,9 @@ $(document).ready(function() {
         });
     });
 
+    // =========================================================================
     // Open Edit Summary Modal
+    // =========================================================================
     $(document).on('click', '.edit-summary-btn', function() {
         const id = $(this).data('id');
         $.ajax({
@@ -1122,6 +1307,7 @@ $(document).ready(function() {
                     $('#edit_approval_status').val(d.approval_status);
                     $('#edit_remarks').val(d.remarks);
 
+                    editLastFetchedReg = d.farm_reg_no;
                     $('#editSummaryModal').modal('show');
                 } else {
                     Swal.fire('Error', res.message || 'Could not fetch record.', 'error');
@@ -1130,7 +1316,9 @@ $(document).ready(function() {
         });
     });
 
+    // =========================================================================
     // Submit Edit Summary Form via AJAX
+    // =========================================================================
     $('#editSummaryForm').on('submit', function(e) {
         e.preventDefault();
         const formData = $(this).serialize();
@@ -1164,7 +1352,9 @@ $(document).ready(function() {
         });
     });
 
+    // =========================================================================
     // Delete Summary Entry
+    // =========================================================================
     $(document).on('click', '.delete-summary-btn', function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
@@ -1200,5 +1390,7 @@ $(document).ready(function() {
     });
 });
 </script>
-
-<?php require_once '../../../includes/footer.php'; ?>
+<?php
+$pageScripts = ob_get_clean();
+require_once __DIR__ . '/../../../includes/footer.php';
+?>

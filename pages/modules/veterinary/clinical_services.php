@@ -564,7 +564,7 @@ body {
                 <small class="text-muted">Cattle, Buffalo, Goat, Sheep &amp; Farm Livestock &bull; Farm Registration Master Verification</small>
             </div>
             <div class="mt-2 mt-md-0">
-                <button type="button" class="btn btn-sm btn-large-animal fw-semibold" onclick="openNewOpdModalWithPreset('large_animal')">
+                <button type="button" class="btn btn-sm btn-large-animal fw-semibold" id="btnAddLargeAnimalRecord">
                     <i class="bi bi-plus-circle me-1"></i> Add Large Animal Record
                 </button>
             </div>
@@ -716,13 +716,13 @@ body {
                                     <!-- Action -->
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
-                                            <button type="button" class="btn btn-outline-info" title="View Physical Register Card" onclick="viewOpdDetails(<?= $rec['id'] ?>)">
+                                            <button type="button" class="btn btn-outline-info btn-view-opd" data-id="<?= $rec['id'] ?>" title="View Physical Register Card">
                                                 <i class="bi bi-eye"></i>
                                             </button>
-                                            <button type="button" class="btn btn-outline-primary" title="Edit Entry" onclick="editOpdRecord(<?= $rec['id'] ?>)">
+                                            <button type="button" class="btn btn-outline-primary btn-edit-opd" data-id="<?= $rec['id'] ?>" title="Edit Entry">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button type="button" class="btn btn-outline-danger" title="Delete Record" onclick="deleteOpdRecord(<?= $rec['id'] ?>, '<?= htmlspecialchars(addslashes($rec['owner_name'])) ?>', '<?= htmlspecialchars($rec['cash_receipt_no']) ?>')">
+                                            <button type="button" class="btn btn-outline-danger btn-delete-opd" data-id="<?= $rec['id'] ?>" data-name="<?= htmlspecialchars($rec['owner_name'], ENT_QUOTES) ?>" data-receipt="<?= htmlspecialchars($rec['cash_receipt_no'], ENT_QUOTES) ?>" title="Delete Record">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -749,7 +749,7 @@ body {
                 <small class="text-muted">Dogs (Canine), Cats (Feline), Avian &amp; Pets &bull; Standard Animal Registration Numbers</small>
             </div>
             <div class="mt-2 mt-md-0">
-                <button type="button" class="btn btn-sm btn-small-animal fw-semibold" onclick="openNewOpdModalWithPreset('small_animal')">
+                <button type="button" class="btn btn-sm btn-small-animal fw-semibold" id="btnAddSmallAnimalRecord">
                     <i class="bi bi-plus-circle me-1"></i> Add Small Animal Record
                 </button>
             </div>
@@ -901,13 +901,13 @@ body {
                                     <!-- Action -->
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
-                                            <button type="button" class="btn btn-outline-info" title="View Physical Register Card" onclick="viewOpdDetails(<?= $rec['id'] ?>)">
+                                            <button type="button" class="btn btn-outline-info btn-view-opd" data-id="<?= $rec['id'] ?>" title="View Physical Register Card">
                                                 <i class="bi bi-eye"></i>
                                             </button>
-                                            <button type="button" class="btn btn-outline-primary" title="Edit Entry" onclick="editOpdRecord(<?= $rec['id'] ?>)">
+                                            <button type="button" class="btn btn-outline-primary btn-edit-opd" data-id="<?= $rec['id'] ?>" title="Edit Entry">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button type="button" class="btn btn-outline-danger" title="Delete Record" onclick="deleteOpdRecord(<?= $rec['id'] ?>, '<?= htmlspecialchars(addslashes($rec['owner_name'])) ?>', '<?= htmlspecialchars($rec['cash_receipt_no']) ?>')">
+                                            <button type="button" class="btn btn-outline-danger btn-delete-opd" data-id="<?= $rec['id'] ?>" data-name="<?= htmlspecialchars($rec['owner_name'], ENT_QUOTES) ?>" data-receipt="<?= htmlspecialchars($rec['cash_receipt_no'], ENT_QUOTES) ?>" title="Delete Record">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -929,12 +929,11 @@ body {
 <!-- =========================================================================== -->
 <div class="modal fade" id="modalOpdEntry" tabindex="-1" aria-labelledby="modalOpdEntryLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: var(--border-radius);">
-            <form id="formClinicalOpd" method="POST" autocomplete="off">
-                <input type="hidden" name="action" value="save_opd_record">
-                <input type="hidden" name="id" id="opd_id" value="0">
-                <input type="hidden" name="range_id" value="<?= $range_id ?>">
-                <input type="hidden" name="district_id" value="<?= $current_district_id ?>">
+        <form id="formClinicalOpd" class="modal-content border-0 shadow-lg" method="POST" autocomplete="off" style="border-radius: var(--border-radius);">
+            <input type="hidden" name="action" value="save_opd_record">
+            <input type="hidden" name="id" id="opd_id" value="0">
+            <input type="hidden" name="range_id" value="<?= $range_id ?>">
+            <input type="hidden" name="district_id" value="<?= $current_district_id ?>">
 
                 <div class="modal-header text-white" id="modalOpdHeader" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);">
                     <div class="d-flex align-items-center gap-2">
@@ -1192,8 +1191,7 @@ body {
                         <i class="bi bi-check2-circle me-1" id="iconSave"></i> Save &amp; Sync to Counterfoil
                     </button>
                 </div>
-            </form>
-        </div>
+        </form>
     </div>
 </div>
 
@@ -1228,84 +1226,331 @@ body {
     </div>
 </div>
 
-<!-- DataTables, Buttons & SweetAlert2 JS -->
-<script src="../../../assets/js/jquery.dataTables.min.js"></script>
-<script src="../../../assets/js/dataTables.bootstrap5.min.js"></script>
-<script src="../../../assets/js/dataTables.buttons.min.js"></script>
-<script src="../../../assets/js/buttons.bootstrap5.min.js"></script>
-<script src="../../../assets/js/jszip.min.js"></script>
-<script src="../../../assets/js/buttons.html5.min.js"></script>
-<script src="../../../assets/js/buttons.print.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<?php ob_start(); ?>
 <script>
-$(document).ready(function() {
-    // 1. Initialize DataTables
-    const dtConfig = {
-        pageLength: 25,
-        order: [[1, 'desc']],
-        responsive: true,
-        dom: '<"d-flex flex-wrap align-items-center justify-content-between p-3 border-bottom gap-2"<"d-flex align-items-center gap-2"lB>f>rt<"d-flex flex-wrap align-items-center justify-content-between p-3 border-top"ip>',
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel',
-                className: 'btn btn-sm btn-outline-success',
-                exportOptions: { columns: ':not(:last-child)' }
-            },
-            {
-                extend: 'print',
-                text: '<i class="bi bi-printer me-1"></i> Print',
-                className: 'btn btn-sm btn-outline-dark',
-                exportOptions: { columns: ':not(:last-child)' }
-            }
-        ],
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search clinical records...",
-            lengthMenu: "Show _MENU_ entries"
-        }
-    };
-
-    if ($('#tableLargeAnimalOpd').length && $('#tableLargeAnimalOpd tbody tr td').length > 1) {
-        $('#tableLargeAnimalOpd').DataTable(dtConfig);
+// =============================================================================
+// GLOBAL MODAL CONTROLLER & WORKFLOW UTILITIES
+// =============================================================================
+window.openModal = function(selectorOrEl) {
+    const el = (typeof selectorOrEl === 'string') ? document.querySelector(selectorOrEl) : selectorOrEl;
+    if (!el) return;
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bootstrap.Modal.getOrCreateInstance(el).show();
+    } else if (typeof $ !== 'undefined' && typeof $(el).modal === 'function') {
+        $(el).modal('show');
     }
-    if ($('#tableSmallAnimalOpd').length && $('#tableSmallAnimalOpd tbody tr td').length > 1) {
-        $('#tableSmallAnimalOpd').DataTable(dtConfig);
+};
+
+window.hideModal = function(selectorOrEl) {
+    const el = (typeof selectorOrEl === 'string') ? document.querySelector(selectorOrEl) : selectorOrEl;
+    if (!el) return;
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bootstrap.Modal.getOrCreateInstance(el).hide();
+    } else if (typeof $ !== 'undefined' && typeof $(el).modal === 'function') {
+        $(el).modal('hide');
+    }
+};
+
+window.applyWorkflowLayout = function(type) {
+    const isLarge = (type === 'large_animal');
+    if (isLarge) {
+        $('.section-large-animal').show();
+        $('.section-small-animal').hide();
+        $('#modalOpdHeader').css('background', 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)');
+        $('#modalOpdEntryLabel').text($('#opd_id').val() > 0 ? 'Edit Large Animal OPD Record' : 'New Large Animal OPD Record');
+        $('#lblOwnerName').text('Name of Farmer *');
+        $('#lblOwnerAddress').text('Address of Farmer');
+        $('#lblOwnerPhone').text('Contact Tel. No');
+        $('#lblTotalPop').html('Total Population of the herd <span class="text-danger">*</span>');
+        $('#helpTotalPop').text('Total animal count in the farm herd.');
+        $('#btnSaveOpdRecord').removeClass('btn-primary').addClass('btn-success');
+        $('#optGroupLarge').prop('disabled', false);
+    } else {
+        $('.section-large-animal').hide();
+        $('.section-small-animal').show();
+        $('#modalOpdHeader').css('background', 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)');
+        $('#modalOpdEntryLabel').text($('#opd_id').val() > 0 ? 'Edit Small Animal OPD Record' : 'New Small Animal OPD Record');
+        $('#lblOwnerName').text('Name of Pet Owner *');
+        $('#lblOwnerAddress').text('Address of Pet Owner');
+        $('#lblOwnerPhone').text('Contact Tel. No');
+        $('#lblTotalPop').html('Total Population (Household/Kennel) <span class="text-danger">*</span>');
+        $('#helpTotalPop').text('Number of pets or kennel size.');
+        $('#btnSaveOpdRecord').removeClass('btn-success').addClass('btn-primary');
+    }
+};
+
+window.openNewOpdModalWithPreset = function(type) {
+    const formEl = document.getElementById('formClinicalOpd');
+    if (formEl) formEl.reset();
+    $('#opd_id').val('0');
+    $('#fetchFeedback').hide();
+    $('#revenue_total_display').val('0.00');
+
+    if (type === 'large_animal') {
+        $('#clinicTypeLarge').prop('checked', true);
+        applyWorkflowLayout('large_animal');
+        $('#species').val('Cattle');
+    } else {
+        $('#clinicTypeSmall').prop('checked', true);
+        applyWorkflowLayout('small_animal');
+        $('#species').val('Canine / Dog');
+    }
+
+    openModal('#modalOpdEntry');
+};
+
+window.viewOpdDetails = function(id) {
+    openModal('#modalViewOpdDetails');
+    $('#viewModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+
+    $.ajax({
+        url: 'processors/clinical_services_crud.php',
+        method: 'GET',
+        dataType: 'json',
+        data: { action: 'get_opd_record', id: id },
+        success: function(res) {
+            if (res.success && res.data) {
+                const d = res.data;
+                const isLarge = (d.clinic_type === 'large_animal');
+                $('#viewModalSubTitle').text(isLarge ? 'Large Animal Clinical Register Sheet' : 'Small Animal Clinical Register Sheet');
+
+                const html = `
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <div class="row g-2">
+                            <div class="col-6 col-md-3">
+                                <small class="text-muted text-uppercase fw-bold d-block">Intake Date</small>
+                                <strong class="text-dark">${d.entry_date}</strong>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <small class="text-muted text-uppercase fw-bold d-block">Registration Identifier</small>
+                                <span class="badge ${isLarge ? 'bg-success' : 'bg-primary'} font-monospace">${d.registration_no || d.farm_reg_no}</span>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <small class="text-muted text-uppercase fw-bold d-block">Cash Receipt No</small>
+                                <strong class="text-danger font-monospace">${d.cash_receipt_no}</strong>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <small class="text-muted text-uppercase fw-bold d-block">Counterfoil Leaf Link</small>
+                                ${d.leaf_issue_id ? '<span class="badge bg-success-subtle text-success border border-success">Leaf #' + d.leaf_issue_id + ' Synced</span>' : '<span class="badge bg-secondary">Unlinked</span>'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="card h-100 border">
+                                <div class="card-header bg-white fw-bold small text-muted text-uppercase py-2">
+                                    <i class="bi bi-person me-1"></i> Owner / Farmer Particulars
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="mb-2"><strong>Name:</strong> ${d.owner_name}</div>
+                                    <div class="mb-2"><strong>NIC:</strong> ${d.owner_nic || '—'}</div>
+                                    <div class="mb-2"><strong>Address:</strong> ${d.owner_address || '—'}</div>
+                                    <div><strong>Telephone:</strong> ${d.owner_phone || '—'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border">
+                                <div class="card-header bg-white fw-bold small text-muted text-uppercase py-2">
+                                    <i class="bi bi-shield me-1"></i> Animal Physical Particulars
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="mb-2"><strong>Total Population of Herd:</strong> <span class="badge bg-dark">${d.herd_total_population}</span></div>
+                                    <div class="mb-2"><strong>Species &amp; Breed:</strong> ${d.species} (${d.breed || 'Local'})</div>
+                                    <div class="mb-2"><strong>Age &amp; Sex:</strong> ${d.age_years || '—'} &bull; ${d.sex}</div>
+                                    <div class="mb-2"><strong>Coat Colour:</strong> ${d.coat_colour || '—'}</div>
+                                    <div><strong>Special Marks:</strong> ${d.special_marks || '—'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border mb-3">
+                        <div class="card-header bg-white fw-bold small text-muted text-uppercase py-2 text-danger">
+                            <i class="bi bi-heart-pulse me-1"></i> Clinical Diagnostics &amp; Treatment
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-6"><strong>Animals Clinically Affected:</strong> <span class="badge bg-warning-subtle text-warning-emphasis">${d.clinically_affected_count}</span></div>
+                                <div class="col-md-6"><strong>Number of Deaths:</strong> <span class="badge bg-danger-subtle text-danger">${d.death_count}</span></div>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Tentative Diagnosis:</strong>
+                                <div class="p-2 mt-1 rounded bg-danger-subtle text-danger fw-bold">${d.tentative_diagnosis}</div>
+                            </div>
+                            <div>
+                                <strong>Action Taken:</strong>
+                                <div class="p-2 mt-1 rounded bg-light border">${d.action_taken}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border bg-warning-subtle">
+                        <div class="card-header bg-transparent fw-bold small text-uppercase py-2 text-warning-emphasis">
+                            <i class="bi bi-cash me-1"></i> Revenue Breakdown (Rs.)
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row text-center g-2">
+                                <div class="col-3">
+                                    <small class="text-muted d-block">Consultation</small>
+                                    <strong class="font-monospace">Rs. ${parseFloat(d.revenue_consultation).toFixed(2)}</strong>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted d-block">Drugs</small>
+                                    <strong class="font-monospace">Rs. ${parseFloat(d.revenue_drugs).toFixed(2)}</strong>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted d-block">Others</small>
+                                    <strong class="font-monospace">Rs. ${parseFloat(d.revenue_others).toFixed(2)}</strong>
+                                </div>
+                                <div class="col-3 border-start">
+                                    <small class="text-success fw-bold d-block">TOTAL REVENUE</small>
+                                    <strong class="font-monospace text-success fs-6">Rs. ${parseFloat(d.revenue_total).toFixed(2)}</strong>
+                                </div>
+                            </div>
+                            ${d.remarks ? '<div class="mt-2 pt-2 border-top small text-muted"><strong>Remarks:</strong> ' + d.remarks + '</div>' : ''}
+                        </div>
+                    </div>
+                `;
+                $('#viewModalBody').html(html);
+            } else {
+                $('#viewModalBody').html('<div class="alert alert-danger">Failed to load record details.</div>');
+            }
+        },
+        error: function() {
+            $('#viewModalBody').html('<div class="alert alert-danger">Network or server error loading record details.</div>');
+        }
+    });
+};
+
+window.editOpdRecord = function(id) {
+    $.ajax({
+        url: 'processors/clinical_services_crud.php',
+        method: 'GET',
+        dataType: 'json',
+        data: { action: 'get_opd_record', id: id },
+        success: function(res) {
+            if (res.success && res.data) {
+                const d = res.data;
+                $('#opd_id').val(d.id);
+                $('#entry_date').val(d.entry_date);
+
+                if (d.clinic_type === 'large_animal') {
+                    $('#clinicTypeLarge').prop('checked', true);
+                    applyWorkflowLayout('large_animal');
+                    $('#farm_reg_no').val(d.farm_reg_no || d.registration_no);
+                } else {
+                    $('#clinicTypeSmall').prop('checked', true);
+                    applyWorkflowLayout('small_animal');
+                    $('#registration_no').val(d.registration_no);
+                }
+
+                $('#owner_name').val(d.owner_name);
+                $('#owner_nic').val(d.owner_nic || '');
+                $('#owner_address').val(d.owner_address || '');
+                $('#owner_phone').val(d.owner_phone || '');
+
+                $('#herd_total_population').val(d.herd_total_population);
+                $('#species').val(d.species);
+                $('#breed').val(d.breed || '');
+                $('#age_years').val(d.age_years || '');
+                $('#sex').val(d.sex);
+                $('#coat_colour').val(d.coat_colour || '');
+                $('#special_marks').val(d.special_marks || '');
+
+                $('#clinically_affected_count').val(d.clinically_affected_count);
+                $('#death_count').val(d.death_count);
+                $('#tentative_diagnosis').val(d.tentative_diagnosis);
+                $('#action_taken').val(d.action_taken);
+
+                $('#revenue_consultation').val(d.revenue_consultation);
+                $('#revenue_drugs').val(d.revenue_drugs);
+                $('#revenue_others').val(d.revenue_others);
+                $('#revenue_total_display').val(parseFloat(d.revenue_total).toFixed(2));
+
+                $('#cash_receipt_no').val(d.cash_receipt_no);
+                $('#remarks').val(d.remarks || '');
+
+                $('#modalOpdEntryLabel').text(d.clinic_type === 'large_animal' ? 'Edit Large Animal OPD Record' : 'Edit Small Animal OPD Record');
+
+                openModal('#modalOpdEntry');
+            } else {
+                Swal.fire('Error', res.message || 'Failed to retrieve record for editing.', 'error');
+            }
+        },
+        error: function() {
+            Swal.fire('Error', 'Failed to communicate with server.', 'error');
+        }
+    });
+};
+
+window.deleteOpdRecord = function(id, name, receiptNo) {
+    Swal.fire({
+        title: 'Delete Clinical Record?',
+        html: `Are you sure you want to remove OPD Record for <strong>${name}</strong> (Receipt: <strong>${receiptNo}</strong>)?<br><br><span class="text-danger small">This will also clean up the linked overarching counterfoil leaf &amp; cash book summary.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#820100',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Delete Record'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'processors/clinical_services_crud.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'delete_opd_record',
+                    id: id
+                },
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Deleted!', res.message, 'success').then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Failed to communicate with server.', 'error');
+                }
+            });
+        }
+    });
+};
+
+// =============================================================================
+// DOM READY EVENT BINDINGS
+// =============================================================================
+$(document).ready(function() {
+    // 1. Initialize DataTables safely
+    try {
+        if ($.fn && $.fn.DataTable) {
+            const dtConfig = {
+                pageLength: 25,
+                order: [[1, 'desc']],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search clinical records..."
+                }
+            };
+            if ($('#tableLargeAnimalOpd').length && $('#tableLargeAnimalOpd tbody tr').length > 0 && $('#tableLargeAnimalOpd tbody tr td').length > 1) {
+                $('#tableLargeAnimalOpd').DataTable(dtConfig);
+            }
+            if ($('#tableSmallAnimalOpd').length && $('#tableSmallAnimalOpd tbody tr').length > 0 && $('#tableSmallAnimalOpd tbody tr td').length > 1) {
+                $('#tableSmallAnimalOpd').DataTable(dtConfig);
+            }
+        }
+    } catch(e) {
+        console.warn('DataTable non-fatal notice:', e);
     }
 
     // 2. Dynamic Workflow Switching in Modal
     $('input[name="clinic_type"]').on('change', function() {
         applyWorkflowLayout($(this).val());
     });
-
-    function applyWorkflowLayout(type) {
-        const isLarge = (type === 'large_animal');
-        if (isLarge) {
-            $('.section-large-animal').show();
-            $('.section-small-animal').hide();
-            $('#modalOpdHeader').css('background', 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)');
-            $('#modalOpdEntryLabel').text($('#opd_id').val() > 0 ? 'Edit Large Animal OPD Record' : 'New Large Animal OPD Record');
-            $('#lblOwnerName').text('Name of Farmer *');
-            $('#lblOwnerAddress').text('Address of Farmer');
-            $('#lblOwnerPhone').text('Contact Tel. No');
-            $('#lblTotalPop').html('Total Population of the herd <span class="text-danger">*</span>');
-            $('#helpTotalPop').text('Total animal count in the farm herd.');
-            $('#btnSaveOpdRecord').removeClass('btn-primary').addClass('btn-success');
-            $('#optGroupLarge').prop('disabled', false);
-        } else {
-            $('.section-large-animal').hide();
-            $('.section-small-animal').show();
-            $('#modalOpdHeader').css('background', 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)');
-            $('#modalOpdEntryLabel').text($('#opd_id').val() > 0 ? 'Edit Small Animal OPD Record' : 'New Small Animal OPD Record');
-            $('#lblOwnerName').text('Name of Pet Owner *');
-            $('#lblOwnerAddress').text('Address of Pet Owner');
-            $('#lblOwnerPhone').text('Contact Tel. No');
-            $('#lblTotalPop').html('Total Population (Household/Kennel) <span class="text-danger">*</span>');
-            $('#helpTotalPop').text('Number of pets or kennel size.');
-            $('#btnSaveOpdRecord').removeClass('btn-success').addClass('btn-primary');
-        }
-    }
 
     // 3. Live Revenue Sum Calculation
     $('.revenue-calc').on('input', function() {
@@ -1321,11 +1566,11 @@ $(document).ready(function() {
     }
 
     // 4. Auto-Population (Large Animals): Fetch Farmer Details by Farm Registration Number
-    $('#btnAutoFetchFarmer').on('click', function() {
+    $('#btnAutoFetchFarmer').on('click', function(e) {
+        e.preventDefault();
         performFarmerLookup();
     });
 
-    let lookupDebounce = null;
     $('#farm_reg_no').on('blur', function() {
         const val = $(this).val().trim();
         if (val.length >= 3 && $('#owner_name').val().trim() === '') {
@@ -1394,30 +1639,41 @@ $(document).ready(function() {
         });
     }
 
-    // 5. Open New Modal Button
-    $('#btnOpenNewOpdModal').on('click', function() {
+    // 5. Delegated Modal Open & Action Triggers
+    $(document).on('click', '#btnOpenNewOpdModal', function(e) {
+        e.preventDefault();
         openNewOpdModalWithPreset('<?= $active_tab ?>');
     });
 
-    window.openNewOpdModalWithPreset = function(type) {
-        $('#formClinicalOpd')[0].reset();
-        $('#opd_id').val('0');
-        $('#fetchFeedback').hide();
-        $('#revenue_total_display').val('0.00');
+    $(document).on('click', '#btnAddLargeAnimalRecord', function(e) {
+        e.preventDefault();
+        openNewOpdModalWithPreset('large_animal');
+    });
 
-        if (type === 'large_animal') {
-            $('#clinicTypeLarge').prop('checked', true);
-            applyWorkflowLayout('large_animal');
-            $('#species').val('Cattle');
-        } else {
-            $('#clinicTypeSmall').prop('checked', true);
-            applyWorkflowLayout('small_animal');
-            $('#species').val('Canine / Dog');
-        }
+    $(document).on('click', '#btnAddSmallAnimalRecord', function(e) {
+        e.preventDefault();
+        openNewOpdModalWithPreset('small_animal');
+    });
 
-        const modal = new bootstrap.Modal(document.getElementById('modalOpdEntry'));
-        modal.show();
-    };
+    $(document).on('click', '.btn-view-opd', function(e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        if (id) viewOpdDetails(id);
+    });
+
+    $(document).on('click', '.btn-edit-opd', function(e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        if (id) editOpdRecord(id);
+    });
+
+    $(document).on('click', '.btn-delete-opd', function(e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        const receipt = $(this).data('receipt');
+        if (id) deleteOpdRecord(id, name, receipt);
+    });
 
     // 6. Save Clinical OPD Record via AJAX
     $('#formClinicalOpd').on('submit', function(e) {
@@ -1468,228 +1724,9 @@ $(document).ready(function() {
             }
         });
     });
-
-    // 7. View Record Details Modal
-    window.viewOpdDetails = function(id) {
-        const modal = new bootstrap.Modal(document.getElementById('modalViewOpdDetails'));
-        modal.show();
-        $('#viewModalBody').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
-
-        $.ajax({
-            url: 'processors/clinical_services_crud.php',
-            method: 'GET',
-            dataType: 'json',
-            data: { action: 'get_opd_record', id: id },
-            success: function(res) {
-                if (res.success && res.data) {
-                    const d = res.data;
-                    const isLarge = (d.clinic_type === 'large_animal');
-                    $('#viewModalSubTitle').text(isLarge ? 'Large Animal Clinical Register Sheet' : 'Small Animal Clinical Register Sheet');
-
-                    const html = `
-                        <div class="border rounded p-3 mb-3 bg-light">
-                            <div class="row g-2">
-                                <div class="col-6 col-md-3">
-                                    <small class="text-muted text-uppercase fw-bold d-block">Intake Date</small>
-                                    <strong class="text-dark">${d.entry_date}</strong>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <small class="text-muted text-uppercase fw-bold d-block">Registration Identifier</small>
-                                    <span class="badge ${isLarge ? 'bg-success' : 'bg-primary'} font-monospace">${d.registration_no || d.farm_reg_no}</span>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <small class="text-muted text-uppercase fw-bold d-block">Cash Receipt No</small>
-                                    <strong class="text-danger font-monospace">${d.cash_receipt_no}</strong>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <small class="text-muted text-uppercase fw-bold d-block">Counterfoil Leaf Link</small>
-                                    ${d.leaf_issue_id ? '<span class="badge bg-success-subtle text-success border border-success">Leaf #' + d.leaf_issue_id + ' Synced</span>' : '<span class="badge bg-secondary">Unlinked</span>'}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <div class="card h-100 border">
-                                    <div class="card-header bg-white fw-bold small text-muted text-uppercase py-2">
-                                        <i class="bi bi-person me-1"></i> Owner / Farmer Particulars
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <div class="mb-2"><strong>Name:</strong> ${d.owner_name}</div>
-                                        <div class="mb-2"><strong>NIC:</strong> ${d.owner_nic || '—'}</div>
-                                        <div class="mb-2"><strong>Address:</strong> ${d.owner_address || '—'}</div>
-                                        <div><strong>Telephone:</strong> ${d.owner_phone || '—'}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card h-100 border">
-                                    <div class="card-header bg-white fw-bold small text-muted text-uppercase py-2">
-                                        <i class="bi bi-shield me-1"></i> Animal Physical Particulars
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <div class="mb-2"><strong>Total Population of Herd:</strong> <span class="badge bg-dark">${d.herd_total_population}</span></div>
-                                        <div class="mb-2"><strong>Species &amp; Breed:</strong> ${d.species} (${d.breed || 'Local'})</div>
-                                        <div class="mb-2"><strong>Age &amp; Sex:</strong> ${d.age_years || '—'} &bull; ${d.sex}</div>
-                                        <div class="mb-2"><strong>Coat Colour:</strong> ${d.coat_colour || '—'}</div>
-                                        <div><strong>Special Marks:</strong> ${d.special_marks || '—'}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card border mb-3">
-                            <div class="card-header bg-white fw-bold small text-muted text-uppercase py-2 text-danger">
-                                <i class="bi bi-heart-pulse me-1"></i> Clinical Diagnostics &amp; Treatment
-                            </div>
-                            <div class="card-body p-3">
-                                <div class="row g-2 mb-2">
-                                    <div class="col-md-6"><strong>Animals Clinically Affected:</strong> <span class="badge bg-warning-subtle text-warning-emphasis">${d.clinically_affected_count}</span></div>
-                                    <div class="col-md-6"><strong>Number of Deaths:</strong> <span class="badge bg-danger-subtle text-danger">${d.death_count}</span></div>
-                                </div>
-                                <div class="mb-2">
-                                    <strong>Tentative Diagnosis:</strong>
-                                    <div class="p-2 mt-1 rounded bg-danger-subtle text-danger fw-bold">${d.tentative_diagnosis}</div>
-                                </div>
-                                <div>
-                                    <strong>Action Taken:</strong>
-                                    <div class="p-2 mt-1 rounded bg-light border">${d.action_taken}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card border bg-warning-subtle">
-                            <div class="card-header bg-transparent fw-bold small text-uppercase py-2 text-warning-emphasis">
-                                <i class="bi bi-cash me-1"></i> Revenue Breakdown (Rs.)
-                            </div>
-                            <div class="card-body p-3">
-                                <div class="row text-center g-2">
-                                    <div class="col-3">
-                                        <small class="text-muted d-block">Consultation</small>
-                                        <strong class="font-monospace">Rs. ${parseFloat(d.revenue_consultation).toFixed(2)}</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <small class="text-muted d-block">Drugs</small>
-                                        <strong class="font-monospace">Rs. ${parseFloat(d.revenue_drugs).toFixed(2)}</strong>
-                                    </div>
-                                    <div class="col-3">
-                                        <small class="text-muted d-block">Others</small>
-                                        <strong class="font-monospace">Rs. ${parseFloat(d.revenue_others).toFixed(2)}</strong>
-                                    </div>
-                                    <div class="col-3 border-start">
-                                        <small class="text-success fw-bold d-block">TOTAL REVENUE</small>
-                                        <strong class="font-monospace text-success fs-6">Rs. ${parseFloat(d.revenue_total).toFixed(2)}</strong>
-                                    </div>
-                                </div>
-                                ${d.remarks ? '<div class="mt-2 pt-2 border-top small text-muted"><strong>Remarks:</strong> ' + d.remarks + '</div>' : ''}
-                            </div>
-                        </div>
-                    `;
-                    $('#viewModalBody').html(html);
-                } else {
-                    $('#viewModalBody').html('<div class="alert alert-danger">Failed to load record details.</div>');
-                }
-            }
-        });
-    };
-
-    // 8. Edit OPD Record
-    window.editOpdRecord = function(id) {
-        $.ajax({
-            url: 'processors/clinical_services_crud.php',
-            method: 'GET',
-            dataType: 'json',
-            data: { action: 'get_opd_record', id: id },
-            success: function(res) {
-                if (res.success && res.data) {
-                    const d = res.data;
-                    $('#opd_id').val(d.id);
-                    $('#entry_date').val(d.entry_date);
-
-                    if (d.clinic_type === 'large_animal') {
-                        $('#clinicTypeLarge').prop('checked', true);
-                        applyWorkflowLayout('large_animal');
-                        $('#farm_reg_no').val(d.farm_reg_no || d.registration_no);
-                    } else {
-                        $('#clinicTypeSmall').prop('checked', true);
-                        applyWorkflowLayout('small_animal');
-                        $('#registration_no').val(d.registration_no);
-                    }
-
-                    $('#owner_name').val(d.owner_name);
-                    $('#owner_nic').val(d.owner_nic || '');
-                    $('#owner_address').val(d.owner_address || '');
-                    $('#owner_phone').val(d.owner_phone || '');
-
-                    $('#herd_total_population').val(d.herd_total_population);
-                    $('#species').val(d.species);
-                    $('#breed').val(d.breed || '');
-                    $('#age_years').val(d.age_years || '');
-                    $('#sex').val(d.sex);
-                    $('#coat_colour').val(d.coat_colour || '');
-                    $('#special_marks').val(d.special_marks || '');
-
-                    $('#clinically_affected_count').val(d.clinically_affected_count);
-                    $('#death_count').val(d.death_count);
-                    $('#tentative_diagnosis').val(d.tentative_diagnosis);
-                    $('#action_taken').val(d.action_taken);
-
-                    $('#revenue_consultation').val(d.revenue_consultation);
-                    $('#revenue_drugs').val(d.revenue_drugs);
-                    $('#revenue_others').val(d.revenue_others);
-                    $('#revenue_total_display').val(parseFloat(d.revenue_total).toFixed(2));
-
-                    $('#cash_receipt_no').val(d.cash_receipt_no);
-                    $('#remarks').val(d.remarks || '');
-
-                    $('#modalOpdEntryLabel').text(d.clinic_type === 'large_animal' ? 'Edit Large Animal OPD Record' : 'Edit Small Animal OPD Record');
-
-                    const modal = new bootstrap.Modal(document.getElementById('modalOpdEntry'));
-                    modal.show();
-                } else {
-                    Swal.fire('Error', 'Failed to retrieve record for editing.', 'error');
-                }
-            }
-        });
-    };
-
-    // 9. Delete OPD Record
-    window.deleteOpdRecord = function(id, name, receiptNo) {
-        Swal.fire({
-            title: 'Delete Clinical Record?',
-            html: `Are you sure you want to remove OPD Record for <strong>${name}</strong> (Receipt: <strong>${receiptNo}</strong>)?<br><br><span class="text-danger small">This will also clean up the linked overarching counterfoil leaf &amp; cash book summary.</span>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#820100',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, Delete Record'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: 'processors/clinical_services_crud.php',
-                    method: 'POST',
-                    dataType: 'json',
-                    data: {
-                        action: 'delete_opd_record',
-                        id: id
-                    },
-                    success: function(res) {
-                        if (res.success) {
-                            Swal.fire('Deleted!', res.message, 'success').then(() => {
-                                window.location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error', res.message, 'error');
-                        }
-                    },
-                    error: function() {
-                        Swal.fire('Error', 'Failed to communicate with server.', 'error');
-                    }
-                });
-            }
-        });
-    };
 });
 </script>
-
-<?php require_once __DIR__ . '/../../../includes/footer.php'; ?>
+<?php
+$pageScripts = ob_get_clean();
+require_once __DIR__ . '/../../../includes/footer.php';
+?>
