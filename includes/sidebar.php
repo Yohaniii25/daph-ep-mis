@@ -214,6 +214,10 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/veterinary/production_activities.php">
                             <i class="bi bi-clipboard2-data me-2"></i> Production Activities Plan
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['dairy_hub.php', 'dairy_application_form.php', 'dairy_project_summary.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/dairy_hub.php">
+                            <i class="bi bi-patch-check me-2"></i> Dairy Hub &amp; Approvals
+                        </a>
                     <?php endif; ?>
 
                     <!-- Provincial Director Menu -->
@@ -241,6 +245,10 @@ $current_view_param = $_GET['view'] ?? '';
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['production_activities.php', 'activity_beneficiaries.php']) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/veterinary/production_activities.php">
                             <i class="bi bi-clipboard2-data me-2"></i> Production Activities Plan
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['dairy_hub.php', 'dairy_application_form.php', 'dairy_project_summary.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/dairy_hub.php">
+                            <i class="bi bi-patch-check me-2"></i> Dairy Hub &amp; Approvals
                         </a>
 
                     <?php endif; ?>
@@ -467,17 +475,20 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/veterinary/production_activities.php">
                             <i class="bi bi-clipboard2-data me-2"></i> Production Activities Plan
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['dairy_hub.php', 'dairy_application_form.php', 'dairy_project_summary.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/dairy_hub.php">
+                            <i class="bi bi-patch-check me-2"></i> Dairy Hub &amp; Approvals
+                        </a>
                     <?php endif; ?>
                     <?php if ($is_veterinary_surgeon): ?>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'office_details.php') ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/veterinary/office_details.php">
                             <i class="bi bi-building me-2"></i> Office Details
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['range_details.php', 'monthly-annual-reports.php', 'cattle_voucher.php', 'ear_tag_balance.php', 'animal_branding.php']) ? 'active' : '' ?>"
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['range_details.php', 'monthly-annual-reports.php', 'cattle_voucher.php', 'ear_tag_balance.php', 'animal_branding.php', 'clinical_services.php']) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/veterinary/range_details.php">
                             <i class="bi bi-geo-alt me-2"></i> Range Details
                         </a>
-
 
                     <?php endif; ?>
                     <!-- employee sidebar -->

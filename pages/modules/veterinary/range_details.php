@@ -206,7 +206,7 @@ $all_quick_actions = [
     'clinical_services' => [
         'id' => 6,
         'title' => 'Clinical Services',
-        'icon'  => 'bi-tools',
+        'icon'  => 'bi-clipboard2-pulse',
         'color' => '#2e7d32',
         'link'  => 'clinical_services.php' . ($range_id ? '?range_id=' . $range_id : '')
     ],
