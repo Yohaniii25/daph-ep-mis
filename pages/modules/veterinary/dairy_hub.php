@@ -41,7 +41,7 @@ $requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) 
 $range_id = $requested_range_id !== null ? $requested_range_id : ($session_range_id ?: 1);
 
 // Active Tab
-$active_tab = isset($_GET['tab']) ? trim($_GET['tab']) : 'approvals'; // 'approvals' (default) or 'collections'
+$active_tab = isset($_GET['tab']) ? trim($_GET['tab']) : 'approvals'; // 'approvals', 'collections', or 'society'
 
 // Filters for Beneficiary Approvals
 $selected_year     = isset($_GET['year']) && is_numeric($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
@@ -161,6 +161,79 @@ if ($collection_stmt) {
     $collection_stmt->execute();
     $records = $collection_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $collection_stmt->close();
+}
+
+// -----------------------------------------------------------------------------
+// 4. Fetch Dairy Hub Society & Enrolled Members (for Society Administration Tab)
+// -----------------------------------------------------------------------------
+$society_data = null;
+$soc_stmt = $mysqli->prepare("SELECT * FROM `dairy_hub_societies` WHERE range_id = ? LIMIT 1");
+if ($soc_stmt) {
+    $soc_stmt->bind_param("i", $range_id);
+    $soc_stmt->execute();
+    $society_data = $soc_stmt->get_result()->fetch_assoc();
+    $soc_stmt->close();
+}
+if (empty($society_data)) {
+    $def_soc_name = "Dairy Hub Cooperative Society - " . $current_range_name;
+    $society_data = [
+        'id' => 0,
+        'range_id' => $range_id,
+        'society_name' => $def_soc_name,
+        'reg_no' => 'DHS/EP/' . sprintf("%02d", $range_id),
+        'established_date' => '2026-01-15',
+        'code_of_conduct_title' => 'Dairy Hub Society Official Code of Conduct & Operational Ethics',
+        'code_of_conduct_text' => null,
+        'status' => 'Active'
+    ];
+}
+
+$society_members = [];
+$mem_stmt = $mysqli->prepare("
+    SELECT m.*, a.milk_total_liters, a.main_category, a.shed_capacity_adults, a.cultivating_grass_own_land
+    FROM `dairy_hub_society_members` m
+    LEFT JOIN `dairy_farm_applications` a ON m.farm_reg_no = a.farm_reg_no
+    WHERE m.range_id = ?
+    ORDER BY 
+        CASE 
+            WHEN m.executive_position = 'President' THEN 1
+            WHEN m.executive_position = 'Vice President' THEN 2
+            WHEN m.executive_position = 'Secretary' THEN 3
+            WHEN m.executive_position = 'Treasurer' THEN 4
+            WHEN m.executive_position = 'Assistant Secretary' THEN 5
+            WHEN m.executive_position = 'Committee Member' THEN 6
+            ELSE 10
+        END, m.member_name ASC
+");
+if ($mem_stmt) {
+    $mem_stmt->bind_param("i", $range_id);
+    $mem_stmt->execute();
+    $society_members = $mem_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $mem_stmt->close();
+}
+
+$current_president = null;
+$current_vice_president = null;
+$current_secretary = null;
+$current_treasurer = null;
+$stat_exec_count = 0;
+
+foreach ($society_members as $sm) {
+    if ($sm['executive_position'] === 'President') $current_president = $sm;
+    if ($sm['executive_position'] === 'Vice President') $current_vice_president = $sm;
+    if ($sm['executive_position'] === 'Secretary') $current_secretary = $sm;
+    if ($sm['executive_position'] === 'Treasurer') $current_treasurer = $sm;
+    if ($sm['is_executive'] == 1 || $sm['executive_position'] !== 'Member') $stat_exec_count++;
+}
+
+// Fetch Scheduled Monitoring Visits for Dairy Hub farms
+$dh_visits = [];
+$dh_v_stmt = $mysqli->prepare("SELECT * FROM `project_monitoring_visits` WHERE source_module = 'Dairy Hub' OR range_id = ? ORDER BY visit_date DESC, id DESC");
+if ($dh_v_stmt) {
+    $dh_v_stmt->bind_param("i", $range_id);
+    $dh_v_stmt->execute();
+    $dh_visits = $dh_v_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $dh_v_stmt->close();
 }
 
 require_once '../../../includes/header.php';
@@ -317,7 +390,7 @@ require_once '../../../includes/header.php';
         </div>
     </div>
 
-    <!-- Navigation Tabs between Approvals and Collections -->
+    <!-- Navigation Tabs between Approvals, Collections, and Society Administration -->
     <ul class="nav nav-tabs nav-tabs-dairy mb-4 border-bottom" id="dairyHubTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link <?= ($active_tab === 'approvals') ? 'active' : '' ?>" id="approvals-tab" data-bs-toggle="tab" data-bs-target="#approvals-pane" type="button" role="tab">
@@ -329,6 +402,18 @@ require_once '../../../includes/header.php';
             <button class="nav-link <?= ($active_tab === 'collections') ? 'active' : '' ?>" id="collections-tab" data-bs-toggle="tab" data-bs-target="#collections-pane" type="button" role="tab">
                 <i class="bi bi-droplet-half me-2"></i> Milk Collection &amp; Quality Logs
                 <span class="badge bg-secondary rounded-pill ms-2"><?= count($records) ?></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link <?= ($active_tab === 'society') ? 'active' : '' ?>" id="society-tab" data-bs-toggle="tab" data-bs-target="#society-pane" type="button" role="tab">
+                <i class="bi bi-people-fill me-2"></i> Society Administration &amp; Governance
+                <span class="badge bg-primary rounded-pill ms-2"><?= count($society_members) ?></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link <?= ($active_tab === 'monitoring') ? 'active' : '' ?>" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring-pane" type="button" role="tab">
+                <i class="bi bi-clipboard2-pulse me-2"></i> Scheduled Farm Monitoring Logs
+                <span class="badge bg-danger rounded-pill ms-2"><?= count($dh_visits) ?></span>
             </button>
         </li>
     </ul>
@@ -589,6 +674,12 @@ require_once '../../../includes/header.php';
                                                    title="Open Detailed Application Form for this Farmer">
                                                     <i class="bi bi-file-earmark-text-fill"></i> Form
                                                 </a>
+                                                <!-- Scheduled Site Monitoring Visit Button -->
+                                                <button class="btn btn-sm btn-outline-warning me-1" 
+                                                        title="Record Scheduled Site Monitoring Visit" 
+                                                        onclick="openDairyFarmVisitModal('<?= htmlspecialchars(addslashes($b['farm_reg_no'])) ?>', '<?= htmlspecialchars(addslashes($b['beneficiary_name'])) ?>', <?= $b['id'] ?>)">
+                                                    <i class="bi bi-clipboard2-pulse"></i> Visit
+                                                </button>
                                                 <!-- Quick Edit Modal -->
                                                 <button class="btn btn-sm btn-outline-primary me-1 edit-summary-btn" 
                                                         data-id="<?= $b['id'] ?>"
@@ -673,8 +764,553 @@ require_once '../../../includes/header.php';
 
         </div>
 
+        <!-- ========================================================================= -->
+        <!-- TAB 3: SOCIETY ADMINISTRATION & GOVERNANCE                                -->
+        <!-- ========================================================================= -->
+        <div class="tab-pane fade <?= ($active_tab === 'society') ? 'show active' : '' ?>" id="society-pane" role="tabpanel">
+
+            <!-- Society Header Banner -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--border-radius); background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%); color: #ffffff;">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background: rgba(59, 130, 246, 0.2); border: 2px solid #3b82f6;">
+                                <i class="bi bi-people-fill fs-2 text-info"></i>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span class="badge bg-primary text-white fw-bold text-uppercase px-2 py-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">Dairy Hub Governance</span>
+                                    <span class="badge bg-light text-dark border px-2 py-1" style="font-size: 0.7rem;">Reg: <?= htmlspecialchars($society_data['reg_no'] ?? 'Pending') ?></span>
+                                </div>
+                                <h3 class="fw-bold mb-1"><?= htmlspecialchars($society_data['society_name'] ?? 'Dairy Hub Cooperative Society') ?></h3>
+                                <p class="mb-0 text-light text-opacity-75 small">
+                                    Official producer society for <?= htmlspecialchars($current_range_name) ?> &bull; Automated membership enrollment, executive committee management, and binding code of conduct.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Header Action Buttons -->
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <button type="button" class="btn btn-light btn-sm fw-bold px-3 shadow-sm" id="btnOpenCodeOfConductModal">
+                                <i class="bi bi-pencil-square me-1 text-primary"></i> Edit Code of Conduct
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm px-3 shadow-sm" onclick="window.print()">
+                                <i class="bi bi-printer me-1"></i> Print Society Roster
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Society Executive Committee Roster (Leadership Cards) -->
+            <div class="row g-3 mb-4">
+                <!-- 1. President -->
+                <div class="col-md-6 col-xl-3">
+                    <div class="card h-100 p-3 shadow-sm border-0" style="border-left: 4px solid #f59e0b !important; border-radius: var(--border-radius);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-warning text-dark fw-bold px-2 py-1" style="font-size: 0.7rem;">
+                                    <i class="bi bi-award-fill me-1"></i> PRESIDENT
+                                </span>
+                                <h5 class="fw-bold text-dark mt-2 mb-0">
+                                    <?= $current_president ? htmlspecialchars($current_president['member_name']) : '<span class="text-muted fw-normal fs-6">Position Vacant</span>' ?>
+                                </h5>
+                            </div>
+                            <div class="rounded-circle p-2 bg-warning-subtle text-warning-emphasis">
+                                <i class="bi bi-star-fill fs-5"></i>
+                            </div>
+                        </div>
+                        <?php if ($current_president): ?>
+                            <small class="text-muted d-block font-monospace"><i class="bi bi-telephone text-primary me-1"></i><?= htmlspecialchars($current_president['phone'] ?: 'No phone') ?></small>
+                            <small class="text-muted d-block font-monospace"><i class="bi bi-house-check text-success me-1"></i>Farm: <?= htmlspecialchars($current_president['farm_reg_no'] ?: '—') ?></small>
+                            <button type="button" class="btn btn-xs btn-outline-warning text-dark mt-3 w-100 btn-assign-exec-modal" 
+                                    data-id="<?= $current_president['id'] ?>" data-name="<?= htmlspecialchars($current_president['member_name']) ?>" data-position="President">
+                                <i class="bi bi-arrow-repeat me-1"></i> Change President
+                            </button>
+                        <?php else: ?>
+                            <small class="text-muted d-block">No executive president assigned yet.</small>
+                            <button type="button" class="btn btn-xs btn-outline-secondary mt-3 w-100" onclick="$('#societyMembersTable').DataTable().search('Member').draw();">
+                                <i class="bi bi-plus-circle me-1"></i> Assign from Members
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- 2. Vice President -->
+                <div class="col-md-6 col-xl-3">
+                    <div class="card h-100 p-3 shadow-sm border-0" style="border-left: 4px solid #3b82f6 !important; border-radius: var(--border-radius);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary text-white fw-bold px-2 py-1" style="font-size: 0.7rem;">
+                                    <i class="bi bi-shield-check me-1"></i> VICE PRESIDENT
+                                </span>
+                                <h5 class="fw-bold text-dark mt-2 mb-0">
+                                    <?= $current_vice_president ? htmlspecialchars($current_vice_president['member_name']) : '<span class="text-muted fw-normal fs-6">Position Vacant</span>' ?>
+                                </h5>
+                            </div>
+                            <div class="rounded-circle p-2 bg-primary-subtle text-primary">
+                                <i class="bi bi-shield-shaded fs-5"></i>
+                            </div>
+                        </div>
+                        <?php if ($current_vice_president): ?>
+                            <small class="text-muted d-block font-monospace"><i class="bi bi-telephone text-primary me-1"></i><?= htmlspecialchars($current_vice_president['phone'] ?: 'No phone') ?></small>
+                            <small class="text-muted d-block font-monospace"><i class="bi bi-house-check text-success me-1"></i>Farm: <?= htmlspecialchars($current_vice_president['farm_reg_no'] ?: '—') ?></small>
+                            <button type="button" class="btn btn-xs btn-outline-primary mt-3 w-100 btn-assign-exec-modal" 
+                                    data-id="<?= $current_vice_president['id'] ?>" data-name="<?= htmlspecialchars($current_vice_president['member_name']) ?>" data-position="Vice President">
+                                <i class="bi bi-arrow-repeat me-1"></i> Change Vice President
+                            </button>
+                        <?php else: ?>
+                            <small class="text-muted d-block">No vice president assigned yet.</small>
+                            <button type="button" class="btn btn-xs btn-outline-secondary mt-3 w-100" onclick="$('#societyMembersTable').DataTable().search('Member').draw();">
+                                <i class="bi bi-plus-circle me-1"></i> Assign from Members
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- 3. Secretary -->
+                <div class="col-md-6 col-xl-3">
+                    <div class="card h-100 p-3 shadow-sm border-0" style="border-left: 4px solid #10b981 !important; border-radius: var(--border-radius);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-success text-white fw-bold px-2 py-1" style="font-size: 0.7rem;">
+                                    <i class="bi bi-journal-text me-1"></i> SECRETARY
+                                </span>
+                                <h5 class="fw-bold text-dark mt-2 mb-0">
+                                    <?= $current_secretary ? htmlspecialchars($current_secretary['member_name']) : '<span class="text-muted fw-normal fs-6">Position Vacant</span>' ?>
+                                </h5>
+                            </div>
+                            <div class="rounded-circle p-2 bg-success-subtle text-success">
+                                <i class="bi bi-pencil-fill fs-5"></i>
+                            </div>
+                        </div>
+                        <?php if ($current_secretary): ?>
+                            <small class="text-muted d-block font-monospace"><i class="bi bi-telephone text-primary me-1"></i><?= htmlspecialchars($current_secretary['phone'] ?: 'No phone') ?></small>
+                            <small class="text-muted d-block font-monospace"><i class="bi bi-house-check text-success me-1"></i>Farm: <?= htmlspecialchars($current_secretary['farm_reg_no'] ?: '—') ?></small>
+                            <button type="button" class="btn btn-xs btn-outline-success mt-3 w-100 btn-assign-exec-modal" 
+                                    data-id="<?= $current_secretary['id'] ?>" data-name="<?= htmlspecialchars($current_secretary['member_name']) ?>" data-position="Secretary">
+                                <i class="bi bi-arrow-repeat me-1"></i> Change Secretary
+                            </button>
+                        <?php else: ?>
+                            <small class="text-muted d-block">No secretary assigned yet.</small>
+                            <button type="button" class="btn btn-xs btn-outline-secondary mt-3 w-100" onclick="$('#societyMembersTable').DataTable().search('Member').draw();">
+                                <i class="bi bi-plus-circle me-1"></i> Assign from Members
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- 4. Total Enrolled Members Summary -->
+                <div class="col-md-6 col-xl-3">
+                    <div class="card h-100 p-3 shadow-sm border-0" style="border-left: 4px solid #6366f1 !important; border-radius: var(--border-radius);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-indigo text-white fw-bold px-2 py-1" style="font-size: 0.7rem; background-color: #6366f1;">
+                                    <i class="bi bi-people me-1"></i> TOTAL ENROLLED
+                                </span>
+                                <h3 class="fw-bold text-dark mt-2 mb-0"><?= count($society_members) ?></h3>
+                            </div>
+                            <div class="rounded-circle p-2 bg-indigo-subtle text-indigo" style="background-color: #e0e7ff; color: #4338ca;">
+                                <i class="bi bi-person-check-fill fs-5"></i>
+                            </div>
+                        </div>
+                        <small class="text-success fw-semibold d-block"><i class="bi bi-check2-all me-1"></i><?= $stat_exec_count ?> Executive Officers</small>
+                        <small class="text-muted d-block">Auto-enrolled via application forms</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto-Enrollment System Banner -->
+            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center gap-3 p-3 mb-4 rounded-3">
+                <i class="bi bi-info-circle-fill fs-3 text-primary flex-shrink-0"></i>
+                <div class="small">
+                    <strong>Automated Dairy Hub Society Enrollment Active:</strong>
+                    Whenever a farmer's survey details are entered and submitted through the Dairy Hub application form, the system automatically registers that individual as a formal member of this society. Executive positions (such as <strong>President</strong> and <strong>Vice President</strong>) can be designated directly from the membership directory below.
+                </div>
+            </div>
+
+            <!-- Formal Code of Conduct Panel -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--border-radius);">
+                <div class="card-header bg-white py-3 border-0 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-fill-check fs-4 text-success"></i>
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark" id="displayCodeTitle"><?= htmlspecialchars($society_data['code_of_conduct_title'] ?? 'Official Code of Conduct & Operational Ethics') ?></h5>
+                            <small class="text-muted">Formally established code of conduct binding upon all enrolled society members &bull; Established <?= htmlspecialchars($society_data['established_date'] ?? '2026-01-15') ?></small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-success-subtle text-success border border-success px-2 py-1 fw-bold">
+                            <i class="bi bi-check-circle-fill me-1"></i> Formally Enacted &amp; Active
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnEditCodeInline">
+                            <i class="bi bi-pencil-square me-1"></i> Edit Charter
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-4 bg-light bg-opacity-50">
+                    <div class="p-3 bg-white rounded border" style="line-height: 1.7; font-size: 0.92rem; max-height: 280px; overflow-y: auto;" id="displayCodeBody">
+                        <?= !empty($society_data['code_of_conduct_text']) ? nl2br(htmlspecialchars($society_data['code_of_conduct_text'])) : '<em>Default Code of Conduct is established and automatically displayed from system governance parameters.</em>' ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enrolled Society Members Directory Table -->
+            <div class="card border-0 shadow-sm" style="border-radius: var(--border-radius);">
+                <div class="card-header bg-white py-3 border-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark">
+                            <i class="bi bi-person-lines-fill text-primary me-2"></i>Enrolled Society Membership Directory
+                        </h5>
+                        <small class="text-muted">
+                            Complete list of active members registered under <?= htmlspecialchars($current_range_name) ?> Dairy Hub Society
+                        </small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                            <i class="bi bi-people-fill me-1 text-primary"></i> <?= count($society_members) ?> Members Registered
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle mb-0" id="societyMembersTable">
+                            <thead class="table-dark small text-uppercase">
+                                <tr>
+                                    <th class="text-center" style="min-width: 130px;">Membership No.</th>
+                                    <th style="min-width: 170px;">Member / Farmer Name</th>
+                                    <th style="min-width: 120px;">Farm Reg No.</th>
+                                    <th style="min-width: 120px;">NIC &amp; Phone</th>
+                                    <th style="min-width: 160px;">Address / GN</th>
+                                    <th style="min-width: 105px;" class="text-center">Enrolled Date</th>
+                                    <th style="min-width: 140px;" class="text-center">Executive Position</th>
+                                    <th style="min-width: 80px;" class="text-center">Status</th>
+                                    <th style="min-width: 140px;" class="text-center">Administration Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($society_members)): ?>
+                                    <tr>
+                                        <td colspan="9" class="text-center py-5 text-muted">
+                                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                            No enrolled members registered in this range yet. Submitting a Dairy Farm Development Survey Application will automatically register farmers here.
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($society_members as $m): ?>
+                                        <tr>
+                                            <!-- Membership No -->
+                                            <td class="text-center font-monospace">
+                                                <span class="badge bg-light text-dark border fw-bold px-2 py-1">
+                                                    <?= htmlspecialchars($m['membership_no']) ?>
+                                                </span>
+                                            </td>
+
+                                            <!-- Member Name -->
+                                            <td>
+                                                <div class="fw-bold text-dark"><?= htmlspecialchars($m['member_name']) ?></div>
+                                                <small class="text-muted d-block" style="font-size: 0.75rem;">Source: <?= htmlspecialchars($m['enrollment_source']) ?></small>
+                                            </td>
+
+                                            <!-- Farm Reg No -->
+                                            <td>
+                                                <?php if (!empty($m['farm_reg_no'])): ?>
+                                                    <a href="dairy_application_form.php?farm_reg_no=<?= urlencode($m['farm_reg_no']) ?>&range_id=<?= $range_id ?>" 
+                                                       class="badge bg-success-subtle text-success border border-success font-monospace text-decoration-none px-2 py-1" title="View Farm Survey Application">
+                                                        <i class="bi bi-file-earmark-text me-1"></i><?= htmlspecialchars($m['farm_reg_no']) ?>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="text-muted">—</span>
+                                                <?php endif; ?>
+                                            </td>
+
+                                            <!-- NIC & Phone -->
+                                            <td>
+                                                <div class="small font-monospace fw-semibold text-dark"><?= htmlspecialchars($m['nic']) ?></div>
+                                                <?php if (!empty($m['phone'])): ?>
+                                                    <small class="text-muted font-monospace d-block">
+                                                        <i class="bi bi-telephone text-primary me-1"></i><?= htmlspecialchars($m['phone']) ?>
+                                                    </small>
+                                                <?php endif; ?>
+                                            </td>
+
+                                            <!-- Address -->
+                                            <td>
+                                                <div class="small text-truncate" style="max-width: 180px;" title="<?= htmlspecialchars($m['address']) ?>">
+                                                    <?= htmlspecialchars($m['address'] ?: '—') ?>
+                                                </div>
+                                                <?php if (!empty($m['ds_gn_division'])): ?>
+                                                    <small class="text-muted d-block"><?= htmlspecialchars($m['ds_gn_division']) ?></small>
+                                                <?php endif; ?>
+                                            </td>
+
+                                            <!-- Enrollment Date -->
+                                            <td class="text-center small">
+                                                <?= date('d-M-Y', strtotime($m['enrollment_date'])) ?>
+                                            </td>
+
+                                            <!-- Executive Position Badge -->
+                                            <td class="text-center">
+                                                <?php if ($m['executive_position'] === 'President'): ?>
+                                                    <span class="badge bg-warning text-dark border border-warning px-2 py-1 fw-bold">
+                                                        <i class="bi bi-star-fill me-1"></i> President
+                                                    </span>
+                                                <?php elseif ($m['executive_position'] === 'Vice President'): ?>
+                                                    <span class="badge bg-primary text-white border border-primary px-2 py-1 fw-bold">
+                                                        <i class="bi bi-shield-check me-1"></i> Vice President
+                                                    </span>
+                                                <?php elseif ($m['executive_position'] === 'Secretary'): ?>
+                                                    <span class="badge bg-success text-white border border-success px-2 py-1 fw-bold">
+                                                        <i class="bi bi-journal-check me-1"></i> Secretary
+                                                    </span>
+                                                <?php elseif ($m['executive_position'] === 'Treasurer'): ?>
+                                                    <span class="badge bg-info text-dark border border-info px-2 py-1 fw-bold">
+                                                        <i class="bi bi-cash-coin me-1"></i> Treasurer
+                                                    </span>
+                                                <?php elseif ($m['executive_position'] === 'Committee Member'): ?>
+                                                    <span class="badge bg-purple text-white border px-2 py-1 fw-semibold" style="background-color: #7c3aed;">
+                                                        Committee Member
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-light text-muted border px-2 py-1">Member</span>
+                                                <?php endif; ?>
+                                            </td>
+
+                                            <!-- Status -->
+                                            <td class="text-center">
+                                                <span class="badge bg-success-subtle text-success border border-success">Active</span>
+                                            </td>
+
+                                            <!-- Action: Assign Executive Position -->
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-primary fw-semibold btn-assign-exec-modal"
+                                                        data-id="<?= $m['id'] ?>"
+                                                        data-name="<?= htmlspecialchars($m['member_name'], ENT_QUOTES) ?>"
+                                                        data-position="<?= htmlspecialchars($m['executive_position'], ENT_QUOTES) ?>"
+                                                        data-membership="<?= htmlspecialchars($m['membership_no'], ENT_QUOTES) ?>">
+                                                    <i class="bi bi-person-gear me-1"></i> Assign Position
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- TAB 4: SCHEDULED DAIRY HUB FARM MONITORING LOGS (VET SURGEON)            -->
+        <!-- ========================================================================= -->
+        <div class="tab-pane fade <?= ($active_tab === 'monitoring') ? 'show active' : '' ?>" id="monitoring-pane" role="tabpanel">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-clipboard2-pulse me-2 text-danger"></i>Dairy Hub Scheduled Site Monitoring Visits
+                        </h5>
+                        <small class="text-muted">Mandatory Veterinary Surgeon inspection logs at 1 month, 3 months, 6 months, and bi-annually</small>
+                    </div>
+                    <button class="btn btn-sm text-light fw-bold shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#dairyFarmVisitModal">
+                        <i class="bi bi-journal-plus me-1"></i> Log Farm Inspection
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle small table-striped table-bordered" id="dairyMonitoringTable">
+                            <thead class="table-dairy">
+                                <tr>
+                                    <th>Date &amp; Interval</th>
+                                    <th>Farm &amp; Beneficiary</th>
+                                    <th>Farm Conditions Evaluation</th>
+                                    <th>Animal Illnesses</th>
+                                    <th>Mortality (Deaths)</th>
+                                    <th>Natural Disasters</th>
+                                    <th>Surgeon Directives</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($dh_visits)): ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5 text-muted">
+                                            <i class="bi bi-journal-x fs-1 d-block mb-2 text-danger"></i>
+                                            No scheduled monitoring visits recorded yet for Dairy Hub farms. Click "Log Farm Inspection" to record milestone checks.
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($dh_visits as $dv): ?>
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fw-bold">
+                                                    <?= htmlspecialchars($dv['visit_interval']) ?>
+                                                </span>
+                                                <div class="small text-muted font-monospace mt-1"><?= htmlspecialchars($dv['visit_date']) ?></div>
+                                                <small class="text-secondary d-block"><i class="bi bi-person-check me-1"></i><?= htmlspecialchars($dv['veterinary_surgeon_name']) ?></small>
+                                            </td>
+                                            <td>
+                                                <div class="fw-bold text-dark"><?= htmlspecialchars($dv['farmer_name'] ?: 'Dairy Farmer') ?></div>
+                                                <?php if (!empty($dv['farm_reg_no'])): ?>
+                                                    <span class="badge bg-light text-dark border font-monospace"><?= htmlspecialchars($dv['farm_reg_no']) ?></span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div style="max-width: 250px;">
+                                                    <?= nl2br(htmlspecialchars($dv['farm_conditions'])) ?>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <?php if (!empty($dv['animal_illnesses'])): ?>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle mb-1">Illness Found</span>
+                                                    <div class="text-muted" style="max-width: 180px;"><?= htmlspecialchars($dv['animal_illnesses']) ?></div>
+                                                <?php else: ?>
+                                                    <span class="badge bg-success-subtle text-success border">No Illness</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if (intval($dv['deaths_count']) > 0): ?>
+                                                    <span class="badge bg-danger"><?= $dv['deaths_count'] ?> Deaths</span>
+                                                    <div class="text-danger mt-1 small"><?= htmlspecialchars($dv['deaths_details']) ?></div>
+                                                <?php else: ?>
+                                                    <span class="badge bg-light text-muted border">0 Deaths</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if (!empty($dv['natural_disasters'])): ?>
+                                                    <span class="badge bg-danger-subtle text-danger border"><i class="bi bi-cloud-lightning me-1"></i>Impact Noted</span>
+                                                    <div class="text-muted mt-1" style="max-width: 180px;"><?= htmlspecialchars($dv['natural_disasters']) ?></div>
+                                                <?php else: ?>
+                                                    <span class="text-muted">None</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div style="max-width: 220px;">
+                                                    <?= nl2br(htmlspecialchars($dv['recommendations'] ?: 'Standard operational hygiene and feeding maintenance.')) ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
+</div>
+
+<!-- ========================================================================= -->
+<!-- Modal: Record Scheduled Dairy Hub Farm Monitoring Visit                   -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="dairyFarmVisitModal" tabindex="-1" aria-labelledby="dairyFarmVisitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header text-white" style="background-color: #820100;">
+                <h5 class="modal-title text-white" id="dairyFarmVisitModalLabel">
+                    <i class="bi bi-clipboard2-pulse me-2"></i>Dairy Hub Scheduled Site Monitoring Visit
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form id="dairyMonitoringVisitForm">
+                <input type="hidden" name="action" value="save_monitoring_visit">
+                <input type="hidden" name="source_module" value="Dairy Hub">
+                <input type="hidden" name="dairy_hub_id" id="dh_visit_dh_id" value="0">
+                <input type="hidden" name="range_name" value="<?= htmlspecialchars($current_range_name) ?>">
+                
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        
+                        <!-- Farm Reg No -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase">Farm Registration Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control font-monospace" name="farm_reg_no" id="dh_visit_farm_reg_no" placeholder="e.g. 530112345" required>
+                        </div>
+
+                        <!-- Farmer / Beneficiary Name -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase">Farmer Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="farmer_name" id="dh_visit_farmer_name" placeholder="e.g. Kumara Perera" required>
+                        </div>
+
+                        <!-- Scheduled Interval -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-uppercase">Scheduled Interval <span class="text-danger">*</span></label>
+                            <select class="form-select" name="visit_interval" required>
+                                <option value="1 Month" selected>1 Month Inspection</option>
+                                <option value="3 Months">3 Months Inspection</option>
+                                <option value="6 Months">6 Months Inspection</option>
+                                <option value="Bi-Annual (12 Mo)">Bi-Annual (12 Months)</option>
+                                <option value="Bi-Annual (18 Mo)">Bi-Annual (18 Months)</option>
+                                <option value="Bi-Annual (24 Mo)">Bi-Annual (24 Months)</option>
+                                <option value="Routine / Ad-Hoc">Routine / Emergency Check</option>
+                            </select>
+                        </div>
+
+                        <!-- Visit Date -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-uppercase">Visit Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="visit_date" value="<?= date('Y-m-d') ?>" required>
+                        </div>
+
+                        <!-- Inspecting Surgeon -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-uppercase">Inspecting Veterinary Surgeon</label>
+                            <input type="text" class="form-control" name="veterinary_surgeon_name" value="<?= htmlspecialchars($_SESSION['full_name'] ?? 'Veterinary Surgeon') ?>" required>
+                        </div>
+
+                        <!-- Farm Conditions -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-uppercase">Farm Conditions Evaluation <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="farm_conditions" rows="3" required placeholder="Assess cattle shed cleanliness, ventilation, clean water access, bio-security, silage/fodder availability, and milk hygiene..."></textarea>
+                        </div>
+
+                        <!-- Animal Illnesses -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase">Animal Illnesses Observed</label>
+                            <textarea class="form-control" name="animal_illnesses" rows="2" placeholder="Record symptoms, mastitis checks, parasitic burden, clinical diagnoses, and treatments..."></textarea>
+                        </div>
+
+                        <!-- Natural Disasters -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase">Natural Disasters / Drought / Flooding</label>
+                            <textarea class="form-control" name="natural_disasters" rows="2" placeholder="Note seasonal flooding, drought pasture impact, or environmental stresses..."></textarea>
+                        </div>
+
+                        <!-- Deaths / Mortality -->
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-uppercase">Animal Deaths Count</label>
+                            <input type="number" class="form-control" name="deaths_count" min="0" value="0">
+                        </div>
+
+                        <div class="col-md-9">
+                            <label class="form-label fw-bold small text-uppercase">Mortality Cause &amp; Tag Details</label>
+                            <input type="text" class="form-control" name="deaths_details" placeholder="Ear tag no, breed, suspected cause, post-mortem findings...">
+                        </div>
+
+                        <!-- Recommendations -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-uppercase">Veterinary Surgeon Directives &amp; Action Plan</label>
+                            <textarea class="form-control" name="recommendations" rows="2" placeholder="Vaccination recall, nutritional directives, milking hygiene protocols..."></textarea>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn text-white px-4 fw-bold" style="background-color: #820100;">
+                        <i class="bi bi-save me-1"></i> Save Farm Inspection Log
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- ========================================================================= -->
@@ -943,6 +1579,106 @@ require_once '../../../includes/header.php';
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- Modal: Assign Society Executive Position                                  -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="modalAssignExecutive" tabindex="-1" aria-labelledby="modalAssignExecutiveLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white py-2" style="background-color: #370709;">
+                <h6 class="modal-title fw-bold" id="modalAssignExecutiveLabel">
+                    <i class="bi bi-person-gear me-2"></i> Assign Society Executive Position
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formAssignExecutive">
+                <input type="hidden" name="action" value="assign_executive_position">
+                <input type="hidden" name="member_id" id="assign_member_id" value="">
+                <div class="modal-body p-4">
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="small text-muted mb-1">Selected Society Member:</div>
+                        <div class="fs-5 fw-bold text-dark" id="assign_member_name_display">—</div>
+                        <div class="small text-secondary font-monospace" id="assign_membership_no_display">—</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">
+                            Executive Designation / Office <span class="text-danger">*</span>
+                        </label>
+                        <select name="position" id="assign_executive_position" class="form-select" required>
+                            <option value="President">President (Society Leader)</option>
+                            <option value="Vice President">Vice President (Deputy Society Leader)</option>
+                            <option value="Secretary">Secretary (Administrative Officer)</option>
+                            <option value="Treasurer">Treasurer (Financial Officer)</option>
+                            <option value="Committee Member">Executive Committee Member</option>
+                            <option value="Member">General Member (Revoke Executive Status)</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-warning py-2 px-3 small border-0 mb-0">
+                        <i class="bi bi-shield-exclamation me-1"></i>
+                        <strong>Single-Holder Office Rule:</strong> Designating a <em>President</em>, <em>Vice President</em>, <em>Secretary</em>, or <em>Treasurer</em> will automatically transition any prior office holder in this range to General Member.
+                    </div>
+                </div>
+                <div class="modal-footer py-2 bg-light border-top-0">
+                    <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnSaveExecutive" class="btn btn-sm text-white fw-bold px-3 shadow-sm" style="background-color: #820100;">
+                        <i class="bi bi-check2-circle me-1"></i> Save Executive Position
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- Modal: Establish / Edit Society Code of Conduct                           -->
+<!-- ========================================================================= -->
+<div class="modal fade" id="modalEditCodeOfConduct" tabindex="-1" aria-labelledby="modalEditCodeOfConductLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white py-2" style="background-color: #1e3a8a;">
+                <h6 class="modal-title fw-bold" id="modalEditCodeOfConductLabel">
+                    <i class="bi bi-shield-check me-2"></i> Establish &amp; Formalize Society Code of Conduct
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formEditCodeOfConduct">
+                <input type="hidden" name="action" value="update_code_of_conduct">
+                <input type="hidden" name="range_id" value="<?= $range_id ?>">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">
+                            Charter / Code of Conduct Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="code_of_conduct_title" id="edit_code_title" class="form-control" 
+                               value="<?= htmlspecialchars($society_data['code_of_conduct_title'] ?? "Dairy Hub Farmers' Society Code of Conduct & Operational Guidelines") ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">
+                            Formal Code of Conduct Clauses &amp; Operational Regulations <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="code_of_conduct_text" id="edit_code_text" class="form-control font-monospace" rows="12" required style="font-size: 0.9rem; line-height: 1.5;"><?= htmlspecialchars($society_data['code_of_conduct_text'] ?? '') ?></textarea>
+                        <small class="text-muted">Enter the formal clauses, ethical rules, milk delivery standards, and operational guidelines binding upon all enrolled society members.</small>
+                    </div>
+
+                    <div class="alert alert-info py-2 px-3 small border-0 mb-0">
+                        <i class="bi bi-info-circle-fill me-1"></i>
+                        Updating this charter updates the official society regulations displayed across all member portals and administrative registers in this range.
+                    </div>
+                </div>
+                <div class="modal-footer py-2 bg-light border-top-0">
+                    <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btnSaveCodeOfConduct" class="btn btn-sm btn-primary fw-bold px-3 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Save Formal Code of Conduct
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?php 
 // Include existing Milk Collection modal if present
 if (file_exists(__DIR__ . '/model/add_dairy_record_modal.php')) {
@@ -979,6 +1715,24 @@ $(document).ready(function() {
                 search: "_INPUT_",
                 searchPlaceholder: "Search collections..."
             }
+        });
+    }
+
+    // 3. Initialize Dairy Hub Society Members Table
+    if ($('#societyMembersTable').length) {
+        const societyDt = $('#societyMembersTable').DataTable({
+            pageLength: 15,
+            responsive: true,
+            order: [[5, 'desc']], // Enrolled Date
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search members..."
+            }
+        });
+
+        // Auto adjust table columns when Society tab becomes active
+        $('button[data-bs-toggle="tab"], a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+            societyDt.columns.adjust().responsive.recalc();
         });
     }
 
@@ -1386,6 +2140,134 @@ $(document).ready(function() {
                     }
                 });
             }
+        });
+    });
+
+    // =========================================================================
+    // Open Assign Executive Position Modal
+    // =========================================================================
+    $(document).on('click', '.btn-assign-exec-modal', function() {
+        const id = $(this).data('id');
+        const name = $(this).data('name') || '';
+        const membership = $(this).data('membership') || '';
+        const position = $(this).data('position') || 'Member';
+
+        $('#assign_member_id').val(id);
+        $('#assign_member_name_display').text(name);
+        $('#assign_membership_no_display').text(membership ? 'Membership No: ' + membership : '');
+        $('#assign_executive_position').val(position);
+
+        $('#modalAssignExecutive').modal('show');
+    });
+
+    // =========================================================================
+    // Submit Assign Executive Position Form via AJAX
+    // =========================================================================
+    $('#formAssignExecutive').on('submit', function(e) {
+        e.preventDefault();
+        const formData = $(this).serialize();
+
+        $('#btnSaveExecutive').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+
+        $.ajax({
+            url: 'processors/dairy_project_crud.php',
+            method: 'POST',
+            dataType: 'json',
+            data: formData,
+            success: function(res) {
+                $('#btnSaveExecutive').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Save Executive Position');
+                if (res.success) {
+                    $('#modalAssignExecutive').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Position Assigned',
+                        text: res.message,
+                        confirmButtonColor: '#820100'
+                    }).then(() => {
+                        window.location.href = `dairy_hub.php?range_id=<?= $range_id ?>&tab=society`;
+                    });
+                } else {
+                    Swal.fire('Error', res.message || 'Failed to update executive position.', 'error');
+                }
+            },
+            error: function() {
+                $('#btnSaveExecutive').prop('disabled', false).html('<i class="bi bi-check2-circle me-1"></i> Save Executive Position');
+                Swal.fire('Error', 'Server communication failure.', 'error');
+            }
+        });
+    });
+
+    // =========================================================================
+    // Open Edit Code of Conduct Modal
+    // =========================================================================
+    $('#btnEditCodeInline').on('click', function() {
+        $('#modalEditCodeOfConduct').modal('show');
+    });
+
+    // =========================================================================
+    // Submit Edit Code of Conduct Form via AJAX
+    // =========================================================================
+    $('#formEditCodeOfConduct').on('submit', function(e) {
+        e.preventDefault();
+        const formData = $(this).serialize();
+
+        $('#btnSaveCodeOfConduct').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+
+        $.ajax({
+            url: 'processors/dairy_project_crud.php',
+            method: 'POST',
+            dataType: 'json',
+            data: formData,
+            success: function(res) {
+                $('#btnSaveCodeOfConduct').prop('disabled', false).html('<i class="bi bi-save me-1"></i> Save Formal Code of Conduct');
+                if (res.success) {
+                    $('#modalEditCodeOfConduct').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Charter Enacted & Saved',
+                        text: res.message,
+                        confirmButtonColor: '#1e3a8a'
+                    }).then(() => {
+                        window.location.href = `dairy_hub.php?range_id=<?= $range_id ?>&tab=society`;
+                    });
+                } else {
+                    Swal.fire('Error', res.message || 'Failed to update Code of Conduct.', 'error');
+                }
+            },
+            error: function() {
+                $('#btnSaveCodeOfConduct').prop('disabled', false).html('<i class="bi bi-save me-1"></i> Save Formal Code of Conduct');
+                Swal.fire('Error', 'Server communication failure.', 'error');
+            }
+        });
+    // =========================================================================
+    // Dairy Hub Scheduled Farm Monitoring Visits Handlers
+    // =========================================================================
+    window.openDairyFarmVisitModal = function(farmRegNo, farmerName, dhId) {
+        $('#dh_visit_dh_id').val(dhId || 0);
+        $('#dh_visit_farm_reg_no').val(farmRegNo || '');
+        $('#dh_visit_farmer_name').val(farmerName || '');
+        $('#dairyFarmVisitModal').modal('show');
+    };
+
+    $('#dairyMonitoringVisitForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = $(this).serialize();
+        $.post('processors/project_monitoring_crud.php', formData, function(res) {
+            if (res.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Visit Logged',
+                    text: res.message,
+                    confirmButtonColor: '#820100'
+                }).then(() => {
+                    $('#dairyFarmVisitModal').modal('hide');
+                    location.reload();
+                });
+            } else {
+                Swal.fire('Error', res.message || 'Failed to record visit log.', 'error');
+            }
+        }, 'json').fail(function() {
+            Swal.fire('Error', 'Communication error saving inspection log.', 'error');
         });
     });
 });

@@ -166,6 +166,57 @@ if (!$is_supervisory) {
     }
 }
 
+// Step 4: Fetch registered milk producers for active range to display in summary
+$range_producers = [];
+if (!empty($range_id)) {
+    $mp_sql = "
+        SELECT 
+            COALESCE(r.registration_no, f.farm_registration_no, a.farm_reg_no) AS farm_reg_no,
+            COALESCE(r.farmer_name, f.full_name, a.producer_name) AS farmer_name,
+            COALESCE(r.nic, f.nic_no, a.nic_no) AS nic,
+            COALESCE(r.telephone_no, f.contact_no, a.contact_mobile) AS phone,
+            COALESCE(r.farmer_address, f.location_address, a.address) AS address,
+            COALESCE(r.gender, f.gender, a.gender, 'Male') AS gender,
+            COALESCE(r.ethnicity, f.ethnicity, a.ethnicity, 'Sinhala') AS ethnicity,
+            COALESCE(r.milk_production_volume, f.milk_production_volume, a.milk_production_volume, '5–10 liters') AS milk_production_volume
+        FROM farm_registration_renewals r
+        LEFT JOIN farmers f ON r.registration_no = f.farm_registration_no
+        LEFT JOIN dairy_farm_applications a ON r.registration_no = a.farm_reg_no
+        WHERE r.range_id = ?
+        ORDER BY r.id DESC LIMIT 8
+    ";
+    $mp_stmt = $mysqli->prepare($mp_sql);
+    if ($mp_stmt) {
+        $mp_stmt->bind_param("i", $range_id);
+        $mp_stmt->execute();
+        $range_producers = $mp_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $mp_stmt->close();
+    }
+
+    if (empty($range_producers)) {
+        $f_stmt = $mysqli->prepare("
+            SELECT 
+                farm_registration_no AS farm_reg_no,
+                full_name AS farmer_name,
+                nic_no AS nic,
+                contact_no AS phone,
+                location_address AS address,
+                COALESCE(gender, 'Male') AS gender,
+                COALESCE(ethnicity, 'Sinhala') AS ethnicity,
+                COALESCE(milk_production_volume, '5–10 liters') AS milk_production_volume
+            FROM farmers
+            WHERE range_id = ? AND farm_registration_no IS NOT NULL AND farm_registration_no != ''
+            ORDER BY id DESC LIMIT 8
+        ");
+        if ($f_stmt) {
+            $f_stmt->bind_param("i", $range_id);
+            $f_stmt->execute();
+            $range_producers = $f_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $f_stmt->close();
+        }
+    }
+}
+
 // Standard 14 Quick Actions Catalog
 $all_quick_actions = [
     'range_statistics' => [
@@ -210,6 +261,13 @@ $all_quick_actions = [
         'color' => '#2e7d32',
         'link'  => 'clinical_services.php' . ($range_id ? '?range_id=' . $range_id : '')
     ],
+    'citizen_charter' => [
+        'id' => 8,
+        'title' => 'Other Services (Citizen Charter)',
+        'icon'  => 'bi-file-earmark-person-fill',
+        'color' => '#b45309',
+        'link'  => 'citizen_charter.php' . ($range_id ? '?range_id=' . $range_id : '')
+    ],
     'animal_breeding' => [
         'id' => 7,
         'title' => 'Breeding and Production',
@@ -224,19 +282,12 @@ $all_quick_actions = [
         'color' => '#1565c0',
         'link'  => 'dairy_hub.php' . ($range_id ? '?range_id=' . $range_id : '')
     ],
-    'projects' => [
+    'projects_monitoring' => [
         'id' => 10,
-        'title' => 'Projects',
-        'icon'  => 'bi-geo-alt-fill',
+        'title' => 'Projects and Monitoring',
+        'icon'  => 'bi-kanban-fill',
         'color' => '#00838f',
         'link'  => 'projects_progress.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'monitoring' => [
-        'id' => 11,
-        'title' => 'Monitoring',
-        'icon'  => 'bi-folder-fill',
-        'color' => '#283593',
-        'link'  => 'monitoring.php' . ($range_id ? '?range_id=' . $range_id : '')
     ],
     'accounts' => [
         'id' => 12,
@@ -384,6 +435,209 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
+        <!-- Milk Producers Particulars (Range Details) -->
+        <div class="card shadow-sm mb-4 border-0" id="milkProducersParticularsCard">
+            <div class="card-header bg-white py-3 px-4 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: #370709;">
+                        <i class="bi bi-person-lines-fill me-2"></i>Milk Producers Particulars
+                    </h5>
+                    <p class="text-muted small mb-0">Manage registered milk producer profiles, demographic reporting, and standardized production ranges for this range.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill small">
+                        <i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($range_name) ?>
+                    </span>
+                </div>
+            </div>
+            <div class="card-body px-4 pt-2 pb-4">
+                <form id="formMilkProducerParticulars" autocomplete="off">
+                    <input type="hidden" name="range_id" id="mp_range_id" value="<?= (int)$range_id ?>">
+                    
+                    <div class="alert alert-light border small py-2 px-3 mb-3 d-flex align-items-center text-muted">
+                        <i class="bi bi-info-circle-fill text-primary me-2 fs-5"></i>
+                        <span>
+                            Enter an existing <strong>Farm Registration Number</strong> (e.g., <code>530112345</code>) to automatically fetch and populate historical producer data.
+                            Demographic fields (<strong>Sex</strong> &amp; <strong>Ethnicity</strong>) and standardized <strong>Milk Production Ranges</strong> are strictly required.
+                        </span>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Farm Registration Number with Auto-Fill -->
+                        <div class="col-md-4">
+                            <label for="mp_farm_reg_no" class="form-label fw-semibold small text-secondary">
+                                Farm Registration Number <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted"><i class="bi bi-qr-code"></i></span>
+                                <input type="text" class="form-control" id="mp_farm_reg_no" name="farm_reg_no" placeholder="e.g. 530112345" required>
+                                <button type="button" class="btn btn-outline-primary" id="btnAutoFetchProducer" title="Fetch historical farmer details">
+                                    <i class="bi bi-arrow-repeat me-1"></i> Auto-Fill
+                                </button>
+                            </div>
+                            <div id="mp_autofill_status" class="form-text small mt-1"></div>
+                        </div>
+
+                        <!-- Producer's Full Name -->
+                        <div class="col-md-5">
+                            <label for="mp_farmer_name" class="form-label fw-semibold small text-secondary">
+                                Milk Producer's Full Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="mp_farmer_name" name="farmer_name" placeholder="Full name of milk producer" required>
+                            </div>
+                        </div>
+
+                        <!-- Identity Card Number (NIC) -->
+                        <div class="col-md-3">
+                            <label for="mp_nic" class="form-label fw-semibold small text-secondary">
+                                Identity Card No (NIC) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted"><i class="bi bi-card-heading"></i></span>
+                                <input type="text" class="form-control" id="mp_nic" name="nic" placeholder="e.g. 198512345678" required>
+                            </div>
+                        </div>
+
+                        <!-- Sex Dropdown (Mandatory) -->
+                        <div class="col-md-3">
+                            <label for="mp_sex" class="form-label fw-semibold small text-secondary">
+                                Sex <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="mp_sex" name="sex" required>
+                                <option value="">-- Select Sex --</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+
+                        <!-- Ethnicity Dropdown (Mandatory) -->
+                        <div class="col-md-3">
+                            <label for="mp_ethnicity" class="form-label fw-semibold small text-secondary">
+                                Ethnicity <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="mp_ethnicity" name="ethnicity" required>
+                                <option value="">-- Select Ethnicity --</option>
+                                <option value="Sinhala">Sinhala</option>
+                                <option value="Tamil">Tamil</option>
+                                <option value="Muslim">Muslim</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Contact Mobile -->
+                        <div class="col-md-3">
+                            <label for="mp_phone" class="form-label fw-semibold small text-secondary">
+                                Contact Phone Number <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted"><i class="bi bi-telephone"></i></span>
+                                <input type="text" class="form-control" id="mp_phone" name="phone" placeholder="07XXXXXXXX" required>
+                            </div>
+                        </div>
+
+                        <!-- Standardized Milk Production Range (Strict Dropdown) -->
+                        <div class="col-md-3">
+                            <label for="mp_milk_production_volume" class="form-label fw-semibold small text-secondary">
+                                Milk Production Volume <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="mp_milk_production_volume" name="milk_production_volume" required>
+                                <option value="">-- Select Production Range --</option>
+                                <option value="Below 5 liters">Below 5 liters</option>
+                                <option value="5–10 liters">5–10 liters</option>
+                                <option value="10–20 liters">10–20 liters</option>
+                                <option value="20–40 liters">20–40 liters</option>
+                                <option value="40–100 liters">40–100 liters</option>
+                                <option value="Above 100 liters">Above 100 liters</option>
+                            </select>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="col-md-7">
+                            <label for="mp_address" class="form-label fw-semibold small text-secondary">
+                                Residential / Farm Location Address <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted"><i class="bi bi-geo-alt"></i></span>
+                                <input type="text" class="form-control" id="mp_address" name="address" placeholder="Full postal or farm location address" required>
+                            </div>
+                        </div>
+
+                        <!-- D.S. & G.N. Division -->
+                        <div class="col-md-5">
+                            <label for="mp_ds_gn_division" class="form-label fw-semibold small text-secondary">
+                                D.S. &amp; G.N. Division
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white text-muted"><i class="bi bi-pin-map"></i></span>
+                                <input type="text" class="form-control" id="mp_ds_gn_division" name="ds_gn_division" placeholder="e.g. Medirigiriya / Div 04">
+                            </div>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                            <button type="button" class="btn btn-light border px-3" id="btnResetProducerForm">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Clear Form
+                            </button>
+                            <button type="submit" class="btn text-white px-4 shadow-sm" style="background-color: #370709;" id="btnSubmitProducer">
+                                <i class="bi bi-check2-circle me-1"></i> Save Milk Producer Particulars
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <?php if (!empty($range_producers)): ?>
+                    <hr class="my-4 text-muted">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-clock-history me-1 text-secondary"></i> Recently Registered / Updated Producers in Range
+                        </h6>
+                        <span class="text-muted small">Showing up to <?= count($range_producers) ?> records</span>
+                    </div>
+                    <div class="table-responsive border rounded-3 bg-white">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Farm Reg No</th>
+                                    <th>Producer Name</th>
+                                    <th>Sex</th>
+                                    <th>Ethnicity</th>
+                                    <th>Contact</th>
+                                    <th>Production Range</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($range_producers as $rp): ?>
+                                    <tr>
+                                        <td class="fw-bold text-primary font-monospace"><?= htmlspecialchars($rp['farm_reg_no'] ?? 'N/A') ?></td>
+                                        <td><?= htmlspecialchars($rp['farmer_name'] ?? 'N/A') ?></td>
+                                        <td><span class="badge bg-secondary-subtle text-secondary border"><?= htmlspecialchars($rp['gender'] ?? 'N/A') ?></span></td>
+                                        <td><span class="badge bg-info-subtle text-info border"><?= htmlspecialchars($rp['ethnicity'] ?? 'N/A') ?></span></td>
+                                        <td><?= htmlspecialchars($rp['phone'] ?? 'N/A') ?></td>
+                                        <td><span class="badge bg-success-subtle text-success border fw-semibold"><?= htmlspecialchars($rp['milk_production_volume'] ?? 'N/A') ?></span></td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 btn-load-producer" 
+                                                data-reg="<?= htmlspecialchars($rp['farm_reg_no'] ?? '') ?>"
+                                                data-name="<?= htmlspecialchars($rp['farmer_name'] ?? '') ?>"
+                                                data-nic="<?= htmlspecialchars($rp['nic'] ?? '') ?>"
+                                                data-sex="<?= htmlspecialchars($rp['gender'] ?? 'Male') ?>"
+                                                data-ethnicity="<?= htmlspecialchars($rp['ethnicity'] ?? 'Sinhala') ?>"
+                                                data-phone="<?= htmlspecialchars($rp['phone'] ?? '') ?>"
+                                                data-volume="<?= htmlspecialchars($rp['milk_production_volume'] ?? '5–10 liters') ?>"
+                                                data-address="<?= htmlspecialchars($rp['address'] ?? '') ?>">
+                                                <i class="bi bi-pencil-square me-1"></i> Load to Form
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div class="d-flex flex-wrap align-items-center gap-2">
@@ -442,4 +696,256 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
-<?php require_once '../../../includes/footer.php'; ?>
+<?php
+ob_start();
+?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const regInput = document.getElementById('mp_farm_reg_no');
+    const autoFetchBtn = document.getElementById('btnAutoFetchProducer');
+    const statusDiv = document.getElementById('mp_autofill_status');
+    const producerForm = document.getElementById('formMilkProducerParticulars');
+    const resetBtn = document.getElementById('btnResetProducerForm');
+
+    let debounceTimer = null;
+
+    function fetchProducerData(regNo, manualTrigger = false) {
+        regNo = (regNo || '').trim();
+        if (!regNo) {
+            if (manualTrigger && statusDiv) {
+                statusDiv.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>Please enter a Farm Registration Number first.</span>';
+            }
+            return;
+        }
+
+        if (statusDiv) {
+            statusDiv.innerHTML = '<span class="text-primary"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Checking historical records...</span>';
+        }
+
+        fetch('processors/milk_producer_crud.php?action=lookup_producer&farm_reg_no=' + encodeURIComponent(regNo))
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.found) {
+                    const p = data.producer;
+                    const nameEl = document.getElementById('mp_farmer_name');
+                    const nicEl = document.getElementById('mp_nic');
+                    const phoneEl = document.getElementById('mp_phone');
+                    const addrEl = document.getElementById('mp_address');
+                    const dsEl = document.getElementById('mp_ds_gn_division');
+                    const sexEl = document.getElementById('mp_sex');
+                    const ethEl = document.getElementById('mp_ethnicity');
+                    const volEl = document.getElementById('mp_milk_production_volume');
+
+                    if (nameEl && p.farmer_name) nameEl.value = p.farmer_name;
+                    if (nicEl && p.nic) nicEl.value = p.nic;
+                    if (phoneEl && p.phone) phoneEl.value = p.phone;
+                    if (addrEl && p.address) addrEl.value = p.address;
+                    if (dsEl && p.ds_gn_division) dsEl.value = p.ds_gn_division;
+                    if (sexEl && p.sex) sexEl.value = p.sex;
+                    if (ethEl && p.ethnicity) ethEl.value = p.ethnicity;
+                    if (volEl && p.milk_production_volume) volEl.value = p.milk_production_volume;
+
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>' + (data.message || 'Historical data populated successfully!') + '</span>';
+                    }
+
+                    if (typeof Swal !== 'undefined' && manualTrigger) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Data Auto-Populated',
+                            text: 'Found record for ' + (p.farmer_name || regNo) + ' (' + (p.source || 'Historical records') + ').',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                } else if (data.success && !data.found) {
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<span class="text-muted"><i class="bi bi-info-circle me-1"></i>New registration number. Enter details manually.</span>';
+                    }
+                    if (manualTrigger && typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'No Historical Data Found',
+                            text: 'No prior records found for "' + regNo + '". You can complete and save new producer particulars.',
+                            timer: 2500,
+                            showConfirmButton: false
+                        });
+                    }
+                } else {
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>' + (data.message || 'Lookup encountered an issue.') + '</span>';
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching producer:', err);
+                if (statusDiv) {
+                    statusDiv.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Error connecting to lookup service.</span>';
+                }
+            });
+    }
+
+    if (regInput) {
+        regInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            const val = this.value.trim();
+            if (val.length >= 4) {
+                debounceTimer = setTimeout(() => {
+                    fetchProducerData(val, false);
+                }, 500);
+            } else if (statusDiv) {
+                statusDiv.innerHTML = '';
+            }
+        });
+
+        regInput.addEventListener('blur', function () {
+            const val = this.value.trim();
+            if (val.length >= 3) {
+                fetchProducerData(val, false);
+            }
+        });
+    }
+
+    if (autoFetchBtn) {
+        autoFetchBtn.addEventListener('click', function () {
+            const val = regInput ? regInput.value.trim() : '';
+            fetchProducerData(val, true);
+        });
+    }
+
+    // Reset button
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            if (producerForm) producerForm.reset();
+            if (statusDiv) statusDiv.innerHTML = '';
+        });
+    }
+
+    // Form submission
+    if (producerForm) {
+        producerForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const sex = document.getElementById('mp_sex') ? document.getElementById('mp_sex').value : '';
+            const ethnicity = document.getElementById('mp_ethnicity') ? document.getElementById('mp_ethnicity').value : '';
+            const volume = document.getElementById('mp_milk_production_volume') ? document.getElementById('mp_milk_production_volume').value : '';
+
+            if (!sex) {
+                if (typeof Swal !== 'undefined') Swal.fire('Required Field', 'Please select Sex (Male / Female).', 'warning');
+                return;
+            }
+            if (!ethnicity) {
+                if (typeof Swal !== 'undefined') Swal.fire('Required Field', 'Please select Ethnicity.', 'warning');
+                return;
+            }
+            if (!volume) {
+                if (typeof Swal !== 'undefined') Swal.fire('Required Field', 'Please select a Milk Production Volume range.', 'warning');
+                return;
+            }
+
+            const formData = new FormData(producerForm);
+            const submitBtn = document.getElementById('btnSubmitProducer');
+            const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...';
+            }
+
+            fetch('processors/milk_producer_crud.php?action=save_producer', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                }
+
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Saved Successfully',
+                            text: data.message || 'Milk Producer Particulars saved successfully!',
+                            confirmButtonColor: '#370709'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert(data.message || 'Saved successfully!');
+                        window.location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            text: data.message || 'Failed to save particulars.',
+                            confirmButtonColor: '#370709'
+                        });
+                    } else {
+                        alert(data.message || 'Error saving producer.');
+                    }
+                }
+            })
+            .catch(err => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                }
+                console.error('Save error:', err);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Network Error', 'Could not complete the request. Please try again.', 'error');
+                } else {
+                    alert('Network error.');
+                }
+            });
+        });
+    }
+
+    // Load from recent table
+    document.querySelectorAll('.btn-load-producer').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const reg = this.getAttribute('data-reg') || '';
+            const name = this.getAttribute('data-name') || '';
+            const nic = this.getAttribute('data-nic') || '';
+            const sex = this.getAttribute('data-sex') || 'Male';
+            const ethnicity = this.getAttribute('data-ethnicity') || 'Sinhala';
+            const phone = this.getAttribute('data-phone') || '';
+            const volume = this.getAttribute('data-volume') || '5–10 liters';
+            const address = this.getAttribute('data-address') || '';
+
+            if (regInput) regInput.value = reg;
+            const nameEl = document.getElementById('mp_farmer_name');
+            const nicEl = document.getElementById('mp_nic');
+            const sexEl = document.getElementById('mp_sex');
+            const ethEl = document.getElementById('mp_ethnicity');
+            const phoneEl = document.getElementById('mp_phone');
+            const volEl = document.getElementById('mp_milk_production_volume');
+            const addrEl = document.getElementById('mp_address');
+
+            if (nameEl) nameEl.value = name;
+            if (nicEl) nicEl.value = nic;
+            if (sexEl) sexEl.value = sex;
+            if (ethEl) ethEl.value = ethnicity;
+            if (phoneEl) phoneEl.value = phone;
+            if (volEl) volEl.value = volume;
+            if (addrEl) addrEl.value = address;
+
+            if (statusDiv) {
+                statusDiv.innerHTML = '<span class="text-success"><i class="bi bi-pencil me-1"></i>Loaded producer ' + reg + ' for editing.</span>';
+            }
+
+            const card = document.getElementById('milkProducersParticularsCard');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+});
+</script>
+<?php
+$pageScripts = ob_get_clean();
+require_once '../../../includes/footer.php';
+?>

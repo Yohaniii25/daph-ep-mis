@@ -571,7 +571,7 @@ $(document).ready(function() {
                     text: '<i class="bi bi-file-earmark-pdf"></i> PDF',
                     orientation: 'landscape',
                     pageSize: 'A4',
-                    title: 'Crop Return Summary - ' + selectedYear
+                    title: 'Vaccine Return Summary - ' + selectedYear
                 },
                 {
                     extend: 'print',
@@ -722,7 +722,7 @@ $(document).ready(function() {
                         extend: 'csv',
                         className: 'btn btn-sm btn-success me-2',
                         text: '<i class="bi bi-file-earmark-spreadsheet"></i> CSV',
-                        title: 'Crop Return Period Summary (' + rangeLabel + ')'
+                        title: 'Vaccine Return Period Summary (' + rangeLabel + ')'
                     },
                     {
                         extend: 'pdf',
@@ -730,7 +730,7 @@ $(document).ready(function() {
                         text: '<i class="bi bi-file-earmark-pdf"></i> PDF',
                         orientation: 'landscape',
                         pageSize: 'A4',
-                        title: 'Crop Return Period Summary (' + rangeLabel + ')'
+                        title: 'Vaccine Return Period Summary (' + rangeLabel + ')'
                     },
                     {
                         extend: 'print',
@@ -837,7 +837,7 @@ $(document).ready(function() {
                 if (response.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Crop Return Saved!',
+                        title: 'Vaccine Return Saved!',
                         text: 'All 20 standard items for ' + reportPeriod + ' have been successfully saved.',
                         confirmButtonColor: '#820100'
                     });
@@ -845,7 +845,7 @@ $(document).ready(function() {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: response.message || 'Could not save crop return records.',
+                        text: response.message || 'Could not save vaccine return records.',
                         confirmButtonColor: '#820100'
                     });
                 }
@@ -870,7 +870,7 @@ $(document).ready(function() {
         Swal.fire({
             icon: 'success',
             title: 'Saved!',
-            text: 'Crop Return records updated successfully.',
+            text: 'Vaccine Return records updated successfully.',
             confirmButtonColor: '#820100'
         });
         window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/[\?&]status=[^&]+/, ''));

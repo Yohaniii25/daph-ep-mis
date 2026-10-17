@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $remark, $id, $range_id
         );
         if ($stmt->execute()) {
-            $_SESSION['msg'] = "Crop Return record updated successfully.";
+            $_SESSION['msg'] = "Vaccine Return record updated successfully.";
             $_SESSION['msg_type'] = "success";
             header("Location: ../crop_returns.php?status=updated");
         } else {

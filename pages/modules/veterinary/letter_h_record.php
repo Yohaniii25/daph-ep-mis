@@ -127,8 +127,8 @@ $month_shorts = [
 $range_label = $month_names[$from_month] . ' – ' . $month_names[$to_month] . ' ' . $selected_year;
 $report_period_label = ($month_names[$active_month] ?? '') . ' ' . $selected_year;
 
-// 5. Fetch the 4 Main Categories for Letter H
-$categories_query = $mysqli->query("SELECT id, category_name, sort_order FROM letter_h_categories ORDER BY sort_order ASC, id ASC");
+// 5. Fetch Active Categories for Letter H (Excluding redundant Advance Account)
+$categories_query = $mysqli->query("SELECT id, category_name, sort_order FROM letter_h_categories WHERE category_name NOT LIKE '%Advance%' ORDER BY sort_order ASC, id ASC");
 $all_categories   = $categories_query->fetch_all(MYSQLI_ASSOC);
 
 // 6. Fetch All Subcategories (Revenue Items) grouped by Category
@@ -193,9 +193,9 @@ require_once '../../../includes/header.php';
             <div class="col-lg-8">
                 <div class="d-flex align-items-center gap-3 mb-2">
                     <span class="badge" style="background-color: #820100; font-size: 0.85rem; letter-spacing: 0.5px;">
-                        <i class="bi bi-bank me-1"></i> LETTER 'H' ACCOUNT
+                        <i class="bi bi-journal-bookmark-fill me-1"></i> LITERATURE ACCOUNT RECORDS (LETTER 'H')
                     </span>
-                    <h5 class="fw-bold mb-0 text-dark">Cash Settlement in Bank - Official Financial Return</h5>
+                    <h5 class="fw-bold mb-0 text-dark">Literature Account Records & Cash Settlement in Bank - Official Financial Return</h5>
                 </div>
                 <div class="row g-2 text-muted small mt-1">
                     <div class="col-sm-6">

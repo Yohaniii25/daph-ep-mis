@@ -167,14 +167,16 @@ $val_daph_no     = $app_data['daph_register_no'] ?? '';
 $val_ai_no       = $app_data['ai_no'] ?? ($farmer_data['vs_division'] ?? '');
 $val_survey_date = $app_data['survey_date'] ?? date('Y-m-d');
 $val_main_cat    = $app_data['main_category'] ?? ($summary_data['category'] ?? '05 Liters');
-$val_gender      = $app_data['gender'] ?? 'Male';
+$val_gender      = $app_data['gender'] ?? ($farmer_data['gender'] ?? 'Male');
+$val_ethnicity   = $app_data['ethnicity'] ?? ($farmer_data['ethnicity'] ?? 'Sinhala');
+$val_milk_vol    = $app_data['milk_production_volume'] ?? ($farmer_data['milk_production_volume'] ?? '');
 $val_ds_gn       = $app_data['ds_gn_division'] ?? (trim(($farmer_data['ds_division'] ?? '') . ' / ' . ($farmer_data['gn_division'] ?? ''), ' /'));
 $val_coords      = $app_data['geo_coordinates'] ?? ($farmer_data['gps_location'] ?? '');
 $val_council     = $app_data['livestock_council'] ?? 'No';
 $val_dist_km     = $app_data['transport_distance_km'] ?? '0.00';
 $val_prev_ben    = $app_data['previous_project_benefit'] ?? 'No';
 $val_prev_det    = $app_data['previous_project_details'] ?? '';
-$val_water       = $app_data['water_source'] ?? 'Well';
+$val_water       = $app_data['water_source'] ?? 'Dug Well';
 $val_land_ext    = $app_data['land_extent'] ?? '';
 $val_past_ext    = $app_data['pasture_extent'] ?? '';
 $val_shed_adults = $app_data['shed_capacity_adults'] ?? 0;
@@ -189,7 +191,10 @@ $val_biogas      = $app_data['has_biogas_plant'] ?? 0;
 $val_biogas_cap  = $app_data['biogas_capacity_m3'] ?? '';
 $val_tag_no      = $app_data['id_ear_tag_no'] ?? '';
 $val_brand_no    = $app_data['id_hot_brand_no'] ?? '';
-$val_ai_cc       = $app_data['agri_env_ai_cc'] ?? ($farmer_data['vs_division'] ?? '');
+$val_id_method   = $app_data['animal_id_method'] ?? 'Ear Tag';
+$val_branding_rem= $app_data['branding_remarks'] ?? '';
+// Leave AI Customer Center blank for manual entry
+$val_ai_cc       = $app_data['agri_env_ai_cc'] ?? '';
 $val_ds_div      = $app_data['agri_env_ds_division'] ?? ($farmer_data['ds_division'] ?? '');
 $val_gn_div      = $app_data['agri_env_gn_division'] ?? ($farmer_data['gn_division'] ?? '');
 
@@ -199,6 +204,30 @@ $val_milk_tot    = $app_data['milk_total_liters'] ?? ($summary_data['daily_milk_
 $val_milk_exp    = $app_data['milk_expected_liters'] ?? ($summary_data['daily_milk_expected'] ?? 0.0);
 $val_hygiene     = $app_data['milk_hygiene_measures'] ?? '';
 $val_milk_price  = $app_data['milk_price_per_liter'] ?? 0.0;
+
+$val_p_qty       = $app_data['private_milk_qty_liters'] ?? 0.0;
+$val_p_price     = $app_data['private_milk_price'] ?? 0.0;
+$val_org_qty     = $app_data['organized_milk_qty_liters'] ?? 0.0;
+$val_org_name    = $app_data['organized_collector_name'] ?? '';
+$val_bookkeeping = $app_data['bookkeeping_records_notes'] ?? '';
+$val_vax_hs_date = $app_data['vaccine_hs_date'] ?? '';
+$val_vax_bq_date = $app_data['vaccine_bq_date'] ?? '';
+$val_vax_fmd_date= $app_data['vaccine_fmd_date'] ?? '';
+
+// Water sources list from database
+$water_sources_list = [];
+$ws_res = $mysqli->query("SELECT source_name FROM `dairy_water_sources` ORDER BY id ASC");
+if ($ws_res) {
+    while ($ws_row = $ws_res->fetch_assoc()) {
+        $water_sources_list[] = $ws_row['source_name'];
+    }
+}
+if (empty($water_sources_list)) {
+    $water_sources_list = ['Dug Well', 'Pipe-Borne Water', 'Tube Well', 'River / Stream'];
+}
+if (!empty($val_water) && !in_array($val_water, $water_sources_list, true) && $val_water !== 'Other') {
+    $water_sources_list[] = $val_water;
+}
 
 require_once '../../../includes/header.php';
 ?>
@@ -433,6 +462,7 @@ require_once '../../../includes/header.php';
     <form id="modernApplicationForm">
         <input type="hidden" name="action" value="save_application">
         <input type="hidden" name="summary_id" value="<?= htmlspecialchars($param_summary_id) ?>">
+        <input type="hidden" name="range_id" value="<?= htmlspecialchars($param_range_id) ?>">
 
         <!-- ========================================================================= -->
         <!-- SECTION 1: PRODUCER GENERAL INFORMATION                                   -->
@@ -539,17 +569,23 @@ require_once '../../../includes/header.php';
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label-modern">Gender</label>
-                    <div class="d-flex gap-3 pt-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="gender" id="gender_m" value="Male" <?= ($val_gender === 'Male') ? 'checked' : '' ?>>
-                            <label class="form-check-label fw-semibold" for="gender_m">Male</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="gender" id="gender_f" value="Female" <?= ($val_gender === 'Female') ? 'checked' : '' ?>>
-                            <label class="form-check-label fw-semibold" for="gender_f">Female</label>
-                        </div>
-                    </div>
+                    <label class="form-label-modern">Sex <span class="text-danger">*</span></label>
+                    <select name="gender" id="app_gender" class="form-select form-select-modern" required>
+                        <option value="" disabled <?= empty($val_gender) ? 'selected' : '' ?>>-- Select Sex --</option>
+                        <option value="Male" <?= ($val_gender === 'Male') ? 'selected' : '' ?>>Male</option>
+                        <option value="Female" <?= ($val_gender === 'Female') ? 'selected' : '' ?>>Female</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label-modern">Ethnicity <span class="text-danger">*</span></label>
+                    <select name="ethnicity" id="app_ethnicity" class="form-select form-select-modern" required>
+                        <option value="" disabled <?= empty($val_ethnicity) ? 'selected' : '' ?>>-- Select Ethnicity --</option>
+                        <option value="Sinhala" <?= ($val_ethnicity === 'Sinhala') ? 'selected' : '' ?>>Sinhala</option>
+                        <option value="Tamil" <?= ($val_ethnicity === 'Tamil') ? 'selected' : '' ?>>Tamil</option>
+                        <option value="Muslim" <?= ($val_ethnicity === 'Muslim') ? 'selected' : '' ?>>Muslim</option>
+                        <option value="Other" <?= ($val_ethnicity === 'Other') ? 'selected' : '' ?>>Other / Burgher</option>
+                    </select>
                 </div>
 
                 <div class="col-md-4">
@@ -601,14 +637,23 @@ require_once '../../../includes/header.php';
 
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label-modern">Water Source &amp; Facilities</label>
-                    <select name="water_source" class="form-select form-select-modern">
-                        <option value="Well" <?= ($val_water === 'Well') ? 'selected' : '' ?>>Dug Well</option>
-                        <option value="Pipe borne" <?= ($val_water === 'Pipe borne') ? 'selected' : '' ?>>Pipe-Borne Water</option>
-                        <option value="Tube Well" <?= ($val_water === 'Tube Well') ? 'selected' : '' ?>>Tube Well</option>
-                        <option value="River / Stream" <?= ($val_water === 'River / Stream') ? 'selected' : '' ?>>River / Stream</option>
-                        <option value="Other" <?= ($val_water === 'Other') ? 'selected' : '' ?>>Other Source</option>
+                    <label class="form-label-modern">Water Source &amp; Facilities <span class="text-danger">*</span></label>
+                    <select name="water_source" id="app_water_source" class="form-select form-select-modern" required>
+                        <?php foreach ($water_sources_list as $ws): ?>
+                            <option value="<?= htmlspecialchars($ws) ?>" <?= ($val_water === $ws) ? 'selected' : '' ?>><?= htmlspecialchars($ws) ?></option>
+                        <?php endforeach; ?>
+                        <option value="Other">Other sources...</option>
                     </select>
+                    <!-- Dynamic Other Source Input -->
+                    <div id="wrapperCustomWaterSource" class="mt-2" style="display: none;">
+                        <div class="input-group">
+                            <input type="text" id="custom_water_source_input" name="custom_water_source" class="form-control form-control-modern" placeholder="Type new source (e.g. agriculture well)">
+                            <button type="button" class="btn btn-outline-success" id="btnSaveWaterSource">
+                                <i class="bi bi-plus-circle me-1"></i> Save to List
+                            </button>
+                        </div>
+                        <div class="form-text small text-muted">New sources are automatically saved and appended as permanent options in future drop-downs.</div>
+                    </div>
                 </div>
 
                 <div class="col-md-4">
@@ -719,14 +764,33 @@ require_once '../../../includes/header.php';
                     </div>
                 </div>
 
-                <!-- Animal ID Method -->
-                <div class="col-md-6">
-                    <label class="form-label-modern">Ear Tagging Number (AI / Range)</label>
-                    <input type="text" name="id_ear_tag_no" class="form-control form-control-modern font-monospace" value="<?= htmlspecialchars($val_tag_no) ?>" placeholder="Tag ID series">
+                <!-- Animal ID Method & Branding (Tattooing) -->
+                <div class="col-md-4">
+                    <label class="form-label-modern">Animal Identification Method <span class="text-danger">*</span></label>
+                    <select name="animal_id_method" id="app_animal_id_method" class="form-select form-select-modern">
+                        <option value="Ear Tag" <?= ($val_id_method === 'Ear Tag') ? 'selected' : '' ?>>Ear Tags</option>
+                        <option value="Hot Iron Branding" <?= ($val_id_method === 'Hot Iron Branding') ? 'selected' : '' ?>>Hot Iron Branding (Tattooing)</option>
+                        <option value="Both" <?= ($val_id_method === 'Both') ? 'selected' : '' ?>>Both (Ear Tag &amp; Branding)</option>
+                        <option value="None" <?= ($val_id_method === 'None') ? 'selected' : '' ?>>Not Tagged / Branded</option>
+                    </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <label class="form-label-modern">Ear Tagging Number (AI / Range)</label>
+                    <input type="text" id="app_id_ear_tag_no" name="id_ear_tag_no" class="form-control form-control-modern font-monospace" value="<?= htmlspecialchars($val_tag_no) ?>" placeholder="Tag ID series">
+                </div>
+                <div class="col-md-4">
                     <label class="form-label-modern">Hot Iron Brand Number (AI / Range)</label>
-                    <input type="text" name="id_hot_brand_no" class="form-control form-control-modern font-monospace" value="<?= htmlspecialchars($val_brand_no) ?>" placeholder="Brand Mark / Code">
+                    <input type="text" id="app_id_hot_brand_no" name="id_hot_brand_no" class="form-control form-control-modern font-monospace" value="<?= htmlspecialchars($val_brand_no) ?>" placeholder="Brand Mark / Code">
+                </div>
+                <div class="col-12">
+                    <label class="form-label-modern">Animal Identification Details &amp; Registration Remarks</label>
+                    <div class="input-group">
+                        <textarea id="app_branding_remarks" name="branding_remarks" rows="2" class="form-control form-control-modern" placeholder="Auto-populated remarks from farm registration census remarks..."><?= htmlspecialchars($val_branding_rem) ?></textarea>
+                        <button type="button" class="btn btn-outline-secondary no-print" id="btnLookupAnimalId" title="Lookup remarks from farm registration">
+                            <i class="bi bi-search me-1"></i> Auto-Fill Remarks
+                        </button>
+                    </div>
+                    <div class="form-text small text-muted">Entering an identification number auto-fills the corresponding details captured in farm registration remarks.</div>
                 </div>
             </div>
         </div>
@@ -758,18 +822,18 @@ require_once '../../../includes/header.php';
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label-modern">AI / Customer Center</label>
-                    <input type="text" name="agri_env_ai_cc" class="form-control form-control-modern" value="<?= htmlspecialchars($val_ai_cc) ?>" placeholder="AI Division">
+                    <label class="form-label-modern">AI Customer Center <span class="badge bg-light text-secondary border">Manual</span></label>
+                    <input type="text" id="app_agri_env_ai_cc" name="agri_env_ai_cc" class="form-control form-control-modern" value="<?= htmlspecialchars($val_ai_cc) ?>" placeholder="Manual entry...">
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label-modern">DS Division</label>
-                    <input type="text" name="agri_env_ds_division" class="form-control form-control-modern" value="<?= htmlspecialchars($val_ds_div) ?>" placeholder="DS Office">
+                    <input type="text" id="app_agri_env_ds_division" name="agri_env_ds_division" class="form-control form-control-modern" value="<?= htmlspecialchars($val_ds_div) ?>" placeholder="DS Office">
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label-modern">GN Division</label>
-                    <input type="text" name="agri_env_gn_division" class="form-control form-control-modern" value="<?= htmlspecialchars($val_gn_div) ?>" placeholder="Grama Niladhari">
+                    <input type="text" id="app_agri_env_gn_division" name="agri_env_gn_division" class="form-control form-control-modern" value="<?= htmlspecialchars($val_gn_div) ?>" placeholder="Grama Niladhari">
                 </div>
             </div>
         </div>
@@ -1060,12 +1124,26 @@ require_once '../../../includes/header.php';
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label-modern">6.2 Expected Daily Production (Liters/day)</label>
+                    <label class="form-label-modern">6.2 Standardized Production Range <span class="text-danger">*</span></label>
+                    <select id="app_milk_production_volume" name="milk_production_volume" class="form-select form-select-modern fw-bold text-dark border-danger" required>
+                        <option value="" disabled <?= empty($val_milk_vol) ? 'selected' : '' ?>>-- Select Range --</option>
+                        <option value="Below 5 liters" <?= ($val_milk_vol === 'Below 5 liters') ? 'selected' : '' ?>>Below 5 liters</option>
+                        <option value="5–10 liters" <?= ($val_milk_vol === '5–10 liters') ? 'selected' : '' ?>>5–10 liters</option>
+                        <option value="10–20 liters" <?= ($val_milk_vol === '10–20 liters') ? 'selected' : '' ?>>10–20 liters</option>
+                        <option value="20–40 liters" <?= ($val_milk_vol === '20–40 liters') ? 'selected' : '' ?>>20–40 liters</option>
+                        <option value="40–100 liters" <?= ($val_milk_vol === '40–100 liters') ? 'selected' : '' ?>>40–100 liters</option>
+                        <option value="Above 100 liters" <?= ($val_milk_vol === 'Above 100 liters') ? 'selected' : '' ?>>Above 100 liters</option>
+                    </select>
+                    <div class="form-text small text-muted">Strict standardized production tier.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label-modern">6.3 Expected Daily Production (Liters/day)</label>
                     <div class="input-group">
                         <input type="number" step="0.1" min="0" name="milk_expected_liters" class="form-control form-control-modern fw-bold text-success" value="<?= htmlspecialchars($val_milk_exp) ?>">
                         <span class="input-group-text bg-success text-white">L/day</span>
                     </div>
-                    <div class="form-text small text-muted">Target daily quota under the development programme.</div>
+                    <div class="form-text small text-muted">Target daily quota under development programme.</div>
                 </div>
 
                 <div class="col-md-8">
@@ -1098,42 +1176,83 @@ require_once '../../../includes/header.php';
             </div>
 
             <div class="row g-3">
+                <!-- 7.1 Private Sector Sales -->
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded-3 border h-100">
-                        <label class="form-label-modern d-block">7.1 Selling Milk to Private Collector?</label>
-                        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
-                            <input type="radio" class="btn-check" name="sell_to_private_collector" id="sp_yes" value="1" <?= ($app_data['sell_to_private_collector'] ?? 0) == 1 ? 'checked' : '' ?>>
-                            <label class="btn btn-outline-primary" for="sp_yes">Yes, Private Collector</label>
-                            <input type="radio" class="btn-check" name="sell_to_private_collector" id="sp_no" value="0" <?= ($app_data['sell_to_private_collector'] ?? 0) == 0 ? 'checked' : '' ?>>
-                            <label class="btn btn-outline-secondary" for="sp_no">No</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label-modern mb-0">7.1 Selling to Private Sector / Collector?</label>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <input type="radio" class="btn-check" name="sell_to_private_collector" id="sp_yes" value="1" <?= ($app_data['sell_to_private_collector'] ?? 0) == 1 ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-primary" for="sp_yes">Yes</label>
+                                <input type="radio" class="btn-check" name="sell_to_private_collector" id="sp_no" value="0" <?= ($app_data['sell_to_private_collector'] ?? 0) == 0 ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-secondary" for="sp_no">No</label>
+                            </div>
+                        </div>
+                        <div class="row g-2 mt-2">
+                            <div class="col-6">
+                                <label class="form-label-modern small">Private Quantity (L/day)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" step="0.1" min="0" name="private_milk_qty_liters" class="form-control form-control-modern" value="<?= htmlspecialchars($val_p_qty) ?>" placeholder="0.0">
+                                    <span class="input-group-text bg-white">L</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-modern small">Private Price (Rs/L)</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white">Rs.</span>
+                                    <input type="number" step="0.01" min="0" name="private_milk_price" class="form-control form-control-modern" value="<?= htmlspecialchars($val_p_price) ?>" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7.2 Organized Sector Sales -->
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 border h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label-modern mb-0">7.2 Selling to Organizations / Companies?</label>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <input type="radio" class="btn-check" name="sell_to_organized_collector" id="so_yes" value="1" <?= ($app_data['sell_to_organized_collector'] ?? 0) == 1 ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-primary" for="so_yes">Yes</label>
+                                <input type="radio" class="btn-check" name="sell_to_organized_collector" id="so_no" value="0" <?= ($app_data['sell_to_organized_collector'] ?? 0) == 0 ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-secondary" for="so_no">No</label>
+                            </div>
+                        </div>
+                        <div class="row g-2 mt-2">
+                            <div class="col-6">
+                                <label class="form-label-modern small">Organization Quantity (L/day)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" step="0.1" min="0" name="organized_milk_qty_liters" class="form-control form-control-modern" value="<?= htmlspecialchars($val_org_qty) ?>" placeholder="0.0">
+                                    <span class="input-group-text bg-white">L</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-modern small">Organization / Collector Name</label>
+                                <input type="text" name="organized_collector_name" class="form-control form-control-sm form-control-modern" value="<?= htmlspecialchars($val_org_name) ?>" placeholder="e.g. Milco, Nestlé, Pelwatte">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
+                    <label class="form-label-modern">7.3 General Marketing &amp; Sales Summary</label>
+                    <input type="text" name="marketing_details" class="form-control form-control-modern" value="<?= htmlspecialchars($app_data['marketing_details'] ?? '') ?>" placeholder="Overall collection terms, route, payment cycle...">
+                </div>
+
+                <!-- 7.4 Bookkeeping & Accounting -->
+                <div class="col-md-6">
                     <div class="p-3 bg-light rounded-3 border h-100">
-                        <label class="form-label-modern d-block">7.2 Selling to Organized Collector?</label>
-                        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
-                            <input type="radio" class="btn-check" name="sell_to_organized_collector" id="so_yes" value="1" <?= ($app_data['sell_to_organized_collector'] ?? 0) == 1 ? 'checked' : '' ?>>
-                            <label class="btn btn-outline-primary" for="so_yes">Yes, Organized / Cooperative (Milco, Nestlé, etc.)</label>
-                            <input type="radio" class="btn-check" name="sell_to_organized_collector" id="so_no" value="0" <?= ($app_data['sell_to_organized_collector'] ?? 0) == 0 ? 'checked' : '' ?>>
-                            <label class="btn btn-outline-secondary" for="so_no">No</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label-modern mb-0">7.4 Farm Bookkeeping &amp; Accounting Records</label>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <input type="radio" class="btn-check" name="keep_daily_records" id="kr_yes" value="1" <?= ($app_data['keep_daily_records'] ?? 0) == 1 ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-success" for="kr_yes">Yes, Maintained</label>
+                                <input type="radio" class="btn-check" name="keep_daily_records" id="kr_no" value="0" <?= ($app_data['keep_daily_records'] ?? 0) == 0 ? 'checked' : '' ?>>
+                                <label class="btn btn-outline-secondary" for="kr_no">No</label>
+                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-md-8">
-                    <label class="form-label-modern">7.3 Quantity Sold &amp; Price per Liter Details</label>
-                    <input type="text" name="marketing_details" class="form-control form-control-modern" value="<?= htmlspecialchars($app_data['marketing_details'] ?? '') ?>" placeholder="e.g. 18 Liters/day supplied to Milco center @ Rs. 165.00">
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label-modern">7.4 Farm Bookkeeping &amp; Daily Records</label>
-                    <div class="btn-group btn-group-sm w-100" role="group">
-                        <input type="radio" class="btn-check" name="keep_daily_records" id="kr_yes" value="1" <?= ($app_data['keep_daily_records'] ?? 0) == 1 ? 'checked' : '' ?>>
-                        <label class="btn btn-outline-success" for="kr_yes">Yes, Maintains Accounts</label>
-                        <input type="radio" class="btn-check" name="keep_daily_records" id="kr_no" value="0" <?= ($app_data['keep_daily_records'] ?? 0) == 0 ? 'checked' : '' ?>>
-                        <label class="btn btn-outline-secondary" for="kr_no">No</label>
+                        <textarea name="bookkeeping_records_notes" rows="2" class="form-control form-control-modern" placeholder="Bookkeeping details (e.g. daily milk sheet, feed expenditure ledger, passbook)"><?= htmlspecialchars($val_bookkeeping) ?></textarea>
                     </div>
                 </div>
             </div>
@@ -1149,7 +1268,7 @@ require_once '../../../includes/header.php';
                 </div>
                 <div>
                     <h5 class="section-title">08. Training &amp; Technical Advice</h5>
-                    <div class="section-subtitle">Livestock capacity development programmes completed by farmer</div>
+                    <div class="section-subtitle">Livestock capacity development programmes completed by farmer (synced to primary training registry)</div>
                 </div>
             </div>
 
@@ -1157,8 +1276,9 @@ require_once '../../../includes/header.php';
                 <table class="table modern-table table-hover align-middle mb-0" id="tblTrainings">
                     <thead>
                         <tr>
-                            <th style="width: 50%;">Training / Course Name</th>
-                            <th style="width: 42%;">Conducting Institute / Agency</th>
+                            <th style="width: 42%;">Training / Course Name</th>
+                            <th style="width: 32%;">Conducting Institute / Agency</th>
+                            <th style="width: 18%;">Completion Date</th>
                             <th style="width: 8%;" class="text-center no-print">Action</th>
                         </tr>
                     </thead>
@@ -1169,7 +1289,10 @@ require_once '../../../includes/header.php';
                                     <input type="text" name="training_courses_data[<?= $idx ?>][course]" class="form-control form-control-sm form-control-modern" value="<?= htmlspecialchars($t['course'] ?? '') ?>" placeholder="e.g. Dairy Cattle Management, Clean Milk Hygiene">
                                 </td>
                                 <td>
-                                    <input type="text" name="training_courses_data[<?= $idx ?>][institute]" class="form-control form-control-sm form-control-modern" value="<?= htmlspecialchars($t['institute'] ?? '') ?>" placeholder="e.g. Department of Animal Production & Health">
+                                    <input type="text" name="training_courses_data[<?= $idx ?>][institute]" class="form-control form-control-sm form-control-modern" value="<?= htmlspecialchars($t['institute'] ?? '') ?>" placeholder="e.g. Department of Animal Production &amp; Health">
+                                </td>
+                                <td>
+                                    <input type="date" name="training_courses_data[<?= $idx ?>][completion_date]" class="form-control form-control-sm form-control-modern" value="<?= htmlspecialchars($t['completion_date'] ?? '') ?>">
                                 </td>
                                 <td class="text-center no-print">
                                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest('tr').remove()" title="Remove course">
@@ -1198,7 +1321,7 @@ require_once '../../../includes/header.php';
                 </div>
                 <div>
                     <h5 class="section-title">09. Waste Management &amp; Preventive Health</h5>
-                    <div class="section-subtitle">Bio-waste conversion and mandatory veterinary vaccination coverage</div>
+                    <div class="section-subtitle">Bio-waste conversion, health camps, and mandatory veterinary vaccination coverage</div>
                 </div>
             </div>
 
@@ -1239,7 +1362,7 @@ require_once '../../../includes/header.php';
                         </div>
                     </div>
                     <div class="col-12 mt-2">
-                        <input type="text" name="waste_other" class="form-control form-control-modern" value="<?= htmlspecialchars($app_data['waste_other'] ?? '') ?>" placeholder="Other specific waste management practices">
+                        <input type="text" name="waste_other" class="form-control form-control-modern" value="<?= htmlspecialchars($app_data['waste_other'] ?? '') ?>" placeholder="Other specific waste management practices...">
                     </div>
                 </div>
             </div>
@@ -1277,58 +1400,74 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
 
-            <!-- Vaccinations -->
+            <!-- Mandatory Preventive Vaccinations Coverage & Logs -->
             <div class="p-3 bg-light rounded-3 border">
                 <div class="fw-bold text-danger mb-3">
-                    <i class="bi bi-shield-check me-1"></i> 9.5 Mandatory Preventive Vaccinations Coverage:
+                    <i class="bi bi-shield-check me-1"></i> 9.5 Mandatory Preventive Vaccinations Coverage &amp; Date Logs:
                 </div>
                 <div class="row g-3">
+                    <!-- HS -->
                     <div class="col-md-4">
-                        <div class="p-3 bg-white rounded border d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="fw-bold text-dark small">Hemorrhagic Septicemia (HS)</div>
-                                <div class="small text-muted" style="font-size: 0.75rem;">HS Vaccine Protection</div>
+                        <div class="p-3 bg-white rounded border h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <div class="fw-bold text-dark small">Hemorrhagic Septicemia (HS)</div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">HS Vaccine Protection</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="vaccine_hs" id="vhs_yes" value="1" <?= ($app_data['vaccine_hs'] ?? 0) == 1 ? 'checked' : '' ?>>
+                                    <label class="form-check-label small fw-bold" for="vhs_yes">Covered</label>
+                                </div>
                             </div>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <input type="radio" class="btn-check" name="vaccine_hs" id="vhs_yes" value="1" <?= ($app_data['vaccine_hs'] ?? 0) == 1 ? 'checked' : '' ?>>
-                                <label class="btn btn-outline-success" for="vhs_yes">Yes</label>
-                                <input type="radio" class="btn-check" name="vaccine_hs" id="vhs_no" value="0" <?= ($app_data['vaccine_hs'] ?? 0) == 0 ? 'checked' : '' ?>>
-                                <label class="btn btn-outline-secondary" for="vhs_no">No</label>
+                            <div class="mt-2">
+                                <label class="form-label-modern small">Vaccination Log Date</label>
+                                <input type="date" name="vaccine_hs_date" class="form-control form-control-sm form-control-modern" value="<?= htmlspecialchars($val_vax_hs_date) ?>">
                             </div>
                         </div>
                     </div>
 
+                    <!-- BQ -->
                     <div class="col-md-4">
-                        <div class="p-3 bg-white rounded border d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="fw-bold text-dark small">Black Quarter (BQ)</div>
-                                <div class="small text-muted" style="font-size: 0.75rem;">BQ Vaccine Protection</div>
+                        <div class="p-3 bg-white rounded border h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <div class="fw-bold text-dark small">Black Quarter (BQ)</div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">BQ Vaccine Protection</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="vaccine_bq" id="vbq_yes" value="1" <?= ($app_data['vaccine_bq'] ?? 0) == 1 ? 'checked' : '' ?>>
+                                    <label class="form-check-label small fw-bold" for="vbq_yes">Covered</label>
+                                </div>
                             </div>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <input type="radio" class="btn-check" name="vaccine_bq" id="vbq_yes" value="1" <?= ($app_data['vaccine_bq'] ?? 0) == 1 ? 'checked' : '' ?>>
-                                <label class="btn btn-outline-success" for="vbq_yes">Yes</label>
-                                <input type="radio" class="btn-check" name="vaccine_bq" id="vbq_no" value="0" <?= ($app_data['vaccine_bq'] ?? 0) == 0 ? 'checked' : '' ?>>
-                                <label class="btn btn-outline-secondary" for="vbq_no">No</label>
+                            <div class="mt-2">
+                                <label class="form-label-modern small">Vaccination Log Date</label>
+                                <input type="date" name="vaccine_bq_date" class="form-control form-control-sm form-control-modern" value="<?= htmlspecialchars($val_vax_bq_date) ?>">
                             </div>
                         </div>
                     </div>
 
+                    <!-- FMD -->
                     <div class="col-md-4">
-                        <div class="p-3 bg-white rounded border d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="fw-bold text-dark small">Foot and Mouth Disease (FMD)</div>
-                                <div class="small text-muted" style="font-size: 0.75rem;">FMD Vaccine Protection</div>
+                        <div class="p-3 bg-white rounded border h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <div class="fw-bold text-dark small">Foot and Mouth Disease (FMD)</div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">FMD Vaccine Protection</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="vaccine_fmd" id="vfmd_yes" value="1" <?= ($app_data['vaccine_fmd'] ?? 0) == 1 ? 'checked' : '' ?>>
+                                    <label class="form-check-label small fw-bold" for="vfmd_yes">Covered</label>
+                                </div>
                             </div>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <input type="radio" class="btn-check" name="vaccine_fmd" id="vfmd_yes" value="1" <?= ($app_data['vaccine_fmd'] ?? 0) == 1 ? 'checked' : '' ?>>
-                                <label class="btn btn-outline-success" for="vfmd_yes">Yes</label>
-                                <input type="radio" class="btn-check" name="vaccine_fmd" id="vfmd_no" value="0" <?= ($app_data['vaccine_fmd'] ?? 0) == 0 ? 'checked' : '' ?>>
-                                <label class="btn btn-outline-secondary" for="vfmd_no">No</label>
+                            <div class="mt-2">
+                                <label class="form-label-modern small">Vaccination Log Date</label>
+                                <input type="date" name="vaccine_fmd_date" class="form-control form-control-sm form-control-modern" value="<?= htmlspecialchars($val_vax_fmd_date) ?>">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
         </div>
 
         <!-- ========================================================================= -->
@@ -1480,13 +1619,50 @@ ob_start();
                         if (f.gps_location) {
                             $('#app_geo_coordinates').val(f.gps_location);
                         }
+                        if (f.ds_division) {
+                            $('#app_agri_env_ds_division').val(f.ds_division);
+                        }
+                        if (f.gn_division) {
+                            $('#app_agri_env_gn_division').val(f.gn_division);
+                        }
+                        // Manual Override: AI Customer Center field is intentionally left blank for manual user input
+                        $('#app_agri_env_ai_cc').val('');
+
+                        // Historical Project Benefits Auto-Population
+                        if (f.previous_project_benefit) {
+                            $('select[name="previous_project_benefit"]').val(f.previous_project_benefit);
+                        }
+                        if (f.previous_project_details) {
+                            $('input[name="previous_project_details"]').val(f.previous_project_details);
+                        }
+
                         if (f.daily_milk > 0 && parseFloat($('#app_milk_total').val() || 0) === 0) {
                             $('#app_milk_total').val(f.daily_milk);
                             $('#app_milk_morning').val((f.daily_milk * 0.6).toFixed(1));
                             $('#app_milk_evening').val((f.daily_milk * 0.4).toFixed(1));
                         }
 
-                        const $flashed = $('#app_producer_name, #app_nic_no, #app_address, #app_contact_mobile, #app_telephone_no, #app_ds_gn_division, #app_geo_coordinates');
+                        if (f.gender) {
+                            $('#app_gender').val(f.gender);
+                        }
+                        if (f.ethnicity) {
+                            $('#app_ethnicity').val(f.ethnicity);
+                        }
+                        if (f.milk_production_volume) {
+                            $('#app_milk_production_volume').val(f.milk_production_volume);
+                        } else if (f.daily_milk > 0) {
+                            const dvol = parseFloat(f.daily_milk);
+                            let tier = 'Below 5 liters';
+                            if (dvol < 5.0) tier = 'Below 5 liters';
+                            else if (dvol <= 10.0) tier = '5–10 liters';
+                            else if (dvol <= 20.0) tier = '10–20 liters';
+                            else if (dvol <= 40.0) tier = '20–40 liters';
+                            else if (dvol <= 100.0) tier = '40–100 liters';
+                            else tier = 'Above 100 liters';
+                            $('#app_milk_production_volume').val(tier);
+                        }
+
+                        const $flashed = $('#app_producer_name, #app_nic_no, #app_address, #app_contact_mobile, #app_telephone_no, #app_ds_gn_division, #app_geo_coordinates, #app_agri_env_ds_division, #app_agri_env_gn_division, #app_gender, #app_ethnicity, #app_milk_production_volume');
                         $flashed.addClass('auto-fill-flash');
                         setTimeout(() => { $flashed.removeClass('auto-fill-flash'); }, 1400);
 
@@ -1539,6 +1715,119 @@ ob_start();
             }
         });
 
+        // -------------------------------------------------------------------------
+        // DYNAMIC WATER SOURCE SELECTION & AUTO-SAVE TO LIST
+        // -------------------------------------------------------------------------
+        $('#app_water_source').on('change', function() {
+            if ($(this).val() === 'Other') {
+                $('#wrapperCustomWaterSource').slideDown(200);
+                $('#custom_water_source_input').focus();
+            } else {
+                $('#wrapperCustomWaterSource').slideUp(200);
+                $('#custom_water_source_input').val('');
+            }
+        });
+
+        $('#btnSaveWaterSource').on('click', function(e) {
+            e.preventDefault();
+            const newSource = $('#custom_water_source_input').val().trim();
+            if (!newSource) {
+                Swal.fire('Input Required', 'Please type the new water source name (e.g. agriculture well).', 'warning');
+                return;
+            }
+            const btn = $(this);
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
+            $.ajax({
+                url: 'processors/dairy_project_crud.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'add_water_source',
+                    source_name: newSource
+                },
+                success: function(res) {
+                    btn.prop('disabled', false).html('<i class="bi bi-plus-circle me-1"></i> Save to List');
+                    if (res.success) {
+                        let exists = false;
+                        $('#app_water_source option').each(function() {
+                            if ($(this).val().toLowerCase() === newSource.toLowerCase()) {
+                                exists = true;
+                            }
+                        });
+                        if (!exists) {
+                            $('<option>', {
+                                value: newSource,
+                                text: newSource,
+                                selected: true
+                            }).insertBefore('#app_water_source option[value="Other"]');
+                        } else {
+                            $('#app_water_source').val(newSource);
+                        }
+                        $('#wrapperCustomWaterSource').slideUp(200);
+                        $('#custom_water_source_input').val('');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Water Source Saved',
+                            text: `"${newSource}" saved and appended to permanent list.`,
+                            timer: 1600,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire('Error', res.message || 'Could not save water source.', 'error');
+                    }
+                },
+                error: function() {
+                    btn.prop('disabled', false).html('<i class="bi bi-plus-circle me-1"></i> Save to List');
+                    Swal.fire('Error', 'Server connection failure.', 'error');
+                }
+            });
+        });
+
+        // -------------------------------------------------------------------------
+        // ANIMAL ID & BRANDING REMARKS LOOKUP
+        // -------------------------------------------------------------------------
+        function lookupAnimalIdRemarks(idNum) {
+            if (!idNum) return;
+            const regVal = $('#app_farm_reg_no').val().trim();
+            $.ajax({
+                url: 'processors/dairy_project_crud.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'lookup_animal_id',
+                    animal_id: idNum,
+                    farm_reg_no: regVal
+                },
+                success: function(res) {
+                    if (res.success && res.remarks) {
+                        $('#app_branding_remarks').val(res.remarks);
+                        if (res.method) {
+                            $('#app_animal_id_method').val(res.method);
+                        }
+                        $('#app_branding_remarks').addClass('auto-fill-flash');
+                        setTimeout(() => $('#app_branding_remarks').removeClass('auto-fill-flash'), 1400);
+                    }
+                }
+            });
+        }
+
+        $('#app_id_ear_tag_no, #app_id_hot_brand_no').on('blur', function() {
+            const val = $(this).val().trim();
+            if (val.length >= 2) {
+                lookupAnimalIdRemarks(val);
+            }
+        });
+
+        $('#btnLookupAnimalId').on('click', function(e) {
+            e.preventDefault();
+            const idVal = $('#app_id_ear_tag_no').val().trim() || $('#app_id_hot_brand_no').val().trim();
+            if (idVal) {
+                lookupAnimalIdRemarks(idVal);
+            } else {
+                Swal.fire('Input Required', 'Please enter an Ear Tag or Brand Number to lookup remarks.', 'info');
+            }
+        });
+
         // Add training row
         let trainingIndex = <?= count($training_courses) ?>;
         $('#btnAddTrainingRow').on('click', function() {
@@ -1550,6 +1839,9 @@ ob_start();
                 </td>
                 <td>
                     <input type="text" name="training_courses_data[${trainingIndex}][institute]" class="form-control form-control-sm form-control-modern" placeholder="Institute / Agency">
+                </td>
+                <td>
+                    <input type="date" name="training_courses_data[${trainingIndex}][completion_date]" class="form-control form-control-sm form-control-modern">
                 </td>
                 <td class="text-center no-print">
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="$(this).closest('tr').remove()">

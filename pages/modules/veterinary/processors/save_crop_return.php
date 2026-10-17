@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $balance_prev, $received, $issued, $balance_curr, $remark
         );
         if ($stmt->execute()) {
-            $_SESSION['msg'] = "Crop Return record added successfully.";
+            $_SESSION['msg'] = "Vaccine Return record added successfully.";
             $_SESSION['msg_type'] = "success";
             header("Location: ../crop_returns.php?status=added");
             exit();

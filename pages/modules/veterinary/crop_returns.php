@@ -227,7 +227,7 @@ require_once '../../../includes/header.php';
 
 <div class="mb-4 d-flex justify-content-between align-items-center">
     <div>
-        <h3 class="fw-bold mb-1" style="color: #370709;">Crop Return</h3>
+        <h3 class="fw-bold mb-1" style="color: #370709;">Vaccine Return (Vaccine Balance)</h3>
         <p class="text-muted small mb-0">Monthly stock, issuance, and balance tracking of veterinary vaccines, biologics, certificates & breeding stock.</p>
     </div>
     <div class="d-flex align-items-center gap-2">
@@ -238,7 +238,7 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- ============================================================ -->
-<!-- STANDARD MONTHLY CROP RETURN HEADER DETAILS -->
+<!-- STANDARD MONTHLY VACCINE RETURN HEADER DETAILS -->
 <!-- ============================================================ -->
 <div class="card shadow-sm border-0 mb-4" style="border-left: 5px solid #820100 !important;">
     <div class="card-body p-4">
@@ -247,7 +247,7 @@ require_once '../../../includes/header.php';
                 <span class="badge bg-danger-subtle text-danger px-2 py-1 mb-1 fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                     <i class="bi bi-file-earmark-medical me-1"></i>Official Biological & Stores Record
                 </span>
-                <h5 class="fw-bold text-dark mb-0">Monthly Crop Return Tracking Grid</h5>
+                <h5 class="fw-bold text-dark mb-0">Monthly Vaccine Return Tracking Grid</h5>
             </div>
             <!-- Month & Year Selector -->
             <form method="GET" class="d-flex align-items-center gap-2 mt-2 mt-md-0">
@@ -312,7 +312,7 @@ require_once '../../../includes/header.php';
 <ul class="nav nav-pills nav-pills-daph mb-4 gap-2 p-2 bg-white rounded shadow-sm border no-print" id="cropReturnsTabNav" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="tab-trend-grid" data-bs-toggle="pill" data-bs-target="#pane-trend-grid" type="button" role="tab" aria-controls="pane-trend-grid" aria-selected="true">
-            <i class="bi bi-graph-up text-danger me-2"></i>Crop Return Distribution & Progressive Trend (<?= $selected_year ?>)
+            <i class="bi bi-graph-up text-danger me-2"></i>Vaccine Return Distribution & Progressive Trend (<?= $selected_year ?>)
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -338,7 +338,7 @@ require_once '../../../includes/header.php';
             <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
                     <h6 class="mb-0 fw-bold" style="color: #370709;">
-                        <i class="bi bi-graph-up me-2 text-danger"></i>Crop Return Distribution & Progressive Cumulative Trend (<?= $selected_year ?>)
+                        <i class="bi bi-graph-up me-2 text-danger"></i>Vaccine Return Distribution & Progressive Cumulative Trend (<?= $selected_year ?>)
                     </h6>
                     <small class="text-muted">Displays monthly issuance volume alongside progressive cumulative Year-to-Date (YTD) total.</small>
                 </div>
@@ -351,7 +351,7 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
-        <!-- 2. CROP RETURN TRACKING GRID FORM (20 STANDARD ITEMS) -->
+        <!-- 2. VACCINE RETURN TRACKING GRID FORM (20 STANDARD ITEMS) -->
         <form id="cropGridForm" action="processors/save_crop_returns_grid.php" method="POST">
             <input type="hidden" name="report_year" value="<?= htmlspecialchars($selected_year) ?>">
             <input type="hidden" name="report_month" value="<?= htmlspecialchars($selected_month) ?>">
@@ -473,7 +473,7 @@ require_once '../../../includes/header.php';
                 <div class="card-footer bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                     <span class="text-muted small"><i class="bi bi-info-circle me-1"></i>All 20 standard items will be stored or updated for <strong><?= $report_period_label ?></strong>.</span>
                     <button type="submit" class="btn btn-sm text-light fw-bold px-4 shadow-sm" style="background-color: #820100;">
-                        <i class="bi bi-check2-circle me-1"></i>Save Monthly Crop Return
+                        <i class="bi bi-check2-circle me-1"></i>Save Monthly Vaccine Return
                     </button>
                 </div>
             </div>
@@ -512,12 +512,12 @@ require_once '../../../includes/header.php';
     <!-- TAB 2: Full Year Breakdown Matrix Table (Jan – Dec) -->
     <!-- ============================================================ -->
     <div class="tab-pane fade" id="pane-annual-matrix" role="tabpanel" aria-labelledby="tab-annual-matrix">
-        <!-- MONTHLY CROP RETURN SUMMARY & CUMULATIVE YTD MATRIX TABLE -->
+        <!-- MONTHLY VACCINE RETURN SUMMARY & CUMULATIVE YTD MATRIX TABLE -->
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
                     <h6 class="mb-0 fw-bold" style="color: #370709;">
-                        <i class="bi bi-table me-2 text-danger"></i>Monthly Crop Return Summary & Progressive Cumulative YTD Matrix (<?= $selected_year ?>)
+                        <i class="bi bi-table me-2 text-danger"></i>Monthly Vaccine Return Summary & Progressive Cumulative YTD Matrix (<?= $selected_year ?>)
                     </h6>
                     <small class="text-muted">Progressive cumulative column automatically sums metrics from January up to <strong><?= $month_names[$selected_month] ?></strong>.</small>
                 </div>
@@ -600,7 +600,7 @@ require_once '../../../includes/header.php';
                         <i class="bi bi-calendar-range me-1"></i>Custom Date / Month Range Summary
                     </span>
                     <h5 class="fw-bold mb-0" style="color: #370709;">
-                        <i class="bi bi-filter-square-fill me-2 text-danger"></i>Crop Returns Period Summary: <span id="rangeLabelText" class="text-danger"><?= htmlspecialchars($range_period_label) ?></span>
+                        <i class="bi bi-filter-square-fill me-2 text-danger"></i>Vaccine Return Period Summary: <span id="rangeLabelText" class="text-danger"><?= htmlspecialchars($range_period_label) ?></span>
                     </h5>
                     <small class="text-muted">Generate instant aggregated stock, receipt, issuance, and closing balances for any interval between months (e.g., Jan – Mar).</small>
                 </div>
@@ -721,7 +721,7 @@ require_once '../../../includes/header.php';
     <div class="text-center mb-4 pb-3 border-bottom border-2 border-dark">
         <h5 class="fw-bold mb-1 text-uppercase" style="letter-spacing: 0.5px;">Department of Animal Production & Health (Eastern Province)</h5>
         <h6 class="fw-bold mb-1">Government Veterinary Surgeon's Office - <?= htmlspecialchars($range_name) ?> Range</h6>
-        <p class="small text-muted mb-2"><?= htmlspecialchars($district_name) ?> District | Official Stores & Biological Crop Return</p>
+        <p class="small text-muted mb-2"><?= htmlspecialchars($district_name) ?> District | Official Stores & Biological Vaccine Return</p>
         <div class="badge bg-dark text-white fs-6 px-3 py-1 text-uppercase">
             Period Summary: <span id="printPeriodRangeText"><?= htmlspecialchars($range_period_label) ?></span>
         </div>

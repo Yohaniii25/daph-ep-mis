@@ -163,6 +163,97 @@ while ($row = $sec_e_res->fetch_assoc()) {
 }
 $sec_e_query->close();
 
+// 7B. AUTOMATED DATA PULLS: Artificial Insemination (AI) reports and Cash Receipts revenue sums
+// A. Pull AI Data directly from breeding_ai_performance (Category 10: Neat Cattle, Goat, Buffalo; Category 11: Used semen)
+$ai_monthly = [];
+$ai_pull_stmt = $mysqli->prepare("
+    SELECT report_month, 
+           COUNT(*) AS total_ai,
+           SUM(CASE WHEN LOWER(ai_type) LIKE '%goat%' OR LOWER(cow_id) LIKE '%goat%' OR LOWER(semen_code) LIKE '%goat%' THEN 1 ELSE 0 END) AS goat_ai,
+           SUM(CASE WHEN LOWER(ai_type) LIKE '%buff%' OR LOWER(cow_id) LIKE '%buff%' OR LOWER(semen_code) LIKE '%buff%' THEN 1 ELSE 0 END) AS buffalo_ai,
+           SUM(CASE WHEN LOWER(ai_type) NOT LIKE '%goat%' AND LOWER(cow_id) NOT LIKE '%goat%' AND LOWER(semen_code) NOT LIKE '%goat%'
+                     AND LOWER(ai_type) NOT LIKE '%buff%' AND LOWER(cow_id) NOT LIKE '%buff%' AND LOWER(semen_code) NOT LIKE '%buff%' THEN 1 ELSE 0 END) AS cattle_ai
+    FROM breeding_ai_performance
+    WHERE range_id = ? AND report_year = ?
+    GROUP BY report_month
+");
+if ($ai_pull_stmt) {
+    $ai_pull_stmt->bind_param("ii", $range_id, $selected_year);
+    $ai_pull_stmt->execute();
+    $ai_res = $ai_pull_stmt->get_result();
+    while ($ar = $ai_res->fetch_assoc()) {
+        $m = intval($ar['report_month']);
+        $ai_monthly[$m] = [
+            'total'   => intval($ar['total_ai']),
+            'cattle'  => intval($ar['cattle_ai']),
+            'goat'    => intval($ar['goat_ai']),
+            'buffalo' => intval($ar['buffalo_ai'])
+        ];
+    }
+    $ai_pull_stmt->close();
+}
+
+// B. Pull Revenue Sums directly from cash_book_summaries (Category 11: Paid amount - Item ID 102)
+$rev_monthly = [];
+$rev_pull_stmt = $mysqli->prepare("
+    SELECT report_month, COALESCE(SUM(total_amount), 0) AS total_rev
+    FROM cash_book_summaries
+    WHERE range_id = ? AND report_year = ?
+    GROUP BY report_month
+");
+if ($rev_pull_stmt) {
+    $rev_pull_stmt->bind_param("ii", $range_id, $selected_year);
+    $rev_pull_stmt->execute();
+    $rev_res = $rev_pull_stmt->get_result();
+    while ($rr = $rev_res->fetch_assoc()) {
+        $m = intval($rr['report_month']);
+        $rev_monthly[$m] = floatval($rr['total_rev']);
+    }
+    $rev_pull_stmt->close();
+}
+
+// C. Auto-populate Section E data arrays without manual input
+for ($m = 1; $m <= 12; $m++) {
+    // 1. AI Details: Items 94 (Neat Cattle), 95 (Goat), 96 (Buffaloa) & Semen Details: Item 98 (Used semen)
+    if (isset($ai_monthly[$m])) {
+        $cattle_val = $ai_monthly[$m]['cattle'];
+        $goat_val = $ai_monthly[$m]['goat'];
+        $buffalo_val = $ai_monthly[$m]['buffalo'];
+        $total_ai = $ai_monthly[$m]['total'];
+
+        // Automatically populate into Category 10 & 11
+        $monthly_data[94][$m] = $cattle_val;
+        $monthly_data[95][$m] = $goat_val;
+        $monthly_data[96][$m] = $buffalo_val;
+        $monthly_data[98][$m] = $total_ai;
+    }
+
+    // 2. Revenue Sum: Item 102 (Paid amount in Rs.)
+    if (isset($rev_monthly[$m])) {
+        $monthly_data[102][$m] = $rev_monthly[$m];
+    }
+}
+
+// Re-aggregate monthly category totals and overall totals
+$monthly_cat_totals = [];
+$monthly_overall_totals = array_fill(1, 12, 0.0);
+foreach ($monthly_data as $iid => $m_arr) {
+    // Lookup item's category_id
+    $c_id = null;
+    foreach ($all_items_by_cat as $cat_k => $c_items) {
+        foreach ($c_items as $ci) {
+            if ($ci['id'] == $iid) { $c_id = $cat_k; break 2; }
+        }
+    }
+    if ($c_id !== null) {
+        foreach ($m_arr as $m => $val) {
+            if (!isset($monthly_cat_totals[$c_id][$m])) $monthly_cat_totals[$c_id][$m] = 0.0;
+            $monthly_cat_totals[$c_id][$m] += floatval($val);
+            $monthly_overall_totals[$m] += floatval($val);
+        }
+    }
+}
+
 // Progressive Cumulative Monthly Totals for Chart
 $chart_months = [];
 $chart_monthly_totals = [];
@@ -474,6 +565,15 @@ require_once '../../../includes/header.php';
                                                 }
                                                 $cat_ytd_sum += $item_ytd;
 
+                                                $is_male_collection = (strcasecmp($item_name, 'Male collection') === 0);
+                                                $is_milk_collection = ($cat_id == 2 || stripos($item_name, 'Milk Collection') !== false || stripos($cat['category_name'], 'Milk Collection') !== false);
+                                                $is_egg_production  = ($cat_id == 4 || stripos($item_name, 'Egg Production') !== false || stripos($cat['category_name'], 'Egg Production') !== false);
+                                                $is_meat_production = ($cat_id == 5 || stripos($item_name, 'Meat Production') !== false || stripos($cat['category_name'], 'Meat Production') !== false);
+
+                                                $is_manual_entry = ($is_male_collection || $is_milk_collection || $is_egg_production || $is_meat_production);
+
+                                                $is_auto_ai = ($cat_id == 10 || ($cat_id == 11 && strcasecmp($item_name, 'Used semen') === 0));
+                                                $is_auto_revenue = ($cat_id == 11 && (strcasecmp($item_name, 'Paid amount') === 0 || stripos($item_name, 'Revenue') !== false));
                                                 $is_semen_balance_row = ($cat_id == 11 && strpos($item_name, 'Balance available') !== false);
                                                 $is_semen_input = ($cat_id == 11);
                                         ?>
@@ -485,7 +585,19 @@ require_once '../../../includes/header.php';
                                                     <div class="d-flex align-items-center justify-content-between">
                                                         <div>
                                                             <strong><?= htmlspecialchars($item_name) ?></strong>
-                                                            <?php if ($is_semen_balance_row): ?>
+                                                            <?php if ($is_manual_entry): ?>
+                                                                <span class="badge bg-warning-subtle text-dark border border-warning-subtle ms-2 small">
+                                                                    <i class="bi bi-pencil-fill me-1"></i>Manual Entry
+                                                                </span>
+                                                            <?php elseif ($is_auto_ai): ?>
+                                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2 small">
+                                                                    <i class="bi bi-robot me-1"></i>Auto-Synced (AI Reports)
+                                                                </span>
+                                                            <?php elseif ($is_auto_revenue): ?>
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle ms-2 small">
+                                                                    <i class="bi bi-receipt me-1"></i>Auto-Synced (Cash Receipts)
+                                                                </span>
+                                                            <?php elseif ($is_semen_balance_row): ?>
                                                                 <span class="badge bg-warning text-dark ms-2 small">Auto-calculated</span>
                                                             <?php endif; ?>
                                                             <?php if (intval($item['is_active'] ?? 1) === 0): ?>
@@ -494,7 +606,7 @@ require_once '../../../includes/header.php';
                                                                 </span>
                                                             <?php endif; ?>
                                                         </div>
-                                                        <?php if (!$is_semen_balance_row): ?>
+                                                        <?php if (!$is_semen_balance_row && !$is_auto_ai && !$is_auto_revenue): ?>
                                                             <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2 btn-delete-item no-print" 
                                                                 data-item-id="<?= $item_id ?>" 
                                                                 data-item-name="<?= htmlspecialchars($item_name) ?>" 
@@ -522,14 +634,43 @@ require_once '../../../includes/header.php';
                                                     <?= number_format($period_sum, 2) ?>
                                                 </td>
                                                 <td class="text-end table-active-month">
-                                                    <input type="number" step="0.01" min="0" 
-                                                        name="items[<?= $item_id ?>][amount]" 
-                                                        id="amount_<?= $item_id ?>"
-                                                        value="<?= $active_val > 0 ? htmlspecialchars($active_val) : '' ?>" 
-                                                        class="form-control form-control-sm text-end input-table-num <?= $is_semen_input ? 'semen-item-input' : '' ?>"
-                                                        data-item-name="<?= htmlspecialchars($item_name) ?>"
-                                                        placeholder="0.00"
-                                                        <?= $is_semen_balance_row ? 'readonly style="background-color: #fef3c7; font-weight: bold;"' : '' ?>>
+                                                    <?php if ($is_auto_ai): ?>
+                                                        <input type="number" step="1" min="0" 
+                                                            name="items[<?= $item_id ?>][amount]" 
+                                                            id="amount_<?= $item_id ?>"
+                                                            value="<?= $active_val > 0 ? htmlspecialchars($active_val) : '0' ?>" 
+                                                            class="form-control form-control-sm text-end input-table-num bg-primary-subtle border-primary-subtle fw-bold text-primary"
+                                                            data-item-name="<?= htmlspecialchars($item_name) ?>"
+                                                            readonly
+                                                            title="Auto-pulled directly from official AI performance records without manual input">
+                                                    <?php elseif ($is_auto_revenue): ?>
+                                                        <input type="number" step="0.01" min="0" 
+                                                            name="items[<?= $item_id ?>][amount]" 
+                                                            id="amount_<?= $item_id ?>"
+                                                            value="<?= $active_val > 0 ? htmlspecialchars(number_format($active_val, 2, '.', '')) : '0.00' ?>" 
+                                                            class="form-control form-control-sm text-end input-table-num bg-success-subtle border-success-subtle fw-bold text-success font-monospace"
+                                                            data-item-name="<?= htmlspecialchars($item_name) ?>"
+                                                            readonly
+                                                            title="Auto-pulled directly from cashbook receipts without manual input">
+                                                    <?php elseif ($is_semen_balance_row): ?>
+                                                        <input type="number" step="0.01" min="0" 
+                                                            name="items[<?= $item_id ?>][amount]" 
+                                                            id="amount_<?= $item_id ?>"
+                                                            value="<?= $active_val > 0 ? htmlspecialchars($active_val) : '' ?>" 
+                                                            class="form-control form-control-sm text-end input-table-num"
+                                                            data-item-name="<?= htmlspecialchars($item_name) ?>"
+                                                            placeholder="0.00"
+                                                            readonly style="background-color: #fef3c7; font-weight: bold;"
+                                                            title="Auto-calculated closing balance">
+                                                    <?php else: ?>
+                                                        <input type="number" step="0.01" min="0" 
+                                                            name="items[<?= $item_id ?>][amount]" 
+                                                            id="amount_<?= $item_id ?>"
+                                                            value="<?= $active_val > 0 ? htmlspecialchars($active_val) : '' ?>" 
+                                                            class="form-control form-control-sm text-end input-table-num <?= $is_manual_entry ? 'border-warning' : '' ?> <?= $is_semen_input ? 'semen-item-input' : '' ?>"
+                                                            data-item-name="<?= htmlspecialchars($item_name) ?>"
+                                                            placeholder="0.00">
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td class="text-end font-monospace text-dark fw-bold table-ytd">
                                                     <?= number_format($item_ytd, 2) ?>

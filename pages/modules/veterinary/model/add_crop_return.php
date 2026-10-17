@@ -2,7 +2,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header text-light py-3" style="background-color:#370709;">
-                <h6 class="modal-title fw-bold" id="addCropReturnsLabel"><i class="bi bi-file-earmark-plus me-2"></i>Add Crop Return Item Record</h6>
+                <h6 class="modal-title fw-bold" id="addCropReturnsLabel"><i class="bi bi-file-earmark-plus me-2"></i>Add Vaccine Return Item Record</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="formAddCropReturn" action="processors/save_crop_return.php" method="POST">

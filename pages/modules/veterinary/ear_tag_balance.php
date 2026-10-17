@@ -1581,6 +1581,12 @@ $(document).ready(function() {
         autoFetchFarmDetails(val, true);
     });
 
+    $(document).on("click", "#btnQuickSample530112345", function(e) {
+        e.preventDefault();
+        $("#ai_farm_reg_no").val("530112345");
+        autoFetchFarmDetails("530112345", true);
+    });
+
     // Prepare Modal Form & State (Single vs Batch)
     window.prepareAnimalIdentificationModal = function(isBatch) {
         $("#ai_edit_id").val("0");
