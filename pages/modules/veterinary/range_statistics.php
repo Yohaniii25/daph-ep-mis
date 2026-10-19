@@ -648,13 +648,16 @@ require_once '../../../includes/header.php';
                 <h2 class="h4 mb-0 fw-bold" style="color: #370709;">Range Statistics & Overview</h2>
                 <small class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($range_name) ?> (<?= htmlspecialchars($district_name) ?>) | DAPH Eastern Province</small>
             </div>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <form method="GET" class="d-flex align-items-center gap-2 m-0 bg-white p-2 rounded-3 border shadow-xs">
                     <label class="form-label small fw-bold text-secondary mb-0 text-nowrap"><i class="bi bi-buildings text-primary me-1"></i>Veterinary Range:</label>
                     <select name="range_id" class="form-select form-select-sm fw-semibold" onchange="this.form.submit()" style="min-width: 220px;">
                         <option value="<?= $range_id ?>"><?= htmlspecialchars($range_name) ?></option>
                     </select>
                 </form>
+                <a href="range_details.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
             </div>
         </div>
 

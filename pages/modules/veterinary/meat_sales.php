@@ -367,8 +367,8 @@ include '../../../includes/header.php';
             </p>
         </div>
         <div class="d-flex align-items-center gap-2">
-            <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-light text-dark border fw-bold btn-sm shadow-sm d-flex align-items-center">
-                <i class="bi bi-arrow-left-circle me-1"></i> Range Statistics
+            <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-secondary shadow-sm text-nowrap">
+                <i class="bi bi-arrow-left me-2"></i>Back
             </a>
             <button type="button" class="btn btn-danger text-white fw-bold shadow-sm btn-sm" data-bs-toggle="modal" data-bs-target="#addMeatModal">
                 <i class="bi bi-plus-circle me-1"></i> Record Meat Sales

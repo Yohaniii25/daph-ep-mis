@@ -501,8 +501,8 @@ require_once __DIR__ . '/../../../includes/header.php';
                             <?php endforeach; ?>
                         </select>
                     </form>
-                    <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-light text-dark fw-bold btn-sm shadow-sm">
-                        <i class="bi bi-arrow-left-circle me-1"></i> Range Statistics
+                    <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-secondary shadow-sm text-nowrap">
+                        <i class="bi bi-arrow-left me-2"></i>Back
                     </a>
                 </div>
             </div>

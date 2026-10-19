@@ -614,8 +614,8 @@ require_once '../../../includes/header.php';
                 <p class="text-muted small mb-0">Record and monitor livestock cooperative societies for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong> (<?= htmlspecialchars($district_name) ?> District)</p>
             </div>
             <div>
-                <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-light text-dark border fw-bold btn-sm shadow-sm">
-                    <i class="bi bi-arrow-left-circle me-1"></i> Range Statistics
+                <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
                 </a>
             </div>
         </div>
@@ -670,12 +670,7 @@ require_once '../../../includes/header.php';
                                     <span class="small fw-bold text-uppercase">Add Livestock Society</span>
                                 </button>
                             </div>
-                            <div class="col-md-3">
-                                <a href="range_statistics.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : '' ?>" class="btn btn-outline-secondary w-100 py-3 d-flex flex-column align-items-center justify-content-center" style="min-height: 105px;">
-                                    <i class="bi bi-arrow-left-circle fs-3 mb-1"></i>
-                                    <span class="small fw-bold text-uppercase">Back to Statistics</span>
-                                </a>
-                            </div>
+                            
                         </div>
                     </div>
                 </div>
