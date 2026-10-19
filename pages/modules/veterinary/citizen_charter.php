@@ -13,6 +13,16 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Seamlessly forward to the unified Services Register tab in clinical_services.php
+$forward_params = $_GET;
+$forward_params['tab'] = 'services_register';
+if (!isset($forward_params['range_id']) && !empty($_SESSION['range_id'])) {
+    $forward_params['range_id'] = $_SESSION['range_id'];
+}
+$forward_query = http_build_query($forward_params);
+header("Location: clinical_services.php?" . $forward_query);
+exit();
+
 require_once __DIR__ . '/../../../config/db_connect.php';
 require_once __DIR__ . '/processors/dairy_db_migration.php';
 

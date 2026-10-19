@@ -653,7 +653,17 @@ if ($action === 'save_application') {
     $address                  = trim($_POST['address'] ?? '');
     $ai_no                    = trim($_POST['ai_no'] ?? '');
     $survey_date              = !empty($_POST['survey_date']) ? $_POST['survey_date'] : date('Y-m-d');
-    $main_category            = trim($_POST['main_category'] ?? '05 Liters');
+    $main_category            = trim($_POST['main_category'] ?? '');
+    $milk_production_volume   = trim($_POST['milk_production_volume'] ?? '');
+    if (empty($main_category) && !empty($milk_production_volume)) {
+        $main_category = $milk_production_volume;
+    }
+    if (empty($milk_production_volume) && !empty($main_category)) {
+        $milk_production_volume = $main_category;
+    }
+    if (empty($main_category)) {
+        $main_category = '5–10 liters';
+    }
     $daph_register_no         = trim($_POST['daph_register_no'] ?? '');
     $contact_mobile           = trim($_POST['contact_mobile'] ?? '');
     $telephone_no             = trim($_POST['telephone_no'] ?? '');
@@ -980,6 +990,15 @@ if ($action === 'save_application') {
         $res = $stmt_ins->execute();
         $app_id = $stmt_ins->insert_id;
         $stmt_ins->close();
+    }
+
+    if (!empty($milk_production_volume) && $app_id > 0) {
+        $upd_vol = $mysqli->prepare("UPDATE `dairy_farm_applications` SET `milk_production_volume` = ? WHERE `id` = ?");
+        if ($upd_vol) {
+            $upd_vol->bind_param("si", $milk_production_volume, $app_id);
+            $upd_vol->execute();
+            $upd_vol->close();
+        }
     }
 
     // Two-way sync: keep summary table's current & expected milk and category in sync if summary row exists

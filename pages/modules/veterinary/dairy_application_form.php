@@ -166,10 +166,25 @@ $val_address     = $app_data['address'] ?? ($summary_data['address'] ?? ($farmer
 $val_daph_no     = $app_data['daph_register_no'] ?? '';
 $val_ai_no       = $app_data['ai_no'] ?? ($farmer_data['vs_division'] ?? '');
 $val_survey_date = $app_data['survey_date'] ?? date('Y-m-d');
-$val_main_cat    = $app_data['main_category'] ?? ($summary_data['category'] ?? '05 Liters');
+$val_main_cat    = $app_data['main_category'] ?? ($summary_data['category'] ?? '');
 $val_gender      = $app_data['gender'] ?? ($farmer_data['gender'] ?? 'Male');
 $val_ethnicity   = $app_data['ethnicity'] ?? ($farmer_data['ethnicity'] ?? 'Sinhala');
-$val_milk_vol    = $app_data['milk_production_volume'] ?? ($farmer_data['milk_production_volume'] ?? '');
+$val_milk_vol    = $app_data['milk_production_volume'] ?? ($farmer_data['milk_production_volume'] ?? ($val_main_cat ?: ''));
+$cat_tier_map    = [
+    '05 Liters' => '5–10 liters',
+    '10 Liters' => '10–20 liters',
+    '20 Liters' => '20–40 liters',
+    '50 Liters' => '40–100 liters',
+    '100 Liters' => 'Above 100 liters',
+    '5L Tier' => '5–10 liters',
+    '10L Tier' => '10–20 liters',
+    '20L Tier' => '20–40 liters',
+    '50L Tier' => '40–100 liters',
+    '100L Tier' => 'Above 100 liters'
+];
+if (!empty($val_milk_vol) && isset($cat_tier_map[$val_milk_vol])) {
+    $val_milk_vol = $cat_tier_map[$val_milk_vol];
+}
 $val_ds_gn       = $app_data['ds_gn_division'] ?? (trim(($farmer_data['ds_division'] ?? '') . ' / ' . ($farmer_data['gn_division'] ?? ''), ' /'));
 $val_coords      = $app_data['geo_coordinates'] ?? ($farmer_data['gps_location'] ?? '');
 $val_council     = $app_data['livestock_council'] ?? 'No';
@@ -478,34 +493,30 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
 
-            <!-- Main Category Selector (Modern Radio Pills) -->
+            <!-- Milk Production Volume (Mandatory Standardized Dropdown) -->
             <div class="mb-4 p-3 bg-light rounded-3 border">
-                <label class="form-label-modern d-block mb-2 text-dark">
-                    <i class="bi bi-speedometer2 me-1 text-danger"></i> Main Category of Milk Production Recording:
+                <label for="app_milk_production_volume" class="form-label-modern d-block mb-2 text-dark">
+                    <i class="bi bi-droplet-half me-1 text-danger"></i> Milk Production Volume <span class="text-danger">*</span>
                 </label>
-                <div class="row g-2">
+                <select id="app_milk_production_volume" name="milk_production_volume" class="form-select form-select-modern fw-semibold text-dark border-danger-subtle" required>
+                    <option value="" disabled <?= empty($val_milk_vol) ? 'selected' : '' ?>>-- Select Milk Production Volume Range --</option>
                     <?php
-                    $categories = [
-                        '05 Liters' => '5L Tier',
-                        '10 Liters' => '10L Tier',
-                        '20 Liters' => '20L Tier',
-                        '50 Liters' => '50L Tier',
-                        '100 Liters' => '100L Tier'
+                    $volume_ranges = [
+                        'Below 5 liters',
+                        '5–10 liters',
+                        '10–20 liters',
+                        '20–40 liters',
+                        '40–100 liters',
+                        'Above 100 liters'
                     ];
-                    foreach ($categories as $catVal => $catLabel):
-                        $checked = (strpos($val_main_cat, str_replace(' Liters', '', $catVal)) !== false || $val_main_cat === $catVal) ? 'checked' : '';
+                    foreach ($volume_ranges as $vRange):
+                        $sel = ($val_milk_vol === $vRange) ? 'selected' : '';
                     ?>
-                        <div class="col-6 col-md">
-                            <label class="d-block">
-                                <input type="radio" class="d-none cat-radio-input" name="main_category" value="<?= $catVal ?>" <?= $checked ?>>
-                                <div class="cat-pill-card">
-                                    <div class="small text-muted"><?= $catLabel ?></div>
-                                    <div class="fs-6"><?= $catVal ?></div>
-                                </div>
-                            </label>
-                        </div>
+                        <option value="<?= htmlspecialchars($vRange) ?>" <?= $sel ?>><?= htmlspecialchars($vRange) ?></option>
                     <?php endforeach; ?>
-                </div>
+                </select>
+                <input type="hidden" name="main_category" id="app_main_category" value="<?= htmlspecialchars($val_milk_vol ?: $val_main_cat) ?>">
+                <div class="form-text small text-muted">Standardized daily milk production category tier for this producer profile (Mandatory).</div>
             </div>
 
             <!-- Fields Grid -->
@@ -1124,21 +1135,7 @@ require_once '../../../includes/header.php';
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label-modern">6.2 Standardized Production Range <span class="text-danger">*</span></label>
-                    <select id="app_milk_production_volume" name="milk_production_volume" class="form-select form-select-modern fw-bold text-dark border-danger" required>
-                        <option value="" disabled <?= empty($val_milk_vol) ? 'selected' : '' ?>>-- Select Range --</option>
-                        <option value="Below 5 liters" <?= ($val_milk_vol === 'Below 5 liters') ? 'selected' : '' ?>>Below 5 liters</option>
-                        <option value="5–10 liters" <?= ($val_milk_vol === '5–10 liters') ? 'selected' : '' ?>>5–10 liters</option>
-                        <option value="10–20 liters" <?= ($val_milk_vol === '10–20 liters') ? 'selected' : '' ?>>10–20 liters</option>
-                        <option value="20–40 liters" <?= ($val_milk_vol === '20–40 liters') ? 'selected' : '' ?>>20–40 liters</option>
-                        <option value="40–100 liters" <?= ($val_milk_vol === '40–100 liters') ? 'selected' : '' ?>>40–100 liters</option>
-                        <option value="Above 100 liters" <?= ($val_milk_vol === 'Above 100 liters') ? 'selected' : '' ?>>Above 100 liters</option>
-                    </select>
-                    <div class="form-text small text-muted">Strict standardized production tier.</div>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label-modern">6.3 Expected Daily Production (Liters/day)</label>
+                    <label class="form-label-modern">6.2 Expected Daily Production (Liters/day)</label>
                     <div class="input-group">
                         <input type="number" step="0.1" min="0" name="milk_expected_liters" class="form-control form-control-modern fw-bold text-success" value="<?= htmlspecialchars($val_milk_exp) ?>">
                         <span class="input-group-text bg-success text-white">L/day</span>
@@ -1569,6 +1566,10 @@ ob_start();
         $('.herd-input').on('input', calculateHerdTotals);
         $('#app_milk_morning, #app_milk_evening').on('input', calculateMilkTotals);
 
+        $('#app_milk_production_volume').on('change', function() {
+            $('#app_main_category').val($(this).val());
+        });
+
         // Auto-fetch in Application form
         let appLastFetchedReg = '';
         let appAutoFetchTimer = null;
@@ -1650,6 +1651,7 @@ ob_start();
                         }
                         if (f.milk_production_volume) {
                             $('#app_milk_production_volume').val(f.milk_production_volume);
+                            $('#app_main_category').val(f.milk_production_volume);
                         } else if (f.daily_milk > 0) {
                             const dvol = parseFloat(f.daily_milk);
                             let tier = 'Below 5 liters';
@@ -1660,6 +1662,7 @@ ob_start();
                             else if (dvol <= 100.0) tier = '40–100 liters';
                             else tier = 'Above 100 liters';
                             $('#app_milk_production_volume').val(tier);
+                            $('#app_main_category').val(tier);
                         }
 
                         const $flashed = $('#app_producer_name, #app_nic_no, #app_address, #app_contact_mobile, #app_telephone_no, #app_ds_gn_division, #app_geo_coordinates, #app_agri_env_ds_division, #app_agri_env_gn_division, #app_gender, #app_ethnicity, #app_milk_production_volume');
