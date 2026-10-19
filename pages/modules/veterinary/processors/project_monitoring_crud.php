@@ -50,7 +50,7 @@ if ($action === 'get_psdg_categories') {
 if ($action === 'save_beneficiary') {
     $id                              = intval($_POST['beneficiary_id'] ?? 0);
     $project_id                      = intval($_POST['project_id'] ?? 0);
-    $range_id                        = intval($_SESSION['range_id'] ?? 1);
+    $range_id                        = !empty($_POST['range_id']) && is_numeric($_POST['range_id']) ? intval($_POST['range_id']) : intval($_SESSION['range_id'] ?? 1);
     $beneficiary_name                = trim($_POST['beneficiary_name'] ?? '');
     $nic_no                          = trim($_POST['nic_no'] ?? '');
     $address                         = trim($_POST['address'] ?? '');
@@ -233,7 +233,7 @@ if ($action === 'save_monitoring_visit') {
     $dairy_hub_id            = !empty($_POST['dairy_hub_id']) ? intval($_POST['dairy_hub_id']) : null;
     $farm_reg_no             = trim($_POST['farm_reg_no'] ?? '');
     $farmer_name             = trim($_POST['farmer_name'] ?? '');
-    $range_id                = intval($_SESSION['range_id'] ?? 1);
+    $range_id                = !empty($_POST['range_id']) && is_numeric($_POST['range_id']) ? intval($_POST['range_id']) : intval($_SESSION['range_id'] ?? 1);
     $range_name              = trim($_POST['range_name'] ?? 'Range Office');
     $veterinary_surgeon_name = trim($_POST['veterinary_surgeon_name'] ?? ($_SESSION['full_name'] ?? 'Veterinary Surgeon'));
     
@@ -302,7 +302,7 @@ if ($action === 'get_monitoring_visits') {
     $project_id    = intval($_GET['project_id'] ?? 0);
     $beneficiary_id= intval($_GET['beneficiary_id'] ?? 0);
     $dairy_hub_id  = intval($_GET['dairy_hub_id'] ?? 0);
-    $range_id      = intval($_SESSION['range_id'] ?? 0);
+    $range_id      = !empty($_POST['range_id']) && is_numeric($_POST['range_id']) ? intval($_POST['range_id']) : intval($_SESSION['range_id'] ?? 0);
 
     $sql = "SELECT * FROM `project_monitoring_visits` WHERE 1=1";
     $params = [];

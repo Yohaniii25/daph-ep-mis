@@ -1,20 +1,41 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
-    header("Location: ../../../../index.php");
-    exit();
-}
-
-$range_id = $_SESSION['range_id'] ?? null;
-if (empty($range_id)) {
-    die('<div class="alert alert-danger text-center p-5 m-5">Error: Account not assigned to a Range.</div>');
-}
-
 require_once __DIR__ . '/../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
+
+$allowed_roles = [
+    'veterinary_surgeon',
+    'government_veterinary_surgeon',
+    'additional_veterinary_surgeon',
+    'deputy_director_hq_1',
+    'deputy_director_hq_2',
+    'district_dd',
+    'deputy_director_district',
+    'provincial_director',
+    'admin',
+    'super_admin',
+    'administrator',
+    'sms',
+    'planning_officer',
+    'employee',
+    'livestock_development_officer'
+];
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
+    header("Location: ../../../index.php");
+    exit();
+}
+
+$requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
+$range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
+
+if (empty($range_id)) {
+    $first_r = $mysqli->query("SELECT id FROM veterinary_ranges ORDER BY id ASC LIMIT 1")->fetch_assoc();
+    $range_id = $first_r['id'] ?? 1;
+}
 
 $project_id = intval($_GET['project_id'] ?? 0);
 if ($project_id <= 0) {
@@ -81,9 +102,9 @@ require_once '../../../includes/header.php';
                     <i class="bi bi-calendar-range me-1"></i><?= htmlspecialchars($project['start_date']) ?> to <?= htmlspecialchars($project['end_date']) ?>
                 </small>
             </div>
-            <div class="d-flex gap-2">
-                <a href="projects_progress.php" class="btn btn-outline-secondary shadow-sm">
-                    <i class="bi bi-arrow-left me-1"></i> Back to Overview
+            <div class="d-flex align-items-center gap-2">
+                <a href="projects_progress.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
                 </a>
                 <button class="btn btn-success shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
                     <i class="bi bi-person-plus-fill me-1"></i> Register Beneficiary

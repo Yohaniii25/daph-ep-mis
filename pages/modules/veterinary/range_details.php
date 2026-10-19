@@ -132,147 +132,28 @@ if (!empty($range_id)) {
     }
 }
 
-// Step 3: Fetch assigned tasks for the logged-in user
-// District-Wide Permission Scope:
-// When a District Deputy Director assigns specific Quick Actions to a Veterinary Surgeon,
-// those actions automatically apply to all veterinary ranges within that district.
-$assigned_action_keys = [];
-if (!$is_supervisory) {
-    $target_dist_id = $range_district_id ?: $user_district_id;
-    $assigned_stmt = $mysqli->prepare("
-        SELECT DISTINCT action_id 
-        FROM user_quick_action_assignments 
-        WHERE (
-            user_id = ? 
-            OR (
-                target_role IN ('government_veterinary_surgeon', 'veterinary_surgeon')
-                AND (district_id = ? OR district_id IS NULL)
-            )
-        )
-        AND (
-            district_id = ? 
-            OR district_id IS NULL
-            OR range_id = ?
-        )
-    ");
-    if ($assigned_stmt) {
-        $assigned_stmt->bind_param("iiii", $user_id, $target_dist_id, $target_dist_id, $range_id);
-        $assigned_stmt->execute();
-        $assigned_res = $assigned_stmt->get_result();
-        while ($row = $assigned_res->fetch_assoc()) {
-            $assigned_action_keys[] = $row['action_id'];
-        }
-        $assigned_stmt->close();
-    }
-}
+// Step 3: Fetch assigned tasks and module topics dynamically from database
+require_once __DIR__ . '/../district/processors/db_migration.php';
+ensure_quick_action_assignments_table($mysqli);
 
+// Dynamic module topic fetching for this specific range
+$visible_actions = get_assigned_module_topics_for_range(
+    $mysqli, 
+    $range_id, 
+    $range_district_id, 
+    !$is_supervisory ? $user_id : null
+);
 
-// Standard 14 Quick Actions Catalog
-$all_quick_actions = [
-    'range_statistics' => [
-        'id' => 1,
-        'title' => 'Range Statistics',
-        'icon'  => 'bi-graph-up',
-        'color' => '#820100',
-        'link'  => 'range_statistics.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'annual_targets' => [
-        'id' => 2,
-        'title' => 'Annual Targets',
-        'icon'  => 'bi-bar-chart',
-        'color' => '#370709',
-        'link'  => 'annual_targets.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'monthly_annual_reports' => [
-        'id' => 3,
-        'title' => 'Monthly/Annual Reports',
-        'icon'  => 'bi-car-front-fill',
-        'color' => '#b08723',
-        'link'  => 'monthly-annual-reports.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'regulatory_functions' => [
-        'id' => 4,
-        'title' => 'Regulatory Functions',
-        'icon'  => 'bi-file-earmark-plus',
-        'color' => '#a07174',
-        'link'  => 'regulatory_functions.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'animal_health' => [
-        'id' => 5,
-        'title' => 'Animal Health',
-        'icon'  => 'bi-gear-fill',
-        'color' => '#689ccf',
-        'link'  => 'animal_health.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'clinical_services' => [
-        'id' => 6,
-        'title' => 'Clinical Services',
-        'icon'  => 'bi-clipboard2-pulse',
-        'color' => '#2e7d32',
-        'link'  => 'clinical_services.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'citizen_charter' => [
-        'id' => 8,
-        'title' => 'Services Register (Citizen Charter)',
-        'icon'  => 'bi-file-earmark-person-fill',
-        'color' => '#b45309',
-        'link'  => 'clinical_services.php?tab=services_register' . ($range_id ? '&range_id=' . $range_id : '')
-    ],
-    'animal_breeding' => [
-        'id' => 7,
-        'title' => 'Breeding and Production',
-        'icon'  => 'bi-file-earmark-text-fill',
-        'color' => '#e65100',
-        'link'  => 'animal_breeding.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'dairy_hub' => [
-        'id' => 9,
-        'title' => 'Dairy Hub',
-        'icon'  => 'bi-patch-check-fill',
-        'color' => '#1565c0',
-        'link'  => 'dairy_hub.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'projects_monitoring' => [
-        'id' => 10,
-        'title' => 'Projects and Monitoring',
-        'icon'  => 'bi-kanban-fill',
-        'color' => '#00838f',
-        'link'  => 'projects_progress.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'accounts' => [
-        'id' => 12,
-        'title' => 'Accounts',
-        'icon'  => 'bi-bookmark-dash-fill',
-        'color' => '#ad1457',
-        'link'  => 'accounts.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'clean_sri_lanka' => [
-        'id' => 13,
-        'title' => 'Clean Sri Lanka',
-        'icon'  => 'bi-graph-up-arrow',
-        'color' => '#d84315',
-        'link'  => 'clean_sri_lanka.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ],
-    'trainings' => [
-        'id' => 14,
-        'title' => 'Trainings',
-        'icon'  => 'bi-sliders',
-        'color' => '#37474f',
-        'link'  => 'training.php' . ($range_id ? '?range_id=' . $range_id : '')
-    ]
-];
-
-// Determine visible actions based on delegation:
-// - Supervisory roles see all 14 actions
-// - Subordinate officers see only explicitly assigned actions
-if ($is_supervisory) {
-    $visible_actions = $all_quick_actions;
-} else {
-    $visible_actions = [];
-    foreach ($all_quick_actions as $key => $act) {
-        if (in_array($key, $assigned_action_keys)) {
-            $visible_actions[$key] = $act;
-        }
+// Check if range has custom override or is inheriting district-wide defaults
+$has_custom_range_assignment = false;
+if (!empty($range_id)) {
+    $chk_override = $mysqli->prepare("SELECT COUNT(*) as c FROM user_quick_action_assignments WHERE range_id = ?");
+    if ($chk_override) {
+        $chk_override->bind_param("i", $range_id);
+        $chk_override->execute();
+        $ovr_res = $chk_override->get_result()->fetch_assoc();
+        $has_custom_range_assignment = ($ovr_res && (int)$ovr_res['c'] > 0);
+        $chk_override->close();
     }
 }
 
@@ -389,31 +270,40 @@ require_once '../../../includes/header.php';
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-header bg-white py-3 border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div class="d-flex flex-wrap align-items-center gap-2">
-                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Quick Actions</h6>
-                    <?php if (!$is_supervisory && !empty($visible_actions)): ?>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small rounded-pill">
-                            <i class="bi bi-check2-circle me-1"></i><?= count($visible_actions) ?> Module(s) Assigned
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Module Topics & Quick Actions</h6>
+                    <?php if (!empty($visible_actions)): ?>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 small rounded-pill">
+                            <i class="bi bi-check2-circle me-1"></i><?= count($visible_actions) ?> Active Module(s)
                         </span>
-                        <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 small rounded-pill">
-                            <i class="bi bi-geo-alt-fill me-1"></i>Assigned Range (<?= htmlspecialchars($range_name) ?>)
-                        </span>
+                        <?php if ($has_custom_range_assignment): ?>
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1 small rounded-pill">
+                                <i class="bi bi-pin-angle-fill me-1"></i>Custom Range Delegation
+                            </span>
+                        <?php else: ?>
+                            <span class="badge bg-light text-muted border px-2.5 py-1 small rounded-pill">
+                                <i class="bi bi-globe2 me-1"></i>District Default Delegation
+                            </span>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
-                <?php if ($is_supervisory && in_array($user_role, ['district_dd', 'deputy_director_district'])): ?>
+                <?php if ($is_supervisory && in_array($user_role, ['district_dd', 'deputy_director_district', 'administrator', 'provincial_director'])): ?>
                     <div>
-                        <a href="../district/task_assignments.php" class="btn btn-sm text-white shadow-sm" style="background-color: #370709;">
-                            <i class="bi bi-person-check-fill me-1"></i> Manage Task Delegations
+                        <a href="../district/task_assignments.php?range_id=<?= (int)$range_id ?>" class="btn btn-sm text-white shadow-sm" style="background-color: #370709;">
+                            <i class="bi bi-sliders me-1"></i> Configure Range Modules
                         </a>
                     </div>
                 <?php endif; ?>
             </div>
             <div class="card-body pt-0">
                 <?php if ($is_supervisory): ?>
-                    <div class="alert alert-light border small py-2 px-3 mb-3 d-flex align-items-center justify-content-between text-muted">
+                    <div class="alert alert-light border small py-2 px-3 mb-3 d-flex flex-wrap align-items-center justify-content-between text-muted gap-2">
                         <div>
                             <i class="bi bi-info-circle-fill text-primary me-2"></i>
-                            Viewing full catalog as <strong><?= ucwords(str_replace('_', ' ', $user_role)) ?></strong>. Subordinates only view modules explicitly delegated to them.
+                            Dynamically displaying active module topics for <strong><?= htmlspecialchars($range_name) ?> Range</strong> as configured by the District Deputy Director.
                         </div>
+                        <a href="../district/task_assignments.php?range_id=<?= (int)$range_id ?>" class="small text-decoration-none fw-semibold" style="color: #370709;">
+                            <i class="bi bi-pencil-square me-1"></i>Edit Range Modules &rarr;
+                        </a>
                     </div>
                 <?php endif; ?>
 
@@ -423,11 +313,15 @@ require_once '../../../includes/header.php';
                             <i class="bi bi-shield-lock text-secondary" style="font-size: 3.2rem;"></i>
                         </div>
                         <h5 class="fw-bold text-dark mb-2">No Quick Actions Assigned</h5>
-                        <p class="text-muted small mx-auto mb-0" style="max-width: 540px; line-height: 1.6;">
-                            Quick Action buttons are restricted and hidden by default. 
-                            Your District Deputy Director has not delegated any operational modules (such as Clinical Services, Animal Health, or Range Statistics) to your profile yet. 
-                            Please contact your District Deputy Director for task delegation.
+                        <p class="text-muted small mx-auto mb-3" style="max-width: 540px; line-height: 1.6;">
+                            Module topics for <strong><?= htmlspecialchars($range_name) ?> Range</strong> are dynamically controlled. 
+                            The District Deputy Director has not activated any module topics for this range office yet.
                         </p>
+                        <?php if ($is_supervisory && in_array($user_role, ['district_dd', 'deputy_director_district', 'administrator', 'provincial_director'])): ?>
+                            <a href="../district/task_assignments.php?range_id=<?= (int)$range_id ?>" class="btn btn-sm text-white shadow-sm px-3 py-2 rounded-pill" style="background-color: #370709;">
+                                <i class="bi bi-plus-circle me-1"></i> Assign Modules to <?= htmlspecialchars($range_name) ?> Range
+                            </a>
+                        <?php endif; ?>
                     </div>
                 <?php else: ?>
                     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3">

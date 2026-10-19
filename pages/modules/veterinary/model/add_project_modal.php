@@ -39,6 +39,7 @@ if ($cat_res) {
             </div>
             
             <form action="processors/process_project.php" method="POST" id="projectForm">
+                <input type="hidden" name="range_id" value="<?= htmlspecialchars($range_id ?? '') ?>">
                 <div class="modal-body p-4">
                     
                     <!-- SECTION 1: CORE PROJECT DETAILS -->

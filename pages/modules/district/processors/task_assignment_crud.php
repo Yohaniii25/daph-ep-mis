@@ -49,7 +49,11 @@ if ($dist_stmt) {
     $dist_stmt->close();
 }
 
-$valid_actions = [
+// Dynamic master quick action catalog from database
+$master_topics = get_all_range_module_topics($mysqli);
+$valid_actions = array_keys($master_topics);
+// Include backward compatibility aliases
+$valid_actions = array_values(array_unique(array_merge($valid_actions, [
     'range_statistics',
     'annual_targets',
     'monthly_annual_reports',
@@ -61,10 +65,11 @@ $valid_actions = [
     'dairy_hub',
     'projects',
     'monitoring',
+    'projects_monitoring',
     'accounts',
     'clean_sri_lanka',
     'trainings'
-];
+])));
 
 $tc_district_mapping = [
     'uppuveli'      => 3,
@@ -142,7 +147,40 @@ if ($action === 'fetch_officers') {
 
     $officers = [];
 
-    if ($category === 'range_veterinary_officer') {
+    if ($category === 'range_office') {
+        // District DD managing module topics per individual veterinary range
+        $r_stmt = $mysqli->prepare("
+            SELECT vr.id, vr.name,
+                   (SELECT COUNT(*) FROM user_quick_action_assignments a WHERE a.range_id = vr.id) AS specific_count
+            FROM veterinary_ranges vr
+            WHERE vr.district_id = ?
+            ORDER BY vr.name ASC
+        ");
+        if ($r_stmt) {
+            $r_stmt->bind_param("i", $district_id);
+            $r_stmt->execute();
+            $r_res = $r_stmt->get_result();
+            while ($r = $r_res->fetch_assoc()) {
+                $is_custom = ((int)$r['specific_count'] > 0);
+                $assigned_topics = get_assigned_module_topics_for_range($mysqli, (int)$r['id'], $district_id);
+                $count = count($assigned_topics);
+
+                $officers[] = [
+                    'id' => 'range_' . $r['id'],
+                    'range_id' => (int)$r['id'],
+                    'username' => 'range_' . $r['id'],
+                    'full_name' => $r['name'] . ' Range Office',
+                    'role' => 'range_office',
+                    'designation' => 'Veterinary Range (' . ($is_custom ? 'Custom Override' : 'District Default') . ')',
+                    'workstation' => $r['name'] . ' Range (' . $district_name . ' District)',
+                    'assigned_count' => $count,
+                    'is_custom' => $is_custom,
+                    'is_range_target' => true
+                ];
+            }
+            $r_stmt->close();
+        }
+    } elseif ($category === 'range_veterinary_officer') {
         if ($sub_role === 'government_veterinary_surgeon') {
             // District-wide bulk role assignment: No need to mention or select individual range officers
             $count_q = $mysqli->query("
@@ -347,6 +385,54 @@ if ($action === 'fetch_officers') {
 if ($action === 'fetch_officer_assignments') {
     $target_raw = trim($_GET['user_id'] ?? '');
 
+    // Range-level delegation target
+    if (strpos($target_raw, 'range_') === 0) {
+        $target_range_id = (int)str_replace('range_', '', $target_raw);
+        $range_row = null;
+        $chk = $mysqli->prepare("SELECT id, name FROM veterinary_ranges WHERE id = ? AND district_id = ?");
+        if ($chk) {
+            $chk->bind_param("ii", $target_range_id, $district_id);
+            $chk->execute();
+            $range_row = $chk->get_result()->fetch_assoc();
+            $chk->close();
+        }
+        if (!$range_row) {
+            echo json_encode(['status' => 'error', 'message' => 'Range not found in your district jurisdiction.']);
+            exit();
+        }
+
+        $assigned_actions = [];
+        $is_custom = false;
+        $stmt = $mysqli->prepare("SELECT DISTINCT action_id FROM user_quick_action_assignments WHERE range_id = ?");
+        if ($stmt) {
+            $stmt->bind_param("i", $target_range_id);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            if ($res && $res->num_rows > 0) {
+                $is_custom = true;
+                while ($row = $res->fetch_assoc()) {
+                    $assigned_actions[] = $row['action_id'];
+                }
+            }
+            $stmt->close();
+        }
+
+        if (!$is_custom) {
+            $assigned_actions = get_assigned_keys_for_range($mysqli, $target_range_id, $district_id);
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'user_id' => $target_raw,
+            'range_id' => $target_range_id,
+            'range_name' => $range_row['name'] ?? '',
+            'district_id' => $district_id,
+            'is_custom' => $is_custom,
+            'assignments' => array_values(array_unique($assigned_actions))
+        ]);
+        exit();
+    }
+
     if ($target_raw === 'all_veterinary_surgeons') {
         $assigned_actions = [];
         $dist_alt = $district_name . 'i';
@@ -432,6 +518,71 @@ if ($action === 'save_assignments') {
     // Filter to only valid quick actions
     $filtered_actions = array_values(array_intersect($selected_actions, $valid_actions));
     $assigned_by = (int)$_SESSION['user_id'];
+
+    // Handle Range Office target assignment
+    if (strpos($target_raw, 'range_') === 0) {
+        $target_range_id = (int)str_replace('range_', '', $target_raw);
+        $chk = $mysqli->prepare("SELECT id, name FROM veterinary_ranges WHERE id = ? AND district_id = ?");
+        $chk->bind_param("ii", $target_range_id, $district_id);
+        $chk->execute();
+        $range_row = $chk->get_result()->fetch_assoc();
+        $chk->close();
+        if (!$range_row) {
+            echo json_encode(['status' => 'error', 'message' => 'Range not found in your district jurisdiction.']);
+            exit();
+        }
+
+        $mysqli->begin_transaction();
+        try {
+            // Delete previous range-level assignments
+            $del_stmt = $mysqli->prepare("DELETE FROM user_quick_action_assignments WHERE range_id = ?");
+            $del_stmt->bind_param("i", $target_range_id);
+            $del_stmt->execute();
+            $del_stmt->close();
+
+            // Insert new range-level assignments
+            if (!empty($filtered_actions)) {
+                $ins_stmt = $mysqli->prepare("
+                    INSERT INTO user_quick_action_assignments (user_id, target_role, district_id, range_id, action_id, assigned_by) 
+                    VALUES (NULL, NULL, ?, ?, ?, ?)
+                ");
+                foreach ($filtered_actions as $act_id) {
+                    $ins_stmt->bind_param("iisi", $district_id, $target_range_id, $act_id, $assigned_by);
+                    $ins_stmt->execute();
+                }
+                $ins_stmt->close();
+            }
+
+            $mysqli->commit();
+
+            if (function_exists('logActivity')) {
+                logActivity(
+                    $mysqli,
+                    $assigned_by,
+                    'UPDATE_RANGE_MODULE_ASSIGNMENTS',
+                    'user_quick_action_assignments',
+                    $target_range_id,
+                    null,
+                    $filtered_actions,
+                    "District DD updated module topics for " . $range_row['name'] . " Range (" . count($filtered_actions) . " actions assigned)"
+                );
+            }
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Module topics for ' . htmlspecialchars($range_row['name']) . ' Range updated successfully. The Range Details page will now reflect these active modules immediately.',
+                'assigned_count' => count($filtered_actions),
+                'action_ids' => $filtered_actions,
+                'range_id' => $target_range_id,
+                'is_custom' => true
+            ]);
+            exit();
+        } catch (Exception $e) {
+            $mysqli->rollback();
+            echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+            exit();
+        }
+    }
 
     if ($target_raw === 'all_veterinary_surgeons') {
         $mysqli->begin_transaction();
@@ -597,6 +748,34 @@ if ($action === 'revoke_assignments') {
     }
 
     $target_raw = trim($_POST['user_id'] ?? '');
+
+    // Handle Range Office target reset/revoke
+    if (strpos($target_raw, 'range_') === 0) {
+        $target_range_id = (int)str_replace('range_', '', $target_raw);
+        $del_stmt = $mysqli->prepare("DELETE FROM user_quick_action_assignments WHERE range_id = ?");
+        $del_stmt->bind_param("i", $target_range_id);
+        $del_stmt->execute();
+        $del_stmt->close();
+
+        if (function_exists('logActivity')) {
+            logActivity(
+                $mysqli,
+                $_SESSION['user_id'],
+                'RESET_RANGE_MODULE_ASSIGNMENTS',
+                'user_quick_action_assignments',
+                $target_range_id,
+                null,
+                null,
+                "District DD reset module topics for Range ID $target_range_id to district-wide default"
+            );
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Range custom assignment cleared. This range now inherits the district-wide default module configuration in real time.'
+        ]);
+        exit();
+    }
 
     if ($target_raw === 'all_veterinary_surgeons') {
         $dist_alt = $district_name . 'i';

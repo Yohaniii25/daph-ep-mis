@@ -1,28 +1,55 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
-    header("Location: ../../../../index.php");
-    exit();
-}
-
-$range_id = $_SESSION['range_id'] ?? null;
-if (empty($range_id)) {
-    die('<div class="alert alert-danger text-center p-5 m-5">Error: Account not assigned to a Range.</div>');
-}
-
 require_once __DIR__ . '/../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
 
+$allowed_roles = [
+    'veterinary_surgeon',
+    'government_veterinary_surgeon',
+    'additional_veterinary_surgeon',
+    'deputy_director_hq_1',
+    'deputy_director_hq_2',
+    'district_dd',
+    'deputy_director_district',
+    'provincial_director',
+    'admin',
+    'super_admin',
+    'administrator',
+    'sms',
+    'planning_officer',
+    'employee',
+    'livestock_development_officer'
+];
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
+    header("Location: ../../../index.php");
+    exit();
+}
+
+$requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
+$range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
+
+if (empty($range_id)) {
+    $first_r = $mysqli->query("SELECT id FROM veterinary_ranges ORDER BY id ASC LIMIT 1")->fetch_assoc();
+    $range_id = $first_r['id'] ?? 1;
+}
+
 $range_name = 'Unknown Range';
-$stmt = $mysqli->prepare("SELECT name FROM veterinary_ranges WHERE id = ?");
-$stmt->bind_param("i", $range_id);
-$stmt->execute();
-$res = $stmt->get_result()->fetch_assoc();
-if ($res) $range_name = $res['name'];
-$stmt->close();
+$district_name = '';
+$stmt = $mysqli->prepare("SELECT vr.name AS range_name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id WHERE vr.id = ?");
+if ($stmt) {
+    $stmt->bind_param("i", $range_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+    if ($res) {
+        $range_name = $res['range_name'];
+        $district_name = $res['district_name'] ?? '';
+    }
+    $stmt->close();
+}
 
 $active_tab = ($_GET['tab'] ?? '') === 'monitoring' ? 'monitoring' : 'projects';
 
@@ -87,12 +114,15 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 
         <!-- Unified Header -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <div>
                 <h2 class="h4 mb-0 fw-bold text-uppercase">Projects and Monitoring</h2>
-                <small class="text-muted"><?= htmlspecialchars($range_name) ?> | Unified Projects Registry &amp; Scheduled Field Monitoring</small>
+                <small class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($range_name) ?><?= !empty($district_name) ? ' (' . htmlspecialchars($district_name) . ')' : '' ?> | Unified Projects Registry &amp; Scheduled Field Monitoring</small>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="range_details.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
                 <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#scheduledVisitModal">
                     <i class="bi bi-journal-plus me-1"></i> Record Site Visit
                 </button>
@@ -241,7 +271,7 @@ require_once '../../../includes/header.php';
                                                         <span class="badge bg-light text-dark border"><?= htmlspecialchars($proj['project_type']) ?></span>
                                                     <?php endif; ?>
                                                     <!-- Sub-Page Link Button -->
-                                                    <a href="project_beneficiaries.php?project_id=<?= $proj['id'] ?>" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 11px;">
+                                                    <a href="project_beneficiaries.php?project_id=<?= $proj['id'] ?><?= $requested_range_id ? '&range_id=' . $requested_range_id : ($range_id ? '&range_id=' . $range_id : '') ?>" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 11px;">
                                                         <i class="bi bi-people me-1"></i>Beneficiaries (<?= $enrolled_bens ?>/<?= $target_num ?: 'Open' ?>) &rarr;
                                                     </a>
                                                 </div>
@@ -320,14 +350,7 @@ require_once '../../../includes/header.php';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if (empty($monitoring_visits)): ?>
-                                        <tr>
-                                            <td colspan="7" class="text-center py-5 text-muted">
-                                                <i class="bi bi-journal-x fs-1 d-block mb-2"></i>
-                                                No scheduled monitoring visits logged yet. Use the "Record Site Visit" button to add milestone inspections.
-                                            </td>
-                                        </tr>
-                                    <?php else: ?>
+                                    <?php if (!empty($monitoring_visits)): ?>
                                         <?php foreach ($monitoring_visits as $mv): ?>
                                             <tr>
                                                 <td>
@@ -408,6 +431,7 @@ require_once '../../../includes/header.php';
             
             <form id="unifiedMonitoringForm">
                 <input type="hidden" name="action" value="save_monitoring_visit">
+                <input type="hidden" name="range_id" value="<?= htmlspecialchars($range_id) ?>">
                 <input type="hidden" name="source_module" value="Project">
                 <input type="hidden" name="range_name" value="<?= htmlspecialchars($range_name) ?>">
                 
@@ -578,7 +602,10 @@ require_once '../../../includes/header.php';
 
         $('#monitoringLogsTable').DataTable({
             pageLength: 10,
-            order: [[0, 'desc']]
+            order: [[0, 'desc']],
+            language: {
+                emptyTable: '<div class="py-4 text-center text-muted"><i class="bi bi-journal-x fs-2 d-block mb-2 text-secondary"></i>No scheduled monitoring visits logged yet. Use the "Log Field Inspection" button to add milestone inspections.</div>'
+            }
         });
 
         // Save Unified Monitoring Visit AJAX

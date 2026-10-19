@@ -45,135 +45,22 @@ if ($dist_stmt) {
     $dist_stmt->close();
 }
 
-// 14 Standardized Quick Actions with official icons, branding, and category metadata
-$quick_actions_list = [
-    'range_statistics' => [
-        'id' => 1,
-        'title' => 'Range Statistics',
-        'icon' => 'bi-graph-up',
-        'color' => '#820100',
-        'desc' => 'Statistical returns & population summaries',
-        'category' => 'reports',
-        'category_label' => 'Reports & Data'
-    ],
-    'annual_targets' => [
-        'id' => 2,
-        'title' => 'Annual Targets',
-        'icon' => 'bi-bar-chart',
-        'color' => '#370709',
-        'desc' => 'Annual operational targets & performance',
-        'category' => 'reports',
-        'category_label' => 'Reports & Data'
-    ],
-    'monthly_annual_reports' => [
-        'id' => 3,
-        'title' => 'Monthly/Annual Reports',
-        'icon' => 'bi-car-front-fill',
-        'color' => '#b08723',
-        'desc' => 'Periodic reporting submissions',
-        'category' => 'reports',
-        'category_label' => 'Reports & Data'
-    ],
-    'regulatory_functions' => [
-        'id' => 4,
-        'title' => 'Regulatory Functions',
-        'icon' => 'bi-file-earmark-plus',
-        'color' => '#a07174',
-        'desc' => 'Animals Act compounding & legal functions',
-        'category' => 'clinical',
-        'category_label' => 'Clinical & Legal'
-    ],
-    'animal_health' => [
-        'id' => 5,
-        'title' => 'Animal Health',
-        'icon' => 'bi-gear-fill',
-        'color' => '#689ccf',
-        'desc' => 'Disease surveillance & clinical logs',
-        'category' => 'clinical',
-        'category_label' => 'Clinical Care'
-    ],
-    'clinical_services' => [
-        'id' => 6,
-        'title' => 'Clinical Services',
-        'icon' => 'bi-tools',
-        'color' => '#2e7d32',
-        'desc' => 'Outpatient veterinary clinical care',
-        'category' => 'clinical',
-        'category_label' => 'Clinical Care'
-    ],
-    'animal_breeding' => [
-        'id' => 7,
-        'title' => 'Breeding and Production',
-        'icon' => 'bi-file-earmark-text-fill',
-        'color' => '#e65100',
-        'desc' => 'Artificial insemination & pedigree records',
-        'category' => 'clinical',
-        'category_label' => 'Breeding & AI'
-    ],
-    'livestock_production' => [
-        'id' => 8,
-        'title' => 'Livestock Production',
-        'icon' => 'bi-person-bounding-box',
-        'color' => '#455a64',
-        'desc' => 'Production levels & activity tracking',
-        'category' => 'operations',
-        'category_label' => 'Field Operations'
-    ],
-    'dairy_hub' => [
-        'id' => 9,
-        'title' => 'Dairy Hub',
-        'icon' => 'bi-patch-check-fill',
-        'color' => '#1565c0',
-        'desc' => 'Milk collection & dairy farmer hubs',
-        'category' => 'operations',
-        'category_label' => 'Dairy & Hubs'
-    ],
-    'projects' => [
-        'id' => 10,
-        'title' => 'Projects',
-        'icon' => 'bi-geo-alt-fill',
-        'color' => '#00838f',
-        'desc' => 'Field development project tracking',
-        'category' => 'operations',
-        'category_label' => 'Special Projects'
-    ],
-    'monitoring' => [
-        'id' => 11,
-        'title' => 'Monitoring',
-        'icon' => 'bi-folder-fill',
-        'color' => '#283593',
-        'desc' => 'Field inspections & audit monitoring',
-        'category' => 'operations',
-        'category_label' => 'Field Monitoring'
-    ],
-    'accounts' => [
-        'id' => 12,
-        'title' => 'Accounts',
-        'icon' => 'bi-bookmark-dash-fill',
-        'color' => '#ad1457',
-        'desc' => 'Revenue, cash books & expenditures',
-        'category' => 'reports',
-        'category_label' => 'Finance & Cash'
-    ],
-    'clean_sri_lanka' => [
-        'id' => 13,
-        'title' => 'Clean Sri Lanka',
-        'icon' => 'bi-graph-up-arrow',
-        'color' => '#d84315',
-        'desc' => 'Clean Sri Lanka national initiative',
-        'category' => 'operations',
-        'category_label' => 'National Program'
-    ],
-    'trainings' => [
-        'id' => 14,
-        'title' => 'Trainings',
-        'icon' => 'bi-sliders',
-        'color' => '#37474f',
-        'desc' => 'Farmer workshops & staff capacity sessions',
-        'category' => 'operations',
-        'category_label' => 'Capacity Building'
-    ],
-];
+// Dynamic Master Quick Actions Catalog loaded from database
+$db_topics = get_all_range_module_topics($mysqli);
+$quick_actions_list = [];
+foreach ($db_topics as $k => $t) {
+    $quick_actions_list[$k] = [
+        'id'             => (int)$t['id'],
+        'module_key'     => $t['module_key'],
+        'title'          => $t['title'],
+        'icon'           => $t['icon'],
+        'color'          => $t['color'],
+        'desc'           => $t['description'] ?: $t['title'],
+        'category'       => $t['category'],
+        'category_label' => $t['category_label'],
+        'link_path'      => $t['link_path']
+    ];
+}
 
 // Fetch active assignments overview within this District DD jurisdiction
 $district_assignments = [];
@@ -258,6 +145,32 @@ if ($overview_res) {
     }
 }
 
+// 3. Fetch all veterinary ranges in this district for per-range delegation overview
+$district_ranges_overview = [];
+$dr_stmt = $mysqli->prepare("
+    SELECT vr.id, vr.name,
+           (SELECT COUNT(*) FROM user_quick_action_assignments a WHERE a.range_id = vr.id) AS specific_count
+    FROM veterinary_ranges vr
+    WHERE vr.district_id = ?
+    ORDER BY vr.name ASC
+");
+if ($dr_stmt) {
+    $dr_stmt->bind_param("i", $district_id);
+    $dr_stmt->execute();
+    $dr_res = $dr_stmt->get_result();
+    while ($dr = $dr_res->fetch_assoc()) {
+        $is_custom = ((int)$dr['specific_count'] > 0);
+        $assigned_modules = get_assigned_module_topics_for_range($mysqli, (int)$dr['id'], $district_id);
+        $dr['is_custom'] = $is_custom;
+        $dr['active_count'] = count($assigned_modules);
+        $dr['modules'] = $assigned_modules;
+        $district_ranges_overview[] = $dr;
+    }
+    $dr_stmt->close();
+}
+
+$requested_range_id = !empty($_GET['range_id']) ? (int)$_GET['range_id'] : null;
+
 require_once '../../../includes/header.php';
 require_once '../../../includes/sidebar.php';
 ?>
@@ -332,7 +245,8 @@ require_once '../../../includes/sidebar.php';
                             </label>
                             <select class="form-select form-select-lg border-2" id="categorySelect" required>
                                 <option value="">-- Choose User Category --</option>
-                                <option value="range_veterinary_officer" selected>Range Veterinary Officer</option>
+                                <option value="range_office" <?= $requested_range_id ? 'selected' : '' ?>>Veterinary Range Offices (Per-Range Delegation)</option>
+                                <option value="range_veterinary_officer" <?= !$requested_range_id ? 'selected' : '' ?>>Range Veterinary Officer</option>
                                 <option value="subject_matter_specialist">Subject Matter Specialist</option>
                                 <option value="training_centers">Training Centers</option>
                                 <option value="regional_farms">Regional Farms</option>
@@ -472,6 +386,97 @@ require_once '../../../includes/sidebar.php';
             </div>
         </div>
 
+        <!-- Veterinary Ranges Module Delegations Overview -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-header bg-white py-3 px-4 border-bottom">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color: #370709;">
+                            <i class="bi bi-geo-alt-fill me-2"></i>Veterinary Range Offices &bull; Dynamic Module Status
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            Active module topics assigned to each veterinary range in <?= htmlspecialchars($district_name) ?> District. Any edits sync immediately with the Range Details view.
+                        </p>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-semibold">
+                        <?= count($district_ranges_overview) ?> Range Offices
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="small text-uppercase text-muted">
+                                <th class="ps-4">Range Office</th>
+                                <th>Delegation Mode</th>
+                                <th>Active Module Topics</th>
+                                <th>Modules Active</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($district_ranges_overview)): ?>
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No ranges found in this district.</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($district_ranges_overview as $dr): ?>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($dr['name']) ?> Range Office</div>
+                                            <small class="text-muted">ID: #<?= (int)$dr['id'] ?> &bull; <?= htmlspecialchars($district_name) ?> District</small>
+                                        </td>
+                                        <td>
+                                            <?php if ($dr['is_custom']): ?>
+                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1.5 rounded-pill">
+                                                    <i class="bi bi-pin-angle-fill me-1"></i>Custom Range Override
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-muted border px-2.5 py-1.5 rounded-pill">
+                                                    <i class="bi bi-globe2 me-1"></i>Inheriting District Default
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                <?php foreach ($dr['modules'] as $mod_key => $mod_data): ?>
+                                                    <span class="badge-action-pill" style="background-color: <?= $mod_data['color'] ?>;">
+                                                        <i class="bi <?= $mod_data['icon'] ?>"></i> <?= htmlspecialchars($mod_data['title']) ?>
+                                                    </span>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill fw-semibold">
+                                                <?= $dr['active_count'] ?> Module(s)
+                                            </span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary btn-edit-range" data-range-id="<?= $dr['id'] ?>" title="Configure Active Topics">
+                                                    <i class="bi bi-sliders me-1"></i>Configure
+                                                </button>
+                                                <a href="../veterinary/range_details.php?range_id=<?= $dr['id'] ?>" target="_blank" class="btn btn-outline-secondary" title="Preview Range Details Page">
+                                                    <i class="bi bi-box-arrow-up-right me-1"></i>Preview
+                                                </a>
+                                                <?php if ($dr['is_custom']): ?>
+                                                    <button type="button" class="btn btn-outline-danger btn-reset-range" data-range-id="<?= $dr['id'] ?>" data-range-name="<?= htmlspecialchars($dr['name']) ?>" title="Reset to District Default">
+                                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Overview Directory Table -->
         <div class="card border-0 shadow-sm rounded-3">
             <div class="card-header bg-white py-3 px-4 border-bottom">
@@ -606,6 +611,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Exact sub-roles mapping required for Dropdown 2
     const categoryRolesMap = {
+        'range_office': [
+            { value: '', label: '-- All Ranges in District --' }
+        ],
         'range_veterinary_officer': [
             { value: '', label: '-- All Range Staff Sub-Roles --' },
             { value: 'government_veterinary_surgeon', label: 'Government Veterinary Surgeon' },
@@ -785,13 +793,26 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        if (userId === 'all_veterinary_surgeons') {
+        if (userId.startsWith('range_')) {
+            const rangeObj = currentOfficers.find(o => o.id === userId);
+            const rangeName = rangeObj ? rangeObj.full_name : 'Selected Range';
+            const isCustom = rangeObj ? rangeObj.is_custom : false;
+            officerStatusHint.innerHTML = `Managing active module topics for <strong>${rangeName}</strong>. Any changes saved here update the Range Details page immediately.`;
+            officerWorkstationHint.innerHTML = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 fw-semibold"><i class="bi bi-geo-alt-fill me-1"></i>Target: ${rangeName}</span> <span class="badge ${isCustom ? 'bg-primary' : 'bg-secondary'} ms-2">${isCustom ? 'Custom Override Active' : 'Inheriting District Default'}</span>`;
+            btnRevokeAll.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1"></i> Reset to District Default';
+            btnRevokeAll.title = 'Clear custom range overrides and inherit district defaults';
+            document.getElementById('btnSaveAssignments').innerHTML = '<i class="bi bi-check2-circle me-1"></i> Save Range Modules';
+        } else if (userId === 'all_veterinary_surgeons') {
             officerStatusHint.textContent = `Managing district-wide permissions for All Government Veterinary Surgeons across <?= htmlspecialchars($district_name) ?> District.`;
             officerWorkstationHint.innerHTML = `<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-semibold"><i class="bi bi-globe2 me-1"></i>District-Wide Delegation: Automatically applies across all ranges in <?= htmlspecialchars($district_name) ?> District. No individual range officer needed.</span>`;
+            btnRevokeAll.innerHTML = '<i class="bi bi-trash3 me-1"></i> Revoke All Tasks';
+            document.getElementById('btnSaveAssignments').innerHTML = '<i class="bi bi-check2-circle me-1"></i> Save Task Assignments';
         } else {
             const officer = currentOfficers.find(o => o.id == userId);
             officerStatusHint.textContent = `Managing district-wide permissions for ${officer ? officer.full_name : 'selected officer'}.`;
             officerWorkstationHint.innerHTML = officer ? `<strong>${officer.designation}</strong> &bull; Workstation: ${officer.workstation}<br><span class="text-primary fw-semibold"><i class="bi bi-globe2 me-1"></i>Scope: District-Wide (Covers all ranges in <?= htmlspecialchars($district_name) ?> District)</span>` : '';
+            btnRevokeAll.innerHTML = '<i class="bi bi-trash3 me-1"></i> Revoke All Tasks';
+            document.getElementById('btnSaveAssignments').innerHTML = '<i class="bi bi-check2-circle me-1"></i> Save Task Assignments';
         }
 
         // Fetch officer's assigned tasks
@@ -889,14 +910,17 @@ document.addEventListener("DOMContentLoaded", function() {
         const userId = officerSelect.value;
         if (!userId) return;
 
+        const isRange = userId.startsWith('range_');
         Swal.fire({
-            title: 'Revoke All Tasks?',
-            text: 'This will hide all 14 Quick Actions on the Range Details page for this officer.',
+            title: isRange ? 'Reset to District Default?' : 'Revoke All Tasks?',
+            text: isRange 
+                ? 'This will clear all custom module overrides for this range so it inherits the district-wide default configuration.' 
+                : 'This will hide all Quick Actions on the Range Details page for this officer.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, Revoke All'
+            confirmButtonText: isRange ? 'Yes, Reset to Default' : 'Yes, Revoke All'
         }).then((result) => {
             if (result.isConfirmed) {
                 const formData = new FormData();
@@ -1009,8 +1033,77 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Initial setup on page load
-    populateRoles();
+    // Range Edit click handler
+    document.querySelectorAll('.btn-edit-range').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const rangeId = this.getAttribute('data-range-id');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            categorySelect.value = 'range_office';
+            populateRoles();
+            setTimeout(() => {
+                loadOfficers('range_' + rangeId);
+            }, 80);
+        });
+    });
+
+    // Range Reset click handler
+    document.querySelectorAll('.btn-reset-range').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const rangeId = this.getAttribute('data-range-id');
+            const rangeName = this.getAttribute('data-range-name') || 'Range';
+            Swal.fire({
+                title: `Reset ${rangeName} Range?`,
+                text: 'This will clear all custom module overrides for this range so it inherits the district-wide default module configuration.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Reset to Default'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('action', 'revoke_assignments');
+                    formData.append('user_id', 'range_' + rangeId);
+
+                    fetch('processors/task_assignment_crud.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Range Reset',
+                                text: data.message,
+                                confirmButtonColor: '#370709'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    });
+
+    // Initial setup on page load with URL range_id preselection support
+    const requestedRangeId = <?= json_encode($requested_range_id) ?>;
+    if (requestedRangeId) {
+        categorySelect.value = 'range_office';
+        populateRoles();
+        setTimeout(() => {
+            loadOfficers('range_' + requestedRangeId);
+        }, 80);
+    } else {
+        populateRoles();
+    }
 });
 </script>
 

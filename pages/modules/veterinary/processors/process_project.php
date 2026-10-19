@@ -7,7 +7,7 @@ global $mysqli;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['logged_in'])) {
     
-    $range_id                          = intval($_SESSION['range_id'] ?? 1);
+    $range_id                          = !empty($_POST['range_id']) && is_numeric($_POST['range_id']) ? intval($_POST['range_id']) : intval($_SESSION['range_id'] ?? 1);
     $range_office_name                 = trim($_POST['range_office_name'] ?? '');
     $project_type                      = trim($_POST['project_type'] ?? 'PSDG');
     $project_name                      = trim($_POST['project_name'] ?? '');
@@ -97,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['logged_in'])) {
         $_SESSION['error'] = "Database preparation error: " . $mysqli->error;
     }
 
-    header("Location: ../projects_progress.php");
+    $redirect_url = "../projects_progress.php" . (!empty($range_id) ? '?range_id=' . $range_id : '');
+    header("Location: " . $redirect_url);
     exit();
 }
