@@ -1681,8 +1681,8 @@ require_once '../../../includes/header.php';
 
 <?php 
 // Include existing Milk Collection modal if present
-if (file_exists(__DIR__ . '/model/add_dairy_record_modal.php')) {
-    include __DIR__ . '/model/add_dairy_record_modal.php';
+if (file_exists(__DIR__ . '/models/add_dairy_record_modal.php')) {
+    include __DIR__ . '/models/add_dairy_record_modal.php';
 }
 ?>
 

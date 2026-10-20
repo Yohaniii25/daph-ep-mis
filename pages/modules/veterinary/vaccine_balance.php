@@ -584,9 +584,9 @@ require_once __DIR__ . '/../../../includes/header.php';
 </div>
 
 <!-- Modals -->
-<?php include 'model/add_vaccine_balance_modal.php'; ?>
-<?php include 'model/edit_vaccine_balance_modal.php'; ?>
-<?php include 'model/vaccine_batch_modal.php'; ?>
+<?php include 'models/add_vaccine_balance_modal.php'; ?>
+<?php include 'models/edit_vaccine_balance_modal.php'; ?>
+<?php include 'models/vaccine_batch_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

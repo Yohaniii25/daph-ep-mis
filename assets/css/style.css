@@ -626,6 +626,31 @@ textarea:focus-visible {
     transform: translateY(-1px);
 }
 
+/* Print: Primary outline button with icon matching standardized action toolbar */
+.btn-table-print,
+.btn-outline-primary.btn-table-print {
+    color: #0d6efd !important;
+    border: 1px solid #0d6efd !important;
+    background-color: transparent !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    padding: 0.35rem 0.75rem !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.btn-table-print:hover,
+.btn-outline-primary.btn-table-print:hover {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25) !important;
+    transform: translateY(-1px);
+}
+
 /* Sort: Dropdown menu button with gray outline */
 .btn-table-sort,
 .btn-outline-secondary.btn-table-sort {

@@ -274,8 +274,8 @@ require_once '../../../includes/header.php';
 <!-- ============================================================ -->
 <!-- INCLUDED MODALS -->
 <!-- ============================================================ -->
-<?php include 'model/add_daily_diary.php'; ?>
-<?php include 'model/edit_daily_diary.php'; ?>
+<?php include 'models/add_daily_diary.php'; ?>
+<?php include 'models/edit_daily_diary.php'; ?>
 
 <?php require_once '../../../includes/footer.php'; ?>
 

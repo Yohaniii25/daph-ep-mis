@@ -179,34 +179,10 @@ require_once '../../../includes/header.php';
                 'link'  => 'vaccination_targets.php?year=' . $selected_year . $range_param
             ],
             [
-                'title' => 'Breeding and Production',
-                'icon'  => 'bi-gender-ambiguous',
-                'color' => '#a07174',
-                'link'  => 'animal_breeding.php?year=' . $selected_year . $range_param
-            ],
-            [
                 'title' => 'Extension Services',
                 'icon'  => 'bi-people-fill',
                 'color' => '#185dbd',
                 'link'  => 'extension_services.php?year=' . $selected_year . $range_param
-            ],
-            [
-                'title' => 'Special Projects',
-                'icon'  => 'bi-stars',
-                'color' => '#b08723',
-                'link'  => 'projects_progress.php?type=Special' . $range_param
-            ],
-            [
-                'title' => 'Line Ministry Projects',
-                'icon'  => 'bi-building-fill-gear',
-                'color' => '#ca340fff',
-                'link'  => 'projects_progress.php?type=LMP' . $range_param
-            ],
-            [
-                'title' => 'Other Projects',
-                'icon'  => 'bi-folder-fill',
-                'color' => '#475569',
-                'link'  => 'projects_progress.php?type=Other' . $range_param
             ],
             [
                 'title' => 'Production Activities Plan',
@@ -238,7 +214,7 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
-<?php include 'model/asset_modals.php'; ?>
+<?php include 'models/asset_modals.php'; ?>
 
 <?php
 require_once '../../../includes/footer.php';

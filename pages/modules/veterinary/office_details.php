@@ -219,7 +219,7 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
-        <?php include 'model/asset_modals.php'; ?>
+        <?php include 'models/asset_modals.php'; ?>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

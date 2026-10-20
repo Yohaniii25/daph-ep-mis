@@ -546,7 +546,7 @@ require_once '../../../includes/header.php';
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
-<?php include 'model/add_project_modal.php'; ?>
+<?php include 'models/add_project_modal.php'; ?>
 
 <script>
     $(document).ready(function() {

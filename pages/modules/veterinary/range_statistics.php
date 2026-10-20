@@ -1622,8 +1622,8 @@ require_once '../../../includes/header.php';
         </div>
 
 <?php
-include 'model/add_health_record.php';
-include 'model/manage_human_population_modal.php';
+include 'models/add_health_record.php';
+include 'models/manage_human_population_modal.php';
 
 ob_start();
 ?>

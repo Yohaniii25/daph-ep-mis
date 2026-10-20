@@ -920,10 +920,10 @@ require_once __DIR__ . '/../../../includes/header.php';
 
 <?php 
 // Modals for the entire module
-include __DIR__ . '/model/add_vaccine_balance_modal.php'; 
-include __DIR__ . '/model/vaccine_batch_modal.php'; 
-include __DIR__ . '/model/drug_record_modal.php'; 
-include __DIR__ . '/model/drug_type_modal.php'; 
+include __DIR__ . '/models/add_vaccine_balance_modal.php'; 
+include __DIR__ . '/models/vaccine_batch_modal.php'; 
+include __DIR__ . '/models/drug_record_modal.php'; 
+include __DIR__ . '/models/drug_type_modal.php'; 
 ?>
 
 <?php

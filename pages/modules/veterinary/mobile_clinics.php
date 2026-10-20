@@ -500,10 +500,10 @@ require_once '../../../includes/header.php';
 <!-- MODAL INCLUDES                                                            -->
 <!-- ========================================================================= -->
 <?php
-require_once __DIR__ . '/model/modal_record_mobile_clinic.php';
-require_once __DIR__ . '/model/modal_record_drug_distribution.php';
-require_once __DIR__ . '/model/modal_view_mobile_clinic.php';
-require_once __DIR__ . '/model/modal_view_drug_distribution.php';
+require_once __DIR__ . '/models/modal_record_mobile_clinic.php';
+require_once __DIR__ . '/models/modal_record_drug_distribution.php';
+require_once __DIR__ . '/models/modal_view_mobile_clinic.php';
+require_once __DIR__ . '/models/modal_view_drug_distribution.php';
 ?>
 
 <!-- JAVASCRIPTS -->

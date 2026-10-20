@@ -3089,6 +3089,9 @@ require_once '../../../includes/header.php';
                                                     <button type="button" class="btn btn-outline-success" onclick="openFarmRegistrationCardModal(<?= $rec['id'] ?>);" title="Print Official Farm Registration Card (CR80 ID)">
                                                         <i class="bi bi-credit-card-2-front"></i> Card
                                                     </button>
+                                                    <button type="button" class="btn btn-outline-info" onclick="openEarTaggingChartModal(<?= $rec['id'] ?>, '<?= htmlspecialchars($rec['registration_no'], ENT_QUOTES) ?>', '<?= htmlspecialchars($rec['nic'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($rec['farmer_name'], ENT_QUOTES) ?>');" title="Animal Ear Tagging Details Chart">
+                                                        <i class="bi bi-pie-chart-fill"></i> Chart
+                                                    </button>
                                                     <button type="button" class="btn btn-outline-primary" onclick="showRecordDetailModal(<?= $rec['id'] ?>);" title="View Full Details">
                                                         <i class="bi bi-eye-fill"></i> View
                                                     </button>
@@ -3321,6 +3324,9 @@ require_once '../../../includes/header.php';
                                                     <button type="button" class="btn btn-outline-success" onclick="openFarmRegistrationCardModal(<?= $p_row['id'] ?>);" title="Print Official Farm Registration Card (CR80 ID)">
                                                         <i class="bi bi-credit-card-2-front"></i> Card
                                                     </button>
+                                                    <button type="button" class="btn btn-outline-info" onclick="openEarTaggingChartModal(<?= $p_row['id'] ?>, '<?= htmlspecialchars($p_reg, ENT_QUOTES) ?>', '<?= htmlspecialchars($p_nic, ENT_QUOTES) ?>', '<?= htmlspecialchars($p_owner, ENT_QUOTES) ?>');" title="Animal Ear Tagging Details Chart">
+                                                        <i class="bi bi-pie-chart-fill"></i> Chart
+                                                    </button>
                                                     <button type="button" class="btn btn-outline-primary" onclick="showRecordDetailModal(<?= $p_row['id'] ?>);" title="View Full Details">
                                                         <i class="bi bi-eye-fill"></i> View
                                                     </button>
@@ -3372,6 +3378,9 @@ require_once '../../../includes/header.php';
                     </button>
                 </div>
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-info btn-sm fw-bold" onclick="if(window.currentModalRecordId) { var mRec = (window.liveDatabaseRecords||[]).find(r=>Number(r.id)===Number(window.currentModalRecordId))||{}; openEarTaggingChartModal(window.currentModalRecordId, mRec.registration_no||'', mRec.nic||'', mRec.farmer_name||''); }" title="Animal Ear Tagging Details Chart">
+                        <i class="bi bi-pie-chart-fill me-1"></i>Tagging Chart
+                    </button>
                     <button type="button" class="btn btn-warning btn-sm text-dark fw-bold" onclick="openFarmRegistrationCardModal(window.currentModalRecordId);" title="Print Official Farm Registration Card (CR80 ID)">
                         <i class="bi bi-credit-card-2-front me-1"></i>Print ID Card
                     </button>
@@ -3435,6 +3444,194 @@ require_once '../../../includes/header.php';
 <!-- Isolated Print Container (CR80 ID exact 85.6mm x 53.98mm) -->
 <div id="cr80CardPrintSection" style="display: none;"></div>
 
+<!-- ============================================================== -->
+<!-- MODAL: ANIMAL EAR TAGGING DETAILS CHART & BRANDING ANALYTICS   -->
+<!-- ============================================================== -->
+<div class="modal fade" id="modalEarTaggingDetailsChart" tabindex="-1" aria-labelledby="modalEarTaggingDetailsChartLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <!-- Modal Header -->
+            <div class="modal-header text-white py-3 px-4" style="background: linear-gradient(135deg, #370709 0%, #5a1215 100%); border-bottom: 3px solid #c59b27;">
+                <div class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
+                    <div class="rounded-circle bg-warning text-dark p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                        <i class="bi bi-table fs-5"></i>
+                    </div>
+                    <div class="text-truncate">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h5 class="modal-title fw-bold mb-0 text-white fs-6 fs-md-5" id="modalEarTaggingDetailsChartLabel">
+                                Animal Ear Tagging Details
+                            </h5>
+                            <span class="badge bg-warning text-dark font-monospace fw-bold" id="chartModalBadgeRegNo">—</span>
+                            <span class="badge bg-light text-dark font-monospace" id="chartModalBadgeNic">—</span>
+                        </div>
+                        <small class="text-white-50 d-none d-sm-inline" id="chartModalSubtitleFarmer">Registered livestock census, ear tagged vouchers, and animal registry table</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-3 p-md-4 bg-light">
+                <!-- Farmer Overview Profile Header Card -->
+                <div class="card border-0 rounded-3 shadow-xs mb-3 bg-white">
+                    <div class="card-body p-3">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12 col-md-5">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="bg-primary-subtle text-primary rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px;">
+                                        <i class="bi bi-person-circle fs-4"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <span class="text-muted small d-block">Farmer / Farm Name</span>
+                                        <h6 class="fw-bold text-dark mb-0 text-truncate" id="chartModalFarmerNameDisplay">—</h6>
+                                        <span class="small text-muted font-monospace" id="chartModalFarmerAddressDisplay">—</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="border-start ps-3">
+                                    <span class="text-muted small d-block">Jurisdiction &amp; Range</span>
+                                    <strong class="text-dark d-block" id="chartModalRangeDisplay">—</strong>
+                                    <small class="text-muted" id="chartModalDistrictDisplay">—</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4 text-end">
+                                <div class="d-flex flex-column align-items-end justify-content-center">
+                                    <span class="small text-muted mb-1">Ear Tagging Progress</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace fs-6 px-3 py-1" id="chartModalCompletionBadge">0.0% Tagged</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Live Calculation KPI Cards -->
+                <div class="row g-2 g-md-3 mb-3 text-center">
+                    <!-- Metric 1: Total Population -->
+                    <div class="col-12 col-sm-4">
+                        <div class="card border border-primary-subtle rounded-3 shadow-xs h-100 bg-white">
+                            <div class="card-body p-3 text-start">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="text-uppercase fw-bold text-primary" style="font-size: 0.72rem; letter-spacing: 0.04em;">Total Population</div>
+                                        <h3 class="fw-bold mb-0 text-primary font-monospace mt-1" id="chartModalTotalPop">0</h3>
+                                    </div>
+                                    <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                        <i class="bi bi-collection-fill fs-6"></i>
+                                    </div>
+                                </div>
+                                <div class="small text-muted mt-2" style="font-size: 0.74rem;">
+                                    <i class="bi bi-card-checklist text-primary me-1"></i>Total animals registered in census
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metric 2: Tagged Count -->
+                    <div class="col-12 col-sm-4">
+                        <div class="card border border-success-subtle rounded-3 shadow-xs h-100 bg-white">
+                            <div class="card-body p-3 text-start">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="text-uppercase fw-bold text-success" style="font-size: 0.72rem; letter-spacing: 0.04em;">Tagged Count</div>
+                                        <h3 class="fw-bold mb-0 text-success font-monospace mt-1" id="chartModalTaggedCount">0</h3>
+                                    </div>
+                                    <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                        <i class="bi bi-tag-fill fs-6"></i>
+                                    </div>
+                                </div>
+                                <div class="small text-muted mt-2" style="font-size: 0.74rem;">
+                                    <i class="bi bi-shield-check text-success me-1"></i>Ear tagged &amp; certified vouchers
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metric 3: Pending Count -->
+                    <div class="col-12 col-sm-4">
+                        <div class="card border border-danger-subtle rounded-3 shadow-xs h-100 bg-white">
+                            <div class="card-body p-3 text-start">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="text-uppercase fw-bold text-danger" style="font-size: 0.72rem; letter-spacing: 0.04em;">Pending Count</div>
+                                        <h3 class="fw-bold mb-0 text-danger font-monospace mt-1" id="chartModalPendingCount">0</h3>
+                                    </div>
+                                    <div class="bg-danger text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                        <i class="bi bi-hourglass-split fs-6"></i>
+                                    </div>
+                                </div>
+                                <div class="small text-muted mt-2" style="font-size: 0.74rem;">
+                                    <i class="bi bi-exclamation-circle text-danger me-1"></i>Balance awaiting ear tagging
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tagged Animal Records List Table -->
+                <div class="card border-0 rounded-3 shadow-xs bg-white mb-2">
+                    <div class="card-header bg-white border-bottom py-3 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                <i class="bi bi-tags-fill text-primary"></i>
+                                <span>Ear Tagged Animal Records</span>
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1 ms-1" id="chartModalTableCountBadge">0 Animals</span>
+                            </h6>
+                            <small class="text-muted">Master database records of cattle vouchers and ear tag serial numbers registered for this farmer</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-dark border"><i class="bi bi-shield-check text-success me-1"></i>Verified Registry</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
+                            <table class="table table-hover table-striped align-middle mb-0" id="chartModalTaggedTable">
+                                <thead class="table-light small sticky-top">
+                                    <tr>
+                                        <th style="width: 40px;" class="text-center">#</th>
+                                        <th>Ear Tag Number</th>
+                                        <th>Cattle Voucher S.No.</th>
+                                        <th>Species &amp; Breed</th>
+                                        <th>Gender</th>
+                                        <th>Age / Colour</th>
+                                        <th>Present Status</th>
+                                        <th>Date of Tagging</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chartModalTaggedTableBody" class="small">
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                            Loading animal identification records...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer bg-light py-2 px-4 justify-content-between flex-wrap gap-2 border-top">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary-subtle text-secondary font-monospace" id="chartModalFooterStatus">Data synced from live registry</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="javascript:void(0)" id="chartModalBtnEarTagBalance" class="btn btn-warning btn-sm text-dark fw-bold">
+                        <i class="bi bi-plus-circle me-1"></i>Register Ear Tags for this Farm
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-dark btn-sm px-3" onclick="window.print();">
+                        <i class="bi bi-printer me-1"></i>Print Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Client-side Data Binding & Veterinary JS Module -->
 <script>
 // Live database records array passed from PHP to global scope
@@ -3443,6 +3640,145 @@ var liveDatabaseRecords = window.liveDatabaseRecords;
 window.brandingRangeName = <?= json_encode($range_name) ?>;
 window.brandingDistrictName = <?= json_encode($district_name) ?>;
 window.brandingProvinceName = <?= json_encode($province_name) ?>;
+
+// Master function to trigger Animal Ear Tagging Details
+window.openEarTaggingChartModal = function(recordId, farmRegNo, nic, farmerName) {
+    recordId = Number(recordId) || 0;
+    farmRegNo = (farmRegNo || '').trim();
+    nic = (nic || '').trim();
+    farmerName = (farmerName || '').trim();
+
+    const modalEl = document.getElementById('modalEarTaggingDetailsChart');
+    if (!modalEl) {
+        console.error('modalEarTaggingDetailsChart element not found in DOM');
+        return;
+    }
+    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    bsModal.show();
+
+    // Populate placeholder states
+    $('#chartModalBadgeRegNo').text(farmRegNo || 'Reg: Pending');
+    $('#chartModalBadgeNic').text(nic ? 'NIC: ' + nic : 'NIC: —');
+    $('#chartModalFarmerNameDisplay').text(farmerName || 'Loading Farmer...');
+    $('#chartModalFarmerAddressDisplay').text('Farm Record ID: #' + recordId);
+    $('#chartModalRangeDisplay').text(window.brandingRangeName || 'Ampara');
+    $('#chartModalDistrictDisplay').text(window.brandingDistrictName || 'District');
+    $('#chartModalCompletionBadge').text('Loading...').attr('class', 'badge bg-secondary-subtle text-secondary font-monospace fs-6 px-3 py-1');
+    $('#chartModalTotalPop').text('...');
+    $('#chartModalTaggedCount').text('...');
+    $('#chartModalPendingCount').text('...');
+    $('#chartModalTableCountBadge').text('0 Animals');
+
+    // Link "Register Ear Tags for this Farm" button
+    const earTagUrl = 'ear_tag_balance.php?farm_reg_no=' + encodeURIComponent(farmRegNo) + (nic ? '&nic=' + encodeURIComponent(nic) : '');
+    $('#chartModalBtnEarTagBalance').attr('href', earTagUrl);
+
+    $('#chartModalTaggedTableBody').html(`
+        <tr>
+            <td colspan="8" class="text-center py-4 text-muted">
+                <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                Fetching live animal ear tagging data...
+            </td>
+        </tr>
+    `);
+
+    // AJAX request to get_farmer_animal_summary
+    $.ajax({
+        url: 'processors/animal_identification_crud.php?action=get_farmer_animal_summary',
+        type: 'GET',
+        data: {
+            id: recordId,
+            farm_reg_no: farmRegNo,
+            nic: nic
+        },
+        dataType: 'json',
+        success: function(resp) {
+            if (!resp || !resp.success) {
+                $('#chartModalTaggedTableBody').html(`
+                    <tr>
+                        <td colspan="8" class="text-center py-3 text-danger">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            ${(resp && resp.message) ? resp.message : 'Unable to retrieve animal census and tagging records.'}
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+
+            const farmer = resp.farmer || {};
+            const metrics = resp.metrics || {};
+            const animals = resp.animals_list || [];
+
+            // Update Header and Badges
+            if (farmer.farmer_name) $('#chartModalFarmerNameDisplay').text(farmer.farmer_name);
+            if (farmer.farm_reg_no) $('#chartModalBadgeRegNo').text(farmer.farm_reg_no);
+            if (farmer.nic) $('#chartModalBadgeNic').text('NIC: ' + farmer.nic);
+            if (farmer.address) $('#chartModalFarmerAddressDisplay').text(farmer.address);
+            if (farmer.vs_range) $('#chartModalRangeDisplay').text(farmer.vs_range);
+            if (farmer.district) $('#chartModalDistrictDisplay').text(farmer.district);
+
+            // Update 3 Live Metrics
+            const totalPop = parseInt(metrics.total_population || 0, 10);
+            const taggedCount = parseInt(metrics.tagged_count || 0, 10);
+            const pendingCount = parseInt(metrics.pending_count || 0, 10);
+            const pct = parseFloat(metrics.percentage_tagged || 0).toFixed(1);
+
+            $('#chartModalTotalPop').text(totalPop.toLocaleString());
+            $('#chartModalTaggedCount').text(taggedCount.toLocaleString());
+            $('#chartModalPendingCount').text(pendingCount.toLocaleString());
+            $('#chartModalCompletionBadge')
+                .text(pct + '% Tagged')
+                .attr('class', 'badge ' + (pct >= 80 ? 'bg-success-subtle text-success border border-success-subtle' : (pct >= 40 ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle')) + ' font-monospace fs-6 px-3 py-1');
+
+            // Render Animals Table
+            $('#chartModalTableCountBadge').text(animals.length + ' Animals');
+            if (animals.length === 0) {
+                $('#chartModalTaggedTableBody').html(`
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-tag text-secondary fs-3 d-block mb-1"></i>
+                            <span class="fw-semibold">No ear tagging vouchers recorded yet for this farm.</span><br>
+                            <small class="text-muted">Total registered census population is ${totalPop}. All ${pendingCount} animals are currently pending ear tagging.</small>
+                        </td>
+                    </tr>
+                `);
+            } else {
+                let tbodyHtml = '';
+                animals.forEach((a, idx) => {
+                    const st = a.present_status || 'Active';
+                    let stBadge = 'bg-success-subtle text-success border border-success-subtle';
+                    if (st === 'Sold or transferred') stBadge = 'bg-primary-subtle text-primary border border-primary-subtle';
+                    else if (st === 'Slaughter') stBadge = 'bg-danger-subtle text-danger border border-danger-subtle';
+                    else if (st === 'Died') stBadge = 'bg-secondary-subtle text-secondary border border-secondary-subtle';
+                    else if (st === 'Tag Damaged / Removed') stBadge = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+
+                    tbodyHtml += `
+                        <tr>
+                            <td class="text-center text-muted fw-bold">${idx + 1}</td>
+                            <td><strong class="font-monospace text-primary">${a.ear_tag_no || '—'}</strong></td>
+                            <td><span class="font-monospace text-dark">${a.voucher_serial_no || '—'}</span></td>
+                            <td><strong>${a.species || '—'}</strong> <span class="text-muted">(${a.breed || 'Standard'})</span></td>
+                            <td>${a.gender || '—'}</td>
+                            <td>${a.age || '—'} / ${a.colour || '—'}</td>
+                            <td><span class="badge ${stBadge}">${st}</span></td>
+                            <td><small class="text-muted">${a.identification_date || '—'}</small></td>
+                        </tr>
+                    `;
+                });
+                $('#chartModalTaggedTableBody').html(tbodyHtml);
+            }
+        },
+        error: function() {
+            $('#chartModalTaggedTableBody').html(`
+                <tr>
+                    <td colspan="8" class="text-center py-3 text-danger">
+                        <i class="bi bi-x-circle-fill me-1"></i> Server error while loading ear tagging data.
+                    </td>
+                </tr>
+            `);
+        }
+    });
+};
 </script>
 <script src="../../../assets/js/veterinary.js"></script>
 

@@ -91,7 +91,7 @@ $selected_ai_status = isset($_GET['ai_status']) ? trim($_GET['ai_status']) : 'Al
 // Fetch registered farms for auto-complete datalist (Step 1 modal auto-fetch)
 $registered_farms = [];
 $rf_res = $mysqli->query("
-    SELECT DISTINCT registration_no AS farm_reg_no, farmer_name, district, vs_division AS vs_range, range_id, district_id 
+    SELECT DISTINCT registration_no AS farm_reg_no, farmer_name, nic, district, vs_division AS vs_range, range_id, district_id 
     FROM farm_registration_renewals 
     WHERE registration_no IS NOT NULL AND registration_no != ''
     ORDER BY registration_no ASC
@@ -985,9 +985,9 @@ require_once '../../../includes/header.php';
 <!-- ============================================================ -->
 <!-- MODALS INCLUSION -->
 <!-- ============================================================ -->
-<?php include __DIR__ . '/model/modal_ear_tag_stock.php'; ?>
-<?php include __DIR__ . '/model/modal_animal_identification.php'; ?>
-<?php include __DIR__ . '/model/modal_farmer_animal_summary.php'; ?>
+<?php include __DIR__ . '/models/modal_ear_tag_stock.php'; ?>
+<?php include __DIR__ . '/models/modal_animal_identification.php'; ?>
+<?php include __DIR__ . '/models/modal_farmer_animal_summary.php'; ?>
 
 <?php
 ob_start();
@@ -1515,6 +1515,10 @@ $(document).ready(function() {
                 if (resp.success && resp.farmer) {
                     const f = resp.farmer;
                     $("#ai_farmer_name").val(f.farmer_name);
+                    if (f.nic) {
+                        $("#ai_farmer_nic").val(f.nic);
+                        $("#ai_farmer_nic_display").val(f.nic);
+                    }
                     $("#ai_district").val(f.district);
                     $("#ai_vs_range").val(f.vs_range);
                     $("#ai_range_code").val("5314");
@@ -1526,6 +1530,11 @@ $(document).ready(function() {
                     }
                     $("#farmFetchStatusText").html(`<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Verified:</span> ${f.farmer_name} (${f.vs_range})`);
                     $("#farmFetchStatusIcon").attr("class", "bi bi-check-circle-fill text-success flex-shrink-0");
+
+                    // Update live metrics banner if available
+                    if (typeof window.renderLiveAnimalMetrics === "function" && resp.metrics) {
+                        window.renderLiveAnimalMetrics(resp);
+                    }
 
                     // Trigger sequence and voucher block lookup for this farm
                     fetchNextSequenceForFarm(farmRegNo);
@@ -1598,9 +1607,21 @@ $(document).ready(function() {
         const form = document.getElementById("formAddAnimalIdentification");
         if (form) form.reset();
         $("#ai_edit_id").val("0");
+        $("#ai_farmer_nic").val("");
+        $("#ai_farmer_nic_display").val("");
+        $("#stat_total_population").text("0");
+        $("#stat_tagged_count").text("0");
+        $("#stat_pending_count").text("0");
+        $("#statPercentageBadge").text("0.0%");
+        $("#statFarmerTitleDisplay").text("Farmer Population & Tagging Balance");
+        $("#statFarmerRegSyncBadge").text("Awaiting Input").attr("class", "badge bg-secondary-subtle text-secondary font-monospace");
+        $("#statProgressBarTagged").css("width", "0%");
+        $("#statProgressBarPending").css("width", "0%");
+        $("#statProgressBarLabel").text("0 / 0 Animals");
+        $("#spec_cattle_val, #spec_buffalo_val, #spec_goat_val, #spec_sheep_val, #spec_swine_val, #spec_poultry_val").text("0");
         $("#ai_range_code").val(currentRangeCode || "01");
         $("#ai_date").val(new Date().toISOString().split("T")[0]);
-        $("#farmFetchStatusText").html("Enter Farm Registration No. to auto-fetch farmer and location details.");
+        $("#farmFetchStatusText").html("Enter or click the NIC number (or Farm Reg No.) to auto-load live animal calculations.");
         $("#farmFetchStatusIcon").attr("class", "bi bi-info-circle text-primary flex-shrink-0");
         $("#farmerBlockCard").addClass("d-none");
         $("#batchGridBody tr.grid-animal-row:gt(0)").remove();

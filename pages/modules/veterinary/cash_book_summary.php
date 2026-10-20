@@ -1308,9 +1308,9 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Modals -->
-<?php include 'model/add_cash_book_summary_modal.php'; ?>
-<?php include 'model/edit_cash_book_summary_modal.php'; ?>
-<?php include 'model/view_cash_book_item_entries_modal.php'; ?>
+<?php include 'models/add_cash_book_summary_modal.php'; ?>
+<?php include 'models/edit_cash_book_summary_modal.php'; ?>
+<?php include 'models/view_cash_book_item_entries_modal.php'; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

@@ -1,12 +1,12 @@
-<!-- Modal: Statutory Schedule - 06 Monthly Cattle Voucher Return & Register -->
-<div class="modal fade" id="modalSchedule06Return" tabindex="-1" aria-labelledby="modalSchedule06ReturnLabel" aria-hidden="true">
+<!-- Modal: Statutory Monthly Cattle Voucher Return & Register -->
+<div class="modal fade" id="modalCattleVoucherReturn" tabindex="-1" aria-labelledby="modalCattleVoucherReturnLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl modal-fullscreen-lg-down">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header text-light py-3" style="background-color: #370709;">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-file-earmark-ruled fs-4 text-warning"></i>
                     <div>
-                        <h6 class="modal-title fw-bold mb-0" id="modalSchedule06ReturnLabel">Schedule - 06: Monthly Cattle Voucher Return</h6>
+                        <h6 class="modal-title fw-bold mb-0" id="modalCattleVoucherReturnLabel">Monthly Cattle Voucher Return</h6>
                         <small class="text-white-50">Department of Animal Production &amp; Health — Statutory Return of Cattle Vouchers Issued</small>
                     </div>
                 </div>

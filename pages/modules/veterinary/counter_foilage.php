@@ -353,12 +353,12 @@ require_once '../../../includes/header.php';
     </main>
 </div>
 
-<?php include 'model/add_counterfoil.php'; ?>
-<?php include 'model/edit_counterfoil.php'; ?>
-<?php include 'model/view_counterfoil.php'; ?>
-<?php include 'model/modal_issue_counterfoil_leaf.php'; ?>
-<?php include 'model/modal_board_of_survey.php'; ?>
-<?php include 'model/modal_inventory_transfer.php'; ?>
+<?php include 'models/add_counterfoil.php'; ?>
+<?php include 'models/edit_counterfoil.php'; ?>
+<?php include 'models/view_counterfoil.php'; ?>
+<?php include 'models/modal_issue_counterfoil_leaf.php'; ?>
+<?php include 'models/modal_board_of_survey.php'; ?>
+<?php include 'models/modal_inventory_transfer.php'; ?>
 
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

@@ -22,26 +22,53 @@
 
             <div class="modal-body p-3 p-md-4" style="overflow-y: auto;">
                 <!-- ========================================================= -->
-                <!-- STEP 1 (TRIGGER): FARM REGISTRATION NO.                   -->
+                <!-- STEP 1 (TRIGGER): FARM REGISTRATION NO. & NIC AUTO-FETCH   -->
                 <!-- ========================================================= -->
                 <div class="card border border-primary-subtle shadow-xs rounded-3 mb-3 bg-white">
                     <div class="card-header bg-primary-subtle border-primary-subtle py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h6 class="fw-bold mb-0 text-primary d-flex align-items-center gap-2">
                             <span class="badge bg-primary text-white rounded-pill px-2 py-1">Step 1</span>
-                            <span>Farm Registration No. <span class="badge bg-warning text-dark ms-1">Trigger</span></span>
+                            <span>Farmer Identification &amp; Live Population Metrics <span class="badge bg-warning text-dark ms-1">Trigger</span></span>
                         </h6>
-                        <small class="text-muted d-none d-sm-inline"><i class="bi bi-info-circle me-1"></i>Primary key for automatic farmer &amp; jurisdiction retrieval</small>
+                        <small class="text-muted d-none d-sm-inline"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Enter or click NIC number to auto-calculate live animal counts</small>
                     </div>
                     <div class="card-body p-3">
-                        <div class="row g-2 align-items-center">
-                            <div class="col-12 col-md-7">
+                        <div class="row g-2 align-items-end">
+                            <!-- Farmer NIC Field (Interactive Auto-Fetch Trigger) -->
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small fw-bold text-dark mb-1">
-                                    Enter Farm Registration No. <span class="text-danger">*</span>
-                                    <span class="text-muted fw-normal small">(Type or pick from registered farms)</span>
+                                    Farmer NIC Number <span class="badge bg-warning text-dark py-0 px-1"><i class="bi bi-lightning-charge-fill"></i> Live Calculator Trigger</span>
+                                    <span class="text-muted fw-normal small">(Click / Enter to Calculate)</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-primary"><i class="bi bi-person-vcard"></i></span>
+                                    <input type="text" name="farmer_nic" id="ai_farmer_nic" class="form-control form-control-sm font-monospace text-uppercase fw-bold" placeholder="e.g. 198654567890 or 865456789V" autocomplete="off" list="registeredFarmerNicsList">
+                                    <button type="button" class="btn btn-warning btn-sm px-3 fw-semibold text-dark" id="btnFetchFarmerByNic" title="Fetch live farmer animal calculations based on NIC">
+                                        <i class="bi bi-calculator-fill me-1"></i>Calculate
+                                    </button>
+                                </div>
+                                <datalist id="registeredFarmerNicsList">
+                                    <?php if (!empty($registered_farms)): ?>
+                                        <?php foreach ($registered_farms as $rfm): ?>
+                                            <?php if (!empty($rfm['nic'])): ?>
+                                                <option value="<?= htmlspecialchars($rfm['nic']) ?>" label="<?= htmlspecialchars($rfm['farmer_name'] . ' (' . ($rfm['farm_reg_no'] ?? '') . ')') ?>">
+                                                    <?= htmlspecialchars($rfm['farmer_name']) ?>
+                                                </option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </datalist>
+                            </div>
+
+                            <!-- Farm Registration No. -->
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small fw-bold text-dark mb-1">
+                                    Farm Registration No. <span class="text-danger">*</span>
+                                    <span class="text-muted fw-normal small">(Type or select farm)</span>
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light text-primary"><i class="bi bi-search"></i></span>
-                                    <input type="text" name="farm_reg_no" id="ai_farm_reg_no" class="form-control form-control-sm font-monospace text-uppercase fw-bold" placeholder="e.g. 104829375" required autocomplete="off" list="registeredFarmsList">
+                                    <input type="text" name="farm_reg_no" id="ai_farm_reg_no" class="form-control form-control-sm font-monospace text-uppercase fw-bold" placeholder="e.g. 530112345" required autocomplete="off" list="registeredFarmsList">
                                     <button type="button" class="btn btn-primary btn-sm px-3 fw-semibold" id="btnFetchFarmByReg">
                                         <i class="bi bi-arrow-repeat me-1"></i>Fetch Farm
                                     </button>
@@ -49,20 +76,121 @@
                                 <datalist id="registeredFarmsList">
                                     <?php if (!empty($registered_farms)): ?>
                                         <?php foreach ($registered_farms as $rfm): ?>
-                                            <option value="<?= htmlspecialchars($rfm['farm_reg_no']) ?>" label="<?= htmlspecialchars($rfm['farmer_name'] . ' (' . ($rfm['vs_range'] ?? '') . ')') ?>">
+                                            <option value="<?= htmlspecialchars($rfm['farm_reg_no']) ?>" label="<?= htmlspecialchars($rfm['farmer_name'] . (!empty($rfm['nic']) ? ' • NIC: ' . $rfm['nic'] : '') . ' (' . ($rfm['vs_range'] ?? '') . ')') ?>">
                                                 <?= htmlspecialchars($rfm['farmer_name']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </datalist>
                             </div>
-                            <div class="col-12 col-md-5">
-                                <div id="farmFetchStatus" class="p-2 rounded bg-light border text-muted small d-flex align-items-center gap-2">
+                        </div>
+
+                        <!-- Status Feedback Bar -->
+                        <div class="mt-2">
+                            <div id="farmFetchStatus" class="p-2 rounded bg-light border text-muted small d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2">
                                     <i class="bi bi-info-circle text-primary flex-shrink-0" id="farmFetchStatusIcon"></i>
-                                    <span id="farmFetchStatusText">Enter Farm Registration No. to auto-fetch farmer and location details.</span>
+                                    <span id="farmFetchStatusText">Enter or click the NIC number (or Farm Reg No.) to auto-load live animal calculations.</span>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary font-monospace" id="statFarmerRegSyncBadge">Awaiting Input</span>
+                            </div>
+                        </div>
+
+                        <!-- ========================================================= -->
+                        <!-- LIVE DATA CALCULATIONS CONTAINER: 3 METRICS               -->
+                        <!-- ========================================================= -->
+                        <div class="mt-3 p-3 rounded-3 border bg-white shadow-xs" id="nicLiveMetricsContainer" style="background: linear-gradient(180deg, #fbfcfe 0%, #ffffff 100%);">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-dark text-white text-uppercase px-2 py-1" style="font-size: 0.72rem;">
+                                        <i class="bi bi-cpu-fill text-warning me-1"></i>Live NIC Calculations
+                                    </span>
+                                    <span class="small fw-bold text-dark" id="statFarmerTitleDisplay">Farmer Population &amp; Tagging Balance</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small text-muted">Tagging Completion:</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace fw-bold" id="statPercentageBadge">0.0%</span>
+                                </div>
+                            </div>
+
+                            <div class="row g-2 text-center">
+                                <!-- Metric 1: Total Population -->
+                                <div class="col-12 col-sm-4">
+                                    <div class="p-2 p-md-3 rounded-3 border border-primary-subtle bg-primary-subtle text-start position-relative overflow-hidden h-100">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="text-uppercase fw-bold text-primary" style="font-size: 0.72rem; letter-spacing: 0.04em;">Total Population</div>
+                                                <h3 class="fw-bold mb-0 text-primary font-monospace mt-1" id="stat_total_population">0</h3>
+                                            </div>
+                                            <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                                <i class="bi bi-collection-fill fs-6"></i>
+                                            </div>
+                                        </div>
+                                        <div class="small text-muted mt-2" style="font-size: 0.73rem;">
+                                            <i class="bi bi-check-circle me-1 text-primary"></i>Total registered farm animals
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Metric 2: Tagged Count -->
+                                <div class="col-12 col-sm-4">
+                                    <div class="p-2 p-md-3 rounded-3 border border-success-subtle bg-success-subtle text-start position-relative overflow-hidden h-100">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="text-uppercase fw-bold text-success" style="font-size: 0.72rem; letter-spacing: 0.04em;">Tagged Count</div>
+                                                <h3 class="fw-bold mb-0 text-success font-monospace mt-1" id="stat_tagged_count">0</h3>
+                                            </div>
+                                            <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                                <i class="bi bi-tag-fill fs-6"></i>
+                                            </div>
+                                        </div>
+                                        <div class="small text-muted mt-2" style="font-size: 0.73rem;">
+                                            <i class="bi bi-shield-check me-1 text-success"></i>Ear tagged &amp; voucher issued
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Metric 3: Pending Count -->
+                                <div class="col-12 col-sm-4">
+                                    <div class="p-2 p-md-3 rounded-3 border border-danger-subtle bg-danger-subtle text-start position-relative overflow-hidden h-100">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="text-uppercase fw-bold text-danger" style="font-size: 0.72rem; letter-spacing: 0.04em;">Pending Count</div>
+                                                <h3 class="fw-bold mb-0 text-danger font-monospace mt-1" id="stat_pending_count">0</h3>
+                                            </div>
+                                            <div class="bg-danger text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                                <i class="bi bi-hourglass-split fs-6"></i>
+                                            </div>
+                                        </div>
+                                        <div class="small text-muted mt-2" style="font-size: 0.73rem;">
+                                            <i class="bi bi-exclamation-circle me-1 text-danger"></i>Balance needing registration
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar and Species Sub-Totals -->
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between align-items-center small text-muted mb-1" style="font-size: 0.72rem;">
+                                    <span>Ear Tagging Progress (Tagged vs Pending)</span>
+                                    <span id="statProgressBarLabel">0 / 0 Animals</span>
+                                </div>
+                                <div class="progress" style="height: 8px; border-radius: 4px; background-color: #e9ecef;">
+                                    <div class="progress-bar bg-success" id="statProgressBarTagged" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar bg-warning" id="statProgressBarPending" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-1 mt-2 align-items-center" style="font-size: 0.7rem;">
+                                    <span class="text-secondary fw-semibold me-1"><i class="bi bi-pie-chart me-1"></i>Census:</span>
+                                    <span class="badge bg-light text-dark border">Cattle: <strong id="spec_cattle_val" class="text-primary">0</strong></span>
+                                    <span class="badge bg-light text-dark border">Buffalo: <strong id="spec_buffalo_val" class="text-primary">0</strong></span>
+                                    <span class="badge bg-light text-dark border">Goats: <strong id="spec_goat_val" class="text-primary">0</strong></span>
+                                    <span class="badge bg-light text-dark border">Sheep: <strong id="spec_sheep_val" class="text-primary">0</strong></span>
+                                    <span class="badge bg-light text-dark border">Swine: <strong id="spec_swine_val" class="text-primary">0</strong></span>
+                                    <span class="badge bg-light text-dark border">Poultry: <strong id="spec_poultry_val" class="text-primary">0</strong></span>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
@@ -81,18 +209,29 @@
                     <div class="card-body p-3">
                         <div class="row g-2 g-md-3">
                             <!-- Farmer's Name (Read-Only) -->
-                            <div class="col-12 col-md-5">
+                            <div class="col-12 col-md-4">
                                 <label class="form-label small fw-bold text-dark mb-1">
                                     Farmer's Name <span class="badge bg-secondary-subtle text-secondary py-0 px-1"><i class="bi bi-lock-fill"></i> Read-Only</span>
                                 </label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-white"><i class="bi bi-person-fill text-secondary"></i></span>
-                                    <input type="text" name="farmer_name" id="ai_farmer_name" class="form-control form-control-sm bg-white fw-bold text-dark" placeholder="Auto-populated upon entering Farm Reg No." required readonly>
+                                    <input type="text" name="farmer_name" id="ai_farmer_name" class="form-control form-control-sm bg-white fw-bold text-dark" placeholder="Auto-populated upon entering NIC / Reg No." required readonly>
+                                </div>
+                            </div>
+
+                            <!-- Farmer NIC Display (Read-Only) -->
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label class="form-label small fw-bold text-dark mb-1">
+                                    Farmer NIC <span class="badge bg-secondary-subtle text-secondary py-0 px-1"><i class="bi bi-lock-fill"></i> Read-Only</span>
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="bi bi-fingerprint text-secondary"></i></span>
+                                    <input type="text" name="farmer_nic_display" id="ai_farmer_nic_display" class="form-control form-control-sm bg-white font-monospace fw-bold" placeholder="Auto-populated" readonly>
                                 </div>
                             </div>
 
                             <!-- District (Read-Only) -->
-                            <div class="col-12 col-sm-6 col-md-3">
+                            <div class="col-12 col-sm-6 col-md-2">
                                 <label class="form-label small fw-bold text-dark mb-1">
                                     District <span class="badge bg-secondary-subtle text-secondary py-0 px-1"><i class="bi bi-lock-fill"></i> Read-Only</span>
                                 </label>
@@ -100,7 +239,7 @@
                             </div>
 
                             <!-- VS Range (Read-Only) -->
-                            <div class="col-12 col-sm-6 col-md-3">
+                            <div class="col-12 col-sm-6 col-md-2">
                                 <label class="form-label small fw-bold text-dark mb-1">
                                     VS Range <span class="badge bg-secondary-subtle text-secondary py-0 px-1"><i class="bi bi-lock-fill"></i> Read-Only</span>
                                 </label>
@@ -410,3 +549,184 @@
         </div>
     </div>
 </div>
+
+<!-- ============================================================== -->
+<!-- SCRIPT: NIC AUTO-FETCH & LIVE ANIMAL POPULATION CALCULATIONS  -->
+<!-- ============================================================== -->
+<script>
+(function($) {
+    if (!$) return;
+
+    // Helper: update the 3 live metrics in the modal
+    function renderLiveAnimalMetrics(resp) {
+        if (!resp) return;
+        const m = resp.metrics || {};
+        const f = resp.farmer || {};
+        const sp = resp.species_breakdown || {};
+
+        const totalPop = parseInt(m.total_population || 0, 10);
+        const taggedCount = parseInt(m.tagged_count || 0, 10);
+        const pendingCount = parseInt(m.pending_count || Math.max(0, totalPop - taggedCount), 10);
+        const pct = totalPop > 0 ? (taggedCount / totalPop * 100).toFixed(1) : (taggedCount > 0 ? '100.0' : '0.0');
+
+        // 1. Total Population
+        $("#stat_total_population").text(totalPop.toLocaleString());
+        // 2. Tagged Count
+        $("#stat_tagged_count").text(taggedCount.toLocaleString());
+        // 3. Pending Count
+        $("#stat_pending_count").text(pendingCount.toLocaleString());
+
+        // Tagging completion percentage
+        $("#statPercentageBadge").text(pct + '%');
+
+        // Progress bar visual
+        const taggedPct = totalPop > 0 ? Math.min(100, (taggedCount / totalPop * 100)) : (taggedCount > 0 ? 100 : 0);
+        const pendingPct = totalPop > 0 ? Math.min(100 - taggedPct, (pendingCount / totalPop * 100)) : 0;
+        $("#statProgressBarTagged").css("width", taggedPct + '%').attr("title", taggedCount + " Tagged (" + taggedPct.toFixed(1) + "%)");
+        $("#statProgressBarPending").css("width", pendingPct + '%').attr("title", pendingCount + " Pending (" + pendingPct.toFixed(1) + "%)");
+        $("#statProgressBarLabel").text(`${taggedCount} Tagged / ${totalPop} Total (${pendingCount} Pending)`);
+
+        // Species Breakdown Counters
+        $("#spec_cattle_val").text(sp.cattle || 0);
+        $("#spec_buffalo_val").text(sp.buffalo || 0);
+        $("#spec_goat_val").text(sp.goat || 0);
+        $("#spec_sheep_val").text(sp.sheep || 0);
+        $("#spec_swine_val").text(sp.swine || 0);
+        $("#spec_poultry_val").text(sp.poultry || 0);
+
+        if (f.farmer_name) {
+            $("#statFarmerTitleDisplay").html(`<strong class="text-dark">${f.farmer_name}</strong> <span class="text-muted">(${f.vs_range || 'Range'})</span>`);
+            $("#statFarmerRegSyncBadge")
+                .text(f.farm_reg_no ? "Reg: " + f.farm_reg_no : "NIC Verified")
+                .attr("class", "badge bg-success-subtle text-success font-monospace");
+        }
+    }
+    window.renderLiveAnimalMetrics = renderLiveAnimalMetrics;
+
+    // Core function: fetch & calculate farmer metrics by NIC
+    let activeNicRequest = null;
+    function fetchAndCalculateByNIC(nicNumber, showFeedback) {
+        const nic = (nicNumber || '').trim();
+        if (!nic) {
+            $("#farmFetchStatusText").html("Enter or click the NIC number (or Farm Reg No.) to auto-load live animal calculations.");
+            $("#farmFetchStatusIcon").attr("class", "bi bi-info-circle text-primary flex-shrink-0");
+            return;
+        }
+
+        $("#farmFetchStatusText").html(`<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Calculating live animal population & ear tagging balance for NIC: <strong>${nic}</strong>...`);
+        $("#farmFetchStatusIcon").attr("class", "bi bi-arrow-repeat text-primary flex-shrink-0");
+        $("#btnFetchFarmerByNic").prop("disabled", true).html('<span class="spinner-border spinner-border-sm me-1"></span>Calculating');
+
+        if (activeNicRequest) {
+            activeNicRequest.abort();
+        }
+
+        activeNicRequest = $.ajax({
+            url: "processors/animal_identification_crud.php?action=get_farmer_by_nic",
+            type: "GET",
+            data: { nic: nic },
+            dataType: "json",
+            success: function(resp) {
+                activeNicRequest = null;
+                $("#btnFetchFarmerByNic").prop("disabled", false).html('<i class="bi bi-calculator-fill me-1"></i>Calculate');
+
+                if (resp && resp.success && resp.farmer) {
+                    const f = resp.farmer;
+                    // Auto-populate Step 1 and Step 2 fields
+                    if (f.farm_reg_no && !$("#ai_farm_reg_no").val()) {
+                        $("#ai_farm_reg_no").val(f.farm_reg_no);
+                    }
+                    $("#ai_farmer_name").val(f.farmer_name);
+                    $("#ai_farmer_nic_display").val(f.nic || nic);
+                    if (f.district) $("#ai_district").val(f.district);
+                    if (f.vs_range) $("#ai_vs_range").val(f.vs_range);
+                    $("#ai_range_code").val("5314");
+                    if (f.range_id) $("#ai_range_id").val(f.range_id);
+                    if (f.district_id) $("#ai_district_id").val(f.district_id);
+
+                    // Display live 3 metrics
+                    renderLiveAnimalMetrics(resp);
+
+                    $("#farmFetchStatusText").html(`<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>NIC Verified:</span> ${f.farmer_name} • ${resp.metrics.total_population} Animals registered (${resp.metrics.tagged_count} Tagged, ${resp.metrics.pending_count} Pending)`);
+                    $("#farmFetchStatusIcon").attr("class", "bi bi-check-circle-fill text-success flex-shrink-0");
+
+                    // Trigger sequence lookup and concatenation refresh if available
+                    if (typeof window.fetchNextSequenceForFarm === 'function' && f.farm_reg_no) {
+                        window.fetchNextSequenceForFarm(f.farm_reg_no);
+                    }
+                    if (typeof window.refreshGridConcatenations === 'function') {
+                        window.refreshGridConcatenations();
+                    }
+                } else {
+                    $("#farmFetchStatusText").html(`<span class="text-danger fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Unregistered NIC.</span> No active census records found for NIC: ${nic}`);
+                    $("#farmFetchStatusIcon").attr("class", "bi bi-exclamation-circle text-danger flex-shrink-0");
+                    $("#statFarmerRegSyncBadge").text("NIC Not Found").attr("class", "badge bg-danger-subtle text-danger font-monospace");
+
+                    if (showFeedback && typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: "info",
+                            title: "Farmer NIC Not Found",
+                            text: resp.message || "No registered livestock farm census found for the entered NIC.",
+                            confirmButtonColor: "#820100"
+                        });
+                    }
+                }
+            },
+            error: function(xhr, status) {
+                if (status === "abort") return;
+                activeNicRequest = null;
+                $("#btnFetchFarmerByNic").prop("disabled", false).html('<i class="bi bi-calculator-fill me-1"></i>Calculate');
+                $("#farmFetchStatusText").html(`<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Error connecting to server.</span>`);
+                $("#farmFetchStatusIcon").attr("class", "bi bi-x-circle text-danger flex-shrink-0");
+            }
+        });
+    }
+    window.fetchAndCalculateByNIC = fetchAndCalculateByNIC;
+
+    // -------------------------------------------------------------
+    // TRIGGER EVENT LISTENER ON NIC NUMBER FIELD
+    // -------------------------------------------------------------
+    // 1. Click & Focus: Trigger calculation if NIC is clicked or focused
+    $(document).on("click focus", "#ai_farmer_nic", function() {
+        const val = $(this).val().trim();
+        if (val && val.length >= 4) {
+            fetchAndCalculateByNIC(val, false);
+        }
+    });
+
+    // 2. Input: Debounced live auto-calculation as user types
+    let nicInputTimer = null;
+    $(document).on("input", "#ai_farmer_nic", function() {
+        const val = $(this).val().trim();
+        clearTimeout(nicInputTimer);
+        if (val.length >= 4) {
+            nicInputTimer = setTimeout(function() {
+                fetchAndCalculateByNIC(val, false);
+            }, 300);
+        }
+    });
+
+    // 3. Change & Blur: Immediate calculation when leaving or picking from datalist
+    $(document).on("change blur", "#ai_farmer_nic", function() {
+        const val = $(this).val().trim();
+        if (val && val.length >= 4) {
+            fetchAndCalculateByNIC(val, false);
+        }
+    });
+
+    // 4. Calculate Button click trigger
+    $(document).on("click", "#btnFetchFarmerByNic", function() {
+        const val = $("#ai_farmer_nic").val().trim();
+        if (!val) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire("Enter NIC Number", "Please enter a Farmer National Identity Card (NIC) number.", "warning");
+            } else {
+                alert("Please enter a Farmer National Identity Card (NIC) number.");
+            }
+            return;
+        }
+        fetchAndCalculateByNIC(val, true);
+    });
+
+})(jQuery);
+</script>

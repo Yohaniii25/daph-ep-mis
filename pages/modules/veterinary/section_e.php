@@ -848,9 +848,9 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Add Subcategory Modal -->
-<?php include 'model/add_subcategory_modal.php'; ?>
+<?php include 'models/add_subcategory_modal.php'; ?>
 <!-- Manage Archived Subcategories Modal -->
-<?php include 'model/manage_archived_modal.php'; ?>
+<?php include 'models/manage_archived_modal.php'; ?>
 
 <?php require_once '../../../includes/footer.php'; ?>
 

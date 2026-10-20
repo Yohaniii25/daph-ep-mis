@@ -252,7 +252,7 @@ function syncCounterFileRecords($mysqli, $data, $user_id) {
 // ACTION: GET FARMER DETAILS BY FARM REGISTRATION NO (AUTO-FETCH WORKFLOW)
 // -------------------------------------------------------------------------
 if ($action === 'get_farmer_by_reg') {
-    $farm_reg_no = trim($_GET['farm_reg_no'] ?? '');
+    $farm_reg_no = trim($_GET['farm_reg_no'] ?? $_POST['farm_reg_no'] ?? '');
     if (empty($farm_reg_no)) {
         echo json_encode(['success' => false, 'message' => 'Farm registration number is required.']);
         exit();
@@ -260,12 +260,22 @@ if ($action === 'get_farmer_by_reg') {
 
     $found = false;
     $farmer = null;
+    $metrics = [
+        'total_population' => 0,
+        'tagged_count' => 0,
+        'pending_count' => 0,
+        'percentage_tagged' => 0
+    ];
+    $species_breakdown = [
+        'cattle' => 0, 'buffalo' => 0, 'goat' => 0, 'swine' => 0, 'sheep' => 0, 'poultry' => 0
+    ];
 
     $clean_reg = preg_replace('/[^0-9a-zA-Z]/', '', $farm_reg_no);
 
     // 1. Try farm_registration_renewals (Master Registry)
     $stmt = $mysqli->prepare("
-        SELECT id, registration_no, farmer_name, district, vs_division, range_id, district_id 
+        SELECT id, registration_no, farmer_name, nic, district, vs_division, range_id, district_id,
+               total_neat_cattle, total_buffaloes, goat_total_no, swine_total_no, sheep_total_no, poultry_data 
         FROM farm_registration_renewals 
         WHERE registration_no = ? 
            OR LOWER(TRIM(registration_no)) = LOWER(?)
@@ -283,11 +293,32 @@ if ($action === 'get_farmer_by_reg') {
             $farmer = [
                 'farm_reg_no' => $row['registration_no'],
                 'farmer_name' => $row['farmer_name'],
+                'nic'         => $row['nic'] ?? '',
                 'district'    => $row['district'],
                 'vs_range'    => $row['vs_division'],
                 'range_id'    => (int)$row['range_id'],
                 'district_id' => (int)$row['district_id']
             ];
+
+            $species_breakdown['cattle'] = (int)($row['total_neat_cattle'] ?? 0);
+            $species_breakdown['buffalo'] = (int)($row['total_buffaloes'] ?? 0);
+            $species_breakdown['goat'] = (int)($row['goat_total_no'] ?? 0);
+            $species_breakdown['swine'] = (int)($row['swine_total_no'] ?? 0);
+            $species_breakdown['sheep'] = (int)($row['sheep_total_no'] ?? 0);
+
+            $p_count = 0;
+            if (!empty($row['poultry_data'])) {
+                $p_data = json_decode($row['poultry_data'], true);
+                if (is_array($p_data) && !empty($p_data['flock_age_groups']) && is_array($p_data['flock_age_groups'])) {
+                    foreach ($p_data['flock_age_groups'] as $fg) {
+                        if (isset($fg['quantity']) && is_numeric($fg['quantity'])) {
+                            $p_count += (int)$fg['quantity'];
+                        }
+                    }
+                }
+            }
+            $species_breakdown['poultry'] = $p_count;
+            $metrics['total_population'] = array_sum($species_breakdown);
         }
         $stmt->close();
     }
@@ -295,8 +326,9 @@ if ($action === 'get_farmer_by_reg') {
     // 2. Fallback: try farmers table
     if (!$found) {
         $stmt2 = $mysqli->prepare("
-            SELECT f.id, f.farm_registration_no, f.full_name AS farmer_name, f.range_id, f.district_id,
-                   COALESCE(vr.name, '') AS vs_range, COALESCE(d.name, '') AS district, COALESCE(vr.code, '5314') AS range_code
+            SELECT f.id, f.farm_registration_no, f.full_name AS farmer_name, f.nic_no, f.range_id, f.district_id,
+                   COALESCE(vr.name, '') AS vs_range, COALESCE(d.name, '') AS district, COALESCE(vr.code, '5314') AS range_code,
+                   f.cattle_count, f.buffalo_count, f.goat_count, f.swine_count, f.poultry_count, f.total_animal_count
             FROM farmers f
             LEFT JOIN veterinary_ranges vr ON vr.id = f.range_id
             LEFT JOIN districts d ON d.id = f.district_id
@@ -316,12 +348,19 @@ if ($action === 'get_farmer_by_reg') {
                 $farmer = [
                     'farm_reg_no' => $row2['farm_registration_no'],
                     'farmer_name' => $row2['farmer_name'],
+                    'nic'         => $row2['nic_no'] ?? '',
                     'district'    => $row2['district'],
                     'vs_range'    => $row2['vs_range'],
                     'range_id'    => (int)$row2['range_id'],
                     'district_id' => (int)$row2['district_id'],
                     'range_code'  => '5314'
                 ];
+                $species_breakdown['cattle'] = (int)($row2['cattle_count'] ?? 0);
+                $species_breakdown['buffalo'] = (int)($row2['buffalo_count'] ?? 0);
+                $species_breakdown['goat'] = (int)($row2['goat_count'] ?? 0);
+                $species_breakdown['swine'] = (int)($row2['swine_count'] ?? 0);
+                $species_breakdown['poultry'] = (int)($row2['poultry_count'] ?? 0);
+                $metrics['total_population'] = (int)($row2['total_animal_count'] ?? array_sum($species_breakdown));
             }
             $stmt2->close();
         }
@@ -347,6 +386,7 @@ if ($action === 'get_farmer_by_reg') {
                 $farmer = [
                     'farm_reg_no' => $row3['farm_reg_no'],
                     'farmer_name' => $row3['farmer_name'],
+                    'nic'         => '',
                     'district'    => $row3['district'],
                     'vs_range'    => $row3['vs_range'],
                     'range_id'    => (int)$row3['range_id'],
@@ -358,12 +398,36 @@ if ($action === 'get_farmer_by_reg') {
     }
 
     if ($found && $farmer) {
-        // Range code: user requirement specifies 5314 for testing Ampara veterinary range
         $farmer['range_code'] = '5314';
 
+        // Count tagged animals in animal_identifications
+        $target_reg = $farmer['farm_reg_no'] ?: $farm_reg_no;
+        $t_stmt = $mysqli->prepare("
+            SELECT COUNT(*) AS tagged_count 
+            FROM animal_identifications 
+            WHERE farm_reg_no = ? 
+               OR (farmer_name = ? AND farmer_name != '')
+        ");
+        if ($t_stmt) {
+            $t_stmt->bind_param("ss", $target_reg, $farmer['farmer_name']);
+            $t_stmt->execute();
+            $t_res = $t_stmt->get_result();
+            if ($t_row = $t_res->fetch_assoc()) {
+                $metrics['tagged_count'] = (int)$t_row['tagged_count'];
+            }
+            $t_stmt->close();
+        }
+
+        $metrics['pending_count'] = max(0, $metrics['total_population'] - $metrics['tagged_count']);
+        $metrics['percentage_tagged'] = $metrics['total_population'] > 0 
+            ? round(($metrics['tagged_count'] / $metrics['total_population']) * 100, 1) 
+            : ($metrics['tagged_count'] > 0 ? 100 : 0);
+
         echo json_encode([
-            'success' => true,
-            'farmer'  => $farmer
+            'success'           => true,
+            'farmer'            => $farmer,
+            'metrics'           => $metrics,
+            'species_breakdown' => $species_breakdown
         ]);
     } else {
         echo json_encode([
@@ -375,23 +439,192 @@ if ($action === 'get_farmer_by_reg') {
 }
 
 // -------------------------------------------------------------------------
+// ACTION: GET FARMER DETAILS & LIVE METRICS BY NIC (NIC AUTO-FETCH WORKFLOW)
+// -------------------------------------------------------------------------
+if ($action === 'get_farmer_by_nic') {
+    $nic = trim($_GET['nic'] ?? $_POST['nic'] ?? '');
+    if (empty($nic)) {
+        echo json_encode(['success' => false, 'message' => 'NIC number is required.']);
+        exit();
+    }
+
+    $clean_nic = preg_replace('/[^0-9a-zA-Z]/', '', $nic);
+    $found = false;
+    $farmer = null;
+    $metrics = [
+        'total_population' => 0,
+        'tagged_count' => 0,
+        'pending_count' => 0,
+        'percentage_tagged' => 0
+    ];
+    $species_breakdown = [
+        'cattle' => 0, 'buffalo' => 0, 'goat' => 0, 'swine' => 0, 'sheep' => 0, 'poultry' => 0
+    ];
+
+    // 1. Try farm_registration_renewals (Master Livestock Registry)
+    $stmt = $mysqli->prepare("
+        SELECT id, registration_no, farmer_name, nic, district, vs_division, range_id, district_id,
+               total_neat_cattle, total_buffaloes, goat_total_no, swine_total_no, sheep_total_no, poultry_data
+        FROM farm_registration_renewals 
+        WHERE nic = ? 
+           OR LOWER(TRIM(nic)) = LOWER(?)
+           OR REPLACE(REPLACE(nic, ' ', ''), '-', '') = ?
+           OR (nic IS NOT NULL AND nic != '' AND nic LIKE CONCAT('%', ?, '%'))
+        ORDER BY (LOWER(TRIM(nic)) = LOWER(?)) DESC, id DESC 
+        LIMIT 1
+    ");
+    if ($stmt) {
+        $stmt->bind_param("sssss", $nic, $nic, $clean_nic, $nic, $nic);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            $found = true;
+            $farmer = [
+                'farm_reg_no' => $row['registration_no'] ?? '',
+                'farmer_name' => $row['farmer_name'] ?? '',
+                'nic'         => $row['nic'] ?? $nic,
+                'district'    => $row['district'] ?? 'Ampara',
+                'vs_range'    => $row['vs_division'] ?? 'Ampara',
+                'range_id'    => (int)($row['range_id'] ?? 1),
+                'district_id' => (int)($row['district_id'] ?? 1),
+                'range_code'  => '5314'
+            ];
+
+            $species_breakdown['cattle'] = (int)($row['total_neat_cattle'] ?? 0);
+            $species_breakdown['buffalo'] = (int)($row['total_buffaloes'] ?? 0);
+            $species_breakdown['goat'] = (int)($row['goat_total_no'] ?? 0);
+            $species_breakdown['swine'] = (int)($row['swine_total_no'] ?? 0);
+            $species_breakdown['sheep'] = (int)($row['sheep_total_no'] ?? 0);
+
+            $p_count = 0;
+            if (!empty($row['poultry_data'])) {
+                $p_data = json_decode($row['poultry_data'], true);
+                if (is_array($p_data) && !empty($p_data['flock_age_groups']) && is_array($p_data['flock_age_groups'])) {
+                    foreach ($p_data['flock_age_groups'] as $fg) {
+                        if (isset($fg['quantity']) && is_numeric($fg['quantity'])) {
+                            $p_count += (int)$fg['quantity'];
+                        }
+                    }
+                }
+            }
+            $species_breakdown['poultry'] = $p_count;
+            $metrics['total_population'] = array_sum($species_breakdown);
+        }
+        $stmt->close();
+    }
+
+    // 2. Fallback: try farmers table
+    if (!$found) {
+        $stmt2 = $mysqli->prepare("
+            SELECT f.id, f.farm_registration_no, f.full_name AS farmer_name, f.nic_no, f.range_id, f.district_id,
+                   COALESCE(vr.name, '') AS vs_range, COALESCE(d.name, '') AS district, COALESCE(vr.code, '5314') AS range_code,
+                   f.cattle_count, f.buffalo_count, f.goat_count, f.swine_count, f.poultry_count, f.total_animal_count
+            FROM farmers f
+            LEFT JOIN veterinary_ranges vr ON vr.id = f.range_id
+            LEFT JOIN districts d ON d.id = f.district_id
+            WHERE f.nic_no = ? 
+               OR LOWER(TRIM(f.nic_no)) = LOWER(?)
+               OR REPLACE(REPLACE(f.nic_no, ' ', ''), '-', '') = ?
+               OR (f.nic_no IS NOT NULL AND f.nic_no != '' AND f.nic_no LIKE CONCAT('%', ?, '%'))
+            ORDER BY (LOWER(TRIM(f.nic_no)) = LOWER(?)) DESC, f.id DESC
+            LIMIT 1
+        ");
+        if ($stmt2) {
+            $stmt2->bind_param("sssss", $nic, $nic, $clean_nic, $nic, $nic);
+            $stmt2->execute();
+            $res2 = $stmt2->get_result();
+            if ($row2 = $res2->fetch_assoc()) {
+                $found = true;
+                $farmer = [
+                    'farm_reg_no' => $row2['farm_registration_no'] ?? '',
+                    'farmer_name' => $row2['farmer_name'] ?? '',
+                    'nic'         => $row2['nic_no'] ?? $nic,
+                    'district'    => $row2['district'] ?: 'Ampara',
+                    'vs_range'    => $row2['vs_range'] ?: 'Ampara',
+                    'range_id'    => (int)($row2['range_id'] ?? 1),
+                    'district_id' => (int)($row2['district_id'] ?? 1),
+                    'range_code'  => '5314'
+                ];
+                $species_breakdown['cattle'] = (int)($row2['cattle_count'] ?? 0);
+                $species_breakdown['buffalo'] = (int)($row2['buffalo_count'] ?? 0);
+                $species_breakdown['goat'] = (int)($row2['goat_count'] ?? 0);
+                $species_breakdown['swine'] = (int)($row2['swine_count'] ?? 0);
+                $species_breakdown['poultry'] = (int)($row2['poultry_count'] ?? 0);
+                $metrics['total_population'] = (int)($row2['total_animal_count'] ?? array_sum($species_breakdown));
+            }
+            $stmt2->close();
+        }
+    }
+
+    if ($found && $farmer) {
+        $farmer['range_code'] = '5314';
+
+        // Count tagged animals in animal_identifications for this farmer or farm_reg_no
+        $target_reg = $farmer['farm_reg_no'];
+        $tagged_animals = [];
+        $t_stmt = $mysqli->prepare("
+            SELECT id, farm_reg_no, farmer_name, ear_tag_no, voucher_serial_no, identification_date,
+                   gender, colour, species, breed, age, purpose, present_status
+            FROM animal_identifications 
+            WHERE (farm_reg_no = ? AND farm_reg_no != '')
+               OR (farmer_name = ? AND farmer_name != '')
+            ORDER BY id DESC
+        ");
+        if ($t_stmt) {
+            $t_stmt->bind_param("ss", $target_reg, $farmer['farmer_name']);
+            $t_stmt->execute();
+            $t_res = $t_stmt->get_result();
+            while ($t_row = $t_res->fetch_assoc()) {
+                $tagged_animals[] = $t_row;
+            }
+            $metrics['tagged_count'] = count($tagged_animals);
+            $t_stmt->close();
+        }
+
+        // Pending count: Total Population minus Tagged Count
+        $metrics['pending_count'] = max(0, $metrics['total_population'] - $metrics['tagged_count']);
+        $metrics['percentage_tagged'] = $metrics['total_population'] > 0 
+            ? round(($metrics['tagged_count'] / $metrics['total_population']) * 100, 1) 
+            : ($metrics['tagged_count'] > 0 ? 100 : 0);
+
+        echo json_encode([
+            'success'           => true,
+            'farmer'            => $farmer,
+            'metrics'           => $metrics,
+            'species_breakdown' => $species_breakdown,
+            'tagged_animals'    => $tagged_animals
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => "No registered farmer found for NIC: {$nic}"
+        ]);
+    }
+    exit();
+}
+
+// -------------------------------------------------------------------------
 // ACTION: GET FARMER TOTAL ANIMAL SUMMARY (FOR POPUP ON CLICKING FARM REG NO)
 // -------------------------------------------------------------------------
 if ($action === 'get_farmer_animal_summary') {
-    $farm_reg_no = trim($_GET['farm_reg_no'] ?? '');
-    if (empty($farm_reg_no)) {
-        echo json_encode(['success' => false, 'message' => 'Farm registration number is required.']);
+    $farm_reg_no = trim($_GET['farm_reg_no'] ?? $_POST['farm_reg_no'] ?? '');
+    $nic = trim($_GET['nic'] ?? $_POST['nic'] ?? '');
+    $record_id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
+
+    if (empty($farm_reg_no) && empty($nic) && $record_id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Farm registration number, NIC or record ID is required.']);
         exit();
     }
 
     $farmer_info = [
+        'id'          => $record_id,
         'farm_reg_no' => $farm_reg_no,
         'farmer_name' => '',
-        'nic' => '',
-        'district' => '',
-        'vs_range' => '',
-        'address' => '',
-        'telephone' => ''
+        'nic'         => $nic,
+        'district'    => '',
+        'vs_range'    => '',
+        'address'     => '',
+        'telephone'   => ''
     ];
 
     $master_animals = [
@@ -406,22 +639,38 @@ if ($action === 'get_farmer_animal_summary') {
 
     // 1. Query farm_registration_renewals for master census
     $clean_reg = preg_replace('/[^0-9a-zA-Z]/', '', $farm_reg_no);
-    $m_stmt = $mysqli->prepare("
+    $clean_nic = preg_replace('/[^0-9a-zA-Z]/', '', $nic);
+
+    $m_sql = "
         SELECT id, registration_no, farmer_name, nic, farmer_address, telephone_no, district, vs_division,
                total_neat_cattle, total_buffaloes, goat_total_no, swine_total_no, sheep_total_no, poultry_data
         FROM farm_registration_renewals
-        WHERE registration_no = ? 
-           OR LOWER(TRIM(registration_no)) = LOWER(?)
-           OR REPLACE(REPLACE(registration_no, ' ', ''), '-', '') = ?
-           OR (registration_no IS NOT NULL AND registration_no != '' AND registration_no LIKE CONCAT('%', ?, '%'))
-        ORDER BY (LOWER(TRIM(registration_no)) = LOWER(?)) DESC, id DESC 
+        WHERE (id = ? AND ? > 0)
+           OR (registration_no = ? AND ? != '') 
+           OR (LOWER(TRIM(registration_no)) = LOWER(?) AND ? != '')
+           OR (REPLACE(REPLACE(registration_no, ' ', ''), '-', '') = ? AND ? != '')
+           OR (nic = ? AND ? != '')
+           OR (LOWER(TRIM(nic)) = LOWER(?) AND ? != '')
+        ORDER BY (id = ?) DESC, (registration_no = ?) DESC, id DESC 
         LIMIT 1
-    ");
+    ";
+    $m_stmt = $mysqli->prepare($m_sql);
     if ($m_stmt) {
-        $m_stmt->bind_param("sssss", $farm_reg_no, $farm_reg_no, $clean_reg, $farm_reg_no, $farm_reg_no);
+        $m_stmt->bind_param(
+            "iississsssssis",
+            $record_id, $record_id,
+            $farm_reg_no, $farm_reg_no,
+            $farm_reg_no, $farm_reg_no,
+            $clean_reg, $clean_reg,
+            $nic, $nic,
+            $nic, $nic,
+            $record_id,
+            $farm_reg_no
+        );
         $m_stmt->execute();
         $m_res = $m_stmt->get_result();
         if ($m_row = $m_res->fetch_assoc()) {
+            $farmer_info['id'] = (int)$m_row['id'];
             $farmer_info['farm_reg_no'] = $m_row['registration_no'];
             $farmer_info['farmer_name'] = $m_row['farmer_name'];
             $farmer_info['nic'] = $m_row['nic'];
@@ -440,12 +689,10 @@ if ($action === 'get_farmer_animal_summary') {
             $p_count = 0;
             if (!empty($m_row['poultry_data'])) {
                 $p_data = json_decode($m_row['poultry_data'], true);
-                if (is_array($p_data)) {
-                    if (!empty($p_data['flock_age_groups']) && is_array($p_data['flock_age_groups'])) {
-                        foreach ($p_data['flock_age_groups'] as $fg) {
-                            if (isset($fg['quantity']) && is_numeric($fg['quantity'])) {
-                                $p_count += (int)$fg['quantity'];
-                            }
+                if (is_array($p_data) && !empty($p_data['flock_age_groups']) && is_array($p_data['flock_age_groups'])) {
+                    foreach ($p_data['flock_age_groups'] as $fg) {
+                        if (isset($fg['quantity']) && is_numeric($fg['quantity'])) {
+                            $p_count += (int)$fg['quantity'];
                         }
                     }
                 }
@@ -467,17 +714,20 @@ if ($action === 'get_farmer_animal_summary') {
         'damaged' => 0
     ];
 
+    $target_reg = $farmer_info['farm_reg_no'] ?: $farm_reg_no;
+    $target_name = $farmer_info['farmer_name'];
+
     $ai_stmt = $mysqli->prepare("
         SELECT id, farm_reg_no, farmer_name, district, vs_range, ear_tag_no, animal_seq_no,
                voucher_serial_no, identification_date, gender, colour, species, breed, age, purpose, io_number, present_status
         FROM animal_identifications
-        WHERE farm_reg_no = ? 
-           OR LOWER(TRIM(farm_reg_no)) = LOWER(?)
-           OR (farm_reg_no IS NOT NULL AND farm_reg_no != '' AND farm_reg_no LIKE CONCAT('%', ?, '%'))
+        WHERE (farm_reg_no = ? AND ? != '') 
+           OR (LOWER(TRIM(farm_reg_no)) = LOWER(?) AND ? != '')
+           OR (farmer_name = ? AND ? != '')
         ORDER BY id DESC
     ");
     if ($ai_stmt) {
-        $ai_stmt->bind_param("sss", $farm_reg_no, $farm_reg_no, $farm_reg_no);
+        $ai_stmt->bind_param("ssssss", $target_reg, $target_reg, $target_reg, $target_reg, $target_name, $target_name);
         $ai_stmt->execute();
         $ai_res = $ai_stmt->get_result();
         while ($row = $ai_res->fetch_assoc()) {
@@ -498,12 +748,25 @@ if ($action === 'get_farmer_animal_summary') {
         $ai_stmt->close();
     }
 
+    $total_pop = $master_animals['total'];
+    $tagged_count = $ai_status_summary['total'];
+    $pending_count = max(0, $total_pop - $tagged_count);
+    $percentage_tagged = $total_pop > 0 ? round(($tagged_count / $total_pop) * 100, 1) : ($tagged_count > 0 ? 100 : 0);
+
+    $metrics = [
+        'total_population'  => $total_pop,
+        'tagged_count'      => $tagged_count,
+        'pending_count'     => $pending_count,
+        'percentage_tagged' => $percentage_tagged
+    ];
+
     echo json_encode([
-        'success' => true,
-        'farmer' => $farmer_info,
-        'master_census' => $master_animals,
+        'success'         => true,
+        'farmer'          => $farmer_info,
+        'master_census'   => $master_animals,
         'ear_tag_summary' => $ai_status_summary,
-        'animals_list' => $ai_animals
+        'metrics'         => $metrics,
+        'animals_list'    => $ai_animals
     ]);
     exit();
 }

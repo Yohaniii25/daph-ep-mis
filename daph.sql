@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 18, 2026 at 05:42 AM
+-- Generation Time: Oct 19, 2026 at 05:16 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -24,12 +24,43 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `activity_beneficiaries`
+--
+
+CREATE TABLE `activity_beneficiaries` (
+  `id` int(11) NOT NULL,
+  `activity_id` int(11) NOT NULL,
+  `client_type` enum('farmer','pet_owner') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'farmer',
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nic` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(25) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `gps_location` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `dept_contribution` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `beneficiary_contribution` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `total_cost` decimal(12,2) DEFAULT 0.00,
+  `dept_contribution_pct` decimal(5,2) DEFAULT 0.00,
+  `dept_contribution_amount` decimal(12,2) DEFAULT 0.00,
+  `beneficiary_contribution_pct` decimal(5,2) DEFAULT 0.00,
+  `beneficiary_contribution_amount` decimal(12,2) DEFAULT 0.00,
+  `work_done_percentage` int(3) NOT NULL DEFAULT 0,
+  `photo_1` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `photo_2` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `advanced_programmes`
 --
 
 CREATE TABLE `advanced_programmes` (
   `id` int(11) NOT NULL,
   `range_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
   `date` date NOT NULL,
   `task` text NOT NULL,
   `place` varchar(255) NOT NULL,
@@ -41,10 +72,10 @@ CREATE TABLE `advanced_programmes` (
 -- Dumping data for table `advanced_programmes`
 --
 
-INSERT INTO `advanced_programmes` (`id`, `range_id`, `date`, `task`, `place`, `distance`, `time_duration`) VALUES
-(3, 1, '2026-07-10', 'test', 'uppuveli', '0.00', '09.00 am - 11.00 am'),
-(4, 1, '2026-07-10', 'test', 'uppuveli', '0.00', '09.00 am - 11.00 am'),
-(5, 1, '2026-07-23', 'Test Advanced Programme', 'uppuveli', '0.00', '09.00 am - 11.00 am');
+INSERT INTO `advanced_programmes` (`id`, `range_id`, `user_id`, `date`, `task`, `place`, `distance`, `time_duration`) VALUES
+(3, 1, NULL, '2026-07-10', 'test', 'uppuveli', '0.00', '09.00 am - 11.00 am'),
+(4, 1, NULL, '2026-07-10', 'test', 'uppuveli', '0.00', '09.00 am - 11.00 am'),
+(5, 1, NULL, '2026-07-23', 'Test Advanced Programme', 'uppuveli', '0.00', '09.00 am - 11.00 am');
 
 -- --------------------------------------------------------
 
@@ -143,6 +174,163 @@ INSERT INTO `animal_health_records` (`id`, `range_id`, `date`, `farmer_reg_no`, 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `animal_identifications`
+--
+
+CREATE TABLE `animal_identifications` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `district` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `vs_range` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farmer_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `range_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `animal_seq_no` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `ear_tag_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `voucher_serial_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `identification_date` date NOT NULL,
+  `gender` enum('Male','Female') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Female',
+  `colour` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `species` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Cattle',
+  `breed` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `age` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `purpose` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Dairy',
+  `io_number` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `present_status` enum('Active','Sold or transferred','Slaughter','Died','Tag Damaged / Removed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Sold or transferred',
+  `status_date` date DEFAULT NULL,
+  `remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `animal_identifications`
+--
+
+INSERT INTO `animal_identifications` (`id`, `district_id`, `district`, `range_id`, `vs_range`, `farmer_name`, `farm_reg_no`, `range_code`, `animal_seq_no`, `ear_tag_no`, `voucher_serial_no`, `identification_date`, `gender`, `colour`, `species`, `breed`, `age`, `purpose`, `io_number`, `present_status`, `status_date`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(11, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '001', '531412345001', 'A-339222', '2026-10-15', 'Female', 'Brown', 'Cattle', 'Jersey Cross', '5 Yrs', 'Dairy Production', '', 'Tag Damaged / Removed', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-15 15:26:12', '2026-10-16 14:15:31'),
+(12, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '002', '531412345002', 'A-339102', '2026-07-15', 'Female', 'Fawn', 'Cattle', 'European Friesian', '6 Yrs', 'Dairy Production', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(13, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '003', '531412345003', 'A-339103', '2026-07-15', 'Female', 'Black & White', 'Cattle', 'Jersey Cross', '4 Yrs', 'Dairy Production', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(14, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '004', '531412345004', 'A-339104', '2026-07-15', 'Female', 'Brown', 'Cattle', 'European Friesian', '5 Yrs', 'Dairy Production', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(15, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '005', '531412345005', 'A-339105', '2026-07-15', 'Female', 'Fawn', 'Cattle', 'Jersey Cross', '6 Yrs', 'Dairy Production', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(16, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '006', '531412345006', 'A-339106', '2026-07-15', 'Female', 'Black & White', 'Cattle', 'European Friesian', '4 Yrs', 'Dairy Production', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(17, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '007', '531412345007', 'A-339107', '2026-07-15', 'Female', 'Brown', 'Cattle', 'Jersey Cross', '5 Yrs', 'Dairy Production', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(18, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '008', '531412345008', 'A-339108', '2026-07-15', 'Female', 'Fawn', 'Cattle', 'European Friesian', '6 Yrs', 'Dairy Production', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(19, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '009', '531412345009', 'A-339109', '2026-07-15', 'Female', 'Black & White', 'Cattle', 'Jersey Cross', '4 Yrs', 'Dairy Production', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(20, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '010', '531412345010', 'A-339110', '2026-07-15', 'Female', 'Brown', 'Cattle', 'European Friesian', '5 Yrs', 'Dairy Production', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(21, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '011', '531412345011', 'A-339111', '2026-07-15', 'Female', 'Fawn', 'Cattle', 'Jersey Cross', '6 Yrs', 'Dairy Production', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(22, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '012', '531412345012', 'A-339112', '2026-07-15', 'Female', 'Black & White', 'Cattle', 'European Friesian', '4 Yrs', 'Dairy Production', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(23, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '013', '531412345013', 'A-339113', '2026-07-15', 'Female', 'Brown', 'Cattle', 'Jersey Cross', '5 Yrs', 'Dairy Production', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(24, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '014', '531412345014', 'A-339114', '2026-07-15', 'Female', 'Fawn', 'Cattle', 'European Friesian', '6 Yrs', 'Dairy Production', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(25, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '015', '531412345015', 'A-339115', '2026-07-15', 'Female', 'Black & White', 'Cattle', 'Jersey Cross', '4 Yrs', 'Dairy Production', 'IO-AMP-2026-10', 'Sold or transferred', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(26, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '016', '531412345016', 'A-339116', '2026-07-15', 'Female', 'Brown', 'Cattle', 'European Friesian', '5 Yrs', 'Dairy Production', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(27, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '017', '531412345017', 'A-339117', '2026-07-15', 'Female', 'Fawn', 'Cattle', 'Jersey Cross', '6 Yrs', 'Dairy Production', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(28, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '018', '531412345018', 'A-339118', '2026-07-15', 'Female', 'Black & White', 'Cattle', 'European Friesian', '4 Yrs', 'Dairy Production', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(29, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '019', '531412345019', 'A-339119', '2026-07-15', 'Female', 'Brown', 'Cattle', 'Jersey Cross', '5 Yrs', 'Dairy Production', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(30, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '020', '531412345020', 'A-339120', '2026-07-15', 'Female', 'Fawn', 'Cattle', 'European Friesian', '6 Yrs', 'Dairy Production', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Cow (Milking)', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(31, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '021', '531412345021', 'A-339121', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '7 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(32, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '022', '531412345022', 'A-339122', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '8 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(33, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '023', '531412345023', 'A-339123', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '9 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(34, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '024', '531412345024', 'A-339124', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '7 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(35, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '025', '531412345025', 'A-339125', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '8 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(36, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '026', '531412345026', 'A-339126', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '9 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(37, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '027', '531412345027', 'A-339127', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '7 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(38, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '028', '531412345028', 'A-339128', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '8 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(39, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '029', '531412345029', 'A-339129', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '9 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(40, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '030', '531412345030', 'A-339130', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '7 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-10', 'Slaughter', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(41, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '031', '531412345031', 'A-339131', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '8 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(42, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '032', '531412345032', 'A-339132', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '9 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(43, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '033', '531412345033', 'A-339133', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '7 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(44, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '034', '531412345034', 'A-339134', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '8 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(45, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '035', '531412345035', 'A-339135', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '9 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-10', 'Sold or transferred', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(46, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '036', '531412345036', 'A-339136', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '7 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(47, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '037', '531412345037', 'A-339137', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '8 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(48, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '038', '531412345038', 'A-339138', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '9 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-13', 'Died', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(49, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '039', '531412345039', 'A-339139', '2026-08-10', 'Female', 'Dark Brown', 'Cattle', 'European Local Cross', '7 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(50, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '040', '531412345040', 'A-339140', '2026-08-10', 'Female', 'Brown & White', 'Cattle', 'European Local Cross', '8 Yrs', 'Dairy (Dry)', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Unproductive Cow', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(51, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '041', '531412345041', 'A-339141', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(52, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '042', '531412345042', 'A-339142', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(53, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '043', '531412345043', 'A-339143', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(54, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '044', '531412345044', 'A-339144', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(55, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '045', '531412345045', 'A-339145', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(56, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '046', '531412345046', 'A-339146', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(57, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '047', '531412345047', 'A-339147', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(58, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '048', '531412345048', 'A-339148', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(59, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '049', '531412345049', 'A-339149', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(60, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '050', '531412345050', 'A-339150', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(61, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '051', '531412345051', 'A-339151', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-11', 'Slaughter', '2026-10-19', 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-19 06:58:03'),
+(62, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '052', '531412345052', 'A-339152', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(63, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '053', '531412345053', 'A-339153', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(64, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '054', '531412345054', 'A-339154', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(65, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '055', '531412345055', 'A-339155', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-10', 'Sold or transferred', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(66, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '056', '531412345056', 'A-339156', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(67, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '057', '531412345057', 'A-339157', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(68, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '058', '531412345058', 'A-339158', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(69, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '059', '531412345059', 'A-339159', '2026-08-22', 'Female', 'Fawn', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(70, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '060', '531412345060', 'A-339160', '2026-08-22', 'Female', 'Black & White', 'Cattle', 'European Friesian', '1.5 - 2 Yrs', 'Breeding / Replacement', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Heifer', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(71, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '061', '531412345061', 'A-339161', '2026-09-05', 'Female', 'Black & White', 'Cattle', 'European Cross', '7 Mos', 'Rearing / Replacement', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(72, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '062', '531412345062', 'A-339162', '2026-09-05', 'Female', 'Brown', 'Cattle', 'European Cross', '8 Mos', 'Rearing / Replacement', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(73, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '063', '531412345063', 'A-339163', '2026-09-05', 'Female', 'White', 'Cattle', 'European Cross', '9 Mos', 'Rearing / Replacement', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(74, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '064', '531412345064', 'A-339164', '2026-09-05', 'Female', 'Black & White', 'Cattle', 'European Cross', '10 Mos', 'Rearing / Replacement', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(75, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '065', '531412345065', 'A-339165', '2026-09-05', 'Female', 'Brown', 'Cattle', 'European Cross', '6 Mos', 'Rearing / Replacement', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(76, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '066', '531412345066', 'A-339166', '2026-09-05', 'Female', 'White', 'Cattle', 'European Cross', '7 Mos', 'Rearing / Replacement', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(77, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '067', '531412345067', 'A-339167', '2026-09-05', 'Female', 'Black & White', 'Cattle', 'European Cross', '8 Mos', 'Rearing / Replacement', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(78, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '068', '531412345068', 'A-339168', '2026-09-05', 'Female', 'Brown', 'Cattle', 'European Cross', '9 Mos', 'Rearing / Replacement', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(79, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '069', '531412345069', 'A-339169', '2026-09-05', 'Female', 'White', 'Cattle', 'European Cross', '10 Mos', 'Rearing / Replacement', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(80, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '070', '531412345070', 'A-339170', '2026-09-05', 'Female', 'Black & White', 'Cattle', 'European Cross', '6 Mos', 'Rearing / Replacement', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(81, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '071', '531412345071', 'A-339171', '2026-09-05', 'Female', 'Brown', 'Cattle', 'European Cross', '7 Mos', 'Rearing / Replacement', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(82, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '072', '531412345072', 'A-339172', '2026-09-05', 'Female', 'White', 'Cattle', 'European Cross', '8 Mos', 'Rearing / Replacement', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(83, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '073', '531412345073', 'A-339173', '2026-09-05', 'Female', 'Black & White', 'Cattle', 'European Cross', '9 Mos', 'Rearing / Replacement', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(84, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '074', '531412345074', 'A-339174', '2026-09-05', 'Female', 'Brown', 'Cattle', 'European Cross', '10 Mos', 'Rearing / Replacement', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(85, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '075', '531412345075', 'A-339175', '2026-09-05', 'Female', 'White', 'Cattle', 'European Cross', '6 Mos', 'Rearing / Replacement', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(86, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '076', '531412345076', 'A-339176', '2026-09-05', 'Female', 'Black & White', 'Cattle', 'European Cross', '7 Mos', 'Rearing / Replacement', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(87, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '077', '531412345077', 'A-339177', '2026-09-05', 'Female', 'Brown', 'Cattle', 'European Cross', '8 Mos', 'Rearing / Replacement', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(88, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '078', '531412345078', 'A-339178', '2026-09-05', 'Female', 'White', 'Cattle', 'European Cross', '9 Mos', 'Rearing / Replacement', 'IO-AMP-2026-13', 'Died', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(89, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '079', '531412345079', 'A-339179', '2026-09-05', 'Female', 'Black & White', 'Cattle', 'European Cross', '10 Mos', 'Rearing / Replacement', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(90, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '080', '531412345080', 'A-339180', '2026-09-05', 'Female', 'Brown', 'Cattle', 'European Cross', '6 Mos', 'Rearing / Replacement', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Female Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(91, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '081', '531412345081', 'A-339181', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '3 Yrs', 'Breeding Sire', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(92, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '082', '531412345082', 'A-339182', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '4 Yrs', 'Breeding Sire', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(93, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '083', '531412345083', 'A-339183', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '5 Yrs', 'Breeding Sire', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(94, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '084', '531412345084', 'A-339184', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '3 Yrs', 'Breeding Sire', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(95, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '085', '531412345085', 'A-339185', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '4 Yrs', 'Breeding Sire', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(96, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '086', '531412345086', 'A-339186', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '5 Yrs', 'Breeding Sire', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(97, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '087', '531412345087', 'A-339187', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '3 Yrs', 'Breeding Sire', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(98, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '088', '531412345088', 'A-339188', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '4 Yrs', 'Breeding Sire', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(99, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '089', '531412345089', 'A-339189', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '5 Yrs', 'Breeding Sire', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(100, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '090', '531412345090', 'A-339190', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '3 Yrs', 'Breeding Sire', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(101, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '091', '531412345091', 'A-339191', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '4 Yrs', 'Breeding Sire', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(102, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '092', '531412345092', 'A-339192', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '5 Yrs', 'Breeding Sire', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(103, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '093', '531412345093', 'A-339193', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '3 Yrs', 'Breeding Sire', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(104, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '094', '531412345094', 'A-339194', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '4 Yrs', 'Breeding Sire', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(105, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '095', '531412345095', 'A-339195', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '5 Yrs', 'Breeding Sire', 'IO-AMP-2026-10', 'Sold or transferred', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(106, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '096', '531412345096', 'A-339196', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '3 Yrs', 'Breeding Sire', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(107, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '097', '531412345097', 'A-339197', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '4 Yrs', 'Breeding Sire', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(108, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '098', '531412345098', 'A-339198', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '5 Yrs', 'Breeding Sire', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(109, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '099', '531412345099', 'A-339199', '2026-09-18', 'Male', 'Brown', 'Cattle', 'European Friesian Sire', '3 Yrs', 'Breeding Sire', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(110, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '100', '531412345100', 'A-339200', '2026-09-18', 'Male', 'Black', 'Cattle', 'European Friesian Sire', '4 Yrs', 'Breeding Sire', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Bull', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(111, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '101', '531412345101', 'A-339201', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '5 Mos', 'Fattening / Rearing', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(112, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '102', '531412345102', 'A-339202', '2026-10-02', 'Male', 'Black & White', 'Cattle', 'European Cross', '6 Mos', 'Fattening / Rearing', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(113, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '103', '531412345103', 'A-339203', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '7 Mos', 'Fattening / Rearing', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(114, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '104', '531412345104', 'A-339204', '2026-10-02', 'Male', 'Black & White', 'Cattle', 'European Cross', '4 Mos', 'Fattening / Rearing', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(115, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '105', '531412345105', 'A-339205', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '5 Mos', 'Fattening / Rearing', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(116, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '106', '531412345106', 'A-339206', '2026-10-02', 'Male', 'Black & White', 'Cattle', 'European Cross', '6 Mos', 'Fattening / Rearing', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(117, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '107', '531412345107', 'A-339207', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '7 Mos', 'Fattening / Rearing', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(118, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '108', '531412345108', 'A-339208', '2026-10-02', 'Male', 'Black & White', 'Cattle', 'European Cross', '4 Mos', 'Fattening / Rearing', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(119, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '109', '531412345109', 'A-339209', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '5 Mos', 'Fattening / Rearing', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(120, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '110', '531412345110', 'A-339210', '2026-10-02', 'Male', 'Black & White', 'Cattle', 'European Cross', '6 Mos', 'Fattening / Rearing', 'IO-AMP-2026-10', 'Sold or transferred', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(121, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '111', '531412345111', 'A-339211', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '7 Mos', 'Fattening / Rearing', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(122, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '112', '531412345112', 'A-339212', '2026-10-02', 'Male', 'Black & White', 'Cattle', 'European Cross', '4 Mos', 'Fattening / Rearing', 'IO-AMP-2026-12', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(123, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '113', '531412345113', 'A-339213', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '5 Mos', 'Fattening / Rearing', 'IO-AMP-2026-13', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(124, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '114', '531412345114', 'A-339214', '2026-10-02', 'Male', 'Black & White', 'Cattle', 'European Cross', '6 Mos', 'Fattening / Rearing', 'IO-AMP-2026-14', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(125, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '115', '531412345115', 'A-339215', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '7 Mos', 'Fattening / Rearing', 'IO-AMP-2026-10', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(126, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '116', '531412345116', 'A-339216', '2026-10-02', 'Male', 'Black & White', 'Cattle', 'European Cross', '4 Mos', 'Fattening / Rearing', 'IO-AMP-2026-11', 'Active', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31'),
+(127, 1, 'Ampara', 1, 'Ampara', 'A.M.S. Perera', '530112345', '5314', '117', '531412345117', 'A-339217', '2026-10-02', 'Male', 'Brown', 'Cattle', 'European Cross', '5 Mos', 'Fattening / Rearing', 'IO-AMP-2026-12', 'Tag Damaged / Removed', NULL, 'Sample census matching animal_branding.php - Male Calf', 19, '2026-10-16 14:15:31', '2026-10-19 14:28:24');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `animal_populations`
 --
 
@@ -183,6 +371,76 @@ INSERT INTO `animal_populations` (`id`, `range_id`, `year`, `animal_type`, `quan
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `annual_breeding_targets`
+--
+
+CREATE TABLE `annual_breeding_targets` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `year` int(11) NOT NULL,
+  `target_ai_service` int(11) NOT NULL DEFAULT 0,
+  `target_pd_examination` int(11) NOT NULL DEFAULT 0,
+  `target_calf_register` int(11) NOT NULL DEFAULT 0,
+  `target_castration_cattle` int(11) NOT NULL DEFAULT 0,
+  `target_castration_goat` int(11) NOT NULL DEFAULT 0,
+  `target_issue_she_goats` int(11) NOT NULL DEFAULT 0,
+  `target_issue_stud_goats` int(11) DEFAULT 0,
+  `target_issue_heifers_cows` int(11) NOT NULL DEFAULT 0,
+  `target_issue_bull_calves` int(11) NOT NULL DEFAULT 0,
+  `target_issue_buffalo_heifers` int(11) DEFAULT 0,
+  `target_issue_buffalo_bull_calves` int(11) NOT NULL DEFAULT 0,
+  `target_issue_do_chicks` int(11) NOT NULL DEFAULT 0,
+  `target_issue_mo_chicks` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `annual_breeding_targets`
+--
+
+INSERT INTO `annual_breeding_targets` (`id`, `range_id`, `year`, `target_ai_service`, `target_pd_examination`, `target_calf_register`, `target_castration_cattle`, `target_castration_goat`, `target_issue_she_goats`, `target_issue_stud_goats`, `target_issue_heifers_cows`, `target_issue_bull_calves`, `target_issue_buffalo_heifers`, `target_issue_buffalo_bull_calves`, `target_issue_do_chicks`, `target_issue_mo_chicks`, `created_at`, `updated_at`) VALUES
+(1, 1, 2026, 250, 250, 150, 10, 10, 5, 5, 5, 5, 3, 2, 2000, 300, '2026-09-21 14:43:30', '2026-09-27 10:11:47');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `annual_extension_targets`
+--
+
+CREATE TABLE `annual_extension_targets` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `year` int(11) NOT NULL,
+  `target_trainings_conducted` int(11) NOT NULL DEFAULT 25,
+  `target_farmers_sent_training` int(11) NOT NULL DEFAULT 100,
+  `target_attending_training` int(11) NOT NULL DEFAULT 10,
+  `target_pasture_unit_est` int(11) NOT NULL DEFAULT 3,
+  `target_financial_access` int(11) NOT NULL DEFAULT 0,
+  `target_farmer_society_est` int(11) NOT NULL DEFAULT 0,
+  `target_mobile_clinic_conducted` int(11) NOT NULL DEFAULT 24,
+  `target_exhibition_conducted` int(11) NOT NULL DEFAULT 3,
+  `target_field_days_conducted` int(11) NOT NULL DEFAULT 50,
+  `target_poultry_farm_reg` int(11) NOT NULL DEFAULT 100,
+  `target_cattle_farm_reg` int(11) NOT NULL DEFAULT 100,
+  `target_new_farm_reg` int(11) NOT NULL DEFAULT 12,
+  `target_monthly_reports` int(11) NOT NULL DEFAULT 12,
+  `target_animal_identification` int(11) NOT NULL DEFAULT 100,
+  `target_data_collection` int(11) NOT NULL DEFAULT 5,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `annual_extension_targets`
+--
+
+INSERT INTO `annual_extension_targets` (`id`, `range_id`, `year`, `target_trainings_conducted`, `target_farmers_sent_training`, `target_attending_training`, `target_pasture_unit_est`, `target_financial_access`, `target_farmer_society_est`, `target_mobile_clinic_conducted`, `target_exhibition_conducted`, `target_field_days_conducted`, `target_poultry_farm_reg`, `target_cattle_farm_reg`, `target_new_farm_reg`, `target_monthly_reports`, `target_animal_identification`, `target_data_collection`, `created_at`, `updated_at`) VALUES
+(1, 1, 2026, 25, 100, 10, 3, 0, 0, 24, 3, 50, 100, 100, 12, 12, 100, 5, '2026-09-27 10:55:42', '2026-09-27 10:55:42');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `annual_feed_production`
 --
 
@@ -208,7 +466,8 @@ CREATE TABLE `annual_feed_production` (
 
 INSERT INTO `annual_feed_production` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `feed_mill_name`, `proprietor_details`, `category_type`, `produced_qty_mt_month`, `raw_materials_source`, `market_outlets`, `created_by`, `created_at`) VALUES
 (4, 1, 1, 2026, NULL, 'test', 'test', 'pig', '5.00', 'Local', '', 19, '2026-08-12 11:03:50'),
-(5, 1, 1, 2026, NULL, 'Trincomalee', 'Test, test address', 'cattle', '20.00', 'Local', 'market', 19, '2026-09-14 09:12:37');
+(5, 1, 1, 2026, NULL, 'Trincomalee', 'Test, test address', 'cattle', '20.00', 'Local', 'market', 19, '2026-09-14 09:12:37'),
+(6, 1, 1, 2026, 10, 'test', 'test', 'cattle', '70.00', 'Local', '', 19, '2026-10-19 07:17:35');
 
 -- --------------------------------------------------------
 
@@ -457,7 +716,9 @@ CREATE TABLE `annual_vaccination_targets` (
   `target_fmd` int(11) DEFAULT 0,
   `target_bq` int(11) DEFAULT 0,
   `target_hs` int(11) DEFAULT 0,
+  `target_rabies` int(11) DEFAULT 0,
   `target_poultry_doses` int(11) NOT NULL DEFAULT 0,
+  `poultry_targets_json` text DEFAULT NULL,
   `available_ldo_count` int(11) DEFAULT 0,
   `allocated_ldo_target` int(11) DEFAULT 0,
   `casual_vaccinators_needed` int(11) DEFAULT 0,
@@ -474,12 +735,12 @@ CREATE TABLE `annual_vaccination_targets` (
 -- Dumping data for table `annual_vaccination_targets`
 --
 
-INSERT INTO `annual_vaccination_targets` (`id`, `year`, `range_id`, `assigned_vaccinator_id`, `target_fmd`, `target_bq`, `target_hs`, `target_poultry_doses`, `available_ldo_count`, `allocated_ldo_target`, `casual_vaccinators_needed`, `allocated_man_days`, `syringes_10cc_req`, `needles_14g_dozen_req`, `fuel_liters_per_month`, `created_at`, `updated_at`, `animal_type`) VALUES
-(1, 2026, 1, 5, 8, 6, 6, 0, 4, 8, 7, 10, 5, 5, '5.00', '2026-07-06 10:42:28', '2026-07-09 08:24:51', 'Others'),
-(6, 2026, 1, 4, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, '0.00', '2026-07-06 13:11:59', '2026-07-09 08:06:08', 'Cow'),
-(7, 2026, 1, 2, 60, 60, 60, 0, 2, 2, 1, 5, 0, 0, '0.00', '2026-07-09 08:26:37', '2026-09-14 09:35:32', 'Buffalo'),
-(8, 2026, 1, 3, 0, 0, 0, 8000, 0, 0, 1, 0, 0, 0, '0.00', '2026-07-09 08:26:53', '2026-09-16 05:55:15', 'Chicken'),
-(9, 2026, 1, 3, 100, 9, 9, 0, 70, 70, 1, 8, 0, 0, '0.00', '2026-07-22 09:22:42', '2026-09-16 04:25:55', 'Goat');
+INSERT INTO `annual_vaccination_targets` (`id`, `year`, `range_id`, `assigned_vaccinator_id`, `target_fmd`, `target_bq`, `target_hs`, `target_rabies`, `target_poultry_doses`, `poultry_targets_json`, `available_ldo_count`, `allocated_ldo_target`, `casual_vaccinators_needed`, `allocated_man_days`, `syringes_10cc_req`, `needles_14g_dozen_req`, `fuel_liters_per_month`, `created_at`, `updated_at`, `animal_type`) VALUES
+(1, 2026, 1, 5, 8, 6, 6, 0, 0, NULL, 4, 8, 7, 10, 5, 5, '5.00', '2026-07-06 10:42:28', '2026-07-09 08:24:51', 'Others'),
+(6, 2026, 1, 4, 4200, 2350, 3100, 450, 0, NULL, 0, 0, 1, 0, 0, 0, '0.00', '2026-07-06 13:11:59', '2026-09-21 15:18:08', 'Cow'),
+(7, 2026, 1, 2, 60, 60, 60, 0, 0, NULL, 2, 2, 1, 5, 0, 0, '0.00', '2026-07-09 08:26:37', '2026-09-14 09:35:32', 'Buffalo'),
+(8, 2026, 1, 3, 0, 0, 0, 0, 118000, '{\"Ranikhet Primary\":46000,\"Ranikhet Booster\":46000,\"Fowl Pox\":10500,\"Gumboro\":15500}', 0, 0, 1, 0, 0, 0, '0.00', '2026-07-09 08:26:53', '2026-09-21 15:18:08', 'Chicken'),
+(9, 2026, 1, 3, 100, 9, 9, 0, 0, NULL, 70, 70, 1, 8, 0, 0, '0.00', '2026-07-22 09:22:42', '2026-09-16 04:25:55', 'Goat');
 
 -- --------------------------------------------------------
 
@@ -646,7 +907,44 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (315, '2026-09-16 04:11:29', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
 (316, '2026-09-16 09:05:26', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
 (317, '2026-09-17 06:43:02', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
-(318, '2026-09-17 06:55:57', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer');
+(318, '2026-09-17 06:55:57', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(319, '2026-09-21 09:30:00', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(320, '2026-09-21 14:00:37', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(321, '2026-09-22 04:51:18', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(322, '2026-09-23 06:41:38', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(323, '2026-09-25 05:03:20', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(324, '2026-09-27 06:30:39', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(325, '2026-09-29 10:03:21', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(326, '2026-09-29 15:00:38', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(327, '2026-10-06 05:34:27', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(328, '2026-10-12 06:03:39', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(329, '2026-10-13 08:07:05', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: administrator'),
+(330, '2026-10-13 09:00:24', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(331, '2026-10-13 13:42:10', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(332, '2026-10-14 05:15:20', 65, 'District Deputy Director (H/Q1)', 'deputy_director_hq_1', 'LOGIN', NULL, '0', 65, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_hq_1'),
+(333, '2026-10-14 05:16:25', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(334, '2026-10-16 07:54:51', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(335, '2026-10-16 09:06:52', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(336, '2026-10-16 10:14:59', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(337, '2026-10-16 10:21:08', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(338, '2026-10-16 10:31:38', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(339, '2026-10-16 10:56:30', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(340, '2026-10-16 12:56:11', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(341, '2026-10-17 09:23:01', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(342, '2026-10-17 10:43:50', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(343, '2026-10-19 04:33:19', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(344, '2026-10-19 05:31:31', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(345, '2026-10-19 06:26:14', 18, 'Provincial director', 'provincial_director', 'LOGIN', NULL, '0', 18, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: provincial_director'),
+(346, '2026-10-19 06:40:50', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(347, '2026-10-19 08:16:18', 65, 'District Deputy Director (H/Q1)', 'deputy_director_hq_1', 'LOGIN', NULL, '0', 65, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_hq_1'),
+(348, '2026-10-19 08:16:43', 66, 'Planning Deputy Director (H/Q2)', 'deputy_director_hq_2', 'LOGIN', NULL, '0', 66, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_hq_2'),
+(349, '2026-10-19 08:17:06', 7, 'adminstrator', 'administrator', 'LOGIN', NULL, '0', 7, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: administrator'),
+(350, '2026-10-19 08:17:42', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_district'),
+(351, '2026-10-19 08:56:42', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(352, '2026-10-19 08:58:42', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_district'),
+(353, '2026-10-19 09:38:25', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_district'),
+(354, '2026-10-19 10:13:40', 64, 'District Deputy Director (Ampara)', 'district_dd', 'UPDATE_QUICK_ACTION_', NULL, '0', 0, NULL, '[\"range_statistics\",\"annual_targets\",\"monthly_annual_reports\",\"regulatory_functions\",\"animal_health\",\"clinical_services\",\"animal_breeding\",\"dairy_hub\",\"projects_monitoring\",\"accounts\",\"clean_sri_lanka\",\"trainings\"]', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'District DD updated task assignments for All Government Veterinary Surgeons across Ampara District (12 actions assigned district-wide)'),
+(355, '2026-10-19 10:15:44', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer');
 
 -- --------------------------------------------------------
 
@@ -814,11 +1112,15 @@ CREATE TABLE `cash_book_summaries` (
   `range_id` int(11) NOT NULL,
   `report_year` year(4) NOT NULL,
   `report_month` tinyint(4) NOT NULL COMMENT '1 to 12 for Jan to Dec',
+  `receipt_no` varchar(100) DEFAULT NULL,
+  `receipt_date` date DEFAULT NULL,
+  `client_name` varchar(255) DEFAULT NULL,
   `item_name` varchar(255) NOT NULL COMMENT 'e.g., Consultation fee, Day old chicks, Semen straws',
   `quantity_sold` int(11) NOT NULL DEFAULT 0,
   `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
   `total_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
   `amount_deposited` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `leaf_issue_id` int(11) DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -828,9 +1130,10 @@ CREATE TABLE `cash_book_summaries` (
 -- Dumping data for table `cash_book_summaries`
 --
 
-INSERT INTO `cash_book_summaries` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `item_name`, `quantity_sold`, `unit_price`, `total_amount`, `amount_deposited`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 2026, 6, 'Wound ress', 2, '100.00', '200.00', '200.00', 19, '2026-07-13 05:20:01', '2026-07-13 05:20:01'),
-(2, 1, 1, 2026, 1, 'Wound ress', 90, '70.00', '6300.00', '6300.00', 19, '2026-07-22 09:36:21', '2026-07-22 09:36:43');
+INSERT INTO `cash_book_summaries` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `receipt_no`, `receipt_date`, `client_name`, `item_name`, `quantity_sold`, `unit_price`, `total_amount`, `amount_deposited`, `leaf_issue_id`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 6, NULL, NULL, NULL, 'Wound ress', 2, '100.00', '200.00', '200.00', NULL, 19, '2026-07-13 05:20:01', '2026-07-13 05:20:01'),
+(2, 1, 1, 2026, 1, NULL, NULL, NULL, 'Wound ress', 90, '70.00', '6300.00', '6300.00', NULL, 19, '2026-07-22 09:36:21', '2026-07-22 09:36:43'),
+(3, 1, 1, 2026, 1, NULL, NULL, NULL, 'Poultry -Bird post mortems', 100, '70.00', '7000.00', '80.00', NULL, 19, '2026-09-28 12:49:44', '2026-09-28 12:49:44');
 
 -- --------------------------------------------------------
 
@@ -858,6 +1161,193 @@ INSERT INTO `casual_vaccinator_deployments` (`id`, `full_name`, `nic_no`, `range
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `cattle_vouchers`
+--
+
+CREATE TABLE `cattle_vouchers` (
+  `id` int(11) NOT NULL,
+  `tag_program_id` int(11) NOT NULL,
+  `farmer_id` int(11) DEFAULT NULL,
+  `owner_title` varchar(20) DEFAULT 'Mr.',
+  `farmer_name` varchar(255) DEFAULT NULL,
+  `farmer_address` text DEFAULT NULL,
+  `farmer_nic` varchar(50) NOT NULL,
+  `farm_reg_no` varchar(100) DEFAULT NULL,
+  `province` varchar(100) DEFAULT NULL,
+  `district` varchar(100) DEFAULT NULL,
+  `ds_division` varchar(100) DEFAULT NULL,
+  `vs_division` varchar(100) DEFAULT NULL,
+  `gn_division` varchar(100) DEFAULT NULL,
+  `range_id` int(11) NOT NULL,
+  `ear_tag_number` varchar(100) NOT NULL,
+  `identification_date` date DEFAULT NULL,
+  `species` varchar(50) DEFAULT 'Cattle',
+  `voucher_number` varchar(100) NOT NULL,
+  `breed` varchar(100) NOT NULL,
+  `colour` varchar(100) DEFAULT NULL,
+  `sex` varchar(50) NOT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `age` varchar(50) NOT NULL,
+  `specific_marks` text DEFAULT NULL,
+  `issue_date` date NOT NULL,
+  `status` enum('Active','Transferred','Dead','Slaughtered','Damaged') DEFAULT 'Active',
+  `vs_name` varchar(150) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `cattle_vouchers`
+--
+
+INSERT INTO `cattle_vouchers` (`id`, `tag_program_id`, `farmer_id`, `owner_title`, `farmer_name`, `farmer_address`, `farmer_nic`, `farm_reg_no`, `province`, `district`, `ds_division`, `vs_division`, `gn_division`, `range_id`, `ear_tag_number`, `identification_date`, `species`, `voucher_number`, `breed`, `colour`, `sex`, `date_of_birth`, `age`, `specific_marks`, `issue_date`, `status`, `vs_name`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(11, 0, NULL, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345001', NULL, 'Cattle', 'A-339222', 'Indian', NULL, 'Female', NULL, '3', NULL, '2026-10-15', 'Damaged', NULL, NULL, 19, '2026-10-15 15:26:12', '2026-10-19 14:04:53'),
+(12, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345002', NULL, 'Cattle', 'A-339102', 'European Friesian', NULL, 'Female', NULL, '6', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(13, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345003', NULL, 'Cattle', 'A-339103', 'Jersey Cross', NULL, 'Female', NULL, '4', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(14, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345004', NULL, 'Cattle', 'A-339104', 'European Friesian', NULL, 'Female', NULL, '5', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(15, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345005', NULL, 'Cattle', 'A-339105', 'Jersey Cross', NULL, 'Female', NULL, '6', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(16, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345006', NULL, 'Cattle', 'A-339106', 'European Friesian', NULL, 'Female', NULL, '4', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(17, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345007', NULL, 'Cattle', 'A-339107', 'Jersey Cross', NULL, 'Female', NULL, '5', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(18, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345008', NULL, 'Cattle', 'A-339108', 'European Friesian', NULL, 'Female', NULL, '6', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(19, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345009', NULL, 'Cattle', 'A-339109', 'Jersey Cross', NULL, 'Female', NULL, '4', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(20, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345010', NULL, 'Cattle', 'A-339110', 'European Friesian', NULL, 'Female', NULL, '5', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(21, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345011', NULL, 'Cattle', 'A-339111', 'Jersey Cross', NULL, 'Female', NULL, '6', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(22, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345012', NULL, 'Cattle', 'A-339112', 'European Friesian', NULL, 'Female', NULL, '4', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(23, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345013', NULL, 'Cattle', 'A-339113', 'Jersey Cross', NULL, 'Female', NULL, '5', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(24, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345014', NULL, 'Cattle', 'A-339114', 'European Friesian', NULL, 'Female', NULL, '6', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(25, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345015', NULL, 'Cattle', 'A-339115', 'Jersey Cross', NULL, 'Female', NULL, '4', NULL, '2026-07-15', '', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(26, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345016', NULL, 'Cattle', 'A-339116', 'European Friesian', NULL, 'Female', NULL, '5', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(27, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345017', NULL, 'Cattle', 'A-339117', 'Jersey Cross', NULL, 'Female', NULL, '6', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(28, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345018', NULL, 'Cattle', 'A-339118', 'European Friesian', NULL, 'Female', NULL, '4', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(29, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345019', NULL, 'Cattle', 'A-339119', 'Jersey Cross', NULL, 'Female', NULL, '5', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(30, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345020', NULL, 'Cattle', 'A-339120', 'European Friesian', NULL, 'Female', NULL, '6', NULL, '2026-07-15', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(31, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345021', NULL, 'Cattle', 'A-339121', 'European Local Cross', NULL, 'Female', NULL, '7', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(32, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345022', NULL, 'Cattle', 'A-339122', 'European Local Cross', NULL, 'Female', NULL, '8', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(33, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345023', NULL, 'Cattle', 'A-339123', 'European Local Cross', NULL, 'Female', NULL, '9', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(34, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345024', NULL, 'Cattle', 'A-339124', 'European Local Cross', NULL, 'Female', NULL, '7', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(35, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345025', NULL, 'Cattle', 'A-339125', 'European Local Cross', NULL, 'Female', NULL, '8', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(36, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345026', NULL, 'Cattle', 'A-339126', 'European Local Cross', NULL, 'Female', NULL, '9', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(37, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345027', NULL, 'Cattle', 'A-339127', 'European Local Cross', NULL, 'Female', NULL, '7', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(38, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345028', NULL, 'Cattle', 'A-339128', 'European Local Cross', NULL, 'Female', NULL, '8', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(39, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345029', NULL, 'Cattle', 'A-339129', 'European Local Cross', NULL, 'Female', NULL, '9', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(40, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345030', NULL, 'Cattle', 'A-339130', 'European Local Cross', NULL, 'Female', NULL, '7', NULL, '2026-08-10', '', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(41, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345031', NULL, 'Cattle', 'A-339131', 'European Local Cross', NULL, 'Female', NULL, '8', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(42, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345032', NULL, 'Cattle', 'A-339132', 'European Local Cross', NULL, 'Female', NULL, '9', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(43, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345033', NULL, 'Cattle', 'A-339133', 'European Local Cross', NULL, 'Female', NULL, '7', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(44, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345034', NULL, 'Cattle', 'A-339134', 'European Local Cross', NULL, 'Female', NULL, '8', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(45, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345035', NULL, 'Cattle', 'A-339135', 'European Local Cross', NULL, 'Female', NULL, '9', NULL, '2026-08-10', '', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(46, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345036', NULL, 'Cattle', 'A-339136', 'European Local Cross', NULL, 'Female', NULL, '7', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(47, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345037', NULL, 'Cattle', 'A-339137', 'European Local Cross', NULL, 'Female', NULL, '8', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(48, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345038', NULL, 'Cattle', 'A-339138', 'European Local Cross', NULL, 'Female', NULL, '9', NULL, '2026-08-10', '', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(49, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345039', NULL, 'Cattle', 'A-339139', 'European Local Cross', NULL, 'Female', NULL, '7', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(50, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345040', NULL, 'Cattle', 'A-339140', 'European Local Cross', NULL, 'Female', NULL, '8', NULL, '2026-08-10', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(51, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345041', NULL, 'Cattle', 'A-339141', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(52, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345042', NULL, 'Cattle', 'A-339142', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(53, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345043', NULL, 'Cattle', 'A-339143', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(54, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345044', NULL, 'Cattle', 'A-339144', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(55, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345045', NULL, 'Cattle', 'A-339145', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(56, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345046', NULL, 'Cattle', 'A-339146', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(57, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345047', NULL, 'Cattle', 'A-339147', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(58, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345048', NULL, 'Cattle', 'A-339148', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(59, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345049', NULL, 'Cattle', 'A-339149', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(60, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345050', NULL, 'Cattle', 'A-339150', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(61, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345051', NULL, 'Cattle', 'A-339151', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Slaughtered', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(62, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345052', NULL, 'Cattle', 'A-339152', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(63, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345053', NULL, 'Cattle', 'A-339153', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(64, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345054', NULL, 'Cattle', 'A-339154', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(65, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345055', NULL, 'Cattle', 'A-339155', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', '', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(66, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345056', NULL, 'Cattle', 'A-339156', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(67, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345057', NULL, 'Cattle', 'A-339157', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(68, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345058', NULL, 'Cattle', 'A-339158', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(69, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345059', NULL, 'Cattle', 'A-339159', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(70, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345060', NULL, 'Cattle', 'A-339160', 'European Friesian', NULL, 'Female', NULL, '152', NULL, '2026-08-22', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(71, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345061', NULL, 'Cattle', 'A-339161', 'European Cross', NULL, 'Female', NULL, '7', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(72, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345062', NULL, 'Cattle', 'A-339162', 'European Cross', NULL, 'Female', NULL, '8', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(73, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345063', NULL, 'Cattle', 'A-339163', 'European Cross', NULL, 'Female', NULL, '9', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(74, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345064', NULL, 'Cattle', 'A-339164', 'European Cross', NULL, 'Female', NULL, '10', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(75, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345065', NULL, 'Cattle', 'A-339165', 'European Cross', NULL, 'Female', NULL, '6', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(76, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345066', NULL, 'Cattle', 'A-339166', 'European Cross', NULL, 'Female', NULL, '7', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(77, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345067', NULL, 'Cattle', 'A-339167', 'European Cross', NULL, 'Female', NULL, '8', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(78, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345068', NULL, 'Cattle', 'A-339168', 'European Cross', NULL, 'Female', NULL, '9', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(79, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345069', NULL, 'Cattle', 'A-339169', 'European Cross', NULL, 'Female', NULL, '10', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(80, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345070', NULL, 'Cattle', 'A-339170', 'European Cross', NULL, 'Female', NULL, '6', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(81, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345071', NULL, 'Cattle', 'A-339171', 'European Cross', NULL, 'Female', NULL, '7', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(82, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345072', NULL, 'Cattle', 'A-339172', 'European Cross', NULL, 'Female', NULL, '8', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(83, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345073', NULL, 'Cattle', 'A-339173', 'European Cross', NULL, 'Female', NULL, '9', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(84, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345074', NULL, 'Cattle', 'A-339174', 'European Cross', NULL, 'Female', NULL, '10', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(85, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345075', NULL, 'Cattle', 'A-339175', 'European Cross', NULL, 'Female', NULL, '6', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(86, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345076', NULL, 'Cattle', 'A-339176', 'European Cross', NULL, 'Female', NULL, '7', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(87, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345077', NULL, 'Cattle', 'A-339177', 'European Cross', NULL, 'Female', NULL, '8', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(88, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345078', NULL, 'Cattle', 'A-339178', 'European Cross', NULL, 'Female', NULL, '9', NULL, '2026-09-05', '', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(89, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345079', NULL, 'Cattle', 'A-339179', 'European Cross', NULL, 'Female', NULL, '10', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(90, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345080', NULL, 'Cattle', 'A-339180', 'European Cross', NULL, 'Female', NULL, '6', NULL, '2026-09-05', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(91, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345081', NULL, 'Cattle', 'A-339181', 'European Friesian Sire', NULL, 'Male', NULL, '3', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(92, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345082', NULL, 'Cattle', 'A-339182', 'European Friesian Sire', NULL, 'Male', NULL, '4', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(93, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345083', NULL, 'Cattle', 'A-339183', 'European Friesian Sire', NULL, 'Male', NULL, '5', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(94, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345084', NULL, 'Cattle', 'A-339184', 'European Friesian Sire', NULL, 'Male', NULL, '3', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(95, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345085', NULL, 'Cattle', 'A-339185', 'European Friesian Sire', NULL, 'Male', NULL, '4', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(96, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345086', NULL, 'Cattle', 'A-339186', 'European Friesian Sire', NULL, 'Male', NULL, '5', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(97, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345087', NULL, 'Cattle', 'A-339187', 'European Friesian Sire', NULL, 'Male', NULL, '3', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(98, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345088', NULL, 'Cattle', 'A-339188', 'European Friesian Sire', NULL, 'Male', NULL, '4', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(99, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345089', NULL, 'Cattle', 'A-339189', 'European Friesian Sire', NULL, 'Male', NULL, '5', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(100, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345090', NULL, 'Cattle', 'A-339190', 'European Friesian Sire', NULL, 'Male', NULL, '3', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(101, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345091', NULL, 'Cattle', 'A-339191', 'European Friesian Sire', NULL, 'Male', NULL, '4', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(102, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345092', NULL, 'Cattle', 'A-339192', 'European Friesian Sire', NULL, 'Male', NULL, '5', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(103, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345093', NULL, 'Cattle', 'A-339193', 'European Friesian Sire', NULL, 'Male', NULL, '3', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(104, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345094', NULL, 'Cattle', 'A-339194', 'European Friesian Sire', NULL, 'Male', NULL, '4', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(105, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345095', NULL, 'Cattle', 'A-339195', 'European Friesian Sire', NULL, 'Male', NULL, '5', NULL, '2026-09-18', '', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(106, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345096', NULL, 'Cattle', 'A-339196', 'European Friesian Sire', NULL, 'Male', NULL, '3', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(107, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345097', NULL, 'Cattle', 'A-339197', 'European Friesian Sire', NULL, 'Male', NULL, '4', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(108, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345098', NULL, 'Cattle', 'A-339198', 'European Friesian Sire', NULL, 'Male', NULL, '5', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(109, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345099', NULL, 'Cattle', 'A-339199', 'European Friesian Sire', NULL, 'Male', NULL, '3', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(110, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345100', NULL, 'Cattle', 'A-339200', 'European Friesian Sire', NULL, 'Male', NULL, '4', NULL, '2026-09-18', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(111, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345101', NULL, 'Cattle', 'A-339201', 'European Cross', NULL, 'Male', NULL, '5', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(112, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345102', NULL, 'Cattle', 'A-339202', 'European Cross', NULL, 'Male', NULL, '6', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(113, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345103', NULL, 'Cattle', 'A-339203', 'European Cross', NULL, 'Male', NULL, '7', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(114, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345104', NULL, 'Cattle', 'A-339204', 'European Cross', NULL, 'Male', NULL, '4', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(115, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345105', NULL, 'Cattle', 'A-339205', 'European Cross', NULL, 'Male', NULL, '5', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(116, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345106', NULL, 'Cattle', 'A-339206', 'European Cross', NULL, 'Male', NULL, '6', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(117, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345107', NULL, 'Cattle', 'A-339207', 'European Cross', NULL, 'Male', NULL, '7', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(118, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345108', NULL, 'Cattle', 'A-339208', 'European Cross', NULL, 'Male', NULL, '4', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(119, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345109', NULL, 'Cattle', 'A-339209', 'European Cross', NULL, 'Male', NULL, '5', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(120, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345110', NULL, 'Cattle', 'A-339210', 'European Cross', NULL, 'Male', NULL, '6', NULL, '2026-10-02', '', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(121, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345111', NULL, 'Cattle', 'A-339211', 'European Cross', NULL, 'Male', NULL, '7', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(122, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345112', NULL, 'Cattle', 'A-339212', 'European Cross', NULL, 'Male', NULL, '4', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(123, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345113', NULL, 'Cattle', 'A-339213', 'European Cross', NULL, 'Male', NULL, '5', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(124, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345114', NULL, 'Cattle', 'A-339214', 'European Cross', NULL, 'Male', NULL, '6', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(125, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345115', NULL, 'Cattle', 'A-339215', 'European Cross', NULL, 'Male', NULL, '7', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(126, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345116', NULL, 'Cattle', 'A-339216', 'European Cross', NULL, 'Male', NULL, '4', NULL, '2026-10-02', 'Active', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:04:53'),
+(127, 0, 11, 'Mr.', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '530112345', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 1, '531412345117', NULL, 'Cattle', 'A-339217', 'European Cross', NULL, 'Male', NULL, '5', NULL, '2026-10-02', 'Damaged', NULL, NULL, 19, '2026-10-16 14:15:31', '2026-10-19 14:28:24');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cattle_voucher_distributions`
+--
+
+CREATE TABLE `cattle_voucher_distributions` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `farmer_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farmer_nic` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `prefix` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'A-',
+  `start_serial` int(11) NOT NULL,
+  `end_serial` int(11) NOT NULL,
+  `total_allocated` int(11) NOT NULL,
+  `distribution_date` date NOT NULL,
+  `remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `cattle_voucher_usage`
 --
 
@@ -871,6 +1361,7 @@ CREATE TABLE `cattle_voucher_usage` (
   `received_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. Received During the month',
   `used_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. used During The Month',
   `spoilt_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. Spoilt/Damaged',
+  `damaged_qty` int(11) NOT NULL DEFAULT 0,
   `transferred_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Transfer to Another Range',
   `closing_balance` int(11) NOT NULL DEFAULT 0 COMMENT 'Balance at the End of the Month',
   `created_by` int(11) DEFAULT NULL,
@@ -882,10 +1373,10 @@ CREATE TABLE `cattle_voucher_usage` (
 -- Dumping data for table `cattle_voucher_usage`
 --
 
-INSERT INTO `cattle_voucher_usage` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `opening_balance`, `received_qty`, `used_qty`, `spoilt_qty`, `transferred_qty`, `closing_balance`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 2026, 8, 300, 100, 50, 5, 15, 330, 17, '2026-07-13 08:24:37', '2026-07-13 08:24:37'),
-(2, 1, 1, 2026, 6, 700, 600, 500, 100, 200, 500, 19, '2026-07-13 08:25:22', '2026-07-13 08:25:22'),
-(3, 1, 1, 2026, 1, 0, 90, 60, 20, 10, 0, 19, '2026-07-22 09:45:37', '2026-07-22 09:45:37');
+INSERT INTO `cattle_voucher_usage` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `opening_balance`, `received_qty`, `used_qty`, `spoilt_qty`, `damaged_qty`, `transferred_qty`, `closing_balance`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 8, 300, 100, 50, 5, 0, 15, 330, 17, '2026-07-13 08:24:37', '2026-07-13 08:24:37'),
+(2, 1, 1, 2026, 6, 700, 600, 500, 100, 0, 200, 500, 19, '2026-07-13 08:25:22', '2026-07-13 08:25:22'),
+(3, 1, 1, 2026, 1, 0, 90, 60, 20, 0, 10, 0, 19, '2026-07-22 09:45:37', '2026-07-22 09:45:37');
 
 -- --------------------------------------------------------
 
@@ -986,6 +1477,93 @@ INSERT INTO `chick_growth_log` (`id`, `record_date`, `cage_id`, `opening_chicks_
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `citizen_charter_requests`
+--
+
+CREATE TABLE `citizen_charter_requests` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `request_date` date NOT NULL,
+  `reference_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `request_origin` enum('Direct Visit','By Call') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Direct Visit',
+  `beneficiary_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nic_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `purpose_of_visit` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `immediate_action_taken` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `final_remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Completed','Pending','In Progress','Referred') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Completed',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `citizen_charter_requests`
+--
+
+INSERT INTO `citizen_charter_requests` (`id`, `range_id`, `district_id`, `request_date`, `reference_no`, `request_origin`, `beneficiary_name`, `nic_no`, `phone_no`, `address`, `farm_reg_no`, `purpose_of_visit`, `immediate_action_taken`, `final_remarks`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, '2026-10-17', 'CC-20261017-TEST1', 'Direct Visit', 'K. Perera', '198754123456', '0771234567', 'No. 45, Station Road, Ampara', '530112345', 'Bank loan recommendation letter for dairy expansion', 'Inspection scheduled for 2026-10-20. Recommendation letter issued.', 'Applicant satisfied.', 'Completed', 1, '2026-10-17 05:51:45', '2026-10-17 05:51:45'),
+(2, 1, NULL, '2026-10-17', 'CC-20261017-TEST2', 'By Call', 'M. Farook', '199201987654', '0719876543', 'Sammanthurai Main St', 'FRN-AMP-002', 'Ear tag issuances inquiry for newly bought heifers', 'Instructed to bring transport permit on Monday morning for 5 ear tags.', 'Pending follow-up.', 'In Progress', 1, '2026-10-17 05:51:45', '2026-10-17 05:51:45');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clinical_opd_records`
+--
+
+CREATE TABLE `clinical_opd_records` (
+  `id` int(11) NOT NULL,
+  `clinic_type` enum('large_animal','small_animal') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'large_animal',
+  `entry_date` date NOT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `registration_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Farm Reg No or Small Animal Reg/Case No',
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Farm Reg No if large animal',
+  `owner_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner_address` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `owner_phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `owner_nic` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `herd_total_population` int(11) DEFAULT 1 COMMENT 'Total Population of the herd',
+  `species` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Species e.g. Cattle, Buffalo, Goat, Canine, Feline',
+  `breed` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Breed',
+  `age_years` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Age in Years',
+  `sex` enum('Male','Female','Unknown') COLLATE utf8mb4_unicode_ci DEFAULT 'Female' COMMENT 'Sex (M/F)',
+  `coat_colour` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Coat Colour',
+  `special_marks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Special Marks',
+  `ear_tag_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `clinically_affected_count` int(11) DEFAULT 1 COMMENT 'No of Animals Clinically affected',
+  `death_count` int(11) DEFAULT 0 COMMENT 'No of deaths if any',
+  `complaint` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tentative_diagnosis` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Tentative Diagnosis',
+  `action_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Direct Medication / Medicine Supply',
+  `action_taken` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Action Taken / Treatments',
+  `revenue_consultation` decimal(12,2) DEFAULT 0.00 COMMENT 'Consultation fee (Rs.)',
+  `revenue_drugs` decimal(12,2) DEFAULT 0.00 COMMENT 'Drugs fee (Rs.)',
+  `revenue_others` decimal(12,2) DEFAULT 0.00 COMMENT 'Others fee (Rs.)',
+  `revenue_total` decimal(12,2) DEFAULT 0.00 COMMENT 'Total Revenue (Rs.)',
+  `cash_receipt_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Mandatory Cash Receipt No.',
+  `leaf_issue_id` int(11) DEFAULT NULL COMMENT 'Foreign key link to counterfoil_leaf_issues.id',
+  `remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'General Remarks',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `clinical_opd_records`
+--
+
+INSERT INTO `clinical_opd_records` (`id`, `clinic_type`, `entry_date`, `range_id`, `district_id`, `registration_no`, `farm_reg_no`, `owner_name`, `owner_address`, `owner_phone`, `owner_nic`, `herd_total_population`, `species`, `breed`, `age_years`, `sex`, `coat_colour`, `special_marks`, `ear_tag_no`, `clinically_affected_count`, `death_count`, `complaint`, `tentative_diagnosis`, `action_type`, `action_taken`, `revenue_consultation`, `revenue_drugs`, `revenue_others`, `revenue_total`, `cash_receipt_no`, `leaf_issue_id`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(3, 'large_animal', '2026-10-17', 1, 1, 'LA-2026-001', '530112345', 'Mr. K. Perera', 'Farm Road, Ampara', '0771234567', '198512345678', 45, 'Cattle', 'Jersey Cross', '4.5', 'Female', 'Brown & White', NULL, NULL, 2, 0, 'Severe drop in milk yield, high pyrexia', 'Acute Mastitis', 'Direct Medication / Medicine Supply', 'Administered intramammary infusions and antibiotic course', '500.00', '350.00', '0.00', '850.00', 'CR-88001', NULL, 'Follow up in 48 hours', 1, '2026-10-17 04:53:49', '2026-10-17 04:53:49'),
+(4, 'small_animal', '2026-10-17', 1, 1, 'SA-2026-001', NULL, 'Mrs. S. Silva', 'Station Road, Kalmunai', '0719876543', '199256789012', 1, 'Dogs', 'Labrador Retriever', '2.0', 'Male', 'Golden', NULL, NULL, 1, 0, 'Vomiting and lethargy since yesterday', 'Canine Gastroenteritis', 'Direct Medication / Medicine Supply', 'Symptomatic fluid therapy, antiemetic and private pharmacy script', '400.00', '200.00', '0.00', '600.00', 'CR-88002', NULL, 'Dietary rest for 24h', 1, '2026-10-17 04:53:49', '2026-10-17 04:53:49');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `counterfoil_assets`
 --
 
@@ -1031,7 +1609,10 @@ INSERT INTO `counterfoil_assets` (`id`, `user_id`, `training_center_id`, `farm_i
 (1, 19, NULL, NULL, 'veterinary', 1, 1, 'TEST', NULL, NULL, 'Half-Used', 1, 1, 0, '0000-00-00', 'TEST', 0, 'Active', NULL, NULL, NULL, NULL, '2026-06-30 14:43:19', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (2, 19, NULL, NULL, 'veterinary', 1, 1, 'Test', NULL, NULL, 'Good', 100, 100, 0, '2026-08-12', 'Note', 1, 'Active', NULL, NULL, NULL, NULL, '2026-07-07 07:58:52', 'range_veterinary_officer', '', '', '', '', NULL, NULL, NULL),
 (3, 45, NULL, 1, 'regional_farms', 0, 0, 'Credit Sale Book', NULL, NULL, 'Damaged / Cancelled', 1, 1, 0, '2026-08-06', '', 1, 'Active', NULL, NULL, NULL, NULL, '2026-08-06 11:55:29', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(4, 19, NULL, NULL, NULL, 1, 1, 'AI Register', '1151-1155', '5', 'Good', 6, 1, 5, '2026-09-14', '', 1, 'Active', NULL, NULL, NULL, NULL, '2026-09-14 08:55:07', 'range_veterinary_officer', '3', 'Test', 'test 01', '1000 pages', 'Range Office', '2026-09-14', '2026-09-30');
+(4, 19, NULL, NULL, NULL, 1, 1, 'AI Register', '1151-1155', '5', 'Good', 6, 1, 5, '2026-09-14', '', 1, 'Active', NULL, NULL, NULL, NULL, '2026-09-14 08:55:07', 'range_veterinary_officer', '3', 'Test', 'test 01', '1000 pages', 'Range Office', '2026-09-14', '2026-09-30'),
+(5, 19, NULL, NULL, NULL, 1, 1, 'Register of Cattle Branded', '1160 - 1200', '41', 'Good', 2, 1, 1, '2026-09-18', '', 1, 'Active', NULL, NULL, NULL, NULL, '2026-09-18 09:25:41', 'range_veterinary_officer', '1', '2', 'test', 'test', NULL, NULL, NULL),
+(6, 1, NULL, NULL, 'veterinary', 1, 1, 'Cattle Voucher', 'A-Series', '1000', 'Good', 1000, 1000, 0, '2026-10-15', 'Automated Asset for Cattle Vouchers', 1, 'Active', NULL, NULL, NULL, NULL, '2026-10-15 05:43:40', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(9, 0, NULL, NULL, NULL, 1, 1, 'Cash Receipt Book', 'CRB-R1-2026', '100', 'Good', 100, 100, 0, '0000-00-00', 'Auto-provisioned for Clinical Services OPD Revenue Receipts', 1, 'Active', NULL, NULL, NULL, NULL, '2026-10-16 05:12:22', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1046,17 +1627,38 @@ CREATE TABLE `counterfoil_leaf_issues` (
   `range_id` int(11) DEFAULT NULL,
   `counterfoil_type` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `leaf_serial_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `client_type` enum('farmer','pet_owner') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'farmer',
   `farmer_nic` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `farmer_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `farm_registration_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `location_address` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farm_registration_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `location_address` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `animal_counts_summary` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `issue_date` date NOT NULL,
   `purpose` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `amount_deposited` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `revenue_item` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category_tab` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `issued_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `counterfoil_leaf_issues`
+--
+
+INSERT INTO `counterfoil_leaf_issues` (`id`, `counterfoil_id`, `district_id`, `range_id`, `counterfoil_type`, `leaf_serial_no`, `client_type`, `farmer_nic`, `farmer_name`, `farm_registration_no`, `location_address`, `animal_counts_summary`, `issue_date`, `purpose`, `amount`, `quantity`, `unit_price`, `amount_deposited`, `revenue_item`, `category_tab`, `remarks`, `issued_by`, `created_at`) VALUES
+(3, 4, 1, 1, 'AI Register', '1140', 'farmer', '198214502391', 'K. M. Fareed', 'EP/AMP/VET/1001', 'No. 45, Temple Road, Sammanthurai, Ampara', 'Cattle: 15, Buffalo: 4, Goat: 8, Swine: 0, Poultry: 50 (Total: 77)', '2026-09-18', '', '0.00', 1, '0.00', '0.00', NULL, NULL, '', 19, '2026-09-18 09:42:55'),
+(10, 6, 1, 1, 'Cattle Voucher', 'A-000059', 'farmer', 'N/A', 'Test Farmer Automations', 'TEST-FARM-999', 'Ampara, Ampara', '1 (Cattle - Ear Tag: 01-TESTFARM999-001)', '2026-10-15', 'Cattle Voucher - Ear Tag: 01-TESTFARM999-001 (Dairy Production)', '0.00', 1, '0.00', '0.00', 'Cattle Voucher Issuance', 'tab-consultations', 'Synced Status: Tag Damaged / Removed [PERMANENT PAIRING RETAINED - Tag: 01-TESTFARM999-001] (Updated 2026-10-15)', 1, '2026-10-15 09:50:42'),
+(11, 6, 1, 1, 'Cattle Voucher', 'A-339222', 'farmer', 'N/A', 'A.M.S. Perera', '530112345', 'Ampara, Ampara', '1 (Cattle - Ear Tag: 531412345001)', '2026-10-15', 'Cattle Voucher - Ear Tag: 531412345001 (Dairy Production)', '0.00', 1, '0.00', '0.00', 'Cattle Voucher Issuance', 'tab-consultations', 'Synced from Animal Identification (Tag: 531412345001, Status: Tag Damaged / Removed) [PERMANENT PAIRING RETAINED - DAMAGED TAG REMOVED]', 19, '2026-10-15 15:26:12'),
+(12, 8, 1, 1, 'Health Certificate', 'HC-970915', 'farmer', '198654567890', 'A.M.S. Perera', '530112345', 'Test Ampara address', 'Total Animals: 1 (Cattle)', '2026-10-15', 'Dairy Production & Relocation', '0.00', 1, '0.00', '0.00', NULL, 'health_certs', 'Schedule-03 Health Certificate Issued', 19, '2026-10-15 16:17:49'),
+(13, 8, 1, 1, 'Health Certificate', 'HC-TEST-123', 'farmer', '198654567890', 'Danushka Gangoda', '530112345', 'Test Ampara address', 'Total Animals: 1 (Cattle)', '2026-10-15', '0', '0.00', 1, '0.00', '0.00', NULL, 'health_certs', 'Schedule-03 Health Certificate Issued', 1, '2026-10-15 16:20:26'),
+(14, 2, 1, 1, 'Animal Transport', 'VFC-2026-089', 'farmer', '198654567890', 'Danushka Gangoda', '530112345', '', 'Vehicle: 1 | Animals: 1 (Cattle) | Status: Approved', '2026-10-15', '0', '0.00', 1, '0.00', '0.00', NULL, 'vehicle_fitness', 'Schedule-04 Vehicle Fitness Issued', 19, '2026-10-15 16:32:00'),
+(19, 8, 1, 1, 'Health Certificate', 'HC-443970', 'farmer', '198654567890', 'A.M.S. Perera', '530112345', 'Test Ampara address', 'Total Animals: 3 (Buffalo)', '2026-10-19', '0', '0.00', 3, '0.00', '0.00', NULL, 'health_certs', 'Schedule-03 Health Certificate Issued', 19, '2026-10-19 05:36:29'),
+(20, 8, 1, 1, 'Health Certificate', 'HC-379353', 'farmer', '198654567890', 'A.M.S. Perera', '530112345', 'Test Ampara address', 'Total Animals: 3 (Cattle)', '2026-10-19', '0', '0.00', 3, '0.00', '0.00', NULL, 'health_certs', 'Schedule-03 Health Certificate Issued', 19, '2026-10-19 05:38:01');
 
 -- --------------------------------------------------------
 
@@ -1085,7 +1687,47 @@ CREATE TABLE `crop_returns` (
 --
 
 INSERT INTO `crop_returns` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `item_name`, `balance_previous_month`, `received_current_month`, `issued_current_month`, `balance_current_month`, `remark`, `created_at`, `updated_at`) VALUES
-(6, 1, 1, 2026, 6, 'BQ', 0, 0, 0, 0, '', '2026-07-11 10:26:46', '2026-07-11 10:26:46');
+(6, 1, 1, 2026, 6, 'BQ', 0, 0, 0, 0, '', '2026-07-11 10:26:46', '2026-07-11 10:26:46'),
+(12, 1, 1, 2026, 9, 'Ranikhet I', 50, 60, 10, 100, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(13, 1, 1, 2026, 9, 'Ranikhet II', 140, 10, 60, 90, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(14, 1, 1, 2026, 9, 'Fowl pox', 60, 0, 10, 50, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(15, 1, 1, 2026, 9, 'Gumboro', 10, 0, 10, 0, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(16, 1, 1, 2026, 9, 'HS(Oil)', 20, 0, 10, 10, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(17, 1, 1, 2026, 9, 'HS (Alum)', 50, 0, 10, 40, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(18, 1, 1, 2026, 9, 'BQ', 10, 0, 10, 0, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(19, 1, 1, 2026, 9, 'FMD', 40, 0, 10, 30, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(20, 1, 1, 2026, 9, 'Semen', 60, 0, 10, 50, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(21, 1, 1, 2026, 9, 'Sex semen', 70, 0, 8, 62, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(22, 1, 1, 2026, 9, 'Health Certificate', 90, 0, 8, 82, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(23, 1, 1, 2026, 9, 'D/O cockerals', 0, 0, 0, 0, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(24, 1, 1, 2026, 9, 'W/O cockerels', 10, 0, 10, 0, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(25, 1, 1, 2026, 9, 'D/O unsexed', 60, 0, 10, 50, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(26, 1, 1, 2026, 9, 'Stud Bull', 20, 0, 10, 10, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(27, 1, 1, 2026, 9, 'Stud goat', 60, 0, 10, 50, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(28, 1, 1, 2026, 9, 'Calf starter', 20, 0, 10, 10, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(29, 1, 1, 2026, 9, 'Cattle feed', 70, 0, 10, 60, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(30, 1, 1, 2026, 9, 'Mineral mixture', 20, 0, 10, 10, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(31, 1, 1, 2026, 9, 'Tetanus Toxoid', 20, 0, 10, 10, '', '2026-09-28 09:06:42', '2026-09-28 09:23:20'),
+(92, 1, 1, 2026, 10, 'Ranikhet I', 100, 10, 10, 100, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(93, 1, 1, 2026, 10, 'Ranikhet II', 90, 10, 10, 90, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(94, 1, 1, 2026, 10, 'Fowl pox', 50, 10, 10, 50, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(95, 1, 1, 2026, 10, 'Gumboro', 0, 10, 10, 0, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(96, 1, 1, 2026, 10, 'HS(Oil)', 10, 10, 10, 10, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(97, 1, 1, 2026, 10, 'HS (Alum)', 40, 0, 0, 40, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(98, 1, 1, 2026, 10, 'BQ', 0, 0, 0, 0, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(99, 1, 1, 2026, 10, 'FMD', 30, 0, 0, 30, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(100, 1, 1, 2026, 10, 'Semen', 50, 0, 0, 50, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(101, 1, 1, 2026, 10, 'Sex semen', 62, 0, 0, 62, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(102, 1, 1, 2026, 10, 'Health Certificate', 82, 0, 0, 82, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(103, 1, 1, 2026, 10, 'D/O cockerals', 0, 0, 0, 0, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(104, 1, 1, 2026, 10, 'W/O cockerels', 0, 0, 0, 0, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(105, 1, 1, 2026, 10, 'D/O unsexed', 50, 0, 0, 50, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(106, 1, 1, 2026, 10, 'Stud Bull', 10, 0, 0, 10, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(107, 1, 1, 2026, 10, 'Stud goat', 50, 0, 0, 50, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(108, 1, 1, 2026, 10, 'Calf starter', 10, 0, 0, 10, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(109, 1, 1, 2026, 10, 'Cattle feed', 60, 0, 0, 60, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(110, 1, 1, 2026, 10, 'Mineral mixture', 10, 0, 0, 10, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35'),
+(111, 1, 1, 2026, 10, 'Tetanus Toxoid', 10, 0, 0, 10, '', '2026-09-28 09:25:35', '2026-09-28 09:25:35');
 
 -- --------------------------------------------------------
 
@@ -1219,6 +1861,102 @@ INSERT INTO `daily_feed_distribution` (`id`, `distribution_date`, `cage_id`, `ba
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dairy_farm_applications`
+--
+
+CREATE TABLE `dairy_farm_applications` (
+  `id` int(11) NOT NULL,
+  `summary_id` int(11) DEFAULT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ai_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `survey_date` date DEFAULT NULL,
+  `main_category` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '05 Liters',
+  `producer_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nic_no` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `daph_register_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_mobile` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `telephone_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ds_gn_division` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gender` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Male',
+  `ethnicity` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `livestock_council` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT 'No',
+  `transport_distance_km` decimal(8,2) DEFAULT 0.00,
+  `previous_project_benefit` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT 'No',
+  `previous_project_details` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `water_source` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `land_extent` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pasture_extent` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `shed_capacity_adults` int(11) DEFAULT 0,
+  `shed_capacity_calves` int(11) DEFAULT 0,
+  `common_grazing_land` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pasture_cultivation_land` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `has_grass_chopper` tinyint(1) NOT NULL DEFAULT 0,
+  `has_milk_cans` tinyint(1) NOT NULL DEFAULT 0,
+  `has_milking_machine` tinyint(1) NOT NULL DEFAULT 0,
+  `has_chilling_equip` tinyint(1) NOT NULL DEFAULT 0,
+  `has_biogas_plant` tinyint(1) NOT NULL DEFAULT 0,
+  `biogas_capacity_m3` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id_ear_tag_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id_hot_brand_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `geo_coordinates` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `agri_env_ai_cc` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `agri_env_ds_division` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `agri_env_gn_division` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `herd_composition_data` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `feeding_types_data` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cultivating_grass_own_land` tinyint(1) NOT NULL DEFAULT 0,
+  `own_land_grass_extent` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `type_of_grass` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `grass_cutting_method` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Hand',
+  `chop_fodder_before_feeding` tinyint(1) NOT NULL DEFAULT 0,
+  `made_silage_before` tinyint(1) NOT NULL DEFAULT 0,
+  `willing_to_make_silage` tinyint(1) NOT NULL DEFAULT 0,
+  `feed_silage` tinyint(1) NOT NULL DEFAULT 0,
+  `buy_agro_byproducts` tinyint(1) NOT NULL DEFAULT 0,
+  `buy_concentrated_feed` tinyint(1) NOT NULL DEFAULT 0,
+  `mix_mineral_mixture` tinyint(1) NOT NULL DEFAULT 0,
+  `milk_morning_liters` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `milk_evening_liters` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `milk_total_liters` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `milk_production_volume` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `milk_expected_liters` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `milk_hygiene_measures` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `milk_price_per_liter` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `sell_to_private_collector` tinyint(1) NOT NULL DEFAULT 0,
+  `sell_to_organized_collector` tinyint(1) NOT NULL DEFAULT 0,
+  `marketing_details` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `keep_daily_records` tinyint(1) NOT NULL DEFAULT 0,
+  `training_courses_data` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `waste_pasture` tinyint(1) NOT NULL DEFAULT 0,
+  `waste_biogas` tinyint(1) NOT NULL DEFAULT 0,
+  `waste_composting` tinyint(1) NOT NULL DEFAULT 0,
+  `waste_sold_manure` tinyint(1) NOT NULL DEFAULT 0,
+  `waste_other` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `training_clean_milk` tinyint(1) NOT NULL DEFAULT 0,
+  `measure_milk_yield` tinyint(1) NOT NULL DEFAULT 0,
+  `participate_health_camps` tinyint(1) NOT NULL DEFAULT 0,
+  `vaccine_hs` tinyint(1) NOT NULL DEFAULT 0,
+  `vaccine_bq` tinyint(1) NOT NULL DEFAULT 0,
+  `vaccine_fmd` tinyint(1) NOT NULL DEFAULT 0,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `animal_id_method` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Ear Tag',
+  `branding_remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `private_milk_qty_liters` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `private_milk_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `organized_milk_qty_liters` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `organized_collector_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bookkeeping_records_notes` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vaccine_hs_date` date DEFAULT NULL,
+  `vaccine_bq_date` date DEFAULT NULL,
+  `vaccine_fmd_date` date DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `dairy_hub_records`
 --
 
@@ -1242,6 +1980,138 @@ CREATE TABLE `dairy_hub_records` (
 
 INSERT INTO `dairy_hub_records` (`id`, `range_id`, `collection_date`, `farmer_reg_no`, `milk_quantity_liters`, `fat_percentage`, `snf_percentage`, `price_per_liter`, `created_by`, `created_at`) VALUES
 (1, 1, '2026-04-03', '001', '4000.00', '10.00', '2.00', '200.00', 19, '2026-04-03 13:13:30');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dairy_hub_societies`
+--
+
+CREATE TABLE `dairy_hub_societies` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `society_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reg_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `established_date` date DEFAULT NULL,
+  `code_of_conduct_title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Dairy Hub Society Official Code of Conduct & Operational Ethics',
+  `code_of_conduct_text` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `code_of_conduct_pdf` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Active','Pending Registration','Dormant') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dairy_hub_societies`
+--
+
+INSERT INTO `dairy_hub_societies` (`id`, `range_id`, `district_id`, `society_name`, `reg_no`, `established_date`, `code_of_conduct_title`, `code_of_conduct_text`, `code_of_conduct_pdf`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 'Ampara Range Dairy Hub Cooperative Society', 'DHS/EP/AMP/01', '2026-01-15', 'Dairy Hub Farmers\' Society Official Code of Conduct & Ethics (2026 Revision)', 'Clause 1: All members shall deliver clean, unadulterated cow milk complying with provincial health standards.\nClause 2: Democratic representation under the elected President and Vice President shall govern all society affairs.\nClause 3: Active participation in quarterly disease surveillance and vaccination programs is mandatory.', NULL, 'Active', '2026-10-17 05:37:34', '2026-10-17 05:51:45');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dairy_hub_society_members`
+--
+
+CREATE TABLE `dairy_hub_society_members` (
+  `id` int(11) NOT NULL,
+  `society_id` int(11) DEFAULT NULL,
+  `range_id` int(11) NOT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `membership_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `member_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nic` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ds_gn_division` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `enrollment_date` date NOT NULL,
+  `enrollment_source` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Dairy Hub Application',
+  `executive_position` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Member',
+  `is_executive` tinyint(1) NOT NULL DEFAULT 0,
+  `status` enum('Active','Inactive','Suspended') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
+  `code_of_conduct_agreed` tinyint(1) NOT NULL DEFAULT 1,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dairy_hub_society_members`
+--
+
+INSERT INTO `dairy_hub_society_members` (`id`, `society_id`, `range_id`, `district_id`, `membership_no`, `farm_reg_no`, `member_name`, `nic`, `phone`, `address`, `ds_gn_division`, `enrollment_date`, `enrollment_source`, `executive_position`, `is_executive`, `status`, `code_of_conduct_agreed`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 1, 'DHS-01-2026-0001', '530112345', 'A.M.S. Perera', '198654567890', '0775408321', 'Test Ampara address', '', '2026-10-17', 'Dairy Project Beneficiary', 'President', 1, 'Active', 1, 1, '2026-10-17 05:45:20', '2026-10-17 05:51:45'),
+(2, 1, 1, NULL, 'DHS-R01-2026-0002', 'TEST-FARM-999', 'Sunil Shantha', '200012345678', '0789998877', 'Uhana Road, Ampara', 'Ampara DS', '2026-10-17', 'Dairy Hub Survey Application', 'Vice President', 1, 'Active', 1, NULL, '2026-10-17 05:51:45', '2026-10-17 05:51:45');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dairy_project_beneficiaries`
+--
+
+CREATE TABLE `dairy_project_beneficiaries` (
+  `id` int(11) NOT NULL,
+  `project_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'National Dairy Production Programme',
+  `project_year` int(4) NOT NULL DEFAULT 2026,
+  `range_id` int(11) DEFAULT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `beneficiary_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nic` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `daily_milk_current` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `daily_milk_expected` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `category` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '5L',
+  `activities` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `total_cost` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `beneficiary_contribution` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `department_contribution` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `approval_status` enum('Pending','Recommended','Approved','Rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Pending',
+  `remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
+  `deleted_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dairy_project_beneficiaries`
+--
+
+INSERT INTO `dairy_project_beneficiaries` (`id`, `project_name`, `project_year`, `range_id`, `district_id`, `farm_reg_no`, `beneficiary_name`, `address`, `nic`, `phone`, `daily_milk_current`, `daily_milk_expected`, `category`, `activities`, `total_cost`, `beneficiary_contribution`, `department_contribution`, `approval_status`, `remarks`, `created_by`, `created_at`, `updated_at`, `is_deleted`, `deleted_at`) VALUES
+(2, 'National Dairy Production Programme', 2026, 1, 1, '530112345', 'A.M.S. Perera', 'Test Ampara address', '198654567890', '0775408321', '30.00', '0.00', '20L', 'test', '0.00', '0.00', '0.00', 'Pending', '', 19, '2026-10-16 10:50:01', '2026-10-16 10:50:01', 0, NULL),
+(3, 'Ministry Dairy Development 2024', 2024, NULL, NULL, 'TEST-REG-1298', 'Kumara Perera', '', '198813619712', '0771234567', '0.00', '0.00', '5L', 'Cattle Shed Construction Subsidy', '0.00', '0.00', '75000.00', 'Approved', NULL, NULL, '2026-10-17 06:46:28', '2026-10-17 06:46:28', 1, '2026-10-17 12:16:28');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dairy_water_sources`
+--
+
+CREATE TABLE `dairy_water_sources` (
+  `id` int(11) NOT NULL,
+  `source_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dairy_water_sources`
+--
+
+INSERT INTO `dairy_water_sources` (`id`, `source_name`, `created_at`) VALUES
+(1, 'Dug Well', '2026-10-17 06:24:19'),
+(2, 'Pipe-Borne Water', '2026-10-17 06:24:19'),
+(3, 'Tube Well', '2026-10-17 06:24:19'),
+(4, 'River / Stream', '2026-10-17 06:24:19'),
+(5, 'Agricultural Tube Well 1792219416', '2026-10-17 06:43:36'),
+(6, 'Agricultural Tube Well 1792219469', '2026-10-17 06:44:29'),
+(7, 'Agricultural Tube Well 1792219518', '2026-10-17 06:45:18'),
+(8, 'Agricultural Tube Well 1792219588', '2026-10-17 06:46:28');
 
 -- --------------------------------------------------------
 
@@ -1279,6 +2149,7 @@ CREATE TABLE `diary_tasks` (
   `user_id` int(11) NOT NULL,
   `task_date` date NOT NULL,
   `place` varchar(255) NOT NULL,
+  `distance` varchar(50) DEFAULT '0 KM',
   `activity` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `time_duration` varchar(100) NOT NULL COMMENT 'e.g., 2 hours, 08:30-10:30'
@@ -1288,9 +2159,9 @@ CREATE TABLE `diary_tasks` (
 -- Dumping data for table `diary_tasks`
 --
 
-INSERT INTO `diary_tasks` (`id`, `user_id`, `task_date`, `place`, `activity`, `created_at`, `time_duration`) VALUES
-(2, 19, '2026-07-11', 'uppuveli', 'test', '2026-07-11 09:32:30', '09.00 am - 11.00 am'),
-(3, 19, '2026-07-23', 'uppuveli', 'Test Task', '2026-07-22 09:27:49', '09.00 am - 11.00 am');
+INSERT INTO `diary_tasks` (`id`, `user_id`, `task_date`, `place`, `distance`, `activity`, `created_at`, `time_duration`) VALUES
+(2, 19, '2026-07-11', 'uppuveli', '0 KM', 'test', '2026-07-11 09:32:30', '09.00 am - 11.00 am'),
+(3, 19, '2026-07-23', 'uppuveli', '0 KM', 'Test Task', '2026-07-22 09:27:49', '09.00 am - 11.00 am');
 
 -- --------------------------------------------------------
 
@@ -1338,7 +2209,8 @@ CREATE TABLE `drug_records` (
 INSERT INTO `drug_records` (`id`, `log_date`, `drug_type_id`, `vaccine_batch_id`, `starter_count_month`, `during_month_received`, `used_doses_count`, `doses_damaged`, `created_at`) VALUES
 (5, '2026-07-13', 2, 7, 100, 50, 30, 70, '2026-07-13 07:13:10'),
 (6, '2026-07-14', 2, 6, 800, 600, 500, 300, '2026-07-13 07:32:02'),
-(7, '2026-07-22', 4, 8, 90, 80, 60, 70, '2026-07-22 09:43:03');
+(7, '2026-07-22', 4, 8, 90, 80, 60, 70, '2026-07-22 09:43:03'),
+(8, '2026-10-17', 2, 0, 600, 0, 5, 0, '2026-10-17 04:51:43');
 
 -- --------------------------------------------------------
 
@@ -1353,16 +2225,43 @@ CREATE TABLE `drug_types` (
   `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `expiry_date` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `brand_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `chemical_composition` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `drug_types`
 --
 
-INSERT INTO `drug_types` (`id`, `vaccine_name`, `target_animal`, `description`, `expiry_date`, `created_at`, `updated_at`) VALUES
-(2, 'Xyaject Inj', 'Cattle,Dairy Cows,Buffalo,Goats,Poultry,other', '', '2026-07-31', '2026-06-02 06:48:31', '2026-06-02 06:48:31'),
-(4, 'Vitamin B', 'Cattle,Dairy Cows,Buffalo', 'test', '2030-12-01', '2026-07-22 09:38:59', '2026-07-22 09:38:59');
+INSERT INTO `drug_types` (`id`, `vaccine_name`, `target_animal`, `description`, `expiry_date`, `created_at`, `updated_at`, `brand_name`, `chemical_composition`) VALUES
+(2, 'Xyaject Inj', 'Cattle,Dairy Cows,Buffalo,Goats,Poultry,other', '', '2026-07-31', '2026-06-02 06:48:31', '2026-06-02 06:48:31', NULL, NULL),
+(4, 'Vitamin B', 'Cattle,Dairy Cows,Buffalo', 'test', '2030-12-01', '2026-07-22 09:38:59', '2026-07-22 09:38:59', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ear_tag_programs`
+--
+
+CREATE TABLE `ear_tag_programs` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `program_date` date NOT NULL,
+  `farmer_id` int(11) DEFAULT NULL,
+  `farmer_name` varchar(255) NOT NULL,
+  `nic_no` varchar(50) NOT NULL,
+  `farm_reg_no` varchar(100) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `tags_used` int(11) NOT NULL DEFAULT 0,
+  `tags_spoiled` int(11) NOT NULL DEFAULT 0,
+  `staff_involved` varchar(255) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -1380,6 +2279,7 @@ CREATE TABLE `ear_tag_usage` (
   `received_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. Received During the month',
   `used_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. used During The Month',
   `spoilt_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Nos. Spoilt/Damaged',
+  `damaged_qty` int(11) NOT NULL DEFAULT 0,
   `transferred_qty` int(11) NOT NULL DEFAULT 0 COMMENT 'Transfer to Another Range',
   `closing_balance` int(11) NOT NULL DEFAULT 0 COMMENT 'Balance at the End of the Month',
   `created_by` int(11) DEFAULT NULL,
@@ -1391,9 +2291,34 @@ CREATE TABLE `ear_tag_usage` (
 -- Dumping data for table `ear_tag_usage`
 --
 
-INSERT INTO `ear_tag_usage` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `opening_balance`, `received_qty`, `used_qty`, `spoilt_qty`, `transferred_qty`, `closing_balance`, `created_by`, `created_at`, `updated_at`) VALUES
-(2, 1, 1, 2026, 7, 400, 200, 120, 10, 5, 465, 17, '2026-07-13 08:22:02', '2026-07-13 08:23:12'),
-(3, 1, 1, 2026, 3, 0, 90, 30, 10, 10, 40, 19, '2026-07-22 09:44:39', '2026-07-22 09:44:39');
+INSERT INTO `ear_tag_usage` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `opening_balance`, `received_qty`, `used_qty`, `spoilt_qty`, `damaged_qty`, `transferred_qty`, `closing_balance`, `created_by`, `created_at`, `updated_at`) VALUES
+(2, 1, 1, 2026, 7, 400, 200, 120, 10, 0, 5, 465, 17, '2026-07-13 08:22:02', '2026-07-13 08:23:12'),
+(3, 1, 1, 2026, 3, 0, 0, 30, 0, 0, 0, -30, 19, '2026-07-22 09:44:39', '2026-10-15 15:26:47'),
+(4, 1, 1, 2026, 4, 0, 0, 0, 0, 0, 0, 0, 19, '2026-10-15 15:26:58', '2026-10-15 15:27:06'),
+(5, 1, 1, 2026, 10, 150, 100, 17, 1, 1, 0, 231, 19, '2026-10-16 14:15:31', '2026-10-16 14:15:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `extension_service_records`
+--
+
+CREATE TABLE `extension_service_records` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` int(11) NOT NULL,
+  `report_month` int(11) NOT NULL,
+  `activity_date` date NOT NULL,
+  `indicator_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `indicator_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `beneficiary_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1410,6 +2335,9 @@ CREATE TABLE `farmers` (
   `district_id` int(11) DEFAULT NULL,
   `range_id` int(11) DEFAULT NULL,
   `contact_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gender` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ethnicity` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `milk_production_volume` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `cattle_count` int(11) NOT NULL DEFAULT 0,
   `buffalo_count` int(11) NOT NULL DEFAULT 0,
   `goat_count` int(11) NOT NULL DEFAULT 0,
@@ -1425,13 +2353,41 @@ CREATE TABLE `farmers` (
 -- Dumping data for table `farmers`
 --
 
-INSERT INTO `farmers` (`id`, `nic_no`, `full_name`, `farm_registration_no`, `location_address`, `district_id`, `range_id`, `contact_no`, `cattle_count`, `buffalo_count`, `goat_count`, `swine_count`, `poultry_count`, `total_animal_count`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, '198214502391', 'K. M. Fareed', 'EP/AMP/VET/1001', 'No. 45, Temple Road, Sammanthurai, Ampara', 1, 1, '0771234567', 15, 4, 8, 0, 50, 77, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
-(2, '765421980V', 'S. Thiyagarajah', 'EP/BAT/FAR/2045', 'Kallady Beach Road, Batticaloa', 2, 2, '0772345678', 8, 2, 12, 0, 100, 122, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
-(3, '892341675V', 'M. N. Mohamed Rasheed', 'EP/TRIN/LIV/3012', 'Post Office Junction, Kinniya, Trincomalee', 3, 3, '0773456789', 22, 6, 5, 0, 0, 33, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
-(4, '199045127890', 'P. Gunarathna', 'EP/AMP/VET/1048', 'Main Street, Akkaraipattu, Ampara', 1, 1, '0774567890', 5, 0, 20, 0, 200, 225, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
-(5, '197832109845', 'John Doe', 'FRN/BAL/101', '123 Farm Road, Balapitiya', 1, 1, '0775678901', 12, 3, 7, 0, 40, 62, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
-(6, '851234567V', 'S. Parvathy', 'EP/BAT/FAR/2089', 'Station Road, Eravur, Batticaloa', 2, 2, '0776789012', 4, 0, 25, 0, 80, 109, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48');
+INSERT INTO `farmers` (`id`, `nic_no`, `full_name`, `farm_registration_no`, `location_address`, `district_id`, `range_id`, `contact_no`, `gender`, `ethnicity`, `milk_production_volume`, `cattle_count`, `buffalo_count`, `goat_count`, `swine_count`, `poultry_count`, `total_animal_count`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, '198214502391', 'K. M. Fareed', 'EP/AMP/VET/1001', 'No. 45, Temple Road, Sammanthurai, Ampara', 1, 1, '0771234567', NULL, NULL, NULL, 15, 4, 8, 0, 50, 77, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
+(2, '765421980V', 'S. Thiyagarajah', 'EP/BAT/FAR/2045', 'Kallady Beach Road, Batticaloa', 2, 2, '0772345678', NULL, NULL, NULL, 8, 2, 12, 0, 100, 122, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
+(3, '892341675V', 'M. N. Mohamed Rasheed', 'EP/TRIN/LIV/3012', 'Post Office Junction, Kinniya, Trincomalee', 3, 3, '0773456789', NULL, NULL, NULL, 22, 6, 5, 0, 0, 33, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
+(4, '199045127890', 'P. Gunarathna', 'EP/AMP/VET/1048', 'Main Street, Akkaraipattu, Ampara', 1, 1, '0774567890', NULL, NULL, NULL, 5, 0, 20, 0, 200, 225, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
+(5, '197832109845', 'John Doe', 'FRN/BAL/101', '123 Farm Road, Balapitiya', 1, 1, '0775678901', NULL, NULL, NULL, 12, 3, 7, 0, 40, 62, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
+(6, '851234567V', 'S. Parvathy', 'EP/BAT/FAR/2089', 'Station Road, Eravur, Batticaloa', 2, 2, '0776789012', NULL, NULL, NULL, 4, 0, 25, 0, 80, 109, 1, '2026-09-15 11:39:48', '2026-09-15 11:39:48'),
+(7, '199970704599', 'Yohani Abeykoon', '123456789', 'test', 1, 1, '0778439871', NULL, NULL, NULL, 210, 10, 10, 10, 0, 340, 1, '2026-09-29 05:19:46', '2026-09-29 05:29:49'),
+(8, '198654567890', 'A.M.S. Perera', '530112345', 'Test Ampara address', 1, 1, '0775408321', NULL, NULL, NULL, 117, 0, 159, 0, 0, 276, 1, '2026-10-12 06:22:33', '2026-10-16 10:47:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farmer_training_records`
+--
+
+CREATE TABLE `farmer_training_records` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farmer_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nic` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `course_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `institute` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `completion_date` date DEFAULT NULL,
+  `source` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Dairy Farm Survey',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `farmer_training_records`
+--
+
+INSERT INTO `farmer_training_records` (`id`, `range_id`, `farm_reg_no`, `farmer_name`, `nic`, `course_name`, `institute`, `completion_date`, `source`, `created_at`) VALUES
+(1, NULL, 'TEST-REG-1298', 'Kumara Perera', '198813619712', 'Clean Milk Production & Quality Control', 'Livestock Development Center', '2026-03-15', 'Dairy Farm Survey', '2026-10-17 06:46:28');
 
 -- --------------------------------------------------------
 
@@ -1602,6 +2558,29 @@ INSERT INTO `farm_fuel_register` (`id`, `user_id`, `item_id`, `record_date`, `pa
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `farm_master_history`
+--
+
+CREATE TABLE `farm_master_history` (
+  `id` int(11) NOT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `module_source` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `snapshot_data` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `recorded_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `farm_master_history`
+--
+
+INSERT INTO `farm_master_history` (`id`, `farm_reg_no`, `module_source`, `action_type`, `snapshot_data`, `recorded_by`, `created_at`) VALUES
+(1, 'TEST-REG-1298', 'dairy_project_beneficiaries', 'SOFT_DELETE', '{\"project_name\":\"Ministry Dairy Development 2024\",\"project_year\":2024,\"category\":\"5L\",\"activities\":\"Cattle Shed Construction Subsidy\",\"department_contribution\":\"75000.00\",\"approval_status\":\"Approved\"}', 1, '2026-10-17 06:46:28');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `farm_produce_register_annex6`
 --
 
@@ -1634,6 +2613,107 @@ CREATE TABLE `farm_produce_register_annex6` (
 INSERT INTO `farm_produce_register_annex6` (`id`, `user_id`, `commodity_id`, `record_date`, `received_from`, `issued_to`, `plot_no`, `received_qty`, `issued_qty`, `opening_stock`, `closing_stock`, `quantity`, `disposal_method`, `unit_price`, `full_sum_realized`, `receipt_no_or_page`, `initials`, `remarks`, `created_at`) VALUES
 (1, 45, 5, '2026-08-10', 'Test from', '', '0', '700.00', '0.00', '0.00', '700.00', '700.00', 'Internal Harvest', '0.00', '0.00', '', 'regionalfarms', '', '2026-08-10 12:46:44'),
 (2, 45, 5, '2026-08-10', '', 'test to', '0', '0.00', '100.00', '700.00', '600.00', '100.00', 'Credit Sale', '80.00', '8000.00', 'test', 'regionalfarms', '', '2026-08-10 12:47:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_registration_fodder_items`
+--
+
+CREATE TABLE `farm_registration_fodder_items` (
+  `id` int(11) NOT NULL,
+  `farm_registration_id` int(11) NOT NULL,
+  `crop_item` varchar(100) NOT NULL,
+  `other_specify` varchar(255) DEFAULT NULL,
+  `amount_perches` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `yield_amount_kg` decimal(10,2) DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `farm_registration_fodder_items`
+--
+
+INSERT INTO `farm_registration_fodder_items` (`id`, `farm_registration_id`, `crop_item`, `other_specify`, `amount_perches`, `yield_amount_kg`, `created_at`) VALUES
+(19, 11, 'Hybrid Napier', '', '70.00', '80.00', '2026-10-16 10:47:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farm_registration_renewals`
+--
+
+CREATE TABLE `farm_registration_renewals` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `date_of_registration_renewal` date DEFAULT NULL,
+  `province` varchar(100) DEFAULT NULL,
+  `district` varchar(100) DEFAULT NULL,
+  `ds_division` varchar(100) DEFAULT NULL,
+  `vs_division` varchar(100) DEFAULT NULL,
+  `gn_division` varchar(100) DEFAULT NULL,
+  `farmer_name` varchar(255) DEFAULT NULL,
+  `farmer_address` text DEFAULT NULL,
+  `farm_address` text DEFAULT NULL,
+  `gps_location` varchar(100) DEFAULT NULL,
+  `gps_latitude` decimal(11,8) DEFAULT NULL,
+  `gps_longitude` decimal(11,8) DEFAULT NULL,
+  `gps_altitude` decimal(8,2) DEFAULT NULL,
+  `registration_no` varchar(20) NOT NULL,
+  `telephone_no` varchar(50) DEFAULT NULL,
+  `nic` varchar(50) DEFAULT NULL,
+  `gender` varchar(20) DEFAULT NULL,
+  `ethnicity` varchar(50) DEFAULT NULL,
+  `farm_type` varchar(100) DEFAULT NULL,
+  `mixed_farm_type` varchar(100) DEFAULT NULL,
+  `neat_cattle_data` longtext DEFAULT NULL,
+  `total_neat_cattle` int(11) DEFAULT 0,
+  `buffaloes_data` longtext DEFAULT NULL,
+  `total_buffaloes` int(11) DEFAULT 0,
+  `milk_data` longtext DEFAULT NULL,
+  `daily_milk_production` decimal(10,2) DEFAULT 0.00,
+  `milk_production_volume` varchar(50) DEFAULT NULL,
+  `fodder_hybrid_napier` decimal(10,2) DEFAULT 0.00,
+  `fodder_sorghum` decimal(10,2) DEFAULT 0.00,
+  `fodder_maize` decimal(10,2) DEFAULT 0.00,
+  `fodder_other` decimal(10,2) DEFAULT 0.00,
+  `fodder_other_specify` varchar(255) DEFAULT NULL,
+  `fodder_total_land_area` decimal(10,2) DEFAULT 0.00,
+  `fodder_data` longtext DEFAULT NULL,
+  `swine_total_no` int(11) DEFAULT 0,
+  `swine_breeding_female` int(11) DEFAULT 0,
+  `swine_breeding_male` int(11) DEFAULT 0,
+  `swine_weaners_fattening` int(11) DEFAULT 0,
+  `swine_pre_weaners` int(11) DEFAULT 0,
+  `swine_freq_meat` varchar(100) DEFAULT NULL,
+  `swine_freq_breeding` varchar(100) DEFAULT NULL,
+  `goat_total_no` int(11) DEFAULT 0,
+  `goat_breeding_female` int(11) DEFAULT 0,
+  `goat_breeding_male` int(11) DEFAULT 0,
+  `goat_weaners_fattening` int(11) DEFAULT 0,
+  `goat_pre_weaners` int(11) DEFAULT 0,
+  `goat_freq_meat` varchar(100) DEFAULT NULL,
+  `goat_freq_breeding` varchar(100) DEFAULT NULL,
+  `goat_milk_per_day` decimal(10,2) DEFAULT 0.00,
+  `sheep_breeding_female` int(11) DEFAULT 0,
+  `sheep_breeding_male` int(11) DEFAULT 0,
+  `sheep_for_meat` int(11) DEFAULT 0,
+  `sheep_total_no` int(11) DEFAULT 0,
+  `poultry_data` longtext DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `farm_registration_renewals`
+--
+
+INSERT INTO `farm_registration_renewals` (`id`, `range_id`, `district_id`, `date_of_registration_renewal`, `province`, `district`, `ds_division`, `vs_division`, `gn_division`, `farmer_name`, `farmer_address`, `farm_address`, `gps_location`, `gps_latitude`, `gps_longitude`, `gps_altitude`, `registration_no`, `telephone_no`, `nic`, `gender`, `ethnicity`, `farm_type`, `mixed_farm_type`, `neat_cattle_data`, `total_neat_cattle`, `buffaloes_data`, `total_buffaloes`, `milk_data`, `daily_milk_production`, `milk_production_volume`, `fodder_hybrid_napier`, `fodder_sorghum`, `fodder_maize`, `fodder_other`, `fodder_other_specify`, `fodder_total_land_area`, `fodder_data`, `swine_total_no`, `swine_breeding_female`, `swine_breeding_male`, `swine_weaners_fattening`, `swine_pre_weaners`, `swine_freq_meat`, `swine_freq_breeding`, `goat_total_no`, `goat_breeding_female`, `goat_breeding_male`, `goat_weaners_fattening`, `goat_pre_weaners`, `goat_freq_meat`, `goat_freq_breeding`, `goat_milk_per_day`, `sheep_breeding_female`, `sheep_breeding_male`, `sheep_for_meat`, `sheep_total_no`, `poultry_data`, `created_by`, `created_at`, `updated_at`) VALUES
+(7, 1, 1, '2026-09-30', 'Eastern Province', 'Ampara', 'Other', 'Ampara', 'test', 'Uvindu Anuradha', 'test', NULL, '', NULL, NULL, NULL, 'P530123456', '0712205100', '198765432123', NULL, NULL, 'Poultry', '', '[]', 0, '[]', 0, '[]', '0.00', NULL, '0.00', '0.00', '0.00', '0.00', '', '0.00', '[]', 0, 0, 0, 0, 0, 'Not applicable', 'Not applicable', 0, 0, 0, 0, 0, 'Not applicable', 'Not applicable', '0.00', 0, 0, 0, 0, '{\"registration_no\":\"P530123456\",\"owner_name\":\"Uvindu Anuradha\",\"manager_name\":\"Test\",\"farm_address\":\"test\",\"telephone_no\":\"0712205100\",\"owner_nic\":\"198765432123\",\"ownership\":\"Private Limited Company (Pvt Ltd)\",\"gn_division\":\"test\",\"ds_division\":\"Other\",\"provincial_directorate\":\"Northern Provincial Directorate\",\"province_district\":\"Eastern \\/ Trincomalee\",\"present_land_usage\":\"Mixed Livestock and Poultry Farming\",\"env_license\":\"No\",\"env_license_no\":\"\",\"business_license\":\"No\",\"business_license_no\":\"\",\"poultry_farm_type\":\"Broiler\",\"poultry_farm_type_other\":\"\",\"flock_age_groups\":[{\"age_group\":\"Chicks (<8 weeks)\",\"quantity\":\"6\"},{\"age_group\":\"Chicks\",\"quantity\":\"\"}],\"housing\":{\"deep_litter_pens\":\"18\",\"battery_cages\":\"9\",\"free_range\":\"\"},\"purchase_animals\":{\"broiler\":{\"direct_hatchery\":\"1\"}},\"feed_supply_types\":{\"broiler_booster\":\"1\"},\"feed_method\":{\"method_broiler_booster\":{\"commercial\":\"1\"}},\"feed_mfg\":{\"broiler_booster\":{\"monthly_prod\":\"9\",\"unit\":\"Kg\"},\"broiler_starter\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"broiler_grower\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"broiler_finisher\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"broiler_withdrawal\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"layer_booster\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"layer_starter\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"layer_grower\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"layer_layer\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"local_commercial\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"local_supplements\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"local_scavenging\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"}},\"daph_feed_mfr_registered\":\"No\",\"daph_feed_mfr_reg_no\":\"\",\"prod\":{\"max_age_layer_breeder\":\"70\",\"max_age_broiler\":\"\",\"mortality_layer\":\"9\",\"mortality_broiler\":\"\",\"mortality_breeder\":\"\",\"avg_egg_hen_year\":\"\",\"avg_fcr_broiler\":\"89\",\"avg_weight_broiler\":\"7\",\"avg_egg_weight\":\"\",\"shell_color\":\"White\",\"yolk_color\":\"Deep Yellow\"},\"marketing\":{\"meat\":{\"live_birds\":{\"farm_gate\":\"1\"},\"dressed_birds\":{\"farm_gate\":\"1\"},\"other_specify\":\"\"},\"eggs\":{\"table_eggs\":{\"farm_gate\":\"1\",\"other_specify\":\"\"},\"hatching_eggs\":{\"other_specify\":\"\"}}}}', 19, '2026-09-30 05:00:31', '2026-09-30 05:00:31'),
+(9, 1, 1, '2026-10-12', 'Eastern Province', 'Ampara', 'test', 'Ampara', 'test', 'Lakmi Uresha', 'Test Address', NULL, '', NULL, NULL, NULL, 'P-590078901', '0710130836', '199878789789', NULL, NULL, 'Poultry', '', '[]', 0, '[]', 0, '[]', '0.00', NULL, '0.00', '0.00', '0.00', '0.00', '', '0.00', '[]', 0, 0, 0, 0, 0, 'Not applicable', 'Not applicable', 0, 0, 0, 0, 0, 'Not applicable', 'Not applicable', '0.00', 0, 0, 0, 0, '{\"date_of_registration_renewal\":\"2026-10-12\",\"province\":\"Eastern Province\",\"district\":\"Ampara\",\"ds_division\":\"test\",\"vs_division\":\"Ampara\",\"gn_division\":\"test\",\"farmer_name\":\"Lakmi Uresha\",\"farmer_address\":\"Test Address\",\"registration_no\":\"P-590078901\",\"telephone_no\":\"0710130836\",\"nic\":\"199878789789\",\"env_license\":\"Yes\",\"env_license_no\":\"1234567890\",\"business_license\":\"No\",\"business_license_no\":\"\",\"poultry_farm_type\":\"Broiler\",\"poultry_farm_type_other\":\"\",\"flock_age_groups\":[{\"age_group\":\"Chicks (<8 weeks)\",\"quantity\":\"70\"}],\"housing\":{\"deep_litter_pens\":\"90\",\"battery_cages\":\"10\",\"free_range\":\"70\"},\"purchase_animals\":{\"broiler\":{\"direct_hatchery\":\"1\",\"own_hatchery\":\"1\"}},\"feed_supply_types\":{\"broiler_starter\":\"1\"},\"feed_method\":{\"method_broiler_starter\":{\"commercial\":\"1\",\"self_prep\":\"1\",\"buyback\":\"1\"}},\"feed_mfg\":{\"broiler_booster\":{\"monthly_prod\":\"90\",\"unit\":\"Kg\"},\"broiler_starter\":{\"monthly_prod\":\"80\",\"unit\":\"Kg\"},\"broiler_grower\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"broiler_finisher\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"broiler_withdrawal\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"layer_booster\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"layer_starter\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"layer_grower\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"layer_layer\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"local_commercial\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"local_supplements\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"},\"local_scavenging\":{\"monthly_prod\":\"\",\"unit\":\"Kg\"}},\"daph_feed_mfr_registered\":\"No\",\"daph_feed_mfr_reg_no\":\"\",\"prod\":{\"max_age_layer_breeder\":\"72\",\"max_age_broiler\":\"56\",\"mortality_layer\":\"20\",\"mortality_broiler\":\"10\",\"mortality_breeder\":\"\",\"avg_egg_hen_year\":\"280\",\"avg_fcr_broiler\":\"1.5\",\"avg_weight_broiler\":\"2\",\"avg_egg_weight\":\"50\",\"shell_color\":\"White\",\"yolk_color\":\"Golden Orange\"},\"marketing\":{\"meat\":{\"live_birds\":{\"farm_gate\":\"1\"},\"dressed_birds\":{\"wholesale\":\"1\"},\"processed_products\":{\"retail\":\"1\"},\"other_specify\":\"test\",\"other\":{\"farm_gate\":\"1\"}},\"eggs\":{\"table_eggs\":{\"farm_gate\":\"1\",\"other_specify\":\"\"},\"hatching_eggs\":{\"other_specify\":\"\"}}},\"owner_name\":\"Lakmi Uresha\",\"farm_address\":\"Test Address\",\"owner_nic\":\"199878789789\"}', 19, '2026-10-12 06:40:52', '2026-10-12 06:40:52'),
+(11, 1, 1, '2026-10-15', 'Eastern Province', 'Ampara', 'Ampara', 'Ampara', 'GN_01', 'A.M.S. Perera', 'Test Ampara address', 'Test Ampara address', '', NULL, NULL, NULL, '530112345', '0775408321', '198654567890', NULL, NULL, 'Buffaloes', '', '{\"cows\":{\"european\":\"20\",\"indian\":\"0\",\"local\":\"0\"},\"unproductive_cows\":{\"european\":\"20\",\"indian\":\"0\",\"local\":\"0\"},\"heifers\":{\"european\":\"20\",\"indian\":\"0\",\"local\":\"0\"},\"female_calves\":{\"european\":\"20\",\"indian\":\"0\",\"local\":\"0\"},\"bulls\":{\"european\":\"20\",\"indian\":\"0\",\"local\":\"0\"},\"male_calves\":{\"european\":\"17\",\"indian\":\"0\",\"local\":\"0\"}}', 117, '{\"cows\":{\"niliravi\":\"0\",\"murah\":\"0\",\"cross_breed\":\"0\"},\"unproductive_cows\":{\"niliravi\":\"0\",\"murah\":\"0\",\"cross_breed\":\"0\"},\"heifers\":{\"niliravi\":\"0\",\"murah\":\"0\",\"cross_breed\":\"0\"},\"female_calves\":{\"niliravi\":\"0\",\"murah\":\"0\",\"cross_breed\":\"0\"},\"bulls\":{\"niliravi\":\"0\",\"murah\":\"0\",\"cross_breed\":\"0\"},\"male_calves\":{\"niliravi\":\"0\",\"murah\":\"0\",\"cross_breed\":\"0\"}}', 0, '{\"total_production\":{\"cow\":\"30\",\"buffalo\":\"0\"},\"household_consumption\":{\"cow\":\"30\",\"buffalo\":\"0\"},\"used_for_processing\":{\"cow\":\"30\",\"buffalo\":\"0\"},\"sales\":{\"cow\":\"30\",\"buffalo\":\"0\"}}', '30.00', NULL, '70.00', '0.00', '0.00', '0.00', '', '70.00', '[{\"item\":\"Hybrid Napier\",\"amount\":70,\"land_area\":70,\"yield_amount\":80,\"other_specify\":\"\"}]', 0, 0, 0, 0, 0, 'Not applicable', 'Not applicable', 159, 89, 0, 0, 70, 'Monthly', 'Quarterly', '70.00', 0, 0, 0, 0, NULL, 19, '2026-10-15 15:08:44', '2026-10-16 10:47:26');
 
 -- --------------------------------------------------------
 
@@ -1771,6 +2851,41 @@ INSERT INTO `hatchery_sales` (`id`, `user_id`, `farm_id`, `sales_date`, `egg_cat
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `health_certificate_animals`
+--
+
+CREATE TABLE `health_certificate_animals` (
+  `id` int(11) NOT NULL,
+  `health_certificate_id` int(11) NOT NULL,
+  `animal_identification_id` int(11) DEFAULT NULL,
+  `serial_no` int(11) NOT NULL DEFAULT 1,
+  `identification_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `species` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Cattle',
+  `breed` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `age` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `colour` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `specific_marks` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `health_certificate_animals`
+--
+
+INSERT INTO `health_certificate_animals` (`id`, `health_certificate_id`, `animal_identification_id`, `serial_no`, `identification_no`, `species`, `breed`, `age`, `colour`, `specific_marks`, `created_at`) VALUES
+(4, 0, 11, 1, '531412345001', 'Cattle', 'Indian', '3', 'white', 'Purpose: Dairy Production', '2026-10-15 16:17:49'),
+(5, 0, 11, 1, '531412345001', 'Cattle', 'Indian', '3', 'white', 'Purpose: Dairy Production', '2026-10-15 16:20:26'),
+(7, 10, NULL, 1, '531412345001', 'Cattle', 'Indian', '3', 'white', 'Purpose: Dairy Production', '2026-10-16 10:48:32'),
+(8, 11, 11, 1, '531412345001', 'Cattle', 'Jersey Cross', '5 Yrs', 'Brown', 'Purpose: Dairy Production', '2026-10-19 05:36:29'),
+(9, 11, 15, 2, '531412345005', 'Cattle', 'Jersey Cross', '6 Yrs', 'Fawn', 'Purpose: Dairy Production', '2026-10-19 05:36:29'),
+(10, 11, 12, 3, '531412345002', 'Cattle', 'European Friesian', '6 Yrs', 'Fawn', 'Purpose: Dairy Production', '2026-10-19 05:36:29'),
+(11, 12, 29, 1, '531412345019', 'Cattle', 'Jersey Cross', '5 Yrs', 'Brown', 'Purpose: Dairy Production', '2026-10-19 05:38:01'),
+(12, 12, 30, 2, '531412345020', 'Cattle', 'European Friesian', '6 Yrs', 'Fawn', 'Purpose: Dairy Production', '2026-10-19 05:38:01'),
+(13, 12, 26, 3, '531412345016', 'Cattle', 'European Friesian', '5 Yrs', 'Brown', 'Purpose: Dairy Production', '2026-10-19 05:38:01');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `health_certificate_issues`
 --
 
@@ -1786,9 +2901,12 @@ CREATE TABLE `health_certificate_issues` (
   `farm_registration_no` varchar(100) DEFAULT NULL,
   `date_of_issue` date NOT NULL,
   `species` varchar(100) DEFAULT NULL COMMENT 'Species B/Nc',
+  `total_animals` int(11) DEFAULT 0,
+  `selected_animals_json` longtext DEFAULT NULL,
   `animal_details_male` int(11) NOT NULL DEFAULT 0 COMMENT 'Details of animal - Male',
   `animal_details_female` int(11) NOT NULL DEFAULT 0 COMMENT 'Details of animal - Female',
   `vehicle_fitness_certificate_no` varchar(100) DEFAULT NULL,
+  `counterfoil_leaf_id` int(11) DEFAULT NULL,
   `purpose` varchar(255) DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -1799,8 +2917,10 @@ CREATE TABLE `health_certificate_issues` (
 -- Dumping data for table `health_certificate_issues`
 --
 
-INSERT INTO `health_certificate_issues` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `farmer_nic`, `health_certificate_no`, `applicant_name_address`, `farm_registration_no`, `date_of_issue`, `species`, `animal_details_male`, `animal_details_female`, `vehicle_fitness_certificate_no`, `purpose`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 2026, 10, NULL, 'HC/2026/0854', 'John Doe, 123 Farm Road, Balapitiya', 'FRN/BAL/101', '2026-10-15', 'Bovine', 15, 20, 'VF/6075', 'Breeding', 17, '2026-07-13 09:17:13', '2026-07-13 09:18:06');
+INSERT INTO `health_certificate_issues` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `farmer_nic`, `health_certificate_no`, `applicant_name_address`, `farm_registration_no`, `date_of_issue`, `species`, `total_animals`, `selected_animals_json`, `animal_details_male`, `animal_details_female`, `vehicle_fitness_certificate_no`, `counterfoil_leaf_id`, `purpose`, `created_by`, `created_at`, `updated_at`) VALUES
+(10, 1, 1, 2026, 10, '198654567890', 'HC-970915', 'A.M.S. Perera\nTest Ampara address', '530112345', '2026-10-15', 'Cattle', 1, '[{\"identification_no\":\"531412345001\",\"species\":\"Cattle\",\"breed\":\"Indian\",\"age\":\"3\",\"colour\":\"white\",\"specific_marks\":\"Purpose: Dairy Production\"}]', 0, 0, 'VFC-2026-089', NULL, 'Dairy Production & Relocation', 19, '2026-10-15 16:23:25', '2026-10-16 10:48:32'),
+(11, 1, 1, 2026, 10, '198654567890', 'HC-443970', 'A.M.S. Perera\nTest Ampara address', '530112345', '2026-10-19', 'Buffalo', 3, '[{\"animal_id\":\"11\",\"identification_no\":\"531412345001\",\"species\":\"Cattle\",\"breed\":\"Jersey Cross\",\"age\":\"5 Yrs\",\"colour\":\"Brown\",\"specific_marks\":\"Purpose: Dairy Production\"},{\"animal_id\":\"15\",\"identification_no\":\"531412345005\",\"species\":\"Cattle\",\"breed\":\"Jersey Cross\",\"age\":\"6 Yrs\",\"colour\":\"Fawn\",\"specific_marks\":\"Purpose: Dairy Production\"},{\"animal_id\":\"12\",\"identification_no\":\"531412345002\",\"species\":\"Cattle\",\"breed\":\"European Friesian\",\"age\":\"6 Yrs\",\"colour\":\"Fawn\",\"specific_marks\":\"Purpose: Dairy Production\"}]', 0, 0, 'VFC-2026-089', NULL, 'Dairy Production & Relocation', 19, '2026-10-19 05:36:29', '2026-10-19 05:36:29'),
+(12, 1, 1, 2026, 10, '198654567890', 'HC-379353', 'A.M.S. Perera\nTest Ampara address', '530112345', '2026-10-19', 'Cattle', 3, '[{\"animal_id\":\"29\",\"identification_no\":\"531412345019\",\"species\":\"Cattle\",\"breed\":\"Jersey Cross\",\"age\":\"5 Yrs\",\"colour\":\"Brown\",\"specific_marks\":\"Purpose: Dairy Production\"},{\"animal_id\":\"30\",\"identification_no\":\"531412345020\",\"species\":\"Cattle\",\"breed\":\"European Friesian\",\"age\":\"6 Yrs\",\"colour\":\"Fawn\",\"specific_marks\":\"Purpose: Dairy Production\"},{\"animal_id\":\"26\",\"identification_no\":\"531412345016\",\"species\":\"Cattle\",\"breed\":\"European Friesian\",\"age\":\"5 Yrs\",\"colour\":\"Brown\",\"specific_marks\":\"Purpose: Dairy Production\"}]', 0, 0, 'VF/4512', NULL, 'Dairy Production & Relocation', 19, '2026-10-19 05:38:01', '2026-10-19 05:38:01');
 
 -- --------------------------------------------------------
 
@@ -2123,6 +3243,11 @@ CREATE TABLE `letter_h_accounts` (
   `transaction_date` date NOT NULL,
   `transaction_type` enum('Receipt','Disbursement') NOT NULL DEFAULT 'Receipt',
   `reference_no` varchar(50) DEFAULT NULL COMMENT 'Receipt No (e.g., 1030832) or Deposit Ref',
+  `client_type` enum('farmer','pet_owner') DEFAULT 'farmer',
+  `client_name` varchar(255) DEFAULT NULL,
+  `client_nic` varchar(20) DEFAULT NULL,
+  `farm_registration_no` varchar(100) DEFAULT NULL,
+  `activity_reason` varchar(255) DEFAULT NULL,
   `particulars` varchar(255) NOT NULL COMMENT 'Description (e.g., Consultation, Ranikhet vaccine, Deposit to Bank)',
   `quantity` int(11) DEFAULT NULL COMMENT 'Optional: Extracted from details (e.g., 01 from 01x150/-)',
   `rate` decimal(10,2) DEFAULT NULL COMMENT 'Optional: Extracted from details (e.g., 150.00)',
@@ -2136,10 +3261,108 @@ CREATE TABLE `letter_h_accounts` (
 -- Dumping data for table `letter_h_accounts`
 --
 
-INSERT INTO `letter_h_accounts` (`id`, `district_id`, `range_id`, `transaction_date`, `transaction_type`, `reference_no`, `particulars`, `quantity`, `rate`, `amount`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, '2026-07-13', 'Receipt', '1030832', 'Consultation', 1, '150.00', '150.00', 19, '2026-07-13 04:45:17', '2026-07-13 05:02:00'),
-(2, 1, 1, '2026-07-13', 'Disbursement', '1030832', 'Consultation', 1, '150.00', '150.00', 19, '2026-07-13 05:06:25', '2026-07-13 05:06:25'),
-(3, 1, 1, '2026-07-23', 'Receipt', '1030832', 'Consultation', 70, '300.00', '21000.00', 19, '2026-07-22 09:34:45', '2026-07-22 09:34:45');
+INSERT INTO `letter_h_accounts` (`id`, `district_id`, `range_id`, `transaction_date`, `transaction_type`, `reference_no`, `client_type`, `client_name`, `client_nic`, `farm_registration_no`, `activity_reason`, `particulars`, `quantity`, `rate`, `amount`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, '2026-07-13', 'Receipt', '1030832', 'farmer', NULL, NULL, NULL, NULL, 'Consultation', 1, '150.00', '150.00', 19, '2026-07-13 04:45:17', '2026-07-13 05:02:00'),
+(2, 1, 1, '2026-07-13', 'Disbursement', '1030832', 'farmer', NULL, NULL, NULL, NULL, 'Consultation', 1, '150.00', '150.00', 19, '2026-07-13 05:06:25', '2026-07-13 05:06:25'),
+(3, 1, 1, '2026-07-23', 'Receipt', '1030832', 'farmer', NULL, NULL, NULL, NULL, 'Consultation', 70, '300.00', '21000.00', 19, '2026-07-22 09:34:45', '2026-07-22 09:34:45');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `letter_h_categories`
+--
+
+CREATE TABLE `letter_h_categories` (
+  `id` int(11) NOT NULL,
+  `category_name` varchar(150) NOT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `letter_h_categories`
+--
+
+INSERT INTO `letter_h_categories` (`id`, `category_name`, `sort_order`, `created_at`) VALUES
+(1, 'Miscellaneous Revenue', 1, '2026-09-28 10:59:18'),
+(3, 'PSDG', 2, '2026-09-28 10:59:18'),
+(4, 'Divineguma', 3, '2026-09-28 10:59:18');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `letter_h_entries`
+--
+
+CREATE TABLE `letter_h_entries` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) DEFAULT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` int(11) NOT NULL,
+  `report_month` int(11) NOT NULL,
+  `category_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `amount` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `letter_h_entries`
+--
+
+INSERT INTO `letter_h_entries` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `category_id`, `item_id`, `amount`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 1, 1, 1, '2500.00', '2026-09-28 11:01:09', '2026-09-28 11:01:09');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `letter_h_items`
+--
+
+CREATE TABLE `letter_h_items` (
+  `id` int(11) NOT NULL,
+  `category_id` int(11) NOT NULL,
+  `item_name` varchar(255) NOT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `letter_h_items`
+--
+
+INSERT INTO `letter_h_items` (`id`, `category_id`, `item_name`, `sort_order`, `created_at`) VALUES
+(1, 1, 'AI Fees', 1, '2026-09-28 10:59:18'),
+(2, 1, 'Sales of Semen @ 100/-', 2, '2026-09-28 10:59:18'),
+(3, 1, 'Sales of Cattle Feed', 3, '2026-09-28 10:59:18'),
+(4, 1, 'Sales of Calf Starter', 4, '2026-09-28 10:59:18'),
+(5, 1, 'Sales of Vaccine 1st Ranikert, 2nd Ranikert', 5, '2026-09-28 10:59:18'),
+(6, 1, 'OHE for dog /sterilization', 6, '2026-09-28 10:59:18'),
+(7, 1, 'OHE for Cat/ Sterilization Wound Clean', 7, '2026-09-28 10:59:18'),
+(8, 1, 'Noninvasive surgery without anesthesia Dog @ 700/-(dog steril) 1500/= & POP Goat', 8, '2026-09-28 10:59:18'),
+(9, 1, 'Sales of Drugs', 9, '2026-09-28 10:59:18'),
+(10, 1, 'Sales of Booklets', 10, '2026-09-28 10:59:18'),
+(11, 1, 'Sales of Health Certificate @100/-', 11, '2026-09-28 10:59:18'),
+(12, 1, 'Sales of Condemn Articles', 12, '2026-09-28 10:59:18'),
+(13, 1, 'Consultation Fees for cross breed pets @ 150/-, Consultation fee for pure breed dog @300/-', 13, '2026-09-28 10:59:18'),
+(14, 1, 'Ear Tag Done Fees @ 40/-', 14, '2026-09-28 10:59:18'),
+(15, 1, 'Poultry bird Post Mortum', 15, '2026-09-28 10:59:18'),
+(16, 1, 'Postmortum for Rabbit', 16, '2026-09-28 10:59:18'),
+(26, 3, 'Sale of Milk Can', 1, '2026-09-28 10:59:18'),
+(27, 3, 'Sale of Stud Goats', 2, '2026-09-28 10:59:18'),
+(28, 3, 'Sale of M/O Chicks', 3, '2026-09-28 10:59:18'),
+(29, 3, 'Sale of Cattle Feed', 4, '2026-09-28 10:59:18'),
+(30, 3, 'Sale of Calf Starter', 5, '2026-09-28 10:59:18'),
+(31, 3, 'Breeder Farm', 6, '2026-09-28 10:59:18'),
+(32, 3, 'Pasture', 7, '2026-09-28 10:59:18'),
+(33, 3, 'Others', 8, '2026-09-28 10:59:18'),
+(34, 4, 'Sale of Chicks', 1, '2026-09-28 10:59:18'),
+(35, 4, 'Sale of Goats', 2, '2026-09-28 10:59:18'),
+(36, 4, 'Sale of Cattle', 3, '2026-09-28 10:59:18'),
+(37, 4, 'Grass Slips / Fodder', 4, '2026-09-28 10:59:18'),
+(38, 4, 'Feed / Mineral', 5, '2026-09-28 10:59:18'),
+(39, 4, 'Others', 6, '2026-09-28 10:59:18');
 
 -- --------------------------------------------------------
 
@@ -2192,6 +3415,15 @@ CREATE TABLE `livestock_society_committee` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+--
+-- Dumping data for table `livestock_society_committee`
+--
+
+INSERT INTO `livestock_society_committee` (`id`, `society_id`, `position`, `member_name`, `nic`, `address`, `contact_no`, `order_rank`, `created_at`) VALUES
+(22, 1, 'President', 'Member 01', '19871234567', '', '0711234567', 1, '2026-10-19 07:59:55'),
+(23, 1, 'Vice President', 'Member 02', '19781234567', '', '07567889009', 2, '2026-10-19 08:03:03'),
+(24, 1, 'Secretary', 'Member 03', '19998989890', '', '0776543212', 3, '2026-10-19 08:03:25');
+
 -- --------------------------------------------------------
 
 --
@@ -2208,6 +3440,13 @@ CREATE TABLE `livestock_society_meetings` (
   `notes` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `livestock_society_meetings`
+--
+
+INSERT INTO `livestock_society_meetings` (`id`, `society_id`, `meeting_date`, `meeting_type`, `decisions_made`, `attendees_count`, `notes`, `created_at`) VALUES
+(3, 1, '2026-09-18', 'Monthly General Meeting', 'suggest to add new hall', 70, '', '2026-09-18 06:37:59');
 
 -- --------------------------------------------------------
 
@@ -2519,6 +3758,112 @@ INSERT INTO `milk_product_sales_centers` (`id`, `vs_range`, `district_id`, `rang
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `mobile_clinics`
+--
+
+CREATE TABLE `mobile_clinics` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) DEFAULT 1,
+  `range_id` int(11) DEFAULT 1,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL,
+  `clinic_date` date NOT NULL,
+  `places_visited` text DEFAULT NULL,
+  `team_members_json` longtext DEFAULT NULL,
+  `farmers_benefited` int(11) NOT NULL DEFAULT 0,
+  `cases_reported` int(11) NOT NULL DEFAULT 0,
+  `cases_attended` int(11) NOT NULL DEFAULT 0,
+  `ai_done` int(11) NOT NULL DEFAULT 0,
+  `pd_diagnosed` int(11) NOT NULL DEFAULT 0,
+  `animals_vaccinated` int(11) NOT NULL DEFAULT 0,
+  `animals_treated` int(11) NOT NULL DEFAULT 0,
+  `poultry_gumboro` int(11) NOT NULL DEFAULT 0,
+  `poultry_ranikhet_1st` int(11) NOT NULL DEFAULT 0,
+  `poultry_ranikhet_2nd` int(11) NOT NULL DEFAULT 0,
+  `poultry_fowlpox` int(11) NOT NULL DEFAULT 0,
+  `cattle_goat_fmd_bq` int(11) NOT NULL DEFAULT 0,
+  `cattle_goat_arv` int(11) NOT NULL DEFAULT 0,
+  `training_conducted` int(11) NOT NULL DEFAULT 0,
+  `training_type` varchar(255) DEFAULT '',
+  `training_participants` int(11) NOT NULL DEFAULT 0,
+  `animals_ear_tagged` int(11) NOT NULL DEFAULT 0,
+  `remarks` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `mobile_clinics`
+--
+
+INSERT INTO `mobile_clinics` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `clinic_date`, `places_visited`, `team_members_json`, `farmers_benefited`, `cases_reported`, `cases_attended`, `ai_done`, `pd_diagnosed`, `animals_vaccinated`, `animals_treated`, `poultry_gumboro`, `poultry_ranikhet_1st`, `poultry_ranikhet_2nd`, `poultry_fowlpox`, `cattle_goat_fmd_bq`, `cattle_goat_arv`, `training_conducted`, `training_type`, `training_participants`, `animals_ear_tagged`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(2, 1, 1, 2026, 10, '2026-10-15', 'test', '[{\"name\":\"Dr. M. S. Veterinary Surgeon\",\"designation\":\"Veterinary Surgeon\",\"contact\":\"\"}]', 5, 5, 5, 5, 5, 0, 0, 5, 5, 5, 5, 0, 0, 0, '', 0, 0, '', 19, '2026-10-15 16:42:06', '2026-10-15 16:42:06');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mobile_clinic_drug_distributions`
+--
+
+CREATE TABLE `mobile_clinic_drug_distributions` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) DEFAULT 1,
+  `range_id` int(11) DEFAULT 1,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL,
+  `distribution_date` date NOT NULL,
+  `drug_type_id` int(11) DEFAULT NULL,
+  `drug_name` varchar(255) NOT NULL,
+  `batch_no` varchar(100) DEFAULT NULL,
+  `initial_stock` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `total_issued` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `balance_in_hand` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `unit_of_measure` varchar(50) DEFAULT 'Doses',
+  `remarks` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `mobile_clinic_drug_distributions`
+--
+
+INSERT INTO `mobile_clinic_drug_distributions` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `distribution_date`, `drug_type_id`, `drug_name`, `batch_no`, `initial_stock`, `total_issued`, `balance_in_hand`, `unit_of_measure`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 10, '2026-10-15', NULL, 'Albendazole 2.5% Oral Suspension', NULL, '50.00', '12.50', '37.50', 'ml', 'Routine deworming campaign at mobile clinic', NULL, '2026-10-15 16:42:00', '2026-10-15 16:42:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mobile_clinic_treatments`
+--
+
+CREATE TABLE `mobile_clinic_treatments` (
+  `id` int(11) NOT NULL,
+  `distribution_id` int(11) NOT NULL,
+  `serial_no` int(11) NOT NULL DEFAULT 1,
+  `farmer_name` varchar(255) NOT NULL,
+  `farmer_address` text DEFAULT NULL,
+  `farmer_nic` varchar(50) DEFAULT NULL,
+  `species_affected` varchar(100) DEFAULT 'Cattle',
+  `disease_diagnosed` varchar(255) DEFAULT NULL,
+  `animals_treated` int(11) NOT NULL DEFAULT 1,
+  `total_dose_issued` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `mobile_clinic_treatments`
+--
+
+INSERT INTO `mobile_clinic_treatments` (`id`, `distribution_id`, `serial_no`, `farmer_name`, `farmer_address`, `farmer_nic`, `species_affected`, `disease_diagnosed`, `animals_treated`, `total_dose_issued`, `created_at`) VALUES
+(1, 1, 1, 'M. I. Mohamed Rifas', 'Main Street, Addalaichenai', '881234567V', 'Cattle', 'Gastrointestinal Nematodiasis', 3, '7.50', '2026-10-15 16:42:00'),
+(2, 1, 2, 'S. Vijayaratnam', 'Beach Road, Oluvil', '759876543V', 'Goat', 'Helminthiasis', 2, '5.00', '2026-10-15 16:42:00');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `monthly_fuel_summary`
 --
 
@@ -2635,7 +3980,8 @@ CREATE TABLE `monthly_vaccine_balances` (
 
 INSERT INTO `monthly_vaccine_balances` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `vaccine_name`, `opening_balance`, `received_doses`, `used_doses`, `spoilt_damaged_doses`, `transferred_doses`, `closing_balance`, `batch_no`, `expiry_date`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 1, 1, 2026, 6, 'Ranikhet 1', 4800, 0, 2800, 0, 0, 2000, '2025/03', '05.08.2026', 'Pg No.67', 19, '2026-07-13 06:01:56', '2026-07-13 06:01:56'),
-(2, 1, 1, 2026, 1, 'Xyaject Inj', 90, 60, 10, 10, 10, 120, 'SLNV-06/03-2025', '2026-07-31', 'Test', 19, '2026-07-22 09:41:29', '2026-07-22 09:41:29');
+(2, 1, 1, 2026, 1, 'Xyaject Inj', 90, 60, 10, 10, 10, 120, 'SLNV-06/03-2025', '2026-07-31', 'Test', 19, '2026-07-22 09:41:29', '2026-07-22 09:41:29'),
+(6, 1, 1, 2026, 10, 'Xyaject Inj', 0, 0, 5, 0, 0, 0, NULL, NULL, NULL, NULL, '2026-10-17 04:51:43', '2026-10-17 04:53:49');
 
 -- --------------------------------------------------------
 
@@ -2911,6 +4257,8 @@ CREATE TABLE `production_activity_targets` (
   `year` year(4) NOT NULL,
   `range_id` int(11) NOT NULL,
   `activity_name` varchar(255) NOT NULL,
+  `activity_category` varchar(100) NOT NULL DEFAULT 'General Production',
+  `funding_source` varchar(100) NOT NULL DEFAULT 'PSDG',
   `animal_category` enum('Cow','Buffalo','Goat','Chicken','Pig','Other') DEFAULT NULL,
   `animal_category_other` varchar(100) DEFAULT NULL,
   `target_quantity` int(11) NOT NULL DEFAULT 0,
@@ -2923,11 +4271,33 @@ CREATE TABLE `production_activity_targets` (
 -- Dumping data for table `production_activity_targets`
 --
 
-INSERT INTO `production_activity_targets` (`id`, `year`, `range_id`, `activity_name`, `animal_category`, `animal_category_other`, `target_quantity`, `achieved_quantity`, `created_at`, `updated_at`) VALUES
-(1, 2026, 1, 'Cattle Shed Construction', 'Cow', NULL, 8, 9, '2026-07-06 13:07:25', '2026-07-06 13:07:25'),
-(2, 2026, 1, 'Goat Shed Construction', 'Goat', NULL, 3, 2, '2026-07-06 13:09:00', '2026-07-06 13:09:00'),
-(3, 2026, 1, 'Test', 'Other', 'Rabbit', 50, 40, '2026-07-22 09:23:59', '2026-07-22 09:23:59'),
-(4, 2026, 1, 'Buffalo Shed Construction', 'Buffalo', NULL, 800, 0, '2026-09-16 09:46:03', '2026-09-16 09:46:03');
+INSERT INTO `production_activity_targets` (`id`, `year`, `range_id`, `activity_name`, `activity_category`, `funding_source`, `animal_category`, `animal_category_other`, `target_quantity`, `achieved_quantity`, `created_at`, `updated_at`) VALUES
+(1, 2026, 1, 'Cattle Shed Construction', 'General Production', 'PSDG', 'Cow', NULL, 800, 600, '2026-07-06 13:07:25', '2026-09-22 12:01:50'),
+(2, 2026, 1, 'Goat Shed Construction', 'General Production', 'PSDG', 'Goat', NULL, 300, 200, '2026-07-06 13:09:00', '2026-09-22 12:02:53'),
+(3, 2026, 1, 'Test', 'General Production', 'PSDG', 'Other', 'Rabbit', 500, 400, '2026-07-22 09:23:59', '2026-09-22 12:15:21'),
+(4, 2026, 1, 'Buffalo Shed Construction', 'General Production', 'PSDG', 'Buffalo', NULL, 700, 500, '2026-09-16 09:46:03', '2026-09-22 11:58:56'),
+(5, 2026, 1, 'Expansion of cattleshed for promote dairyfarm intensification', 'General Production', 'PSDG (Special Projects)', 'Cow', NULL, 500, 300, '2026-09-21 14:43:30', '2026-09-22 12:02:35'),
+(6, 2026, 1, 'Strengthening of dairy units by providing assistance', 'General Production', 'PSDG (Special Projects)', 'Cow', NULL, 200, 100, '2026-09-21 14:43:30', '2026-09-22 12:16:11'),
+(7, 2026, 1, 'Conducting mobile clinics and disease control', 'General Production', 'PSDG (Special Projects)', 'Other', 'General', 200, 100, '2026-09-21 14:43:30', '2026-09-22 12:16:20'),
+(8, 2026, 1, 'Mastities control program', 'General Production', 'PSDG (Special Projects)', 'Cow', NULL, 500, 100, '2026-09-21 14:43:30', '2026-09-22 12:13:23'),
+(9, 2026, 1, 'Establishment of new goat farms', 'General Production', 'PSDG (Special Projects)', 'Goat', NULL, 150, 100, '2026-09-21 14:43:30', '2026-09-22 12:02:27'),
+(10, 2026, 1, 'Expansion of goatshed to enhance the production', 'General Production', 'PSDG (Special Projects)', 'Goat', NULL, 200, 100, '2026-09-21 14:43:30', '2026-09-22 12:02:48'),
+(11, 2026, 1, 'Issue of improved stud goats for upgrading herds', 'General Production', 'PSDG (Special Projects)', 'Goat', NULL, 500, 200, '2026-09-21 14:43:30', '2026-09-22 12:03:11'),
+(12, 2026, 1, 'Providing assistance for small scale chick producers and meat value addition', 'General Production', 'PSDG (Special Projects)', 'Chicken', NULL, 100, 60, '2026-09-21 14:43:30', '2026-09-22 12:14:43'),
+(13, 2026, 1, 'Promoting native chicks for local consumption', 'General Production', 'PSDG (Special Projects)', 'Chicken', NULL, 600, 400, '2026-09-21 14:43:30', '2026-09-22 12:14:31'),
+(14, 2026, 1, 'Provision of new technology training', 'General Production', 'PSDG (Special Projects)', 'Other', 'General', 700, 400, '2026-09-21 14:43:30', '2026-09-22 12:14:57'),
+(15, 2026, 1, 'Conducting short term training programs', 'General Production', 'PSDG (Special Projects)', 'Other', 'General', 600, 500, '2026-09-21 14:43:30', '2026-09-22 12:02:02'),
+(16, 2026, 1, 'Best farmer awarding', 'General Production', 'PSDG (Special Projects)', 'Other', 'General', 600, 900, '2026-09-21 14:43:30', '2026-09-23 07:08:16'),
+(17, 2026, 1, 'Conducting of exposure visit', 'General Production', 'PSDG (Special Projects)', 'Other', 'General', 100, 100, '2026-09-21 14:43:30', '2026-09-22 12:01:56'),
+(18, 2026, 1, 'Capacity development for veterinary officers', 'General Production', 'PSDG (Special Projects)', 'Other', 'Officers', 100, 70, '2026-09-21 14:43:30', '2026-09-22 12:01:43'),
+(19, 2026, 1, 'Expansion of commercial pasture unit', 'General Production', 'PSDG (Special Projects)', 'Other', 'Pasture', 100, 100, '2026-09-21 14:43:30', '2026-09-22 12:02:42'),
+(20, 2026, 1, 'Supply of native country poultry for new farmers for organic egg production', 'General Production', 'PSDG (Special Projects)', 'Chicken', NULL, 10, 6, '2026-09-21 14:43:30', '2026-09-22 12:00:57'),
+(21, 2026, 1, 'Strengthening of backyard poultry units', 'General Production', 'PSDG (Special Projects)', 'Chicken', NULL, 300, 100, '2026-09-21 14:43:30', '2026-09-22 12:15:14'),
+(22, 2026, 1, 'Establishment of Eco-friendly Swine Farms', 'General Production', 'Line Ministry Projects', 'Pig', NULL, 500, 100, '2026-09-21 14:43:30', '2026-09-22 12:02:18'),
+(23, 2026, 1, 'Development of Medium and Small-Scale Poultry Farming', 'General Production', 'Line Ministry Projects', 'Chicken', NULL, 200, 100, '2026-09-21 14:43:30', '2026-09-22 12:02:11'),
+(24, 2026, 1, 'Improving Small holder dairy Production through forage varieties (FAO Project)', 'General Production', 'MPC / FAO / NGO / DS Office', 'Cow', NULL, 500, 300, '2026-09-21 14:43:30', '2026-09-22 12:03:05'),
+(25, 2026, 1, 'Decentralized capital budget programme - supply of poultry and items(DS office Project)', 'General Production', 'MPC / FAO / NGO / DS Office', 'Chicken', NULL, 600, 200, '2026-09-21 14:43:30', '2026-09-22 12:14:17'),
+(26, 2026, 1, 'Supporting women headed families in poultry farming(DS office Project)', 'General Production', 'MPC / FAO / NGO / DS Office', 'Chicken', NULL, 400, 300, '2026-09-21 14:43:30', '2026-09-22 12:15:51');
 
 -- --------------------------------------------------------
 
@@ -2946,15 +4316,55 @@ CREATE TABLE `production_categories` (
 --
 
 INSERT INTO `production_categories` (`id`, `category_name`, `sort_order`) VALUES
-(1, 'Milk Production (Total)', 1),
-(2, 'Milk Production (Formal)', 2),
-(3, 'Milk Production (Informal) ', 3),
-(4, 'Egg Production ', 4),
-(5, 'Meat Production ', 5),
+(1, 'Milk Production (Formal)', 1),
+(2, 'Milk Collection (In Formal)', 2),
+(3, 'Milk Value Added Production', 3),
+(4, 'Egg Production', 4),
+(5, 'Meat Production', 5),
 (6, 'Other Production Details', 6),
-(7, 'Poultry Feed Production ', 7),
-(9, 'Slaughter Statistics', 0),
-(10, 'Semen Details', 0);
+(7, 'Poultry Feed Production', 7),
+(8, 'Slaughter Statistics', 8),
+(10, 'AI Details', 9),
+(11, 'Semen Details', 10);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `production_issue_records`
+--
+
+CREATE TABLE `production_issue_records` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` int(11) NOT NULL,
+  `report_month` int(11) NOT NULL,
+  `issue_date` date NOT NULL,
+  `indicator_code` varchar(20) NOT NULL,
+  `indicator_name` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 0,
+  `beneficiary_name` varchar(255) DEFAULT NULL,
+  `beneficiary_nic` varchar(50) DEFAULT NULL,
+  `beneficiary_address` varchar(255) DEFAULT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `production_issue_records`
+--
+
+INSERT INTO `production_issue_records` (`id`, `range_id`, `report_year`, `report_month`, `issue_date`, `indicator_code`, `indicator_name`, `quantity`, `beneficiary_name`, `beneficiary_nic`, `beneficiary_address`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 2026, 2, '2026-02-10', 'b.7', 'Issue of she goats', 2, 'K. Sivanesan', '198421049281', 'Ampara South', 'Distributed under Rural Livelihood Support', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08'),
+(2, 1, 2026, 3, '2026-03-05', 'b.8', 'Issue of stud goats', 1, 'M. Farook', '197905183920', 'Sammanthurai', 'Breeding buck distribution', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08'),
+(3, 1, 2026, 3, '2026-03-14', 'b.9', 'Issue of Heifers/Cows', 2, 'A. Jayawardena', '199015092814', 'Uhana', 'Dairy development heifer scheme', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08'),
+(4, 1, 2026, 4, '2026-04-02', 'b.10', 'Issue of bull calves', 1, 'T. Balachandran', '198204918234', 'Kalmunai', 'Upgrading local stock', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08'),
+(5, 1, 2026, 4, '2026-04-18', 'b.11', 'Issue of heifers(Buffalo)', 1, 'S. Mohamed', '197509182736', 'Pottuvil', 'Murrah cross heifer', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08'),
+(6, 1, 2026, 5, '2026-05-12', 'b.12', 'Issue of bull calves (Buffalo)', 1, 'R. Perera', '198810293847', 'Damana', 'Breeding buffalo bull calf', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08'),
+(7, 1, 2026, 2, '2026-02-20', 'b.13', 'Issue of D/O Chicks', 500, 'Village Poultry Cooperative', 'N/A', 'Central Range', 'Day-old chicks consignment batch #04', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08'),
+(8, 1, 2026, 5, '2026-05-08', 'b.13', 'Issue of D/O Chicks', 450, 'Women Agri Society', 'N/A', 'Navithanveli', 'Batch #08 subsidized distribution', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08'),
+(9, 1, 2026, 3, '2026-03-25', 'b.14', 'Issue of M/O Chicks', 100, 'Backyard Poultry Group', 'N/A', 'Uhana West', 'Month-old vaccinated chicks', NULL, '2026-09-27 10:11:56', '2026-09-27 10:19:08');
 
 -- --------------------------------------------------------
 
@@ -2966,46 +4376,60 @@ CREATE TABLE `production_items` (
   `id` int(11) NOT NULL,
   `category_id` int(11) NOT NULL,
   `item_name` varchar(100) NOT NULL,
-  `unit` varchar(20) NOT NULL
+  `unit` varchar(20) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `archived_year` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `production_items`
 --
 
-INSERT INTO `production_items` (`id`, `category_id`, `item_name`, `unit`) VALUES
-(1, 1, 'Cow Milk Production', 'L'),
-(2, 1, 'Buffaloe Milk Production', 'L'),
-(3, 1, 'Goat Milk Production', 'L'),
-(4, 2, 'Nestle', 'L'),
-(5, 2, 'MILCO', 'L'),
-(6, 2, 'Other Private Collectors', 'L'),
-(7, 2, 'Dairy Cooperatives', 'L'),
-(8, 2, 'Palwatha', 'L'),
-(9, 2, 'Kothmale', 'L'),
-(10, 2, 'Cargills', 'L'),
-(11, 3, 'Local Consumption', 'L'),
-(12, 3, 'Ice cream Production', 'L'),
-(13, 3, 'Milk lolly Production', 'Nos'),
-(14, 3, 'Milk Toffee Production', 'Kg'),
-(15, 3, 'Ghee Production', 'Kg'),
-(16, 3, 'Curd Production', 'Nos'),
-(17, 4, 'Egg Production (Total)', 'Nos'),
-(18, 5, 'Chicken meat Production', 'Kg'),
-(19, 5, 'Beef Production', 'Kg'),
-(20, 5, 'Mutton Production', 'Kg'),
-(21, 5, 'Pork Production', 'Kg'),
-(22, 6, 'Silage Production', 'Kg'),
-(23, 6, 'Bio Gas Production', 'Unit'),
-(24, 6, 'Fertilizer production', 'Kg'),
-(25, 6, 'Pasture Production', 'Acres'),
-(26, 6, 'Fodder Production', 'Kg'),
-(27, 6, 'Pasture Land Utilization', 'Acres'),
-(28, 7, 'Starter Feed Production', 'Kg'),
-(29, 7, 'Grower Feed Production', 'Kg'),
-(30, 7, 'Layer Feed Production', 'Kg'),
-(32, 9, 'Neat Cattle Slaughter at Slaughter House During the Month', 'Nos'),
-(33, 10, 'Available Semen at beginning of the month', 'Nos');
+INSERT INTO `production_items` (`id`, `category_id`, `item_name`, `unit`, `is_active`, `archived_year`) VALUES
+(60, 1, 'Cow Milk Production', 'Liters', 1, NULL),
+(61, 1, 'Buffalo Milk Production', 'Liters', 1, NULL),
+(62, 1, 'Goat Milk Production', 'Liters', 1, NULL),
+(63, 1, 'Milk Production (Formal)', 'Liters', 1, NULL),
+(64, 2, 'Nestle', 'Liters', 1, NULL),
+(65, 2, 'MILCO', 'Liters', 1, NULL),
+(66, 2, 'Other Privet Collectors', 'Liters', 1, NULL),
+(67, 2, 'Dairy Cooperatives', 'Liters', 1, NULL),
+(68, 2, 'Palawatha', 'Liters', 1, NULL),
+(69, 2, 'Kotmale', 'Liters', 1, NULL),
+(71, 3, 'Local Consumption', 'Liters', 1, NULL),
+(72, 3, 'Yogurt Production', 'Liters', 1, NULL),
+(73, 3, 'Milk Lolly Production', 'Liters', 1, NULL),
+(74, 3, 'Milk Toffee Production', 'Liters', 1, NULL),
+(75, 3, 'Ghee Production', 'Liters', 1, NULL),
+(76, 3, 'Curd Production', 'Liters', 1, NULL),
+(77, 4, 'Egg Production', 'Nos', 1, NULL),
+(78, 5, 'Chicken Meat Production', 'Kg', 1, NULL),
+(79, 5, 'Beef Production', 'Kg', 1, NULL),
+(80, 5, 'Mutton Production', 'Kg', 1, NULL),
+(81, 5, 'Pork Production', 'Kg', 1, NULL),
+(82, 6, 'Silage Production', 'Kg', 1, NULL),
+(83, 6, 'Bio Gas Production', 'Kwh', 1, NULL),
+(84, 6, 'Fertilizer Production', 'Kg', 1, NULL),
+(85, 6, 'Pasture Production', 'Kg', 1, NULL),
+(86, 6, 'Fodder Production', 'Kg', 1, NULL),
+(87, 6, 'Pasture Land Utilization', 'Acr', 1, NULL),
+(88, 7, 'Starter Feed Production', 'Kg', 1, NULL),
+(89, 7, 'Grower Feed Production', 'Kg', 1, NULL),
+(90, 7, 'Layer Feed Production', 'Kg', 1, NULL),
+(91, 8, 'Neat Cattle Slaughter at Slaughter House During the Month', 'Nos / Kg', 1, NULL),
+(92, 8, 'Goats Slaughter at Slaughter House During the Month', 'Nos / Kg', 1, NULL),
+(93, 8, 'Poultry Slaughter at Slaughter House During the Month', 'Nos / Kg', 1, NULL),
+(94, 10, 'Neat Cattle', 'Nos', 1, NULL),
+(95, 10, 'Goat', 'Nos', 1, NULL),
+(96, 10, 'Buffaloa', 'Nos', 1, NULL),
+(97, 11, 'Available Semen at beginning of the month', 'Nos', 1, NULL),
+(98, 11, 'Used semen', 'Nos', 1, NULL),
+(99, 11, 'Spoiled or damage semen', 'Nos', 1, NULL),
+(100, 11, 'Received Semen', 'Nos', 1, NULL),
+(101, 11, 'Issued semen', 'Nos', 1, NULL),
+(102, 11, 'Paid amount', 'Rs.', 1, NULL),
+(103, 11, 'Balance available end of the month', 'Nos', 1, NULL),
+(104, 2, 'Male collection', 'Nos', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -3025,18 +4449,29 @@ CREATE TABLE `projects_progress` (
   `priority` enum('Low','Medium','High','Urgent') DEFAULT 'Medium',
   `progress_percent` int(3) DEFAULT 0,
   `status` enum('Planned','In Progress','On Hold','Completed') DEFAULT 'Planned',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `range_office_name` varchar(255) DEFAULT NULL,
+  `activity` varchar(255) DEFAULT NULL,
+  `funding_agent` varchar(255) DEFAULT NULL,
+  `target_beneficiaries` int(11) NOT NULL DEFAULT 0,
+  `dept_contribution_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `dept_subsidy_percentage` decimal(5,2) NOT NULL DEFAULT 100.00,
+  `dept_contribution_activity` text DEFAULT NULL,
+  `beneficiary_contribution_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `beneficiary_contribution_activity` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `projects_progress`
 --
 
-INSERT INTO `projects_progress` (`id`, `range_id`, `project_type`, `project_name`, `summary`, `location`, `start_date`, `end_date`, `priority`, `progress_percent`, `status`, `created_at`) VALUES
-(1, 1, 'PSDG', 'PSDG', 'This is for vaccination of animals in the area', 'uppuveli', '2026-04-04', '2026-04-11', 'Low', 70, 'In Progress', '2026-04-04 11:05:26'),
-(2, 1, 'PSDG', 'PSDG', '', 'Batticola', '2026-04-04', '2026-04-07', 'Medium', 50, 'In Progress', '2026-04-04 11:10:03'),
-(3, 1, 'CBG', 'CBG', 'Vaccination Programme', 'Batticola', '2026-04-04', '2026-04-07', 'Medium', 10, 'In Progress', '2026-04-04 11:11:27'),
-(4, 1, 'LMP', 'LMP', 'no', 'Batticola', '2026-04-04', '2026-04-07', 'High', 30, 'In Progress', '2026-04-04 11:16:05');
+INSERT INTO `projects_progress` (`id`, `range_id`, `project_type`, `project_name`, `summary`, `location`, `start_date`, `end_date`, `priority`, `progress_percent`, `status`, `created_at`, `range_office_name`, `activity`, `funding_agent`, `target_beneficiaries`, `dept_contribution_amount`, `dept_subsidy_percentage`, `dept_contribution_activity`, `beneficiary_contribution_amount`, `beneficiary_contribution_activity`) VALUES
+(1, 1, 'PSDG', 'PSDG', 'This is for vaccination of animals in the area', 'uppuveli', '2026-04-04', '2026-04-11', 'Low', 70, 'In Progress', '2026-04-04 11:05:26', NULL, NULL, NULL, 0, '0.00', '100.00', NULL, '0.00', NULL),
+(2, 1, 'PSDG', 'PSDG', '', 'Batticola', '2026-04-04', '2026-04-07', 'Medium', 50, 'In Progress', '2026-04-04 11:10:03', NULL, NULL, NULL, 0, '0.00', '100.00', NULL, '0.00', NULL),
+(3, 1, 'CBG', 'CBG', 'Vaccination Programme', 'Batticola', '2026-04-04', '2026-04-07', 'Medium', 10, 'In Progress', '2026-04-04 11:11:27', NULL, NULL, NULL, 0, '0.00', '100.00', NULL, '0.00', NULL),
+(4, 1, 'LMP', 'LMP', 'no', 'Batticola', '2026-04-04', '2026-04-07', 'High', 30, 'In Progress', '2026-04-04 11:16:05', NULL, NULL, NULL, 0, '0.00', '100.00', NULL, '0.00', NULL),
+(6, 1, 'PSDG', 'Renovation of Cattle Shed', 'Core project entry test execution', NULL, '2026-03-01', '2026-09-30', 'Medium', 0, 'In Progress', '2026-10-17 07:13:55', 'Batticaloa Range Office', 'Renovation of Cattle Shed', 'PSDG / Provincial Ministry of Agriculture', 30, '150000.00', '75.00', 'Floor concreting, brick partition walls, and drainage channel', '50000.00', '0'),
+(7, 1, 'PSDG', 'Renovation of Cattle Shed', 'Core project entry test execution', NULL, '2026-03-01', '2026-09-30', 'Medium', 0, 'In Progress', '2026-10-17 07:16:02', 'Batticaloa Range Office', 'Renovation of Cattle Shed', 'PSDG / Provincial Ministry of Agriculture', 30, '150000.00', '75.00', 'Floor concreting, brick partition walls, and drainage channel', '50000.00', 'Covering remaining material needs like a roof & timber rafters');
 
 -- --------------------------------------------------------
 
@@ -3060,6 +4495,152 @@ INSERT INTO `project_assignments` (`id`, `project_id`, `officer_id`) VALUES
 (3, 3, 1),
 (4, 3, 2),
 (5, 4, 5);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_individual_beneficiaries`
+--
+
+CREATE TABLE `project_individual_beneficiaries` (
+  `id` int(11) NOT NULL,
+  `project_id` int(11) NOT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `beneficiary_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nic_no` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `district` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `range_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gn_division` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gender` enum('Male','Female','Other') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Male',
+  `dept_contribution_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `dept_contribution_activity` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `beneficiary_contribution_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `beneficiary_contribution_activity` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `agreement_date` date DEFAULT NULL,
+  `completion_date` date DEFAULT NULL,
+  `doc_submission_date` date DEFAULT NULL,
+  `final_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `check_received_date` date DEFAULT NULL,
+  `check_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'In Progress',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project_monitoring_visits`
+--
+
+CREATE TABLE `project_monitoring_visits` (
+  `id` int(11) NOT NULL,
+  `source_module` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Project',
+  `project_id` int(11) DEFAULT NULL,
+  `beneficiary_id` int(11) DEFAULT NULL,
+  `dairy_hub_id` int(11) DEFAULT NULL,
+  `farm_reg_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `farmer_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `range_id` int(11) DEFAULT NULL,
+  `range_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `veterinary_surgeon_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `visit_date` date NOT NULL,
+  `visit_interval` enum('1 Month','3 Months','6 Months','Bi-Annual (12 Mo)','Bi-Annual (18 Mo)','Bi-Annual (24 Mo)','Routine / Ad-Hoc') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `farm_conditions` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `animal_illnesses` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `deaths_count` int(11) NOT NULL DEFAULT 0,
+  `deaths_details` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `natural_disasters` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `recommendations` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `psdg_project_catalog`
+--
+
+CREATE TABLE `psdg_project_catalog` (
+  `id` int(11) NOT NULL,
+  `category_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sub_sector` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Livestock Development',
+  `default_subsidy_pct` decimal(5,2) NOT NULL DEFAULT 75.00,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `psdg_project_catalog`
+--
+
+INSERT INTO `psdg_project_catalog` (`id`, `category_name`, `sub_sector`, `default_subsidy_pct`, `is_active`, `created_at`) VALUES
+(1, 'Goat Purchasing & Breed Improvement', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(2, 'Goat Shed Upgrading & Slatted Floor Construction', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(3, 'Cattle Shed Renovation & Milking Parlour', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(4, 'Cattle Shed Construction (New Commercial)', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(5, 'Heifer Calf Rearing Scheme (HCRS)', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(6, 'Dairy Cattle Purchasing Subsidy', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(7, 'Pasture Establishment (CO-3 / CO-4 / Hybrid Napier)', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(8, 'Silage Production & Bunker Construction', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(9, 'Clean Milk Hygiene Equipment & Chilling Units', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(10, 'Biogas Digester Unit Construction', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(11, 'Poultry Unit Assistance (Free-Range Layers)', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(12, 'Commercial Broiler & Layer Housing', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(13, 'Duck Farming Scheme', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(14, 'Swine / Pig Pen Construction & Breeding Support', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(15, 'Milking Machine Distribution Subsidy', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(16, 'Chaff Cutter Machine Distribution', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(17, 'Night Paddock & Bio-Fencing Construction', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(18, 'Cattle Housing Biosecurity & Disinfection Unit', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(19, 'Artificial Insemination (AI) Sub-Center Upgrading', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(20, 'Mineral Block & Feed Supplement Distribution', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(21, 'Farmer Milk Collection Center (MCC) Equipment', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(22, 'Veterinary Health Camp & Mass Deworming Support', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08'),
+(23, 'Livestock Manure Composting & Vermiculture Unit', 'Livestock Development', '75.00', 1, '2026-10-17 08:14:08');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `range_module_topics`
+--
+
+CREATE TABLE `range_module_topics` (
+  `id` int(11) NOT NULL,
+  `module_key` varchar(50) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `icon` varchar(50) NOT NULL,
+  `color` varchar(20) NOT NULL,
+  `link_path` varchar(255) NOT NULL,
+  `category` varchar(50) NOT NULL DEFAULT 'operations',
+  `category_label` varchar(100) NOT NULL DEFAULT 'Field Operations',
+  `description` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `range_module_topics`
+--
+
+INSERT INTO `range_module_topics` (`id`, `module_key`, `title`, `icon`, `color`, `link_path`, `category`, `category_label`, `description`, `sort_order`, `is_active`, `created_at`) VALUES
+(1, 'range_statistics', 'Range Statistics', 'bi-graph-up', '#820100', 'range_statistics.php', 'reports', 'Reports & Data', 'Statistical returns & population summaries', 1, 1, '2026-10-19 09:47:58'),
+(2, 'annual_targets', 'Annual Targets', 'bi-bar-chart', '#370709', 'annual_targets.php', 'reports', 'Reports & Data', 'Annual operational targets & performance', 2, 1, '2026-10-19 09:47:58'),
+(3, 'monthly_annual_reports', 'Monthly/Annual Reports', 'bi-car-front-fill', '#b08723', 'monthly-annual-reports.php', 'reports', 'Reports & Data', 'Periodic reporting submissions', 3, 1, '2026-10-19 09:47:58'),
+(4, 'regulatory_functions', 'Regulatory Functions', 'bi-file-earmark-plus', '#a07174', 'regulatory_functions.php', 'clinical', 'Clinical & Legal', 'Animals Act compounding & legal functions', 4, 1, '2026-10-19 09:47:58'),
+(5, 'animal_health', 'Animal Health', 'bi-gear-fill', '#689ccf', 'animal_health.php', 'clinical', 'Clinical Care', 'Disease surveillance & clinical logs', 5, 1, '2026-10-19 09:47:58'),
+(6, 'clinical_services', 'Clinical Services', 'bi-clipboard2-pulse', '#2e7d32', 'clinical_services.php', 'clinical', 'Clinical Care', 'Outpatient veterinary clinical care', 6, 1, '2026-10-19 09:47:58'),
+(7, 'citizen_charter', 'Services Register (Citizen Charter)', 'bi-file-earmark-person-fill', '#b45309', 'clinical_services.php?tab=services_register', 'clinical', 'Citizen Services', 'Citizen charter service delivery logs', 7, 1, '2026-10-19 09:47:58'),
+(8, 'animal_breeding', 'Breeding and Production', 'bi-file-earmark-text-fill', '#e65100', 'animal_breeding.php', 'clinical', 'Breeding & AI', 'Artificial insemination & pedigree records', 8, 1, '2026-10-19 09:47:58'),
+(9, 'dairy_hub', 'Dairy Hub', 'bi-patch-check-fill', '#1565c0', 'dairy_hub.php', 'operations', 'Dairy & Hubs', 'Milk collection & dairy farmer hubs', 9, 1, '2026-10-19 09:47:58'),
+(10, 'projects_monitoring', 'Projects and Monitoring', 'bi-kanban-fill', '#00838f', 'projects_progress.php', 'operations', 'Special Projects', 'Field development project tracking & site visits', 10, 1, '2026-10-19 09:47:58'),
+(11, 'accounts', 'Accounts', 'bi-bookmark-dash-fill', '#ad1457', 'accounts.php', 'reports', 'Finance & Cash', 'Revenue, cash books & expenditures', 11, 1, '2026-10-19 09:47:58'),
+(12, 'clean_sri_lanka', 'Clean Sri Lanka', 'bi-graph-up-arrow', '#d84315', 'clean_sri_lanka.php', 'operations', 'National Program', 'Clean Sri Lanka national initiative', 12, 1, '2026-10-19 09:47:58'),
+(13, 'trainings', 'Trainings', 'bi-sliders', '#37474f', 'training.php', 'operations', 'Capacity Building', 'Farmer workshops & staff capacity sessions', 13, 1, '2026-10-19 09:47:58');
 
 -- --------------------------------------------------------
 
@@ -3197,9 +4778,93 @@ CREATE TABLE `section_e` (
 --
 
 INSERT INTO `section_e` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `category_id`, `item_id`, `amount`, `created_at`, `updated_at`) VALUES
-(2, 1, 1, 2026, 7, 1, 1, '8.00', '2026-07-11 12:18:26', '2026-07-11 12:18:37'),
-(3, 1, 1, 2026, 7, 9, 32, '9000.00', '2026-07-11 12:37:27', '2026-07-22 09:32:30'),
-(4, 1, 1, 2026, 7, 10, 33, '154.00', '2026-07-11 12:38:54', '2026-07-11 12:38:54');
+(9, 1, 1, 2026, 1, 1, 60, '1500.50', '2026-09-28 09:50:24', '2026-09-28 10:43:56'),
+(10, 1, 1, 2026, 2, 1, 60, '1850.50', '2026-09-28 09:50:24', '2026-09-28 09:50:24'),
+(12, 1, 1, 2026, 9, 1, 60, '0.00', '2026-09-28 10:40:56', '2026-09-28 10:40:56'),
+(13, 1, 1, 2026, 9, 1, 61, '0.00', '2026-09-28 10:40:56', '2026-09-28 10:40:56'),
+(14, 1, 1, 2026, 9, 1, 62, '0.00', '2026-09-28 10:40:56', '2026-09-28 10:40:56'),
+(15, 1, 1, 2026, 9, 1, 63, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(16, 1, 1, 2026, 9, 2, 64, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(17, 1, 1, 2026, 9, 2, 65, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(18, 1, 1, 2026, 9, 2, 66, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(19, 1, 1, 2026, 9, 2, 67, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(20, 1, 1, 2026, 9, 2, 68, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(21, 1, 1, 2026, 9, 2, 69, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(23, 1, 1, 2026, 9, 3, 71, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(24, 1, 1, 2026, 9, 3, 72, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(25, 1, 1, 2026, 9, 3, 73, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(26, 1, 1, 2026, 9, 3, 74, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(27, 1, 1, 2026, 9, 3, 75, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(28, 1, 1, 2026, 9, 3, 76, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(29, 1, 1, 2026, 9, 4, 77, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(30, 1, 1, 2026, 9, 5, 78, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(31, 1, 1, 2026, 9, 5, 79, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(32, 1, 1, 2026, 9, 5, 80, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(33, 1, 1, 2026, 9, 5, 81, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(34, 1, 1, 2026, 9, 6, 82, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(35, 1, 1, 2026, 9, 6, 83, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(36, 1, 1, 2026, 9, 6, 84, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(37, 1, 1, 2026, 9, 6, 85, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(38, 1, 1, 2026, 9, 6, 86, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(39, 1, 1, 2026, 9, 6, 87, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(40, 1, 1, 2026, 9, 7, 88, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(41, 1, 1, 2026, 9, 7, 89, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(42, 1, 1, 2026, 9, 7, 90, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(43, 1, 1, 2026, 9, 8, 91, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(44, 1, 1, 2026, 9, 8, 92, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(45, 1, 1, 2026, 9, 8, 93, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(46, 1, 1, 2026, 9, 10, 94, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(47, 1, 1, 2026, 9, 10, 95, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(48, 1, 1, 2026, 9, 10, 96, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(49, 1, 1, 2026, 9, 11, 97, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(50, 1, 1, 2026, 9, 11, 98, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(51, 1, 1, 2026, 9, 11, 99, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(52, 1, 1, 2026, 9, 11, 100, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(53, 1, 1, 2026, 9, 11, 101, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(54, 1, 1, 2026, 9, 11, 102, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(55, 1, 1, 2026, 9, 11, 103, '0.00', '2026-09-28 10:40:57', '2026-09-28 10:40:57'),
+(57, 1, 1, 2026, 1, 1, 61, '80.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(58, 1, 1, 2026, 1, 1, 62, '10.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(59, 1, 1, 2026, 1, 1, 63, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(60, 1, 1, 2026, 1, 2, 64, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(61, 1, 1, 2026, 1, 2, 65, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(62, 1, 1, 2026, 1, 2, 66, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(63, 1, 1, 2026, 1, 2, 67, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(64, 1, 1, 2026, 1, 2, 68, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(65, 1, 1, 2026, 1, 2, 69, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(67, 1, 1, 2026, 1, 3, 71, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(68, 1, 1, 2026, 1, 3, 72, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(69, 1, 1, 2026, 1, 3, 73, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(70, 1, 1, 2026, 1, 3, 74, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(71, 1, 1, 2026, 1, 3, 75, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(72, 1, 1, 2026, 1, 3, 76, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(73, 1, 1, 2026, 1, 4, 77, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(74, 1, 1, 2026, 1, 5, 78, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(75, 1, 1, 2026, 1, 5, 79, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(76, 1, 1, 2026, 1, 5, 80, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(77, 1, 1, 2026, 1, 5, 81, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(78, 1, 1, 2026, 1, 6, 82, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(79, 1, 1, 2026, 1, 6, 83, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(80, 1, 1, 2026, 1, 6, 84, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(81, 1, 1, 2026, 1, 6, 85, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(82, 1, 1, 2026, 1, 6, 86, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(83, 1, 1, 2026, 1, 6, 87, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(84, 1, 1, 2026, 1, 7, 88, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(85, 1, 1, 2026, 1, 7, 89, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(86, 1, 1, 2026, 1, 7, 90, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(87, 1, 1, 2026, 1, 8, 91, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(88, 1, 1, 2026, 1, 8, 92, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(89, 1, 1, 2026, 1, 8, 93, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(90, 1, 1, 2026, 1, 10, 94, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(91, 1, 1, 2026, 1, 10, 95, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(92, 1, 1, 2026, 1, 10, 96, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(93, 1, 1, 2026, 1, 11, 97, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(94, 1, 1, 2026, 1, 11, 98, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(95, 1, 1, 2026, 1, 11, 99, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(96, 1, 1, 2026, 1, 11, 100, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(97, 1, 1, 2026, 1, 11, 101, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(98, 1, 1, 2026, 1, 11, 102, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56'),
+(99, 1, 1, 2026, 1, 11, 103, '0.00', '2026-09-28 10:43:56', '2026-09-28 10:43:56');
 
 -- --------------------------------------------------------
 
@@ -3332,10 +4997,19 @@ CREATE TABLE `strategic_action_indicators` (
 --
 
 INSERT INTO `strategic_action_indicators` (`id`, `year`, `range_id`, `strategy_pillar`, `sub_activity`, `target_count`, `achieved_count`, `created_at`, `updated_at`) VALUES
-(1, 2026, 1, 'Disease Prevention and Prophylaxis control', 'test', 6, 4, '2026-07-06 13:06:58', '2026-07-06 13:06:58'),
-(2, 2026, 1, 'Disease Prevention and Prophylaxis control', 'test', 8, 8, '2026-07-22 07:41:29', '2026-07-22 07:41:29'),
 (3, 2026, 1, 'Institutional Capacity and Staff Deployment', 'Test', 70, 35, '2026-07-22 09:25:08', '2026-07-22 09:25:08'),
-(4, 2026, 1, 'Community Welfare Food Security Distributions', 'test', 70, 30, '2026-08-12 11:09:04', '2026-08-12 11:09:04');
+(4, 2026, 1, 'Community Welfare Food Security Distributions', 'test', 70, 30, '2026-08-12 11:09:04', '2026-08-12 11:09:04'),
+(5, 2026, 1, 'Extension Services & Field Outreach', 'Conducting trainings', 25, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(6, 2026, 1, 'Extension Services & Field Outreach', 'Farmers send to training', 100, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(7, 2026, 1, 'Extension Services & Field Outreach', 'Attending training', 10, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(8, 2026, 1, 'Extension Services & Field Outreach', 'Est. of pasture unit (Acres)', 3, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(9, 2026, 1, 'Extension Services & Field Outreach', 'Conducting mobile clinic', 24, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(10, 2026, 1, 'Extension Services & Field Outreach', 'Conducting field days', 3, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(11, 2026, 1, 'Extension Services & Field Outreach', 'Poultry farm registration', 100, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(12, 2026, 1, 'Extension Services & Field Outreach', 'Cattle farm registration', 50, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(13, 2026, 1, 'Extension Services & Field Outreach', 'Monthly reports', 12, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(14, 2026, 1, 'Extension Services & Field Outreach', 'Animal Identification', 100, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30'),
+(15, 2026, 1, 'Extension Services & Field Outreach', 'Data Collection', 5, 0, '2026-09-21 14:43:30', '2026-09-21 14:43:30');
 
 -- --------------------------------------------------------
 
@@ -3518,15 +5192,15 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`, `emp_id`, `service_number`, `designation`, `role`, `service_category`, `employment_type`, `employment_status`, `attachment_reason`, `district_id`, `range_id`, `unit_id`, `registered_date`, `appointment_date`, `appointment_date_current_position`, `position_to_current_location`, `date_of_birth`, `office_id`, `farm_id`, `district`, `is_active`, `last_login`, `created_at`, `profile_image`, `training_center_id`, `training_center_location`, `unit`, `current_station`) VALUES
-(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, NULL, 'administrator', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 09:52:45', '2025-12-15 11:32:14', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(7, 'adminstrator', 'admins@gmail.com', NULL, '$2y$10$nlm7FQcS7mceOa48ZahFTO.DdagUFOjijh5Yl.HNTs4yj2fWBcq/2', 'Admin Login', NULL, NULL, NULL, 'administrator', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-10-19 13:47:06', '2025-12-15 11:32:14', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (10, 'finance_admin', 'finance@gmail.com', NULL, '$2y$10$pjmgh5Ij1k6tTXpCPuKo3.bxhwYip.D/D33bT4CSm4su2YUYnHlWe', 'Finance admin', NULL, NULL, NULL, 'finance_admin', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 18:59:02', '2025-12-16 07:42:06', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (11, 'Planning officer', 'planning@gmail.com', NULL, '$2y$10$xM5nKggJu8OJ5E4AV9n4OOuqJ4L2TUqxfXnBoAV0dBcqycEv2L99W', 'Planning officer', NULL, NULL, NULL, 'planning_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-06-10 16:05:02', '2025-12-16 09:34:59', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (12, 'Subject Matter Specialist', 'sms@gmail.com', NULL, '$2y$10$M2geolCGKHuoKMn1R1A0x.Qde.C5H7ME3GS.BzQRMAE5gNpA4VmCu', 'Subject Matter Specialist', NULL, NULL, NULL, 'sms', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 18:54:36', '2025-12-16 11:30:03', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (13, 'Farms Officer', 'farms@gmail.com', NULL, '$2y$10$yig.Tm9WNcTOZx0wOY5ZzukY9Zp4L1Yf2tmilQWcHM5Rfw3euAyW6', 'Deputy Director (Farms Operation)', NULL, NULL, NULL, 'farms_dd', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-05-25 20:22:03', '2025-12-17 08:46:28', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 19:01:11', '2025-12-17 10:22:46', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (17, 'veterinary surgeon', 'veterinary@gmail.com', '0712345678', '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'veterinary surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 1, 13, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Amparai', 1, '2026-07-13 19:15:24', '2025-12-18 10:10:22', NULL, NULL, NULL, NULL, 'Damana Range'),
-(18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, NULL, 'provincial_director', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 18:51:29', '2026-01-05 13:18:11', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
-(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$6/wNKYRGo449W6rMZxLPnumbFV6afE1PfGKavQ1XfwkX64Iy6Mstm', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 1, 1, NULL, NULL, NULL, NULL, '2026-09-12', NULL, 1, NULL, 'Amparai', 1, '2026-09-17 12:25:57', '2026-03-25 10:58:36', NULL, NULL, NULL, 'Range Office - Ampara', 'Range Office - Ampara'),
+(18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, NULL, 'provincial_director', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-10-19 11:56:14', '2026-01-05 13:18:11', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$6/wNKYRGo449W6rMZxLPnumbFV6afE1PfGKavQ1XfwkX64Iy6Mstm', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 1, 1, NULL, NULL, NULL, NULL, '2026-09-12', NULL, 1, NULL, 'Amparai', 1, '2026-10-19 15:45:44', '2026-03-25 10:58:36', NULL, NULL, NULL, 'Range Office - Ampara', 'Range Office - Ampara'),
 (20, 'employee', 'emp@gmail.com', NULL, '$2y$10$ITeSMQXxM8Ciwu4KK/Sy2O7ai30xUjP8yrL1WNRzXlNnsrG8ylfZK', 'Test Employee', NULL, NULL, NULL, 'employee', NULL, 'permanent', 'Permanent', NULL, NULL, 1, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Amparai', 1, '2026-05-18 17:56:16', '2026-04-22 06:10:30', 'profile_20_1777526035.png', NULL, NULL, NULL, 'Ampara Range'),
 (21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'Dr. (Mrs). L. Dujiththera', NULL, NULL, 'GVS', 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
 (22, 'sinharasa', 'sinharasa.a@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. A. Sinharasa', NULL, NULL, 'LDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
@@ -3543,9 +5217,9 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (51, 'Animal Husbandry Training Centre - Kallady', 'ahtc.kallady@gmail.com', NULL, '$2y$10$lOXsKCuN4cjfACEGzI9YTOoO76GRikx.RiY.u8JUfSGHMQH.Tnj4a', 'Animal Husbandry Training Centre - Kallady', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:25:45', '2026-08-13 07:04:58', NULL, 2, '0', NULL, 'Central Provincial Office'),
 (52, 'Animal Husbandry Farmer Training Centre - Kanchira', 'ahftc.kanchirankuda@gmail.com', NULL, '$2y$10$3A4p6VhvasatjFvQBzgyveSCdl.tBpAF6BiaCT.DSu0MMRsHscv1G', 'Animal Husbandry Farmer Training Centre - Kanchirankuda', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:27:48', '2026-08-13 07:05:32', NULL, 3, '0', NULL, 'Central Provincial Office'),
 (54, 'testing123', 'testing123@gmail.com', '0778439871', '$2y$10$G1S9EDwMXOFtV.jeiRnJ1.oPGJG4ZwqJGyq3Ea9TEspRvBVh5yebq', 'Yohani Abeykoon', '210', '210', 'Veterinary Surgeon', 'training_officer', 'test', 'permanent', 'Permanent', NULL, 0, NULL, NULL, NULL, '2026-08-14', '2026-08-14', '2026-08-14', NULL, NULL, NULL, 'Amparai', 0, NULL, '2026-08-14 06:48:10', NULL, 1, NULL, NULL, 'Central Provincial Office'),
-(64, 'District Deputy Director (Ampara)', 'dd.ampara@gmail.com', NULL, '$2y$10$w7Vkk3b0YMGQcAbD84yS7.Mr6vM1LC7.thhtXIzBLP.T9L1MDiCOC', 'District Deputy Director (Ampara)', NULL, NULL, '', 'district_dd', NULL, 'permanent', 'Permanent', NULL, 1, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1972-02-01', NULL, NULL, 'Amparai', 1, '2026-09-14 18:48:25', '2026-09-04 06:57:35', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
-(65, 'District Deputy Director (H/Q1)', 'dd.hq1@gmail.com', NULL, '$2y$10$F.yRyP8Ft.WeYnStQrmbTug2giHf4mAlt1aJvFiyCzN4tSCCYB.iO', 'District Deputy Director (H/Q1)', NULL, NULL, '', 'deputy_director_hq_1', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1980-09-08', NULL, NULL, 'Provincial', 1, '2026-09-14 18:56:11', '2026-09-04 06:58:16', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
-(66, 'Planning Deputy Director (H/Q2)', 'dd.hq2@gmail.com', NULL, '$2y$10$LvQ.ODAFOGVtUcS/bqeKQOfy9rlNcHlD6oqNKnTm/6DSHkqmoPldy', 'Planning Deputy Director (H/Q2)', NULL, NULL, '', 'deputy_director_hq_2', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1980-06-09', NULL, NULL, 'Provincial', 1, '2026-09-04 12:34:36', '2026-09-04 06:59:32', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(64, 'District Deputy Director (Ampara)', 'dd.ampara@gmail.com', NULL, '$2y$10$w7Vkk3b0YMGQcAbD84yS7.Mr6vM1LC7.thhtXIzBLP.T9L1MDiCOC', 'District Deputy Director (Ampara)', NULL, NULL, '', 'district_dd', NULL, 'permanent', 'Permanent', NULL, 1, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1972-02-01', NULL, NULL, 'Amparai', 1, '2026-10-19 15:08:25', '2026-09-04 06:57:35', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(65, 'District Deputy Director (H/Q1)', 'dd.hq1@gmail.com', NULL, '$2y$10$F.yRyP8Ft.WeYnStQrmbTug2giHf4mAlt1aJvFiyCzN4tSCCYB.iO', 'District Deputy Director (H/Q1)', NULL, NULL, '', 'deputy_director_hq_1', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1980-09-08', NULL, NULL, 'Provincial', 1, '2026-10-19 13:46:18', '2026-09-04 06:58:16', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(66, 'Planning Deputy Director (H/Q2)', 'dd.hq2@gmail.com', NULL, '$2y$10$LvQ.ODAFOGVtUcS/bqeKQOfy9rlNcHlD6oqNKnTm/6DSHkqmoPldy', 'Planning Deputy Director (H/Q2)', NULL, NULL, '', 'deputy_director_hq_2', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1980-06-09', NULL, NULL, 'Provincial', 1, '2026-10-19 13:46:43', '2026-09-04 06:59:32', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (67, 'District Deputy Director (Batticaloa)', 'dd.batticaloa@gmail.com', NULL, '$2y$10$RjKsHfESAMfg6l2R54qLx.hY6SCDFsJcVTcNFpZogziOuC7bu0QPi', 'District Deputy Director (Batticaloa)', NULL, NULL, NULL, 'district_dd', NULL, 'permanent', 'Permanent', NULL, 2, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, '2026-09-04 12:57:49', '2026-09-04 07:23:20', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (68, 'District Deputy Director (Trincomalee)', 'dd.trincomalee@gmail.com', NULL, '$2y$10$M00UMVzmD4UpUoMzeH84NuNA6nJTjWldil9GSI6vMwB7KLCVWguhK', 'District Deputy Director (Trincomalee)', NULL, NULL, NULL, 'district_dd', NULL, 'permanent', 'Permanent', NULL, 3, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Trincomalee', 1, '2026-09-04 12:58:32', '2026-09-04 07:23:20', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (71, 'test_driver', 'test_driver@gmail.com', '0776567890', '$2y$10$efirPFWjDbYagQ.s9Y.HcOSzeoFPcHjSkUIDSIQvMEYg9idX7GAoa', 'Test Driver Employee', '001', '001', 'Driver', 'driver', 'Driver', 'temporary', NULL, NULL, 1, 7, NULL, '2026-09-09', '2026-09-09', '2026-09-09', '2026-09-09', '1987-09-09', NULL, NULL, 'Amparai', 1, NULL, '2026-09-09 08:10:46', NULL, NULL, NULL, 'Range Office - Addalaichenai (Ampara)', 'Range Office - Addalaichenai (Ampara)'),
@@ -3575,20 +5249,18 @@ CREATE TABLE `user_quick_action_assignments` (
 --
 
 INSERT INTO `user_quick_action_assignments` (`id`, `user_id`, `target_role`, `district_id`, `range_id`, `action_id`, `assigned_by`, `assigned_at`) VALUES
-(61, NULL, 'veterinary_surgeon', 1, NULL, 'range_statistics', 64, '2026-09-14 09:50:26'),
-(62, NULL, 'veterinary_surgeon', 1, NULL, 'annual_targets', 64, '2026-09-14 09:50:26'),
-(63, NULL, 'veterinary_surgeon', 1, NULL, 'monthly_annual_reports', 64, '2026-09-14 09:50:26'),
-(64, NULL, 'veterinary_surgeon', 1, NULL, 'regulatory_functions', 64, '2026-09-14 09:50:26'),
-(65, NULL, 'veterinary_surgeon', 1, NULL, 'animal_health', 64, '2026-09-14 09:50:26'),
-(66, NULL, 'veterinary_surgeon', 1, NULL, 'clinical_services', 64, '2026-09-14 09:50:26'),
-(67, NULL, 'veterinary_surgeon', 1, NULL, 'animal_breeding', 64, '2026-09-14 09:50:26'),
-(68, NULL, 'veterinary_surgeon', 1, NULL, 'livestock_production', 64, '2026-09-14 09:50:26'),
-(69, NULL, 'veterinary_surgeon', 1, NULL, 'dairy_hub', 64, '2026-09-14 09:50:26'),
-(70, NULL, 'veterinary_surgeon', 1, NULL, 'projects', 64, '2026-09-14 09:50:26'),
-(71, NULL, 'veterinary_surgeon', 1, NULL, 'monitoring', 64, '2026-09-14 09:50:26'),
-(72, NULL, 'veterinary_surgeon', 1, NULL, 'accounts', 64, '2026-09-14 09:50:26'),
-(73, NULL, 'veterinary_surgeon', 1, NULL, 'clean_sri_lanka', 64, '2026-09-14 09:50:26'),
-(74, NULL, 'veterinary_surgeon', 1, NULL, 'trainings', 64, '2026-09-14 09:50:26');
+(120, NULL, 'veterinary_surgeon', 1, NULL, 'range_statistics', 64, '2026-10-19 10:13:40'),
+(121, NULL, 'veterinary_surgeon', 1, NULL, 'annual_targets', 64, '2026-10-19 10:13:40'),
+(122, NULL, 'veterinary_surgeon', 1, NULL, 'monthly_annual_reports', 64, '2026-10-19 10:13:40'),
+(123, NULL, 'veterinary_surgeon', 1, NULL, 'regulatory_functions', 64, '2026-10-19 10:13:40'),
+(124, NULL, 'veterinary_surgeon', 1, NULL, 'animal_health', 64, '2026-10-19 10:13:40'),
+(125, NULL, 'veterinary_surgeon', 1, NULL, 'clinical_services', 64, '2026-10-19 10:13:40'),
+(126, NULL, 'veterinary_surgeon', 1, NULL, 'animal_breeding', 64, '2026-10-19 10:13:40'),
+(127, NULL, 'veterinary_surgeon', 1, NULL, 'dairy_hub', 64, '2026-10-19 10:13:40'),
+(128, NULL, 'veterinary_surgeon', 1, NULL, 'projects_monitoring', 64, '2026-10-19 10:13:40'),
+(129, NULL, 'veterinary_surgeon', 1, NULL, 'accounts', 64, '2026-10-19 10:13:40'),
+(130, NULL, 'veterinary_surgeon', 1, NULL, 'clean_sri_lanka', 64, '2026-10-19 10:13:40'),
+(131, NULL, 'veterinary_surgeon', 1, NULL, 'trainings', 64, '2026-10-19 10:13:40');
 
 -- --------------------------------------------------------
 
@@ -3606,7 +5278,7 @@ CREATE TABLE `vaccination_session_logs` (
   `animal_type` varchar(50) NOT NULL,
   `vaccine_name` varchar(100) NOT NULL,
   `vaccinator_id` int(11) DEFAULT NULL,
-  `vaccinator_name` varchar(150) NOT NULL,
+  `vaccinator_name` varchar(500) NOT NULL DEFAULT '',
   `vaccinated_count` int(11) NOT NULL DEFAULT 0,
   `doses_administered` int(11) NOT NULL DEFAULT 0,
   `batch_no` varchar(100) DEFAULT NULL,
@@ -3614,18 +5286,19 @@ CREATE TABLE `vaccination_session_logs` (
   `remarks` text DEFAULT NULL,
   `created_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `assigned_vaccinator_ids` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data for table `vaccination_session_logs`
 --
 
-INSERT INTO `vaccination_session_logs` (`id`, `range_id`, `session_date`, `report_year`, `report_month`, `category`, `animal_type`, `vaccine_name`, `vaccinator_id`, `vaccinator_name`, `vaccinated_count`, `doses_administered`, `batch_no`, `location_name`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 1, '2026-03-15', 2026, 3, 'Livestock', 'Cow', 'FMD', NULL, 'K. Murugesan (LDO)', 120, 120, NULL, 'Thirukkovil Unit 02', 'Routine FMD ring vaccination', NULL, '2026-09-16 04:10:55', '2026-09-16 04:10:55'),
-(2, 1, '2026-04-10', 2026, 4, 'Poultry', 'Chicken', 'Newcastle Disease (ND / Ranikhet)', NULL, 'S. Kamal (Casual Vaccinator)', 1450, 1450, '', 'Village Backyard Poultry Cluster', 'ND Lasota eye drop vaccination', NULL, '2026-09-16 04:10:55', '2026-09-16 05:55:46'),
-(3, 1, '2026-09-16', 2026, 9, 'Livestock', 'Goat', 'FMD', 4, 'Lakmi Uresha (NIC: 19876543219)', 50, 3, '2025/07', 'Uppuweli', '', 19, '2026-09-16 04:22:50', '2026-09-16 04:22:50'),
-(4, 1, '2026-09-16', 2026, 9, 'Poultry', 'Chicken', 'Fowl Pox Vaccine', 3, 'Yohani Abeykoon (NIC: 4)', 500, 500, '2025/08', 'Uppuweli', '', 19, '2026-09-16 09:40:29', '2026-09-16 09:40:29');
+INSERT INTO `vaccination_session_logs` (`id`, `range_id`, `session_date`, `report_year`, `report_month`, `category`, `animal_type`, `vaccine_name`, `vaccinator_id`, `vaccinator_name`, `vaccinated_count`, `doses_administered`, `batch_no`, `location_name`, `remarks`, `created_by`, `created_at`, `updated_at`, `assigned_vaccinator_ids`) VALUES
+(1, 1, '2026-03-15', 2026, 3, 'Livestock', 'Cow', 'FMD', NULL, 'K. Murugesan (LDO)', 120, 120, NULL, 'Thirukkovil Unit 02', 'Routine FMD ring vaccination', NULL, '2026-09-16 04:10:55', '2026-09-16 04:10:55', NULL),
+(2, 1, '2026-04-10', 2026, 4, 'Poultry', 'Chicken', 'Newcastle Disease (ND / Ranikhet)', NULL, 'S. Kamal (Casual Vaccinator)', 1450, 1450, '', 'Village Backyard Poultry Cluster', 'ND Lasota eye drop vaccination', NULL, '2026-09-16 04:10:55', '2026-09-16 05:55:46', NULL),
+(3, 1, '2026-09-16', 2026, 9, 'Livestock', 'Goat', 'FMD', 4, 'Lakmi Uresha (NIC: 19876543219)', 50, 3, '2025/07', 'Uppuweli', '', 19, '2026-09-16 04:22:50', '2026-09-16 04:22:50', NULL),
+(4, 1, '2026-09-16', 2026, 9, 'Poultry', 'Chicken', 'Fowl Pox Vaccine', 3, 'Yohani Abeykoon (NIC: 4)', 500, 500, '2025/08', 'Uppuweli', '', 19, '2026-09-16 09:40:29', '2026-09-16 09:40:29', NULL);
 
 -- --------------------------------------------------------
 
@@ -3640,19 +5313,20 @@ CREATE TABLE `vaccine_batches` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `remarks` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_id` int(11) DEFAULT NULL
+  `user_id` int(11) DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `vaccine_batches`
 --
 
-INSERT INTO `vaccine_batches` (`id`, `batch_number`, `is_active`, `created_at`, `updated_at`, `remarks`, `user_id`) VALUES
-(6, 'SLNV-06/03-2025', 1, '2026-06-01 06:44:59', '2026-06-01 06:49:24', '', NULL),
-(7, 'T-006', 1, '2026-06-01 11:22:24', '2026-06-01 11:22:24', '', NULL),
-(8, 'CRPS-23', 1, '2026-07-20 14:58:39', '2026-07-21 11:38:52', '', 45),
-(9, '02/26', 0, '2026-07-22 09:37:43', '2026-07-22 09:37:54', '', NULL),
-(10, 'SLNV-06/01-2025', 1, '2026-07-27 08:49:55', '2026-07-27 08:49:55', '', 45);
+INSERT INTO `vaccine_batches` (`id`, `batch_number`, `is_active`, `created_at`, `updated_at`, `remarks`, `user_id`, `expiry_date`) VALUES
+(6, 'SLNV-06/03-2025', 1, '2026-06-01 06:44:59', '2026-06-01 06:49:24', '', NULL, NULL),
+(7, 'T-006', 1, '2026-06-01 11:22:24', '2026-06-01 11:22:24', '', NULL, NULL),
+(8, 'CRPS-23', 1, '2026-07-20 14:58:39', '2026-07-21 11:38:52', '', 45, NULL),
+(9, '02/26', 0, '2026-07-22 09:37:43', '2026-07-22 09:37:54', '', NULL, NULL),
+(10, 'SLNV-06/01-2025', 1, '2026-07-27 08:49:55', '2026-07-27 08:49:55', '', 45, NULL);
 
 -- --------------------------------------------------------
 
@@ -3677,6 +5351,56 @@ INSERT INTO `vaccine_types` (`id`, `vaccine_name`, `target_animal`, `description
 (5, 'Gumboro', 'Cattle,Swine', 'test', '2026-05-28 13:04:12'),
 (6, 'HS Oil (60 dose)', 'Other', 'test', '2026-05-31 10:54:06'),
 (7, 'HS Alum (60 dose)', 'Cattle,Swine,Poultry,Buffalo,Goat,Sheep,Other', 'test', '2026-05-31 10:54:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `vehicle_fitness_certificates`
+--
+
+CREATE TABLE `vehicle_fitness_certificates` (
+  `id` int(11) NOT NULL,
+  `district_id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL,
+  `report_year` year(4) NOT NULL,
+  `report_month` tinyint(4) NOT NULL,
+  `certificate_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `health_certificate_id` int(11) DEFAULT NULL,
+  `health_certificate_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `farm_registration_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `farmer_nic` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `applicant_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `applicant_address` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vehicle_registration_no` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vehicle_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Lorry / Truck',
+  `driver_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `driver_license_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `animal_species` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Cattle',
+  `total_animals` int(11) DEFAULT 0,
+  `issue_date` date NOT NULL,
+  `valid_until` date DEFAULT NULL,
+  `from_location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `to_location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cond_02_easy_observance` enum('Yes','No') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Yes',
+  `cond_03_ramp` enum('Yes','No') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Yes',
+  `cond_04_floor_holes` enum('Yes','No') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Yes',
+  `cond_05_adequate_covering` enum('Yes','No') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Yes',
+  `cond_06_ventilation` enum('Yes','No') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Yes',
+  `cond_07_max_animals` enum('Yes','No') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Yes',
+  `approval_status` enum('Approved','Rejected','Pending') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Approved',
+  `remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `counterfoil_leaf_id` int(11) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `vehicle_fitness_certificates`
+--
+
+INSERT INTO `vehicle_fitness_certificates` (`id`, `district_id`, `range_id`, `report_year`, `report_month`, `certificate_no`, `health_certificate_id`, `health_certificate_no`, `farm_registration_no`, `farmer_nic`, `applicant_name`, `applicant_address`, `vehicle_registration_no`, `vehicle_type`, `driver_name`, `driver_license_no`, `animal_species`, `total_animals`, `issue_date`, `valid_until`, `from_location`, `to_location`, `cond_02_easy_observance`, `cond_03_ramp`, `cond_04_floor_holes`, `cond_05_adequate_covering`, `cond_06_ventilation`, `cond_07_max_animals`, `approval_status`, `remarks`, `counterfoil_leaf_id`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2026, 10, 'VFC-2026-089', 10, 'HC-970915', '530112345', '198654567890', 'Danushka Gangoda', '', '1', 'Light Truck / Pickup', 'test driver', 'test', 'Cattle', 1, '2026-10-15', '2026-10-18', 'test', 'trincomallee', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'Approved', '', NULL, 19, '2026-10-15 16:32:00', '2026-10-15 16:32:00');
 
 -- --------------------------------------------------------
 
@@ -3848,6 +5572,13 @@ INSERT INTO `veterinary_range_maps` (`id`, `range_id`, `iframe_url`, `created_at
 --
 
 --
+-- Indexes for table `activity_beneficiaries`
+--
+ALTER TABLE `activity_beneficiaries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_activity_id` (`activity_id`);
+
+--
 -- Indexes for table `advanced_programmes`
 --
 ALTER TABLE `advanced_programmes`
@@ -3876,11 +5607,38 @@ ALTER TABLE `animal_health_records`
   ADD KEY `fk_range` (`range_id`);
 
 --
+-- Indexes for table `animal_identifications`
+--
+ALTER TABLE `animal_identifications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range` (`range_id`),
+  ADD KEY `idx_district` (`district_id`),
+  ADD KEY `idx_tag` (`ear_tag_no`),
+  ADD KEY `idx_voucher` (`voucher_serial_no`),
+  ADD KEY `idx_status` (`present_status`),
+  ADD KEY `idx_date` (`identification_date`);
+
+--
 -- Indexes for table `animal_populations`
 --
 ALTER TABLE `animal_populations`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_range_year_animal_type` (`range_id`,`year`,`animal_type`);
+
+--
+-- Indexes for table `annual_breeding_targets`
+--
+ALTER TABLE `annual_breeding_targets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_range_year` (`range_id`,`year`);
+
+--
+-- Indexes for table `annual_extension_targets`
+--
+ALTER TABLE `annual_extension_targets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_extension_range_year` (`range_id`,`year`),
+  ADD KEY `idx_extension_year` (`year`);
 
 --
 -- Indexes for table `annual_feed_production`
@@ -4028,6 +5786,23 @@ ALTER TABLE `casual_vaccinator_deployments`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `cattle_vouchers`
+--
+ALTER TABLE `cattle_vouchers`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_tag_no` (`ear_tag_number`),
+  ADD KEY `idx_voucher_no` (`voucher_number`),
+  ADD KEY `idx_tag_prog` (`tag_program_id`);
+
+--
+-- Indexes for table `cattle_voucher_distributions`
+--
+ALTER TABLE `cattle_voucher_distributions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range_farmer` (`range_id`,`farm_reg_no`),
+  ADD KEY `idx_serials` (`start_serial`,`end_serial`);
+
+--
 -- Indexes for table `cattle_voucher_usage`
 --
 ALTER TABLE `cattle_voucher_usage`
@@ -4057,6 +5832,28 @@ ALTER TABLE `chick_growth_log`
   ADD KEY `record_date` (`record_date`);
 
 --
+-- Indexes for table `citizen_charter_requests`
+--
+ALTER TABLE `citizen_charter_requests`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range_date` (`range_id`,`request_date`),
+  ADD KEY `idx_request_origin` (`request_origin`),
+  ADD KEY `idx_nic` (`nic_no`),
+  ADD KEY `idx_farm_reg_no` (`farm_reg_no`);
+
+--
+-- Indexes for table `clinical_opd_records`
+--
+ALTER TABLE `clinical_opd_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_clinic_type` (`clinic_type`),
+  ADD KEY `idx_entry_date` (`entry_date`),
+  ADD KEY `idx_range_id` (`range_id`),
+  ADD KEY `idx_district_id` (`district_id`),
+  ADD KEY `idx_cash_receipt_no` (`cash_receipt_no`),
+  ADD KEY `idx_registration_no` (`registration_no`);
+
+--
 -- Indexes for table `counterfoil_assets`
 --
 ALTER TABLE `counterfoil_assets`
@@ -4079,6 +5876,7 @@ ALTER TABLE `counterfoil_leaf_issues`
 --
 ALTER TABLE `crop_returns`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_crop_unique_monthly` (`range_id`,`report_year`,`report_month`,`item_name`),
   ADD KEY `fk_crop_returns_district` (`district_id`),
   ADD KEY `fk_crop_returns_range` (`range_id`);
 
@@ -4113,10 +5911,52 @@ ALTER TABLE `daily_feed_distribution`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `dairy_farm_applications`
+--
+ALTER TABLE `dairy_farm_applications`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_app_farm_reg_no` (`farm_reg_no`),
+  ADD KEY `idx_app_summary_id` (`summary_id`);
+
+--
 -- Indexes for table `dairy_hub_records`
 --
 ALTER TABLE `dairy_hub_records`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `dairy_hub_societies`
+--
+ALTER TABLE `dairy_hub_societies`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_range_society` (`range_id`);
+
+--
+-- Indexes for table `dairy_hub_society_members`
+--
+ALTER TABLE `dairy_hub_society_members`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_unique_range_nic` (`range_id`,`nic`),
+  ADD KEY `idx_membership_no` (`membership_no`),
+  ADD KEY `idx_farm_reg_no` (`farm_reg_no`),
+  ADD KEY `idx_position` (`executive_position`);
+
+--
+-- Indexes for table `dairy_project_beneficiaries`
+--
+ALTER TABLE `dairy_project_beneficiaries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_farm_reg_no` (`farm_reg_no`),
+  ADD KEY `idx_project_year` (`project_year`),
+  ADD KEY `idx_range_id` (`range_id`),
+  ADD KEY `idx_district_id` (`district_id`);
+
+--
+-- Indexes for table `dairy_water_sources`
+--
+ALTER TABLE `dairy_water_sources`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_water_source_name` (`source_name`);
 
 --
 -- Indexes for table `day_old_chicks_distribution`
@@ -4152,6 +5992,14 @@ ALTER TABLE `drug_types`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `ear_tag_programs`
+--
+ALTER TABLE `ear_tag_programs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range_pdate` (`range_id`,`program_date`),
+  ADD KEY `idx_nic` (`nic_no`);
+
+--
 -- Indexes for table `ear_tag_usage`
 --
 ALTER TABLE `ear_tag_usage`
@@ -4159,6 +6007,14 @@ ALTER TABLE `ear_tag_usage`
   ADD KEY `fk_ear_tags_district` (`district_id`),
   ADD KEY `fk_ear_tags_range` (`range_id`),
   ADD KEY `fk_ear_tags_user` (`created_by`);
+
+--
+-- Indexes for table `extension_service_records`
+--
+ALTER TABLE `extension_service_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_esr_range_year` (`range_id`,`report_year`),
+  ADD KEY `idx_esr_indicator` (`indicator_code`);
 
 --
 -- Indexes for table `farmers`
@@ -4169,6 +6025,15 @@ ALTER TABLE `farmers`
   ADD KEY `idx_farmer_nic` (`nic_no`),
   ADD KEY `idx_farm_reg_no` (`farm_registration_no`),
   ADD KEY `idx_farmer_range` (`range_id`);
+
+--
+-- Indexes for table `farmer_training_records`
+--
+ALTER TABLE `farmer_training_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ft_farm_reg` (`farm_reg_no`),
+  ADD KEY `idx_ft_nic` (`nic`),
+  ADD KEY `idx_ft_range` (`range_id`);
 
 --
 -- Indexes for table `farm_accounts`
@@ -4211,12 +6076,35 @@ ALTER TABLE `farm_fuel_register`
   ADD KEY `item_id` (`item_id`);
 
 --
+-- Indexes for table `farm_master_history`
+--
+ALTER TABLE `farm_master_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_fmh_reg` (`farm_reg_no`),
+  ADD KEY `idx_fmh_module` (`module_source`);
+
+--
 -- Indexes for table `farm_produce_register_annex6`
 --
 ALTER TABLE `farm_produce_register_annex6`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `commodity_id` (`commodity_id`);
+
+--
+-- Indexes for table `farm_registration_fodder_items`
+--
+ALTER TABLE `farm_registration_fodder_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `farm_registration_id` (`farm_registration_id`);
+
+--
+-- Indexes for table `farm_registration_renewals`
+--
+ALTER TABLE `farm_registration_renewals`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range_reg` (`range_id`,`registration_no`),
+  ADD KEY `idx_nic` (`nic`);
 
 --
 -- Indexes for table `furniture_assets`
@@ -4248,6 +6136,14 @@ ALTER TABLE `hatchery_register`
 ALTER TABLE `hatchery_sales`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `health_certificate_animals`
+--
+ALTER TABLE `health_certificate_animals`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_hc_id` (`health_certificate_id`),
+  ADD KEY `idx_animal_id` (`animal_identification_id`);
 
 --
 -- Indexes for table `health_certificate_issues`
@@ -4344,6 +6240,27 @@ ALTER TABLE `letter_h_accounts`
   ADD KEY `fk_letter_h_user` (`created_by`);
 
 --
+-- Indexes for table `letter_h_categories`
+--
+ALTER TABLE `letter_h_categories`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `letter_h_entries`
+--
+ALTER TABLE `letter_h_entries`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_letter_h_unique` (`range_id`,`report_year`,`report_month`,`item_id`),
+  ADD KEY `idx_lh_range_year` (`range_id`,`report_year`,`report_month`);
+
+--
+-- Indexes for table `letter_h_items`
+--
+ALTER TABLE `letter_h_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_cat_sort` (`category_id`,`sort_order`);
+
+--
 -- Indexes for table `livestock_societies`
 --
 ALTER TABLE `livestock_societies`
@@ -4415,6 +6332,30 @@ ALTER TABLE `milk_processing_centers`
 --
 ALTER TABLE `milk_product_sales_centers`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `mobile_clinics`
+--
+ALTER TABLE `mobile_clinics`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_mc_range_date` (`range_id`,`clinic_date`),
+  ADD KEY `idx_mc_year_month` (`report_year`,`report_month`);
+
+--
+-- Indexes for table `mobile_clinic_drug_distributions`
+--
+ALTER TABLE `mobile_clinic_drug_distributions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_mcdd_range_date` (`range_id`,`distribution_date`),
+  ADD KEY `idx_mcdd_drug_name` (`drug_name`);
+
+--
+-- Indexes for table `mobile_clinic_treatments`
+--
+ALTER TABLE `mobile_clinic_treatments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_mct_distribution` (`distribution_id`),
+  ADD KEY `idx_mct_farmer_nic` (`farmer_nic`);
 
 --
 -- Indexes for table `monthly_fuel_summary`
@@ -4496,11 +6437,20 @@ ALTER TABLE `production_categories`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `production_issue_records`
+--
+ALTER TABLE `production_issue_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range_year` (`range_id`,`report_year`),
+  ADD KEY `idx_indicator` (`indicator_code`);
+
+--
 -- Indexes for table `production_items`
 --
 ALTER TABLE `production_items`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `category_id` (`category_id`);
+  ADD KEY `category_id` (`category_id`),
+  ADD KEY `idx_prod_items_active` (`is_active`,`archived_year`);
 
 --
 -- Indexes for table `projects_progress`
@@ -4514,6 +6464,40 @@ ALTER TABLE `projects_progress`
 ALTER TABLE `project_assignments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `project_id` (`project_id`);
+
+--
+-- Indexes for table `project_individual_beneficiaries`
+--
+ALTER TABLE `project_individual_beneficiaries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pib_proj` (`project_id`),
+  ADD KEY `idx_pib_nic` (`nic_no`),
+  ADD KEY `idx_pib_range` (`range_id`);
+
+--
+-- Indexes for table `project_monitoring_visits`
+--
+ALTER TABLE `project_monitoring_visits`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_pmv_proj` (`project_id`),
+  ADD KEY `idx_pmv_ben` (`beneficiary_id`),
+  ADD KEY `idx_pmv_reg` (`farm_reg_no`),
+  ADD KEY `idx_pmv_source` (`source_module`),
+  ADD KEY `idx_pmv_range` (`range_id`);
+
+--
+-- Indexes for table `psdg_project_catalog`
+--
+ALTER TABLE `psdg_project_catalog`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_ppc_cat` (`category_name`);
+
+--
+-- Indexes for table `range_module_topics`
+--
+ALTER TABLE `range_module_topics`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `module_key` (`module_key`);
 
 --
 -- Indexes for table `range_subject_assignments`
@@ -4553,6 +6537,7 @@ ALTER TABLE `regulatory_records`
 --
 ALTER TABLE `section_e`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_section_e_unique` (`range_id`,`report_year`,`report_month`,`item_id`),
   ADD KEY `fk_prod_rec_district` (`district_id`),
   ADD KEY `fk_prod_rec_range` (`range_id`),
   ADD KEY `fk_prod_rec_category` (`category_id`),
@@ -4643,6 +6628,7 @@ ALTER TABLE `user_quick_action_assignments`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uniq_user_dist_action` (`user_id`,`district_id`,`action_id`),
   ADD UNIQUE KEY `uniq_role_dist_action` (`target_role`,`district_id`,`action_id`),
+  ADD UNIQUE KEY `uniq_range_action` (`range_id`,`action_id`),
   ADD KEY `idx_user_id` (`user_id`),
   ADD KEY `idx_assigned_by` (`assigned_by`),
   ADD KEY `idx_district_id` (`district_id`),
@@ -4674,6 +6660,16 @@ ALTER TABLE `vaccine_batches`
 ALTER TABLE `vaccine_types`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `idx_vaccine_unique` (`vaccine_name`,`target_animal`);
+
+--
+-- Indexes for table `vehicle_fitness_certificates`
+--
+ALTER TABLE `vehicle_fitness_certificates`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range_year` (`range_id`,`report_year`),
+  ADD KEY `idx_cert_no` (`certificate_no`),
+  ADD KEY `idx_hc_id` (`health_certificate_id`),
+  ADD KEY `idx_farm_reg` (`farm_registration_no`);
 
 --
 -- Indexes for table `vehicle_repairs`
@@ -4713,10 +6709,16 @@ ALTER TABLE `veterinary_range_maps`
 --
 
 --
+-- AUTO_INCREMENT for table `activity_beneficiaries`
+--
+ALTER TABLE `activity_beneficiaries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `advanced_programmes`
 --
 ALTER TABLE `advanced_programmes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `amended_programmes`
@@ -4737,16 +6739,34 @@ ALTER TABLE `animal_health_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `animal_identifications`
+--
+ALTER TABLE `animal_identifications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
+
+--
 -- AUTO_INCREMENT for table `animal_populations`
 --
 ALTER TABLE `animal_populations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
+-- AUTO_INCREMENT for table `annual_breeding_targets`
+--
+ALTER TABLE `annual_breeding_targets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `annual_extension_targets`
+--
+ALTER TABLE `annual_extension_targets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `annual_feed_production`
 --
 ALTER TABLE `annual_feed_production`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `annual_livestock_societies`
@@ -4800,7 +6820,7 @@ ALTER TABLE `annual_production_levels`
 -- AUTO_INCREMENT for table `annual_vaccination_targets`
 --
 ALTER TABLE `annual_vaccination_targets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `assets_immovable`
@@ -4818,13 +6838,13 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=319;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=356;
 
 --
 -- AUTO_INCREMENT for table `breeding_ai_performance`
 --
 ALTER TABLE `breeding_ai_performance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `breeding_calving_performance`
@@ -4854,13 +6874,25 @@ ALTER TABLE `cages`
 -- AUTO_INCREMENT for table `cash_book_summaries`
 --
 ALTER TABLE `cash_book_summaries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `casual_vaccinator_deployments`
 --
 ALTER TABLE `casual_vaccinator_deployments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `cattle_vouchers`
+--
+ALTER TABLE `cattle_vouchers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=129;
+
+--
+-- AUTO_INCREMENT for table `cattle_voucher_distributions`
+--
+ALTER TABLE `cattle_voucher_distributions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `cattle_voucher_usage`
@@ -4887,22 +6919,34 @@ ALTER TABLE `chick_growth_log`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `citizen_charter_requests`
+--
+ALTER TABLE `citizen_charter_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `clinical_opd_records`
+--
+ALTER TABLE `clinical_opd_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `counterfoil_assets`
 --
 ALTER TABLE `counterfoil_assets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `counterfoil_leaf_issues`
 --
 ALTER TABLE `counterfoil_leaf_issues`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `crop_returns`
 --
 ALTER TABLE `crop_returns`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
 
 --
 -- AUTO_INCREMENT for table `daily_egg_production`
@@ -4929,10 +6973,40 @@ ALTER TABLE `daily_feed_distribution`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `dairy_farm_applications`
+--
+ALTER TABLE `dairy_farm_applications`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `dairy_hub_records`
 --
 ALTER TABLE `dairy_hub_records`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `dairy_hub_societies`
+--
+ALTER TABLE `dairy_hub_societies`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `dairy_hub_society_members`
+--
+ALTER TABLE `dairy_hub_society_members`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `dairy_project_beneficiaries`
+--
+ALTER TABLE `dairy_project_beneficiaries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `dairy_water_sources`
+--
+ALTER TABLE `dairy_water_sources`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=394;
 
 --
 -- AUTO_INCREMENT for table `day_old_chicks_distribution`
@@ -4944,7 +7018,7 @@ ALTER TABLE `day_old_chicks_distribution`
 -- AUTO_INCREMENT for table `diary_tasks`
 --
 ALTER TABLE `diary_tasks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `districts`
@@ -4956,7 +7030,7 @@ ALTER TABLE `districts`
 -- AUTO_INCREMENT for table `drug_records`
 --
 ALTER TABLE `drug_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `drug_types`
@@ -4965,16 +7039,34 @@ ALTER TABLE `drug_types`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `ear_tag_programs`
+--
+ALTER TABLE `ear_tag_programs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `ear_tag_usage`
 --
 ALTER TABLE `ear_tag_usage`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `extension_service_records`
+--
+ALTER TABLE `extension_service_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `farmers`
 --
 ALTER TABLE `farmers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `farmer_training_records`
+--
+ALTER TABLE `farmer_training_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `farm_accounts`
@@ -5013,10 +7105,28 @@ ALTER TABLE `farm_fuel_register`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `farm_master_history`
+--
+ALTER TABLE `farm_master_history`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `farm_produce_register_annex6`
 --
 ALTER TABLE `farm_produce_register_annex6`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `farm_registration_fodder_items`
+--
+ALTER TABLE `farm_registration_fodder_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT for table `farm_registration_renewals`
+--
+ALTER TABLE `farm_registration_renewals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `furniture_assets`
@@ -5043,10 +7153,16 @@ ALTER TABLE `hatchery_sales`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `health_certificate_animals`
+--
+ALTER TABLE `health_certificate_animals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
 -- AUTO_INCREMENT for table `health_certificate_issues`
 --
 ALTER TABLE `health_certificate_issues`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `human_populations`
@@ -5109,22 +7225,40 @@ ALTER TABLE `letter_h_accounts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `letter_h_categories`
+--
+ALTER TABLE `letter_h_categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `letter_h_entries`
+--
+ALTER TABLE `letter_h_entries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `letter_h_items`
+--
+ALTER TABLE `letter_h_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+
+--
 -- AUTO_INCREMENT for table `livestock_societies`
 --
 ALTER TABLE `livestock_societies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `livestock_society_committee`
 --
 ALTER TABLE `livestock_society_committee`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `livestock_society_meetings`
 --
 ALTER TABLE `livestock_society_meetings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `machinery_assets`
@@ -5136,7 +7270,7 @@ ALTER TABLE `machinery_assets`
 -- AUTO_INCREMENT for table `master_counterfoil_types`
 --
 ALTER TABLE `master_counterfoil_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `master_programme_types`
@@ -5175,6 +7309,24 @@ ALTER TABLE `milk_product_sales_centers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `mobile_clinics`
+--
+ALTER TABLE `mobile_clinics`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `mobile_clinic_drug_distributions`
+--
+ALTER TABLE `mobile_clinic_drug_distributions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `mobile_clinic_treatments`
+--
+ALTER TABLE `mobile_clinic_treatments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `monthly_fuel_summary`
 --
 ALTER TABLE `monthly_fuel_summary`
@@ -5190,7 +7342,7 @@ ALTER TABLE `monthly_mash_details`
 -- AUTO_INCREMENT for table `monthly_vaccine_balances`
 --
 ALTER TABLE `monthly_vaccine_balances`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `month_old_chicks_distribution`
@@ -5232,31 +7384,61 @@ ALTER TABLE `pending_approvals`
 -- AUTO_INCREMENT for table `production_activity_targets`
 --
 ALTER TABLE `production_activity_targets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `production_categories`
 --
 ALTER TABLE `production_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `production_issue_records`
+--
+ALTER TABLE `production_issue_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `production_items`
 --
 ALTER TABLE `production_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT for table `projects_progress`
 --
 ALTER TABLE `projects_progress`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `project_assignments`
 --
 ALTER TABLE `project_assignments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `project_individual_beneficiaries`
+--
+ALTER TABLE `project_individual_beneficiaries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `project_monitoring_visits`
+--
+ALTER TABLE `project_monitoring_visits`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `psdg_project_catalog`
+--
+ALTER TABLE `psdg_project_catalog`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2186;
+
+--
+-- AUTO_INCREMENT for table `range_module_topics`
+--
+ALTER TABLE `range_module_topics`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=534;
 
 --
 -- AUTO_INCREMENT for table `range_subject_assignments`
@@ -5286,7 +7468,7 @@ ALTER TABLE `regulatory_records`
 -- AUTO_INCREMENT for table `section_e`
 --
 ALTER TABLE `section_e`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `semen_logs`
@@ -5316,7 +7498,7 @@ ALTER TABLE `stock_balance_logs`
 -- AUTO_INCREMENT for table `strategic_action_indicators`
 --
 ALTER TABLE `strategic_action_indicators`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `training_advanced_programmes`
@@ -5352,7 +7534,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_quick_action_assignments`
 --
 ALTER TABLE `user_quick_action_assignments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=117;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
 
 --
 -- AUTO_INCREMENT for table `vaccination_session_logs`
@@ -5371,6 +7553,12 @@ ALTER TABLE `vaccine_batches`
 --
 ALTER TABLE `vaccine_types`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `vehicle_fitness_certificates`
+--
+ALTER TABLE `vehicle_fitness_certificates`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `vehicle_repairs`
@@ -5399,6 +7587,12 @@ ALTER TABLE `veterinary_range_maps`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `activity_beneficiaries`
+--
+ALTER TABLE `activity_beneficiaries`
+  ADD CONSTRAINT `fk_activity_beneficiaries_activity` FOREIGN KEY (`activity_id`) REFERENCES `production_activity_targets` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `advanced_programmes`
@@ -5560,6 +7754,12 @@ ALTER TABLE `ear_tag_usage`
   ADD CONSTRAINT `fk_ear_tags_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_ear_tags_range` FOREIGN KEY (`range_id`) REFERENCES `veterinary_ranges` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_ear_tags_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `farm_registration_fodder_items`
+--
+ALTER TABLE `farm_registration_fodder_items`
+  ADD CONSTRAINT `fk_farm_fodder_reg` FOREIGN KEY (`farm_registration_id`) REFERENCES `farm_registration_renewals` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `hatchery_register`

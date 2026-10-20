@@ -563,10 +563,10 @@ require_once '../../../includes/header.php';
 <!-- ============================================================ -->
 <!-- MODAL INCLUSIONS                                             -->
 <!-- ============================================================ -->
-<?php include __DIR__ . '/model/modal_issue_health_certificate.php'; ?>
-<?php include __DIR__ . '/model/modal_print_schedule03.php'; ?>
-<?php include __DIR__ . '/model/modal_issue_vehicle_fitness.php'; ?>
-<?php include __DIR__ . '/model/modal_print_schedule04.php'; ?>
+<?php include __DIR__ . '/models/modal_issue_health_certificate.php'; ?>
+<?php include __DIR__ . '/models/modal_print_schedule03.php'; ?>
+<?php include __DIR__ . '/models/modal_issue_vehicle_fitness.php'; ?>
+<?php include __DIR__ . '/models/modal_print_schedule04.php'; ?>
 
 <?php
 ob_start();

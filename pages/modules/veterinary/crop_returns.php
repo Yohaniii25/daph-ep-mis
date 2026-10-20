@@ -776,8 +776,8 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Add / Edit Modals for individual records -->
-<?php include 'model/add_crop_return.php'; ?>
-<?php include 'model/edit_crop_return.php'; ?>
+<?php include 'models/add_crop_return.php'; ?>
+<?php include 'models/edit_crop_return.php'; ?>
 
 <?php require_once '../../../includes/footer.php'; ?>
 
