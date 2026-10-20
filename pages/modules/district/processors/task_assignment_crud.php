@@ -58,7 +58,6 @@ $valid_actions = array_values(array_unique(array_merge($valid_actions, [
     'annual_targets',
     'monthly_annual_reports',
     'regulatory_functions',
-    'animal_health',
     'clinical_services',
     'animal_breeding',
     'livestock_production',

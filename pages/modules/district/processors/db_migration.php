@@ -127,17 +127,6 @@ if (!function_exists('ensure_quick_action_assignments_table')) {
                 'sort_order'     => 4
             ],
             [
-                'module_key'     => 'animal_health',
-                'title'          => 'Animal Health',
-                'icon'           => 'bi-gear-fill',
-                'color'          => '#689ccf',
-                'link_path'      => 'animal_health.php',
-                'category'       => 'clinical',
-                'category_label' => 'Clinical Care',
-                'description'    => 'Disease surveillance & clinical logs',
-                'sort_order'     => 5
-            ],
-            [
                 'module_key'     => 'clinical_services',
                 'title'          => 'Clinical Services',
                 'icon'           => 'bi-clipboard2-pulse',

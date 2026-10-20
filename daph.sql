@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 19, 2026 at 05:16 PM
+-- Generation Time: Oct 20, 2026 at 12:36 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -944,7 +944,10 @@ INSERT INTO `audit_logs` (`id`, `log_timestamp`, `user_id`, `username`, `role`, 
 (352, '2026-10-19 08:58:42', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_district'),
 (353, '2026-10-19 09:38:25', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_district'),
 (354, '2026-10-19 10:13:40', 64, 'District Deputy Director (Ampara)', 'district_dd', 'UPDATE_QUICK_ACTION_', NULL, '0', 0, NULL, '[\"range_statistics\",\"annual_targets\",\"monthly_annual_reports\",\"regulatory_functions\",\"animal_health\",\"clinical_services\",\"animal_breeding\",\"dairy_hub\",\"projects_monitoring\",\"accounts\",\"clean_sri_lanka\",\"trainings\"]', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'District DD updated task assignments for All Government Veterinary Surgeons across Ampara District (12 actions assigned district-wide)'),
-(355, '2026-10-19 10:15:44', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer');
+(355, '2026-10-19 10:15:44', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(356, '2026-10-20 09:29:08', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer'),
+(357, '2026-10-20 09:58:21', 64, 'District Deputy Director (Ampara)', 'district_dd', 'LOGIN', NULL, '0', 64, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: deputy_director_district'),
+(358, '2026-10-20 10:09:59', 19, 'Ampara veterinary surgeon', 'veterinary_surgeon', 'LOGIN', NULL, '0', 19, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0', 'User logged in with context: range_veterinary_officer');
 
 -- --------------------------------------------------------
 
@@ -4145,6 +4148,39 @@ CREATE TABLE `office_details` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `operational_trainings`
+--
+
+CREATE TABLE `operational_trainings` (
+  `id` int(11) NOT NULL,
+  `range_id` int(11) NOT NULL DEFAULT 1,
+  `module_context` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'projects',
+  `training_date` date NOT NULL,
+  `topic` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target_group` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `location` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `attendance` int(11) NOT NULL DEFAULT 0,
+  `photo_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `trainer_name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `remarks` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `operational_trainings`
+--
+
+INSERT INTO `operational_trainings` (`id`, `range_id`, `module_context`, `training_date`, `topic`, `target_group`, `location`, `attendance`, `photo_path`, `trainer_name`, `remarks`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 'projects', '2026-03-25', 'PSDG Commercial Poultry Bio-Security & Housing', 'Poultry Farmers & Beneficiaries', 'Ampara Veterinary Range Office Auditorium', 38, NULL, 'Dr. K. Jayasundara (VS)', 'Comprehensive workshop on broiler ventilation, litter management, and vaccination schedules.', NULL, '2026-10-20 05:05:44', '2026-10-20 05:05:44'),
+(2, 1, 'projects', '2026-04-05', 'LMP Fodder Cultivation & Silage Preparation Methods', 'Smallholder Livestock Farmers', 'Uhana Community Demonstration Plot', 29, NULL, 'Livestock Development Officer', 'Practical demo on CO-3 / CO-4 grass harvesting, chopper operation, and pit silage packing.', NULL, '2026-10-20 05:05:44', '2026-10-20 05:05:44'),
+(3, 1, 'dairy_hub', '2026-03-18', 'Clean Milk Production, Mastitis Control & CMT Testing', 'Dairy Farmers & Hub Members', 'Ampara Central Milk Collection Center', 45, NULL, 'Government Veterinary Surgeon', 'Trained dairy farmers on pre-milking teat disinfection, California Mastitis Test (CMT), and chilled storage.', NULL, '2026-10-20 05:05:44', '2026-10-20 05:05:44'),
+(4, 1, 'dairy_hub', '2026-04-12', 'Heifer Calf Rearing & Artificial Insemination Timelines', 'Dairy Farm Holders & Women Beneficiaries', 'Dairy Hub Training Facility', 32, NULL, 'Senior Breeding Officer', 'Covered nutritional requirements for weaning calves and estrus detection indicators.', NULL, '2026-10-20 05:05:44', '2026-10-20 05:05:44');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `parent_stock_flocks`
 --
 
@@ -4632,7 +4668,6 @@ INSERT INTO `range_module_topics` (`id`, `module_key`, `title`, `icon`, `color`,
 (2, 'annual_targets', 'Annual Targets', 'bi-bar-chart', '#370709', 'annual_targets.php', 'reports', 'Reports & Data', 'Annual operational targets & performance', 2, 1, '2026-10-19 09:47:58'),
 (3, 'monthly_annual_reports', 'Monthly/Annual Reports', 'bi-car-front-fill', '#b08723', 'monthly-annual-reports.php', 'reports', 'Reports & Data', 'Periodic reporting submissions', 3, 1, '2026-10-19 09:47:58'),
 (4, 'regulatory_functions', 'Regulatory Functions', 'bi-file-earmark-plus', '#a07174', 'regulatory_functions.php', 'clinical', 'Clinical & Legal', 'Animals Act compounding & legal functions', 4, 1, '2026-10-19 09:47:58'),
-(5, 'animal_health', 'Animal Health', 'bi-gear-fill', '#689ccf', 'animal_health.php', 'clinical', 'Clinical Care', 'Disease surveillance & clinical logs', 5, 1, '2026-10-19 09:47:58'),
 (6, 'clinical_services', 'Clinical Services', 'bi-clipboard2-pulse', '#2e7d32', 'clinical_services.php', 'clinical', 'Clinical Care', 'Outpatient veterinary clinical care', 6, 1, '2026-10-19 09:47:58'),
 (7, 'citizen_charter', 'Services Register (Citizen Charter)', 'bi-file-earmark-person-fill', '#b45309', 'clinical_services.php?tab=services_register', 'clinical', 'Citizen Services', 'Citizen charter service delivery logs', 7, 1, '2026-10-19 09:47:58'),
 (8, 'animal_breeding', 'Breeding and Production', 'bi-file-earmark-text-fill', '#e65100', 'animal_breeding.php', 'clinical', 'Breeding & AI', 'Artificial insemination & pedigree records', 8, 1, '2026-10-19 09:47:58'),
@@ -4640,7 +4675,7 @@ INSERT INTO `range_module_topics` (`id`, `module_key`, `title`, `icon`, `color`,
 (10, 'projects_monitoring', 'Projects and Monitoring', 'bi-kanban-fill', '#00838f', 'projects_progress.php', 'operations', 'Special Projects', 'Field development project tracking & site visits', 10, 1, '2026-10-19 09:47:58'),
 (11, 'accounts', 'Accounts', 'bi-bookmark-dash-fill', '#ad1457', 'accounts.php', 'reports', 'Finance & Cash', 'Revenue, cash books & expenditures', 11, 1, '2026-10-19 09:47:58'),
 (12, 'clean_sri_lanka', 'Clean Sri Lanka', 'bi-graph-up-arrow', '#d84315', 'clean_sri_lanka.php', 'operations', 'National Program', 'Clean Sri Lanka national initiative', 12, 1, '2026-10-19 09:47:58'),
-(13, 'trainings', 'Trainings', 'bi-sliders', '#37474f', 'training.php', 'operations', 'Capacity Building', 'Farmer workshops & staff capacity sessions', 13, 1, '2026-10-19 09:47:58');
+(13, 'trainings', 'Trainings', 'bi-sliders', '#37474f', 'training.php', 'operations', 'Capacity Building', 'Farmer workshops & staff capacity sessions', 13, 0, '2026-10-19 09:47:58');
 
 -- --------------------------------------------------------
 
@@ -5200,7 +5235,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (15, 'Training Officer', 'training@gmail.com', NULL, '$2y$10$dK4TD.h0f07IW/xDn.p8GuEW0kIiu2lhXlnYt64SUBeOaeWvIqNNK', 'Training Officer', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-09-14 19:01:11', '2025-12-17 10:22:46', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (17, 'veterinary surgeon', 'veterinary@gmail.com', '0712345678', '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'veterinary surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 1, 13, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Amparai', 1, '2026-07-13 19:15:24', '2025-12-18 10:10:22', NULL, NULL, NULL, NULL, 'Damana Range'),
 (18, 'Provincial director', 'provinciald@gmail.com', NULL, '$2y$10$rosK7hcBMssxuPRgI6iqi.CbGiv7bmo7lsM68UAPaRxZR4/uJc37G', 'Provincial Director', NULL, NULL, NULL, 'provincial_director', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-10-19 11:56:14', '2026-01-05 13:18:11', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
-(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$6/wNKYRGo449W6rMZxLPnumbFV6afE1PfGKavQ1XfwkX64Iy6Mstm', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 1, 1, NULL, NULL, NULL, NULL, '2026-09-12', NULL, 1, NULL, 'Amparai', 1, '2026-10-19 15:45:44', '2026-03-25 10:58:36', NULL, NULL, NULL, 'Range Office - Ampara', 'Range Office - Ampara'),
+(19, 'Ampara veterinary surgeon', 'amp_veterinary@gmail.com', '0712345678', '$2y$10$6/wNKYRGo449W6rMZxLPnumbFV6afE1PfGKavQ1XfwkX64Iy6Mstm', 'Ampara Veterinary Surgeon', NULL, NULL, NULL, 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 1, 1, NULL, NULL, NULL, NULL, '2026-09-12', NULL, 1, NULL, 'Amparai', 1, '2026-10-20 15:39:59', '2026-03-25 10:58:36', NULL, NULL, NULL, 'Range Office - Ampara', 'Range Office - Ampara'),
 (20, 'employee', 'emp@gmail.com', NULL, '$2y$10$ITeSMQXxM8Ciwu4KK/Sy2O7ai30xUjP8yrL1WNRzXlNnsrG8ylfZK', 'Test Employee', NULL, NULL, NULL, 'employee', NULL, 'permanent', 'Permanent', NULL, NULL, 1, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Amparai', 1, '2026-05-18 17:56:16', '2026-04-22 06:10:30', 'profile_20_1777526035.png', NULL, NULL, NULL, 'Ampara Range'),
 (21, 'dujiththera', 'dujiththera.l@daph.lk', NULL, '$2y$10$.rrAOsDrZRZ1auMc3Y.orODketpLbb0ctCrg5MwUqkcEWpqrUqIYC', 'Dr. (Mrs). L. Dujiththera', NULL, NULL, 'GVS', 'veterinary_surgeon', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
 (22, 'sinharasa', 'sinharasa.a@daph.lk', NULL, '$2y$10$8K1p/a0PdzS.pG92CPpY9.NmsY6F.6P.1N3G7.Y6N3G7.Y6N3G7.', 'Mr. A. Sinharasa', NULL, NULL, 'LDO', 'employee', NULL, 'permanent', 'Permanent', NULL, 2, 21, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, NULL, '2026-04-29 10:32:40', NULL, NULL, NULL, NULL, 'Batticaloa Range'),
@@ -5217,7 +5252,7 @@ INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `full_name`
 (51, 'Animal Husbandry Training Centre - Kallady', 'ahtc.kallady@gmail.com', NULL, '$2y$10$lOXsKCuN4cjfACEGzI9YTOoO76GRikx.RiY.u8JUfSGHMQH.Tnj4a', 'Animal Husbandry Training Centre - Kallady', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:25:45', '2026-08-13 07:04:58', NULL, 2, '0', NULL, 'Central Provincial Office'),
 (52, 'Animal Husbandry Farmer Training Centre - Kanchira', 'ahftc.kanchirankuda@gmail.com', NULL, '$2y$10$3A4p6VhvasatjFvQBzgyveSCdl.tBpAF6BiaCT.DSu0MMRsHscv1G', 'Animal Husbandry Farmer Training Centre - Kanchirankuda', NULL, NULL, NULL, 'training_officer', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Provincial', 1, '2026-08-15 18:27:48', '2026-08-13 07:05:32', NULL, 3, '0', NULL, 'Central Provincial Office'),
 (54, 'testing123', 'testing123@gmail.com', '0778439871', '$2y$10$G1S9EDwMXOFtV.jeiRnJ1.oPGJG4ZwqJGyq3Ea9TEspRvBVh5yebq', 'Yohani Abeykoon', '210', '210', 'Veterinary Surgeon', 'training_officer', 'test', 'permanent', 'Permanent', NULL, 0, NULL, NULL, NULL, '2026-08-14', '2026-08-14', '2026-08-14', NULL, NULL, NULL, 'Amparai', 0, NULL, '2026-08-14 06:48:10', NULL, 1, NULL, NULL, 'Central Provincial Office'),
-(64, 'District Deputy Director (Ampara)', 'dd.ampara@gmail.com', NULL, '$2y$10$w7Vkk3b0YMGQcAbD84yS7.Mr6vM1LC7.thhtXIzBLP.T9L1MDiCOC', 'District Deputy Director (Ampara)', NULL, NULL, '', 'district_dd', NULL, 'permanent', 'Permanent', NULL, 1, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1972-02-01', NULL, NULL, 'Amparai', 1, '2026-10-19 15:08:25', '2026-09-04 06:57:35', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
+(64, 'District Deputy Director (Ampara)', 'dd.ampara@gmail.com', NULL, '$2y$10$w7Vkk3b0YMGQcAbD84yS7.Mr6vM1LC7.thhtXIzBLP.T9L1MDiCOC', 'District Deputy Director (Ampara)', NULL, NULL, '', 'district_dd', NULL, 'permanent', 'Permanent', NULL, 1, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1972-02-01', NULL, NULL, 'Amparai', 1, '2026-10-20 15:28:21', '2026-09-04 06:57:35', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (65, 'District Deputy Director (H/Q1)', 'dd.hq1@gmail.com', NULL, '$2y$10$F.yRyP8Ft.WeYnStQrmbTug2giHf4mAlt1aJvFiyCzN4tSCCYB.iO', 'District Deputy Director (H/Q1)', NULL, NULL, '', 'deputy_director_hq_1', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1980-09-08', NULL, NULL, 'Provincial', 1, '2026-10-19 13:46:18', '2026-09-04 06:58:16', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (66, 'Planning Deputy Director (H/Q2)', 'dd.hq2@gmail.com', NULL, '$2y$10$LvQ.ODAFOGVtUcS/bqeKQOfy9rlNcHlD6oqNKnTm/6DSHkqmoPldy', 'Planning Deputy Director (H/Q2)', NULL, NULL, '', 'deputy_director_hq_2', NULL, 'permanent', 'Permanent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-09-12', '1980-06-09', NULL, NULL, 'Provincial', 1, '2026-10-19 13:46:43', '2026-09-04 06:59:32', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
 (67, 'District Deputy Director (Batticaloa)', 'dd.batticaloa@gmail.com', NULL, '$2y$10$RjKsHfESAMfg6l2R54qLx.hY6SCDFsJcVTcNFpZogziOuC7bu0QPi', 'District Deputy Director (Batticaloa)', NULL, NULL, NULL, 'district_dd', NULL, 'permanent', 'Permanent', NULL, 2, NULL, NULL, NULL, NULL, NULL, '2026-09-12', NULL, NULL, NULL, 'Batticaloa', 1, '2026-09-04 12:57:49', '2026-09-04 07:23:20', NULL, NULL, NULL, NULL, 'Central Provincial Office'),
@@ -5253,7 +5288,6 @@ INSERT INTO `user_quick_action_assignments` (`id`, `user_id`, `target_role`, `di
 (121, NULL, 'veterinary_surgeon', 1, NULL, 'annual_targets', 64, '2026-10-19 10:13:40'),
 (122, NULL, 'veterinary_surgeon', 1, NULL, 'monthly_annual_reports', 64, '2026-10-19 10:13:40'),
 (123, NULL, 'veterinary_surgeon', 1, NULL, 'regulatory_functions', 64, '2026-10-19 10:13:40'),
-(124, NULL, 'veterinary_surgeon', 1, NULL, 'animal_health', 64, '2026-10-19 10:13:40'),
 (125, NULL, 'veterinary_surgeon', 1, NULL, 'clinical_services', 64, '2026-10-19 10:13:40'),
 (126, NULL, 'veterinary_surgeon', 1, NULL, 'animal_breeding', 64, '2026-10-19 10:13:40'),
 (127, NULL, 'veterinary_surgeon', 1, NULL, 'dairy_hub', 64, '2026-10-19 10:13:40'),
@@ -6404,6 +6438,14 @@ ALTER TABLE `office_details`
   ADD KEY `unit_id` (`unit_id`);
 
 --
+-- Indexes for table `operational_trainings`
+--
+ALTER TABLE `operational_trainings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_range_context` (`range_id`,`module_context`),
+  ADD KEY `idx_training_date` (`training_date`);
+
+--
 -- Indexes for table `parent_stock_flocks`
 --
 ALTER TABLE `parent_stock_flocks`
@@ -6838,7 +6880,7 @@ ALTER TABLE `assets_movable`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=356;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=359;
 
 --
 -- AUTO_INCREMENT for table `breeding_ai_performance`
@@ -7006,7 +7048,7 @@ ALTER TABLE `dairy_project_beneficiaries`
 -- AUTO_INCREMENT for table `dairy_water_sources`
 --
 ALTER TABLE `dairy_water_sources`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=394;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=418;
 
 --
 -- AUTO_INCREMENT for table `day_old_chicks_distribution`
@@ -7363,6 +7405,12 @@ ALTER TABLE `office_details`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `operational_trainings`
+--
+ALTER TABLE `operational_trainings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `parent_stock_flocks`
 --
 ALTER TABLE `parent_stock_flocks`
@@ -7432,13 +7480,13 @@ ALTER TABLE `project_monitoring_visits`
 -- AUTO_INCREMENT for table `psdg_project_catalog`
 --
 ALTER TABLE `psdg_project_catalog`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2186;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2324;
 
 --
 -- AUTO_INCREMENT for table `range_module_topics`
 --
 ALTER TABLE `range_module_topics`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=534;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1199;
 
 --
 -- AUTO_INCREMENT for table `range_subject_assignments`

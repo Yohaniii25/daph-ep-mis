@@ -452,6 +452,63 @@ foreach ($sales_records as $r) {
     $sales_totals['total'] += floatval($r['total_lit_per_month']);
 }
 
+// Auto-fetch Farm Production Benchmarks from Animal Branding & Farm Registration Module (animal_branding.php)
+$farm_milk_benchmarks = [
+    'registered_farms'        => 0,
+    'daily_cow_milk'          => 0.0,
+    'daily_buffalo_milk'      => 0.0,
+    'daily_goat_milk'         => 0.0,
+    'daily_total_milk'        => 0.0,
+    'daily_sales_milk'        => 0.0,
+    'monthly_estimated_prod'  => 0.0,
+    'monthly_estimated_sales' => 0.0,
+];
+
+$farm_b_sql = "
+    SELECT id, daily_milk_production, goat_milk_per_day, milk_data 
+    FROM `farm_registration_renewals` 
+    WHERE (range_id = ? OR ? = 0)
+";
+$fb_stmt = $mysqli->prepare($farm_b_sql);
+if ($fb_stmt) {
+    $range_filter_val = !empty($range_id) ? (int)$range_id : 0;
+    $fb_stmt->bind_param("ii", $range_filter_val, $range_filter_val);
+    $fb_stmt->execute();
+    $fb_res = $fb_stmt->get_result();
+    while ($fb_row = $fb_res->fetch_assoc()) {
+        $farm_milk_benchmarks['registered_farms']++;
+        $m_data = !empty($fb_row['milk_data']) ? (is_string($fb_row['milk_data']) ? json_decode($fb_row['milk_data'], true) : $fb_row['milk_data']) : [];
+        
+        $cow_p = floatval($m_data['total_production']['cow'] ?? 0);
+        $buf_p = floatval($m_data['total_production']['buffalo'] ?? 0);
+        $gt_p  = floatval($fb_row['goat_milk_per_day'] ?? 0);
+        
+        // If JSON total_production is empty, fallback to daily_milk_production column
+        if ($cow_p == 0 && $buf_p == 0 && floatval($fb_row['daily_milk_production']) > 0) {
+            $cow_p = floatval($fb_row['daily_milk_production']);
+        }
+
+        $cow_sale = floatval($m_data['sales']['cow'] ?? 0);
+        $buf_sale = floatval($m_data['sales']['buffalo'] ?? 0);
+
+        $farm_milk_benchmarks['daily_cow_milk']     += $cow_p;
+        $farm_milk_benchmarks['daily_buffalo_milk'] += $buf_p;
+        $farm_milk_benchmarks['daily_goat_milk']    += $gt_p;
+        $farm_milk_benchmarks['daily_total_milk']   += ($cow_p + $buf_p + $gt_p);
+        $farm_milk_benchmarks['daily_sales_milk']   += ($cow_sale + $buf_sale);
+    }
+    $fb_stmt->close();
+}
+
+$farm_milk_benchmarks['monthly_estimated_prod']  = $farm_milk_benchmarks['daily_total_milk'] * 30;
+$farm_milk_benchmarks['monthly_estimated_sales'] = $farm_milk_benchmarks['daily_sales_milk'] * 30;
+
+// Collection Coverage Ratio (% of farm production collected at formal centers)
+$collection_efficiency = 0.0;
+if ($farm_milk_benchmarks['monthly_estimated_prod'] > 0) {
+    $collection_efficiency = round(($collecting_totals['total'] / $farm_milk_benchmarks['monthly_estimated_prod']) * 100, 1);
+}
+
 // --- AUTOMATED SUMMARY DASHBOARD AGGREGATIONS (Targeted by Location if selected, else Range-wide) ---
 $milk_summary_year = ($selected_year !== 'all') ? intval($selected_year) : intval(date('Y'));
 $range_param = $requested_range_id ? ('&range_id=' . $requested_range_id) : ($range_id ? ('&range_id=' . $range_id) : '');
@@ -735,6 +792,95 @@ include '../../../includes/header.php';
 
     <!-- TAB 1: MILK COLLECTING CENTERS -->
     <?php if ($active_tab === 'collecting'): ?>
+        <!-- Live Farm Production Benchmark & Cross-Verification (from Animal Branding Registry) -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4 bg-white border-top border-4" style="border-top-color: #820100 !important;">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle p-2 text-white d-flex align-items-center justify-content-center shadow-sm" style="background-color: #820100; width: 38px; height: 38px;">
+                        <i class="bi bi-link-45deg fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark">
+                            Farm Milk Production Benchmark &amp; Cross-Verification
+                            <span class="badge bg-success-subtle text-success border border-success-subtle ms-2 font-monospace small">
+                                <i class="bi bi-shield-check me-1"></i>Auto-Synced with animal_branding.php
+                            </span>
+                        </h6>
+                        <small class="text-muted">Real-time benchmark compiled from <?= number_format($farm_milk_benchmarks['registered_farms']) ?> registered dairy farm holdings in <?= htmlspecialchars($range_name) ?></small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="animal_branding.php?range_id=<?= $requested_range_id ?: ($range_id ?: 1) ?>" class="btn btn-sm btn-outline-secondary" target="_blank">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>View Farm Registrations
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-3">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-3">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small fw-bold text-uppercase d-block">Registered Farms</span>
+                            <span class="fs-5 fw-bold text-dark"><?= number_format($farm_milk_benchmarks['registered_farms']) ?> Holdings</span>
+                            <div class="small text-muted mt-1">
+                                <i class="bi bi-check-circle-fill text-success me-1"></i>Range #<?= htmlspecialchars((string)($range_id ?: 1)) ?> Census
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small fw-bold text-uppercase d-block">Estimated Farm Output</span>
+                            <span class="fs-5 fw-bold text-primary"><?= number_format($farm_milk_benchmarks['daily_total_milk'], 1) ?> <small class="fs-6">L/day</small></span>
+                            <div class="small text-muted mt-1">
+                                ~<?= number_format($farm_milk_benchmarks['monthly_estimated_prod']) ?> L/mo potential
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small fw-bold text-uppercase d-block">Formal Center Intake</span>
+                            <span class="fs-5 fw-bold text-success"><?= number_format($collecting_totals['total'], 1) ?> <small class="fs-6">L/mo</small></span>
+                            <div class="small text-muted mt-1">
+                                <?= count($collecting_records) ?> Chilling / Collection Point(s)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-2 border rounded bg-light">
+                            <span class="text-muted small fw-bold text-uppercase d-block">Collection Efficiency</span>
+                            <?php 
+                            $badge_color = ($collection_efficiency >= 70) ? 'success' : (($collection_efficiency >= 40) ? 'warning' : 'secondary');
+                            ?>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="fs-5 fw-bold text-<?= $badge_color ?>"><?= number_format($collection_efficiency, 1) ?>%</span>
+                                <span class="badge bg-<?= $badge_color ?>-subtle text-<?= $badge_color ?> border border-<?= $badge_color ?>-subtle">
+                                    <?= ($collection_efficiency > 0) ? 'Active Capture' : 'No Center Intake' ?>
+                                </span>
+                            </div>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-<?= $badge_color ?>" role="progressbar" style="width: <?= min(100, $collection_efficiency) ?>%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Species Production vs Collection Breakdown Bar -->
+                <div class="row g-2 mt-2 pt-2 border-top small text-secondary">
+                    <div class="col-md-4 d-flex justify-content-between px-3">
+                        <span><i class="bi bi-circle-fill text-primary me-1" style="font-size: 8px;"></i><strong>Cow Milk:</strong> Farm Est: <?= number_format($farm_milk_benchmarks['daily_cow_milk'] * 30) ?> L/mo</span>
+                        <span class="text-dark fw-bold">Collected: <?= number_format($collecting_totals['cow']) ?> L/mo</span>
+                    </div>
+                    <div class="col-md-4 d-flex justify-content-between px-3 border-start">
+                        <span><i class="bi bi-circle-fill text-info me-1" style="font-size: 8px;"></i><strong>Buffalo Milk:</strong> Farm Est: <?= number_format($farm_milk_benchmarks['daily_buffalo_milk'] * 30) ?> L/mo</span>
+                        <span class="text-dark fw-bold">Collected: <?= number_format($collecting_totals['buffalo']) ?> L/mo</span>
+                    </div>
+                    <div class="col-md-4 d-flex justify-content-between px-3 border-start">
+                        <span><i class="bi bi-circle-fill text-warning me-1" style="font-size: 8px;"></i><strong>Goat Milk:</strong> Farm Est: <?= number_format($farm_milk_benchmarks['daily_goat_milk'] * 30) ?> L/mo</span>
+                        <span class="text-dark fw-bold">Collected: <?= number_format($collecting_totals['goat']) ?> L/mo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- KPI Cards: Subdivided by Cow, Buffalo, Goat -->
         <div class="row g-3 mb-4">
             <div class="col-sm-6 col-xl-3">
@@ -1392,6 +1538,13 @@ include '../../../includes/header.php';
                 <input type="hidden" name="sub_module" value="collecting">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body p-4">
+                    <!-- Dynamic Live Benchmark Alert -->
+                    <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center small">
+                        <i class="bi bi-info-circle-fill me-2 fs-5 text-primary"></i>
+                        <div>
+                            <strong>Range Benchmark (from Animal Branding):</strong> Registered dairy farms in <strong><?= htmlspecialchars($range_name) ?></strong> produce approx. <strong><?= number_format($farm_milk_benchmarks['daily_total_milk'], 1) ?> L/day</strong> (~<?= number_format($farm_milk_benchmarks['monthly_estimated_prod']) ?> L/month). Use this to estimate monthly supply intake.
+                        </div>
+                    </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">VS Range</label>

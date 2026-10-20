@@ -135,9 +135,9 @@ require_once __DIR__ . '/../../config/constants.php';
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <a href="<?= BASE_PATH ?>pages/modules/veterinary/animal_health.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-white d-block">
-                            <i class="bi bi-journal-medical fs-4"></i><br>
-                            <span style="color:white">Health Records</span>
+                        <a href="<?= BASE_PATH ?>pages/modules/veterinary/vaccination_targets.php" class="btn btn-success w-100 py-3 shadow-sm border-0 text-white d-block">
+                            <i class="bi bi-shield-check fs-4"></i><br>
+                            <span style="color:white">Vaccination Targets</span>
                         </a>
                     </div>
                     <div class="col-md-3">

@@ -21,13 +21,10 @@ if (!isset($_SESSION['full_name'])) {
 }
 $full_name = $_SESSION['full_name'];
 
-// 2. Supervisory Range Resolution & Jurisdiction
+// 2. Range Resolution & Jurisdiction
+$requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
+$range_id    = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 $district_id = $_SESSION['district_id'] ?? null;
-$range_id    = $_SESSION['range_id'] ?? null;
-
-if ($is_supervisory && isset($_GET['range_id']) && !empty($_GET['range_id'])) {
-    $range_id = intval($_GET['range_id']);
-}
 
 // Fetch ranges for supervisory jurisdiction
 $supervisory_ranges = [];
@@ -77,20 +74,149 @@ if ($range_id) {
     $stmt->close();
 }
 
-// 5. Dynamic Data Fetch: Live Lookups against animal_populations table (Range Statistics Baseline)
+// 5. Dynamic Data Fetch: Live Animal Counts from Animal Branding & Farm Registration Registry (animal_branding.php)
 $total_population = 0;
-$animal_pop_data = [];
-$anim_stmt = $mysqli->prepare("SELECT animal_type, SUM(quantity) as quantity FROM animal_populations WHERE range_id = ? AND year = ? GROUP BY animal_type");
-if ($anim_stmt) {
-    $anim_stmt->bind_param("ii", $range_id, $selected_year);
-    $anim_stmt->execute();
-    $anim_res = $anim_stmt->get_result();
-    while ($row = $anim_res->fetch_assoc()) {
-        $animal_pop_data[$row['animal_type']] = intval($row['quantity']);
-        $total_population += intval($row['quantity']);
+$animal_pop_data = [
+    'Cow'       => 0,
+    'Cattle'    => 0,
+    'Buffalo'   => 0,
+    'Buffaloes' => 0,
+    'Goat'      => 0,
+    'Goats'     => 0,
+    'Sheep'     => 0,
+    'Pig'       => 0,
+    'Swine'     => 0,
+    'Chicken'   => 0,
+    'Poultry'   => 0
+];
+
+$branding_sql = "
+    SELECT 
+        id,
+        total_neat_cattle,
+        neat_cattle_data,
+        total_buffaloes,
+        buffaloes_data,
+        goat_total_no,
+        sheep_total_no,
+        swine_total_no,
+        poultry_data,
+        farm_type
+    FROM farm_registration_renewals
+    WHERE (
+        range_id = ? 
+        OR (vs_division IS NOT NULL AND vs_division != '' AND vs_division = ?)
+        OR (vs_division IS NOT NULL AND vs_division != '' AND vs_division = (SELECT name FROM veterinary_ranges WHERE id = ? LIMIT 1))
+    )
+    AND (
+        YEAR(date_of_registration_renewal) = ?
+        OR (date_of_registration_renewal IS NULL AND YEAR(created_at) = ?)
+        OR (? = 0)
+    )
+";
+$branding_stmt = $mysqli->prepare($branding_sql);
+if ($branding_stmt) {
+    $r_param = !empty($range_id) ? intval($range_id) : 0;
+    $y_param = !empty($selected_year) ? intval($selected_year) : 0;
+    $branding_stmt->bind_param("isiiii", $r_param, $range_name, $r_param, $y_param, $y_param, $y_param);
+    $branding_stmt->execute();
+    $b_res = $branding_stmt->get_result();
+    while ($r = $b_res->fetch_assoc()) {
+        // Neat cattle count
+        $c_cnt = intval($r['total_neat_cattle'] ?? 0);
+        if ($c_cnt <= 0 && !empty($r['neat_cattle_data'])) {
+            $c_data = is_string($r['neat_cattle_data']) ? json_decode($r['neat_cattle_data'], true) : $r['neat_cattle_data'];
+            if (is_array($c_data)) {
+                foreach ($c_data as $sub) {
+                    if (is_array($sub)) {
+                        foreach ($sub as $val) $c_cnt += intval($val);
+                    }
+                }
+            }
+        }
+        $animal_pop_data['Cow']    += $c_cnt;
+        $animal_pop_data['Cattle'] += $c_cnt;
+
+        // Buffalo count
+        $b_cnt = intval($r['total_buffaloes'] ?? 0);
+        if ($b_cnt <= 0 && !empty($r['buffaloes_data'])) {
+            $b_data = is_string($r['buffaloes_data']) ? json_decode($r['buffaloes_data'], true) : $r['buffaloes_data'];
+            if (is_array($b_data)) {
+                foreach ($b_data as $sub) {
+                    if (is_array($sub)) {
+                        foreach ($sub as $val) $b_cnt += intval($val);
+                    }
+                }
+            }
+        }
+        $animal_pop_data['Buffalo']   += $b_cnt;
+        $animal_pop_data['Buffaloes'] += $b_cnt;
+
+        // Small ruminants & Swine
+        $g_cnt = intval($r['goat_total_no'] ?? 0);
+        $animal_pop_data['Goat']  += $g_cnt;
+        $animal_pop_data['Goats'] += $g_cnt;
+
+        $animal_pop_data['Sheep'] += intval($r['sheep_total_no'] ?? 0);
+
+        $p_cnt = intval($r['swine_total_no'] ?? 0);
+        $animal_pop_data['Pig']   += $p_cnt;
+        $animal_pop_data['Swine'] += $p_cnt;
+
+        // Poultry count
+        if (!empty($r['poultry_data'])) {
+            $p_data = is_string($r['poultry_data']) ? json_decode($r['poultry_data'], true) : $r['poultry_data'];
+            if (is_array($p_data)) {
+                $flock_sum = 0;
+                if (!empty($p_data['flock_age_groups']) && is_array($p_data['flock_age_groups'])) {
+                    foreach ($p_data['flock_age_groups'] as $fg) {
+                        if (isset($fg['quantity']) && is_numeric($fg['quantity'])) {
+                            $flock_sum += intval($fg['quantity']);
+                        }
+                    }
+                }
+                if ($flock_sum > 0) {
+                    $animal_pop_data['Chicken'] += $flock_sum;
+                    $animal_pop_data['Poultry'] += $flock_sum;
+                } elseif (!empty($p_data['housing']) && is_array($p_data['housing'])) {
+                    $housing_sum = 0;
+                    foreach (['deep_litter_pens', 'battery_cages', 'free_range'] as $hKey) {
+                        if (!empty($p_data['housing'][$hKey]) && is_numeric($p_data['housing'][$hKey])) {
+                            $housing_sum += intval($p_data['housing'][$hKey]);
+                        }
+                    }
+                    $animal_pop_data['Chicken'] += $housing_sum;
+                    $animal_pop_data['Poultry'] += $housing_sum;
+                }
+            }
+        }
     }
-    $anim_stmt->close();
+    $branding_stmt->close();
 }
+
+// Fallback to animal_populations ONLY if all branding counts are zero
+$base_live_sum = $animal_pop_data['Cow'] + $animal_pop_data['Buffalo'] + $animal_pop_data['Goat'] + $animal_pop_data['Sheep'] + $animal_pop_data['Pig'] + $animal_pop_data['Chicken'];
+if ($base_live_sum === 0) {
+    $anim_stmt = $mysqli->prepare("SELECT animal_type, SUM(quantity) as quantity FROM animal_populations WHERE range_id = ? AND year = ? GROUP BY animal_type");
+    if ($anim_stmt) {
+        $anim_stmt->bind_param("ii", $range_id, $selected_year);
+        $anim_stmt->execute();
+        $anim_res = $anim_stmt->get_result();
+        while ($row = $anim_res->fetch_assoc()) {
+            $t = $row['animal_type'];
+            $q = intval($row['quantity']);
+            $animal_pop_data[$t] = $q;
+            if ($t === 'Cow') $animal_pop_data['Cattle'] = $q;
+            if ($t === 'Buffalo') $animal_pop_data['Buffaloes'] = $q;
+            if ($t === 'Goat') $animal_pop_data['Goats'] = $q;
+            if ($t === 'Pig') $animal_pop_data['Swine'] = $q;
+            if ($t === 'Chicken') $animal_pop_data['Poultry'] = $q;
+        }
+        $anim_stmt->close();
+    }
+}
+
+$total_population = array_sum($animal_pop_data);
 
 // Master list of animal species supported
 $species_options = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Pig', 'Chicken'];
@@ -323,7 +449,7 @@ require_once '../../../includes/header.php';
         <h4 class="fw-bold mb-1" style="color: #370709;">Vaccination Program Tracking & Annual Targets</h4>
         <span class="badge" style="background-color: #d4c7b7; color: #370709;"><i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($range_name) ?> Range</span>
         <span class="badge text-light" style="background-color: #a07174;"><i class="bi bi-building me-1"></i><?= htmlspecialchars($district_name) ?> District</span>
-        <span class="badge bg-success text-light"><i class="bi bi-link-45deg me-1"></i>Range Statistics Baseline Synced</span>
+        <span class="badge bg-success text-light"><i class="bi bi-link-45deg me-1"></i>Animal Branding Baseline Synced</span>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
         <?php if ($is_supervisory && !empty($supervisory_ranges)): ?>
@@ -598,9 +724,9 @@ require_once '../../../includes/header.php';
             <div class="card-header bg-white pt-4 px-4 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h5 class="fw-bold mb-1" style="color: #370709;">
-                        <i class="bi bi-grid-3x3-gap-fill me-2 text-danger"></i>Annual Target Configurations & Deployment Matrix
+                        <i class="bi bi-grid-3x3-gap-fill me-2 text-danger"></i>Annual Target Configurations &amp; Deployment Matrix
                     </h5>
-                    <p class="text-muted small mb-0">Configured annual targets and personnel assignments aligned with live Range Statistics baselines.</p>
+                    <p class="text-muted small mb-0">Configured annual targets and personnel assignments aligned with live animal counts from the <strong>Animal Branding &amp; Farm Registration Registry (animal_branding.php)</strong>.</p>
                 </div>
                 <div>
                     <button class="btn btn-sm btn-dark fw-bold me-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#addTargetModal" id="addVaxTargetBtn">
@@ -619,7 +745,7 @@ require_once '../../../includes/header.php';
                         <thead style="background-color: #d4c7b7; color: #370709;">
                             <tr>
                                 <th>Animal Species</th>
-                                <th class="text-center">Live Population Count</th>
+                                <th class="text-center" title="Live counts fetched dynamically from Animal Branding &amp; Farm Registration (animal_branding.php)">Live Count (Animal Branding)</th>
                                 <th class="text-center">FMD Target</th>
                                 <th class="text-center">BQ Target</th>
                                 <th class="text-center">HS Target</th>
@@ -702,7 +828,7 @@ require_once '../../../includes/header.php';
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2">
-                        <i class="bi bi-shield-check me-1 text-warning"></i>Flock Population: <strong><?= number_format($animal_pop_data['Chicken'] ?? 0) ?></strong> birds
+                        <i class="bi bi-shield-check me-1 text-warning"></i>Flock Population: <strong><?= number_format($animal_pop_data['Chicken'] ?? 0) ?></strong> birds (from Animal Branding)
                     </span>
                     <button class="btn btn-sm btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addPoultryTargetModal" id="btnConfigurePoultryMatrix">
                         <i class="bi bi-plus-circle me-1"></i> Configure Poultry Targets

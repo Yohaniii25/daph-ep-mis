@@ -285,22 +285,61 @@ require_once '../../../includes/header.php';
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
-    .nav-tabs-dairy .nav-link {
+    /* Modern Segmented Capsule Tabs for Dairy Hub */
+    .nav-capsule-dairy {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 5px;
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        gap: 6px;
+    }
+    .nav-capsule-dairy::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Edge */
+    }
+    .nav-capsule-dairy .nav-item {
+        flex: 1 1 0;
+        min-width: max-content;
+    }
+    .nav-capsule-dairy .nav-link {
         font-weight: 600;
-        color: #4b5563;
-        padding: 0.75rem 1.25rem;
-        border: none;
-        border-bottom: 3px solid transparent;
-        transition: all 0.2s ease;
-    }
-    .nav-tabs-dairy .nav-link:hover {
-        color: #820100;
-        border-color: #f3f4f6;
-    }
-    .nav-tabs-dairy .nav-link.active {
-        color: #820100;
+        font-size: 0.885rem;
+        color: #475569;
+        padding: 0.65rem 1rem;
+        border-radius: 8px;
+        border: 1px solid transparent;
         background: transparent;
-        border-bottom: 3px solid #820100;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        width: 100%;
+        text-decoration: none;
+    }
+    .nav-capsule-dairy .nav-link:hover {
+        color: #1e293b;
+        background: #e2e8f0;
+    }
+    .nav-capsule-dairy .nav-link.active {
+        color: #ffffff !important;
+        background: linear-gradient(135deg, #820100 0%, #a30100 100%) !important;
+        box-shadow: 0 4px 12px rgba(130, 1, 0, 0.22);
+        border-color: #820100;
+    }
+    .nav-capsule-dairy .nav-link.active .badge {
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+    .nav-capsule-dairy .nav-link:not(.active) .badge {
+        background-color: #e2e8f0 !important;
+        color: #334155 !important;
+        border: 1px solid #cbd5e1;
     }
     .table-dairy thead {
         background-color: #d4c7b7;
@@ -361,79 +400,43 @@ require_once '../../../includes/header.php';
         </div>
     </div>
 
-    <!-- Hero Header Banner -->
-    <div class="card dairy-hub-header mb-4 border-0">
-        <div class="card-body p-4">
-            <div class="row align-items-center">
-                <div class="col-lg-8">
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <span class="badge bg-light text-dark fw-bold px-3 py-1">
-                            <i class="bi bi-geo-alt-fill me-1 text-danger"></i> <?= htmlspecialchars($current_range_name) ?>
-                        </span>
-                        <span class="badge bg-warning text-dark fw-bold px-3 py-1">
-                            <i class="bi bi-award-fill me-1"></i> National Dairy Production Programme
-                        </span>
-                        <span class="badge bg-success-subtle text-white border border-light px-3 py-1">
-                            <i class="bi bi-shield-check me-1"></i> Master Registry Auto-Sync
-                        </span>
-                    </div>
-                    <h3 class="fw-bold text-white mb-1">Dairy Development &amp; Beneficiary Approval Hub</h3>
-                    <p class="mb-0 text-light opacity-90 small">
-                        Centrally approve farmers for dairy subsidies, verify production quotas, and link directly to detailed farm potential surveys under the National Dairy Production Programme.
-                    </p>
-                </div>
-                <div class="col-lg-4 mt-3 mt-lg-0 text-lg-end">
-                    <div class="bg-white bg-opacity-10 p-3 rounded-3 d-inline-block text-start w-100" style="max-width: 320px;">
-                        <div class="d-flex justify-content-between text-light small mb-1">
-                            <span>Beneficiaries Enrolled:</span>
-                            <span class="fw-bold text-white"><?= number_format($total_beneficiaries) ?> Farmers</span>
-                        </div>
-                        <div class="d-flex justify-content-between text-light small mb-1">
-                            <span>Surveys Completed:</span>
-                            <span class="fw-bold text-warning"><?= number_format($total_forms_completed) ?> / <?= number_format($total_beneficiaries) ?></span>
-                        </div>
-                        <div class="d-flex justify-content-between text-light small pt-1 border-top border-light border-opacity-25">
-                            <span>Target Milk Increase:</span>
-                            <span class="badge bg-light text-dark fw-bold">
-                                <?= number_format($total_milk_current, 1) ?>L &rarr; <?= number_format($total_milk_expected, 1) ?>L /day
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Navigation Tabs between Approvals, Collections, and Society Administration -->
-    <ul class="nav nav-tabs nav-tabs-dairy mb-4 border-bottom" id="dairyHubTabs" role="tablist">
+
+    <!-- Modern Segmented Navigation Tabs -->
+    <ul class="nav nav-capsule-dairy mb-4 shadow-sm" id="dairyHubTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link <?= ($active_tab === 'approvals') ? 'active' : '' ?>" id="approvals-tab" data-bs-toggle="tab" data-bs-target="#approvals-pane" type="button" role="tab">
-                <i class="bi bi-card-checklist me-2"></i> Beneficiary Summary &amp; Approvals
-                <span class="badge bg-danger rounded-pill ms-2"><?= $total_beneficiaries ?></span>
+            <button class="nav-link <?= ($active_tab === 'approvals') ? 'active' : '' ?>" id="approvals-tab" data-bs-toggle="tab" data-bs-target="#approvals-pane" type="button" role="tab" title="Beneficiary Summary &amp; Approvals">
+                <!-- <i class="bi bi-card-checklist me-1.5"></i> -->
+                <span>Beneficiary Approvals</span>
+                <span class="badge rounded-pill ms-2"><?= $total_beneficiaries ?></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link <?= ($active_tab === 'collections') ? 'active' : '' ?>" id="collections-tab" data-bs-toggle="tab" data-bs-target="#collections-pane" type="button" role="tab">
-                <i class="bi bi-droplet-half me-2"></i> Milk Collection &amp; Quality Logs
-                <span class="badge bg-secondary rounded-pill ms-2"><?= count($records) ?></span>
+            <button class="nav-link <?= ($active_tab === 'collections') ? 'active' : '' ?>" id="collections-tab" data-bs-toggle="tab" data-bs-target="#collections-pane" type="button" role="tab" title="Milk Collection &amp; Quality Logs">
+                <!-- <i class="bi bi-droplet-half me-1.5"></i> -->
+                <span>Milk Collections</span>
+                <span class="badge rounded-pill ms-2"><?= count($records) ?></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link <?= ($active_tab === 'society') ? 'active' : '' ?>" id="society-tab" data-bs-toggle="tab" data-bs-target="#society-pane" type="button" role="tab">
-                <i class="bi bi-people-fill me-2"></i> Society Administration &amp; Governance
-                <span class="badge bg-primary rounded-pill ms-2"><?= count($society_members) ?></span>
+            <button class="nav-link <?= ($active_tab === 'society') ? 'active' : '' ?>" id="society-tab" data-bs-toggle="tab" data-bs-target="#society-pane" type="button" role="tab" title="Society Administration &amp; Governance">
+                <!-- <i class="bi bi-people-fill me-1.5"></i> -->
+                <span>Society Governance</span>
+                <span class="badge rounded-pill ms-2"><?= count($society_members) ?></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link <?= ($active_tab === 'monitoring') ? 'active' : '' ?>" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring-pane" type="button" role="tab">
-                <i class="bi bi-clipboard2-pulse me-2"></i> Scheduled Farm Monitoring Logs
-                <span class="badge bg-danger rounded-pill ms-2"><?= count($dh_visits) ?></span>
+            <button class="nav-link <?= ($active_tab === 'monitoring') ? 'active' : '' ?>" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring-pane" type="button" role="tab" title="Scheduled Farm Monitoring Logs">
+                <!-- <i class="bi bi-clipboard2-pulse me-1.5"></i> -->
+                <span>Farm Monitoring</span>
+                <span class="badge rounded-pill ms-2"><?= count($dh_visits) ?></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link <?= ($active_tab === 'trainings') ? 'active' : '' ?>" id="trainings-tab" data-bs-toggle="tab" data-bs-target="#trainings-pane" type="button" role="tab">
-                <i class="bi bi-mortarboard-fill me-2"></i> Dairy Farmer &amp; Extension Trainings
-                <span class="badge rounded-pill ms-2" style="background-color: #820100;"><?= count($dairy_trainings) ?></span>
+            <button class="nav-link <?= ($active_tab === 'trainings') ? 'active' : '' ?>" id="trainings-tab" data-bs-toggle="tab" data-bs-target="#trainings-pane" type="button" role="tab" title="Dairy Farmer &amp; Extension Trainings">
+                <!-- <i class="bi bi-mortarboard-fill me-1.5"></i> -->
+                <span>Farmer Trainings</span>
+                <span class="badge rounded-pill ms-2"><?= count($dairy_trainings) ?></span>
             </button>
         </li>
     </ul>

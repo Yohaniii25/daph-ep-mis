@@ -2,11 +2,23 @@
 if (!isset($selected_year)) {
     $selected_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
 }
-if (!isset($range_id)) {
-    $range_id = $_SESSION['range_id'] ?? 0;
+if (!isset($range_id) || empty($range_id)) {
+    $range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? intval($_GET['range_id']) : ($_SESSION['range_id'] ?? 1);
 }
-if (!isset($animal_pop_data)) {
-    $animal_pop_data = [];
+if (!isset($animal_pop_data) || empty($animal_pop_data)) {
+    $animal_pop_data = [
+        'Cow'       => 0,
+        'Cattle'    => 0,
+        'Buffalo'   => 0,
+        'Buffaloes' => 0,
+        'Goat'      => 0,
+        'Goats'     => 0,
+        'Sheep'     => 0,
+        'Pig'       => 0,
+        'Swine'     => 0,
+        'Chicken'   => 0,
+        'Poultry'   => 0
+    ];
 }
 ?>
 <div class="modal fade" id="addTargetModal" tabindex="-1" aria-labelledby="addTargetLabel" aria-hidden="true">
@@ -47,11 +59,11 @@ if (!isset($animal_pop_data)) {
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label small fw-bold text-dark mb-0">Live Population Count</label>
                                 <span class="badge bg-success text-white py-1 px-2" style="font-size: 0.7rem;">
-                                    <i class="bi bi-link-45deg me-1"></i>Range Statistics Baseline
+                                    <i class="bi bi-link-45deg me-1"></i>Animal Branding Baseline
                                 </span>
                             </div>
                             <input type="number" id="target_species_pop_display" name="quantity" class="form-control form-control-sm border-secondary bg-light fw-bold" readonly placeholder="0">
-                            <small class="text-muted">Synchronized automatically with Range Statistics Census.</small>
+                            <small class="text-muted">Synchronized automatically with Animal Branding &amp; Farm Registration (animal_branding.php).</small>
                         </div>
 
                         <!-- Livestock & Poultry Annual Targets -->
@@ -285,8 +297,50 @@ if (!isset($animal_pop_data)) {
 </div>
 
 <script>
-// Live population lookup data from Range Statistics
+// Live population lookup data from Animal Branding / Range Statistics
 const rangeAnimalPopulationMap = <?= json_encode($animal_pop_data) ?>;
+const MODAL_RANGE_ID = <?= json_encode($range_id) ?>;
+const MODAL_YEAR = <?= json_encode($selected_year) ?>;
+
+function getSpeciesPopulation(sp) {
+    if (!sp) return 0;
+    const norm = String(sp).toLowerCase().trim();
+    if (rangeAnimalPopulationMap) {
+        if (rangeAnimalPopulationMap[sp] !== undefined) return rangeAnimalPopulationMap[sp];
+        if (norm === 'cow' || norm === 'cattle') return rangeAnimalPopulationMap['Cow'] || rangeAnimalPopulationMap['Cattle'] || 0;
+        if (norm === 'buffalo' || norm === 'buffaloes') return rangeAnimalPopulationMap['Buffalo'] || rangeAnimalPopulationMap['Buffaloes'] || 0;
+        if (norm === 'goat' || norm === 'goats') return rangeAnimalPopulationMap['Goat'] || rangeAnimalPopulationMap['Goats'] || 0;
+        if (norm === 'sheep') return rangeAnimalPopulationMap['Sheep'] || 0;
+        if (norm === 'pig' || norm === 'swine') return rangeAnimalPopulationMap['Pig'] || rangeAnimalPopulationMap['Swine'] || 0;
+        if (norm === 'chicken' || norm === 'poultry') return rangeAnimalPopulationMap['Chicken'] || rangeAnimalPopulationMap['Poultry'] || 0;
+    }
+    return 0;
+}
+
+// Background sync with get_animal_population_data.php to guarantee matching range_statistics.php
+function fetchLiveBrandingPopulation() {
+    if (!MODAL_RANGE_ID) return;
+    fetch(`get_animal_population_data.php?range_id=${encodeURIComponent(MODAL_RANGE_ID)}&year=${encodeURIComponent(MODAL_YEAR)}&_t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+            if (Array.isArray(data)) {
+                data.forEach(item => {
+                    rangeAnimalPopulationMap[item.animal_type] = item.count;
+                    if (item.animal_type === 'Cattle') rangeAnimalPopulationMap['Cow'] = item.count;
+                    if (item.animal_type === 'Buffaloes') rangeAnimalPopulationMap['Buffalo'] = item.count;
+                    if (item.animal_type === 'Goats') rangeAnimalPopulationMap['Goat'] = item.count;
+                    if (item.animal_type === 'Swine') rangeAnimalPopulationMap['Pig'] = item.count;
+                    if (item.animal_type === 'Poultry') rangeAnimalPopulationMap['Chicken'] = item.count;
+                });
+                const spSelect = document.getElementById('target_animal_type');
+                const popDisplay = document.getElementById('target_species_pop_display');
+                if (spSelect && spSelect.value && popDisplay) {
+                    popDisplay.value = getSpeciesPopulation(spSelect.value);
+                }
+            }
+        })
+        .catch(err => console.warn('[AddTargetModal] Population live fetch note:', err));
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const spSelect = document.getElementById('target_animal_type');
@@ -334,30 +388,44 @@ document.addEventListener('DOMContentLoaded', function() {
         inp.addEventListener('input', updatePoultryModalSum);
     });
 
-    if (spSelect) {
-        spSelect.addEventListener('change', function() {
-            const sp = this.value;
-            // Lookup population count
-            let count = 0;
-            if (rangeAnimalPopulationMap && rangeAnimalPopulationMap[sp] !== undefined) {
-                count = rangeAnimalPopulationMap[sp];
-            }
-            if (popDisplay) {
-                popDisplay.value = count;
-            }
+    function handleSpeciesChange() {
+        if (!spSelect) return;
+        const sp = spSelect.value;
+        const count = getSpeciesPopulation(sp);
+        if (popDisplay) {
+            popDisplay.value = count;
+        }
 
-            // Visual styling emphasis depending on category
-            const isPoultry = (sp === 'Chicken');
-            if (poultryInput) {
-                poultryInput.closest('.col-md-3').classList.toggle('opacity-50', !isPoultry);
-            }
-            if (poultrySubGroup) {
-                poultrySubGroup.classList.toggle('d-none', !isPoultry);
-            }
-            if (fmdInput) fmdInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
-            if (bqInput) bqInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
-            if (hsInput) hsInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
+        // Visual styling emphasis depending on category
+        const isPoultry = (sp === 'Chicken' || sp === 'Poultry');
+        if (poultryInput) {
+            poultryInput.closest('.col-md-3').classList.toggle('opacity-50', !isPoultry);
+        }
+        if (poultrySubGroup) {
+            poultrySubGroup.classList.toggle('d-none', !isPoultry);
+        }
+        if (fmdInput) fmdInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
+        if (bqInput) bqInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
+        if (hsInput) hsInput.closest('.col-md-3').classList.toggle('opacity-50', isPoultry);
+    }
+
+    if (spSelect) {
+        spSelect.addEventListener('change', handleSpeciesChange);
+        if (typeof $ !== 'undefined') {
+            $(spSelect).on('change', handleSpeciesChange);
+        }
+    }
+
+    // When modal is shown, refresh data
+    const modalTargetEl = document.getElementById('addTargetModal');
+    if (modalTargetEl) {
+        modalTargetEl.addEventListener('shown.bs.modal', function () {
+            fetchLiveBrandingPopulation();
+            handleSpeciesChange();
         });
     }
+
+    // Trigger initial population sync
+    fetchLiveBrandingPopulation();
 });
 </script>
