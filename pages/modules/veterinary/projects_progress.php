@@ -51,7 +51,8 @@ if ($stmt) {
     $stmt->close();
 }
 
-$active_tab = ($_GET['tab'] ?? '') === 'monitoring' ? 'monitoring' : 'projects';
+$tab_param = $_GET['tab'] ?? '';
+$active_tab = in_array($tab_param, ['monitoring', 'trainings'], true) ? $tab_param : 'projects';
 
 $counts = [
     'PSDG'    => 0,
@@ -106,6 +107,20 @@ $v_stmt->bind_param("i", $range_id);
 $v_stmt->execute();
 $monitoring_visits = $v_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $v_stmt->close();
+
+// Fetch Operational Training Sessions for Projects
+$project_trainings = [];
+$training_stmt = $mysqli->prepare("
+    SELECT * FROM `operational_trainings` 
+    WHERE (range_id = ? OR ? = 0) AND module_context = 'projects' 
+    ORDER BY training_date DESC, id DESC
+");
+if ($training_stmt) {
+    $training_stmt->bind_param("ii", $range_id, $range_id);
+    $training_stmt->execute();
+    $project_trainings = $training_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $training_stmt->close();
+}
 
 require_once '../../../includes/header.php';
 ?>
@@ -190,6 +205,12 @@ require_once '../../../includes/header.php';
             <li class="nav-item">
                 <a class="nav-link fw-bold py-3 <?= ($active_tab === 'monitoring') ? 'active text-primary' : 'text-secondary' ?>" id="monitoring-tab" data-bs-toggle="tab" href="#tab-monitoring" role="tab">
                     <i class="bi bi-clipboard2-pulse me-2"></i>2. Scheduled Monitoring Logs &amp; Site Visits
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fw-bold py-3 <?= ($active_tab === 'trainings') ? 'active text-primary' : 'text-secondary' ?>" id="trainings-tab" data-bs-toggle="tab" href="#tab-trainings" role="tab">
+                    <i class="bi bi-mortarboard-fill me-2"></i>3. Training &amp; Extension Sessions
+                    <span class="badge bg-primary rounded-pill ms-2"><?= count($project_trainings) ?></span>
                 </a>
             </li>
         </ul>
@@ -411,6 +432,22 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
 
+            <!-- ============================================================= -->
+            <!-- TAB 3: PROJECT BENEFICIARY TRAINING & EXTENSION MODULE        -->
+            <!-- ============================================================= -->
+            <div class="tab-pane fade <?= ($active_tab === 'trainings') ? 'show active' : '' ?>" id="tab-trainings" role="tabpanel">
+                <?php 
+                $tr_context      = 'projects';
+                $tr_title        = 'Project Beneficiary Training & Extension';
+                $tr_subtitle     = 'Capacity building, poultry bio-security, fodder production, and project skill development';
+                $tr_records      = $project_trainings;
+                $tr_theme_color  = '#0d6efd';
+                $tr_table_id     = 'projectsTrainingsTable';
+                $tr_export_id    = 'projectsTrainingExports';
+                include __DIR__ . '/partials/embedded_training_view.php';
+                ?>
+            </div>
+
         </div>
 
     </main>
@@ -547,6 +584,8 @@ require_once '../../../includes/header.php';
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
 <?php include 'models/add_project_modal.php'; ?>
+<?php include __DIR__ . '/models/modal_log_training.php'; ?>
+<script src="../../../assets/js/training_manager.js"></script>
 
 <script>
     $(document).ready(function() {
@@ -607,6 +646,33 @@ require_once '../../../includes/header.php';
                 emptyTable: '<div class="py-4 text-center text-muted"><i class="bi bi-journal-x fs-2 d-block mb-2 text-secondary"></i>No scheduled monitoring visits logged yet. Use the "Log Field Inspection" button to add milestone inspections.</div>'
             }
         });
+
+        // Initialize Project Trainings DataGrid
+        var trTable = $('#projectsTrainingsTable').DataTable({
+            pageLength: 10,
+            order: [[1, 'desc']],
+            buttons: [
+                {
+                    extend: 'print',
+                    className: 'btn btn-sm btn-success shadow-sm',
+                    exportOptions: { columns: ':visible:not(:last-child)' }
+                },
+                {
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-danger shadow-sm',
+                    exportOptions: { columns: ':visible:not(:last-child)' }
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-sm btn-warning shadow-sm',
+                    exportOptions: { columns: ':visible:not(:last-child)' }
+                }
+            ],
+            language: {
+                emptyTable: '<div class="py-4 text-center text-muted"><i class="bi bi-mortarboard fs-2 d-block mb-2 text-secondary"></i>No project training sessions recorded yet. Use the "Log Training Session" button above.</div>'
+            }
+        });
+        trTable.buttons().container().appendTo('#projectsTrainingExports');
 
         // Save Unified Monitoring Visit AJAX
         $('#unifiedMonitoringForm').on('submit', function(e) {

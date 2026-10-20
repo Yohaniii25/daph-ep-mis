@@ -236,6 +236,20 @@ if ($dh_v_stmt) {
     $dh_v_stmt->close();
 }
 
+// Fetch Operational Training Sessions for Dairy Hub
+$dairy_trainings = [];
+$dt_stmt = $mysqli->prepare("
+    SELECT * FROM `operational_trainings` 
+    WHERE (range_id = ? OR ? = 0) AND module_context = 'dairy_hub' 
+    ORDER BY training_date DESC, id DESC
+");
+if ($dt_stmt) {
+    $dt_stmt->bind_param("ii", $range_id, $range_id);
+    $dt_stmt->execute();
+    $dairy_trainings = $dt_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $dt_stmt->close();
+}
+
 require_once '../../../includes/header.php';
 ?>
 
@@ -414,6 +428,12 @@ require_once '../../../includes/header.php';
             <button class="nav-link <?= ($active_tab === 'monitoring') ? 'active' : '' ?>" id="monitoring-tab" data-bs-toggle="tab" data-bs-target="#monitoring-pane" type="button" role="tab">
                 <i class="bi bi-clipboard2-pulse me-2"></i> Scheduled Farm Monitoring Logs
                 <span class="badge bg-danger rounded-pill ms-2"><?= count($dh_visits) ?></span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link <?= ($active_tab === 'trainings') ? 'active' : '' ?>" id="trainings-tab" data-bs-toggle="tab" data-bs-target="#trainings-pane" type="button" role="tab">
+                <i class="bi bi-mortarboard-fill me-2"></i> Dairy Farmer &amp; Extension Trainings
+                <span class="badge rounded-pill ms-2" style="background-color: #820100;"><?= count($dairy_trainings) ?></span>
             </button>
         </li>
     </ul>
@@ -1201,6 +1221,22 @@ require_once '../../../includes/header.php';
             </div>
         </div>
 
+        <!-- ========================================================================= -->
+        <!-- TAB 5: DAIRY HUB OPERATIONAL TRAININGS & FARMER EDUCATION                 -->
+        <!-- ========================================================================= -->
+        <div class="tab-pane fade <?= ($active_tab === 'trainings') ? 'show active' : '' ?>" id="trainings-pane" role="tabpanel">
+            <?php 
+            $tr_context      = 'dairy_hub';
+            $tr_title        = 'Dairy Farmer & Extension Trainings';
+            $tr_subtitle     = 'Clean milk production, mastitis management, artificial insemination, and cooperative governance';
+            $tr_records      = $dairy_trainings;
+            $tr_theme_color  = '#820100';
+            $tr_table_id     = 'dairyTrainingsTable';
+            $tr_export_id    = 'dairyTrainingExports';
+            include __DIR__ . '/partials/embedded_training_view.php';
+            ?>
+        </div>
+
     </div>
 
 </div>
@@ -1684,7 +1720,11 @@ require_once '../../../includes/header.php';
 if (file_exists(__DIR__ . '/models/add_dairy_record_modal.php')) {
     include __DIR__ . '/models/add_dairy_record_modal.php';
 }
+if (file_exists(__DIR__ . '/models/modal_log_training.php')) {
+    include __DIR__ . '/models/modal_log_training.php';
+}
 ?>
+<script src="../../../assets/js/training_manager.js"></script>
 
 <?php
 // Buffer page-specific scripts to be injected by includes/footer.php after jQuery & Bootstrap load
@@ -1703,6 +1743,36 @@ $(document).ready(function() {
                 searchPlaceholder: "Search beneficiaries..."
             }
         });
+    }
+
+    // 1b. Initialize Dairy Trainings Table
+    if ($('#dairyTrainingsTable').length) {
+        var dairyTrTable = $('#dairyTrainingsTable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            order: [[1, 'desc']],
+            buttons: [
+                {
+                    extend: 'print',
+                    className: 'btn btn-sm btn-success shadow-sm',
+                    exportOptions: { columns: ':visible:not(:last-child)' }
+                },
+                {
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-danger shadow-sm',
+                    exportOptions: { columns: ':visible:not(:last-child)' }
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-sm btn-warning shadow-sm',
+                    exportOptions: { columns: ':visible:not(:last-child)' }
+                }
+            ],
+            language: {
+                emptyTable: '<div class="py-4 text-center text-muted"><i class="bi bi-mortarboard fs-2 d-block mb-2 text-secondary"></i>No dairy farmer training sessions recorded yet. Use the "Log Training Session" button above.</div>'
+            }
+        });
+        dairyTrTable.buttons().container().appendTo('#dairyTrainingExports');
     }
 
     // 2. Initialize Milk Collection Table

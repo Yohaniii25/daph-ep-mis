@@ -213,17 +213,6 @@ if (!function_exists('ensure_quick_action_assignments_table')) {
                 'category_label' => 'National Program',
                 'description'    => 'Clean Sri Lanka national initiative',
                 'sort_order'     => 12
-            ],
-            [
-                'module_key'     => 'trainings',
-                'title'          => 'Trainings',
-                'icon'           => 'bi-sliders',
-                'color'          => '#37474f',
-                'link_path'      => 'training.php',
-                'category'       => 'operations',
-                'category_label' => 'Capacity Building',
-                'description'    => 'Farmer workshops & staff capacity sessions',
-                'sort_order'     => 13
             ]
         ];
 
