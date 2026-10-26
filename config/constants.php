@@ -31,10 +31,10 @@ load_daph_env(dirname(__DIR__) . '/.env');
 require_once __DIR__ . '/session.php';
 
 // Database fallback constants (keep for legacy scripts)
-define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-define('DB_USER', $_ENV['DB_USER'] ?? 'root');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'daph');
+if (!defined('DB_HOST')) define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
+if (!defined('DB_USER')) define('DB_USER', $_ENV['DB_USER'] ?? 'root');
+if (!defined('DB_PASS')) define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+if (!defined('DB_NAME')) define('DB_NAME', $_ENV['DB_NAME'] ?? 'daph');
 
 // Site info
 define('SITE_NAME', 'DAPH Eastern Province MIS');
@@ -44,12 +44,16 @@ define('SITE_SHORT_NAME', 'DAPH - EP MIS');
 define('MAX_LOGIN_ATTEMPTS', 5);
 define('LOGIN_LOCKOUT_TIME', 900); // 15 minutes in seconds
 
-// Auto-detect BASE_PATH - works in root or subfolder
-$script_name = dirname($_SERVER['SCRIPT_NAME'] ?? '');
-if ($script_name === '/' || $script_name === '\\' || empty($script_name)) {
-    define('BASE_PATH', '/');
-} else {
-    define('BASE_PATH', rtrim($script_name, '/') . '/');
+// Auto-detect BASE_PATH - works in root (e.g. daphep.lk) or subfolder (e.g. localhost/daph-ep-mis/)
+if (!defined('BASE_PATH')) {
+    if (!empty($_ENV['APP_URL'])) {
+        $parsed_path = parse_url($_ENV['APP_URL'], PHP_URL_PATH);
+        $base = (!empty($parsed_path) && $parsed_path !== '/') ? (rtrim($parsed_path, '/') . '/') : '/';
+        define('BASE_PATH', $base);
+    } else {
+        $is_subfolder = strpos($_SERVER['REQUEST_URI'] ?? '', '/daph-ep-mis/') !== false;
+        define('BASE_PATH', $is_subfolder ? '/daph-ep-mis/' : '/');
+    }
 }
 
 // Languages (for future trilingual support)

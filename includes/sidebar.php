@@ -16,7 +16,8 @@ $is_veterinary_surgeon = in_array($role, $vs_roles);
 $is_employee = in_array($role, $emp_roles);
 
 
-$base_path = '/daph-ep-mis/';
+// Auto-detect base path: '/' on live daphep.lk, or '/daph-ep-mis/' on local XAMPP
+$base_path = defined('BASE_PATH') ? BASE_PATH : (strpos($_SERVER['REQUEST_URI'] ?? '', '/daph-ep-mis/') !== false ? '/daph-ep-mis/' : '/');
 $current_path = $_SERVER['REQUEST_URI'] ?? '';
 $current_file = basename(parse_url($current_path, PHP_URL_PATH) ?? '');
 $is_dashboard = (strpos($current_path, 'dashboard') !== false);

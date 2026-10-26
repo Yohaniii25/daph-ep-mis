@@ -561,7 +561,7 @@ require_once '../../../includes/header.php';
                                     </td>
                                     <td class="text-center">
                                         <?php if (!empty($row['receipt_file'])): ?>
-                                            <a href="/daph-ep-mis/<?= htmlspecialchars($row['receipt_file']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary px-2 py-1" title="View Digital Receipt">
+                                            <a href="<?= $base_path ?><?= htmlspecialchars($row['receipt_file']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary px-2 py-1" title="View Digital Receipt">
                                                 <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
                                             </a>
                                         <?php else: ?>
@@ -1432,7 +1432,7 @@ require_once '../../../includes/header.php';
         // Receipt preview/download
         if (data.receipt_file) {
             $('#view_repair_receipt_container').html(
-                '<a href="/daph-ep-mis/' + escapeHtml(data.receipt_file) + '" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm">' +
+                '<a href="<?= $base_path ?>' + escapeHtml(data.receipt_file) + '" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm">' +
                 '<i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>Open Attached Receipt Document</a>'
             );
         } else {
@@ -1471,7 +1471,7 @@ require_once '../../../includes/header.php';
         if (data.receipt_file) {
             $('#edit_receipt_preview_container').html(
                 '<span class="badge bg-light text-dark border me-2"><i class="bi bi-paperclip me-1"></i>Attached:</span> ' +
-                '<a href="/daph-ep-mis/' + escapeHtml(data.receipt_file) + '" target="_blank" class="text-decoration-none small text-primary fw-semibold">' +
+                '<a href="<?= $base_path ?>' + escapeHtml(data.receipt_file) + '" target="_blank" class="text-decoration-none small text-primary fw-semibold">' +
                 '<i class="bi bi-file-earmark-pdf text-danger me-1"></i>View Current Document</a>'
             );
         } else {

@@ -232,7 +232,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
         .hero-section {
             position: relative;
             background: linear-gradient(135deg, rgba(30, 3, 5, 0.96) 0%, rgba(55, 7, 9, 0.92) 50%, rgba(20, 2, 4, 0.98) 100%),
-                        url('assets/img/bg.png') repeat center center;
+                url('assets/img/bg.png') repeat center center;
             padding: 2.75rem 0 3.5rem 0;
             color: #ffffff;
             overflow: hidden;
@@ -266,8 +266,13 @@ unset($_SESSION['login_error']); // Clear errors on reload
         }
 
         @keyframes orbFloat {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(60px, 40px) scale(1.1); }
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(60px, 40px) scale(1.1);
+            }
         }
 
         /* Hero Slider Card */
@@ -448,8 +453,8 @@ unset($_SESSION['login_error']); // Clear errors on reload
             border-radius: var(--radius-xl);
             padding: 2.25rem 2rem;
             box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.55),
-                        0 10px 25px -5px rgba(55, 7, 9, 0.25),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+                0 10px 25px -5px rgba(55, 7, 9, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
             position: relative;
             z-index: 10;
             color: #1e293b;
@@ -598,9 +603,21 @@ unset($_SESSION['login_error']); // Clear errors on reload
         }
 
         @keyframes alertShake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-5px); }
-            40%, 80% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-5px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(5px);
+            }
         }
 
         .dynamic-field-group {
@@ -845,8 +862,9 @@ unset($_SESSION['login_error']); // Clear errors on reload
 
         .leadership-img-wrapper {
             position: relative;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            height: 210px;
+            background: #f1f5f9;
+            width: 100%;
+            height: 330px;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -854,9 +872,36 @@ unset($_SESSION['login_error']); // Clear errors on reload
             border-bottom: 1px solid #f1f5f9;
         }
 
+        .leadership-img-wrapper img,
+        .leadership-photo {
+            width: 50%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            display: block;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .leadership-card:hover .leadership-photo,
+        .leadership-card:hover .leadership-img-wrapper img {
+            transform: scale(1.06);
+        }
+
+        .leadership-img-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 75px;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.55) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
         .leadership-avatar-svg {
-            width: 105px;
-            height: 105px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
             padding: 6px;
             background: #ffffff;
@@ -872,19 +917,21 @@ unset($_SESSION['login_error']); // Clear errors on reload
 
         .leadership-badge-role {
             position: absolute;
-            bottom: 12px;
+            bottom: 14px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.88);
             backdrop-filter: blur(8px);
             color: #ffffff;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             font-weight: 700;
-            padding: 0.25rem 0.75rem;
+            padding: 0.35rem 0.95rem;
             border-radius: 9999px;
             white-space: nowrap;
-            letter-spacing: 0.02em;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            letter-spacing: 0.03em;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            z-index: 2;
         }
 
         .director-highlight .leadership-badge-role {
@@ -1077,7 +1124,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
     <nav class="navbar navbar-expand-lg main-navbar">
         <div class="container-fluid px-lg-5">
             <a class="navbar-brand d-flex align-items-center gap-2" href="#home">
-                <img src="assets/img/Government Department of Animal Production and Health – Eastern Province, Sri Lanka(black).png" alt="Department of Animal Production & Health - Eastern Province" class="img-fluid">
+                <img src="assets/img/daph_logo_black.png" alt="Department of Animal Production & Health - Eastern Province" class="img-fluid">
             </a>
 
             <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#landingNavbar">
@@ -1139,7 +1186,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                                 <div class="hero-slide-overlay">
                                     <span class="slide-badge"><i class="bi bi-heart-pulse-fill"></i> Veterinary Healthcare</span>
                                     <h2 class="slide-title">45 Range Offices & Mobile Clinical Operations</h2>
-                                    
+
                                 </div>
                             </div>
 
@@ -1148,7 +1195,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                                 <div class="hero-slide-overlay">
                                     <span class="slide-badge"><i class="bi bi-search"></i> Disease Surveillance</span>
                                     <h2 class="slide-title">Provincial Epidemiology & Clinical Diagnostics</h2>
-                                    
+
                                 </div>
                             </div>
 
@@ -1157,7 +1204,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                                 <div class="hero-slide-overlay">
                                     <span class="slide-badge"><i class="bi bi-droplet-fill"></i> Dairy Productivity</span>
                                     <h2 class="slide-title">Artificial Insemination & Breed Improvement</h2>
-                                    
+
                                 </div>
                             </div>
 
@@ -1166,7 +1213,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                                 <div class="hero-slide-overlay">
                                     <span class="slide-badge"><i class="bi bi-mortarboard-fill"></i> Capacity Building</span>
                                     <h2 class="slide-title">Vaccination & Disease Control</h2>
-                                    
+
                                 </div>
                             </div>
 
@@ -1175,7 +1222,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                                 <div class="hero-slide-overlay">
                                     <span class="slide-badge"><i class="bi bi-laptop"></i> E-Governance</span>
                                     <h2 class="slide-title">Integrated Digital MIS Platform</h2>
-                                    
+
                                 </div>
                             </div>
 
@@ -1208,7 +1255,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
 
                         <!-- Header & Brand -->
                         <div class="text-center mb-3">
-                            <img src="assets/img/Government Department of Animal Production and Health – Eastern Province, Sri Lanka(black).png" alt="DAPH Eastern Province" class="img-fluid mb-2" style="max-height: 54px;">
+                            <img src="assets/img/daph_logo_black.png" alt="DAPH Eastern Province" class="img-fluid mb-2" style="max-height: 54px;">
                             <div>
                                 <span class="login-card-badge">
                                     <i class="bi bi-shield-lock-fill"></i> Staff Authentication Portal
@@ -1440,7 +1487,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
         <div class="container-fluid px-lg-5">
             <div class="text-center">
                 <span class="section-badge"><i class="bi bi-camera-fill"></i> Photographic Showcase</span>
-                <h2 class="section-title">DAPH Photo Gallery</h2>
+                <h2 class="section-title">Our Gallery</h2>
             </div>
 
             <!-- Image-only grid (no filters, no titles/text items) -->
@@ -1448,16 +1495,16 @@ unset($_SESSION['login_error']); // Clear errors on reload
 
                 <!-- Photo 1: Diagnostics Lab -->
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
-                    <div class="gallery-photo-card" onclick="openLightbox('assets/uploads/profile_images/profile_20_1777526035.png')">
-                        <img src="assets/uploads/profile_images/profile_20_1777526035.png" alt="DAPH Veterinary Diagnostics Lab" class="gallery-photo-img">
+                    <div class="gallery-photo-card" onclick="openLightbox('assets/img/slide01.jpg')">
+                        <img src="assets/img/slide01.jpg" alt="DAPH Veterinary Diagnostics Lab" class="gallery-photo-img">
                         <div class="gallery-photo-zoom-overlay"><i class="bi bi-arrows-fullscreen"></i></div>
                     </div>
                 </div>
 
                 <!-- Photo 2: Field Veterinary Care -->
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
-                    <div class="gallery-photo-card" onclick="openLightbox('https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=1200&q=80')">
-                        <img src="https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=800&q=80" alt="DAPH Veterinary Clinical Outreach" class="gallery-photo-img">
+                    <div class="gallery-photo-card" onclick="openLightbox('assets/img/slide02.jpg')">
+                        <img src="assets/img/slide02.jpg" alt="DAPH Veterinary Clinical Outreach" class="gallery-photo-img">
                         <div class="gallery-photo-zoom-overlay"><i class="bi bi-arrows-fullscreen"></i></div>
                     </div>
                 </div>
@@ -1480,8 +1527,8 @@ unset($_SESSION['login_error']); // Clear errors on reload
 
                 <!-- Photo 5: Farmer Training Session -->
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
-                    <div class="gallery-photo-card" onclick="openLightbox('https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80')">
-                        <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80" alt="DAPH Farmer Training Session" class="gallery-photo-img">
+                    <div class="gallery-photo-card" onclick="openLightbox('assets/img/slide04.jpg')">
+                        <img src="assets/img/slide04.jpg" alt="DAPH Farmer Training Session" class="gallery-photo-img">
                         <div class="gallery-photo-zoom-overlay"><i class="bi bi-arrows-fullscreen"></i></div>
                     </div>
                 </div>
@@ -1496,16 +1543,16 @@ unset($_SESSION['login_error']); // Clear errors on reload
 
                 <!-- Photo 7: Fodder and Pasture Lands -->
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
-                    <div class="gallery-photo-card" onclick="openLightbox('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80')">
-                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80" alt="DAPH Fodder Plots" class="gallery-photo-img">
+                    <div class="gallery-photo-card" onclick="openLightbox('assets/img/slide05.jpg')">
+                        <img src="assets/img/slide05.jpg" alt="DAPH Fodder Plots" class="gallery-photo-img">
                         <div class="gallery-photo-zoom-overlay"><i class="bi bi-arrows-fullscreen"></i></div>
                     </div>
                 </div>
 
                 <!-- Photo 8: Secure MIS Operations -->
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
-                    <div class="gallery-photo-card" onclick="openLightbox('assets/uploads/profile_images/profile_50_1786605206.jpg')">
-                        <img src="assets/uploads/profile_images/profile_50_1786605206.jpg" alt="DAPH Digital MIS Central Server" class="gallery-photo-img">
+                    <div class="gallery-photo-card" onclick="openLightbox('assets/img/slide03.jpg')">
+                        <img src="assets/img/slide03.jpg" alt="DAPH Digital MIS Central Server" class="gallery-photo-img">
                         <div class="gallery-photo-zoom-overlay"><i class="bi bi-arrows-fullscreen"></i></div>
                     </div>
                 </div>
@@ -1525,94 +1572,53 @@ unset($_SESSION['login_error']); // Clear errors on reload
                 </p>
             </div>
 
-            <!-- 4 Officers in a unified row/grid -->
-            <div class="row g-4">
+            <!-- 3 Executive Leaders with Full-Width Portrait Photos -->
+            <div class="row g-4 justify-content-center">
 
-                <!-- 1. Provincial Director -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="leadership-card director-highlight">
-
-                        <div class="leadership-img-wrapper" style="background: radial-gradient(circle, #fff1f2 0%, #fee2e2 100%);">
-                            <svg class="leadership-avatar-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="50" cy="50" r="48" fill="#370709" stroke="#efbe2c" stroke-width="4"/>
-                                <circle cx="50" cy="36" r="18" fill="#fde047"/>
-                                <path d="M22 84C22 66 34 58 50 58C66 58 78 66 78 84" fill="#efbe2c"/>
-                                <circle cx="50" cy="35" r="14" fill="#370709"/>
-                            </svg>
+                <!-- 1. President -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="leadership-card">
+                        <div class="leadership-img-wrapper">
+                            <img src="assets/img/president.jpg" alt="President of Sri Lanka" class="leadership-photo">
                             <span class="leadership-badge-role">
-                                <i class="bi bi-award-fill text-warning me-1"></i> Provincial Director
+                                <i class="bi bi-star-fill text-warning me-1"></i> President
+                            </span>
+                        </div>
+                        <div class="leadership-body">
+                            <h3 class="leadership-name">Anura Kumara Dissanayake</h3>
+                            <div class="leadership-title">President of the Democratic Socialist Republic of Sri Lanka</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Governor -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="leadership-card">
+                        <div class="leadership-img-wrapper">
+                            <img src="assets/img/governer.jpg" alt="Hon. Governor of Eastern Province" class="leadership-photo">
+                            <span class="leadership-badge-role">
+                                <i class="bi bi-award-fill text-warning me-1"></i> Hon. Governor
+                            </span>
+                        </div>
+                        <div class="leadership-body">
+                            <h3 class="leadership-name">Prof. Jayantha Lal Ratnasekera</h3>
+                            <div class="leadership-title">Governor of the Eastern Province</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Provincial Director -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="leadership-card director-highlight">
+                        <div class="leadership-img-wrapper">
+                            <img src="assets/img/pd.jpg" alt="Provincial Director" class="leadership-photo">
+                            <span class="leadership-badge-role">
+                                <i class="bi bi-shield-check text-info me-1"></i> Provincial Director
                             </span>
                         </div>
                         <div class="leadership-body">
                             <h3 class="leadership-name">Dr. (Mrs.) M. A. Nihal</h3>
                             <div class="leadership-title">Provincial Director of Animal Production & Health</div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Deputy Director - H/Q-1 (Animal Health & Extension) -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="leadership-card">
-                        <div class="leadership-img-wrapper" style="background: radial-gradient(circle, #f8fafc 0%, #e2e8f0 100%);">
-                            <svg class="leadership-avatar-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="50" cy="50" r="48" fill="#003ddc" stroke="#cbd5e1" stroke-width="3"/>
-                                <circle cx="50" cy="36" r="18" fill="#93c5fd"/>
-                                <path d="M22 84C22 66 34 58 50 58C66 58 78 66 78 84" fill="#93c5fd"/>
-                                <circle cx="50" cy="35" r="14" fill="#003ddc"/>
-                            </svg>
-                            <span class="leadership-badge-role">
-                                <i class="bi bi-heart-pulse-fill text-danger me-1"></i> Deputy Director H/Q-1
-                            </span>
-                        </div>
-                        <div class="leadership-body">
-                            <h3 class="leadership-name">Dr. K. Pushpakumaran</h3>
-                            <div class="leadership-title">Deputy Director (Animal Health & Veterinary Services)</div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. Deputy Director - H/Q-2 (Planning & Development) -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="leadership-card">
-                        <div class="leadership-img-wrapper" style="background: radial-gradient(circle, #f8fafc 0%, #e2e8f0 100%);">
-                            <svg class="leadership-avatar-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="50" cy="50" r="48" fill="#1e293b" stroke="#cbd5e1" stroke-width="3"/>
-                                <circle cx="50" cy="36" r="18" fill="#cbd5e1"/>
-                                <path d="M22 84C22 66 34 58 50 58C66 58 78 66 78 84" fill="#cbd5e1"/>
-                                <circle cx="50" cy="35" r="14" fill="#1e293b"/>
-                            </svg>
-                            <span class="leadership-badge-role">
-                                <i class="bi bi-graph-up text-info me-1"></i> Deputy Director H/Q-2
-                            </span>
-                        </div>
-                        <div class="leadership-body">
-                            <h3 class="leadership-name">Mr. R. Jeyakanth</h3>
-                            <div class="leadership-title">Deputy Director (Planning & Development)</div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. Subject Matter Specialist (Veterinary Epidemiology & Production) -->
-                <div class="col-xl-3 col-md-6">
-                    <div class="leadership-card">
-                        <div class="leadership-img-wrapper" style="background: radial-gradient(circle, #f8fafc 0%, #e2e8f0 100%);">
-                            <svg class="leadership-avatar-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="50" cy="50" r="48" fill="#065f46" stroke="#cbd5e1" stroke-width="3"/>
-                                <circle cx="50" cy="36" r="18" fill="#6ee7b7"/>
-                                <path d="M22 84C22 66 34 58 50 58C66 58 78 66 78 84" fill="#6ee7b7"/>
-                                <circle cx="50" cy="35" r="14" fill="#065f46"/>
-                            </svg>
-                            <span class="leadership-badge-role">
-                                <i class="bi bi-mortarboard text-success me-1"></i> Subject Matter Specialist
-                            </span>
-                        </div>
-                        <div class="leadership-body">
-                            <h3 class="leadership-name">Dr. T. Vigneswaran</h3>
-                            <div class="leadership-title">Senior Subject Matter Specialist (Epidemiology)</div>
-
                         </div>
                     </div>
                 </div>
@@ -1773,7 +1779,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                 e.preventDefault();
                 const passwordInput = $('#loginPassword');
                 const icon = $('#togglePasswordIcon');
-                
+
                 if (passwordInput.attr('type') === 'password') {
                     passwordInput.attr('type', 'text');
                     icon.removeClass('bi-eye-fill').addClass('bi-eye-slash-fill');
@@ -1826,7 +1832,9 @@ unset($_SESSION['login_error']); // Clear errors on reload
                     $.ajax({
                         url: 'auth/get_ranges_by_district.php',
                         type: 'GET',
-                        data: { district_id: districtId },
+                        data: {
+                            district_id: districtId
+                        },
                         dataType: 'json',
                         success: function(data) {
                             $.each(data, function(index, range) {

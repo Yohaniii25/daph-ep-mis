@@ -21,7 +21,7 @@ $mysqli = @new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
 
 if ($mysqli->connect_error) {
     error_log("DAPH MIS Database Connection Error: " . $mysqli->connect_error);
-    die("Database connection failed. Contact administrator.");
+    die("Database connection failed: " . $mysqli->connect_error);
 }
 
 $mysqli->set_charset("utf8mb4"); // Important for Sinhala/Tamil support
