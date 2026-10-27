@@ -10,11 +10,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 
-require_once __DIR__ . '/../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
-require_once '../../../../includes/notification_helper.php';
+require_once __DIR__ . '/../../../../includes/notification_helper.php';
 
 header('Content-Type: application/json');
 

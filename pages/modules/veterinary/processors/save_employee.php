@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
-require_once '../../../../includes/notification_helper.php';
+require_once __DIR__ . '/../../../../includes/notification_helper.php';
 
 $vs_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'provincial_director', 'district_dd', 'deputy_director_district'];
 $is_ajax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || (isset($_POST['ajax']) && $_POST['ajax'] == 1);
