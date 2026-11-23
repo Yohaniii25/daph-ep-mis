@@ -1561,7 +1561,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
         </div>
     </section>
 
-    <!-- 7. LEADERSHIP SECTION (PROVINCIAL DIRECTOR + 3 ADDITIONAL OFFICERS) -->
+    <!-- 7. LEADERSHIP SECTION (EXECUTIVE LEADERSHIP) -->
     <section class="section-padding bg-white" id="leadership">
         <div class="container-fluid px-lg-5">
             <div class="text-center">
@@ -1572,7 +1572,7 @@ unset($_SESSION['login_error']); // Clear errors on reload
                 </p>
             </div>
 
-            <!-- 3 Executive Leaders with Full-Width Portrait Photos -->
+            <!-- Executive Leaders with Full-Width Portrait Photos -->
             <div class="row g-4 justify-content-center">
 
                 <!-- 1. President -->
@@ -1607,7 +1607,39 @@ unset($_SESSION['login_error']); // Clear errors on reload
                     </div>
                 </div>
 
-                <!-- 3. Provincial Director -->
+                <!-- 3. Additional Chief Secretary -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="leadership-card">
+                        <div class="leadership-img-wrapper">
+                            <img src="assets/img/test.jpg" alt="Additional Chief Secretary" class="leadership-photo">
+                            <span class="leadership-badge-role">
+                                <i class="bi bi-person-badge-fill text-warning me-1"></i> Additional Chief Secretary
+                            </span>
+                        </div>
+                        <div class="leadership-body">
+                            <h3 class="leadership-name">Additional Chief Secretary</h3>
+                            <div class="leadership-title">Chief Secretary's Secretariat, Eastern Province</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Secretary, Ministry of Agriculture -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="leadership-card">
+                        <div class="leadership-img-wrapper">
+                            <img src="assets/img/test.jpg" alt="Secretary, Ministry of Agriculture" class="leadership-photo">
+                            <span class="leadership-badge-role">
+                                <i class="bi bi-briefcase-fill text-warning me-1"></i> Ministry Secretary
+                            </span>
+                        </div>
+                        <div class="leadership-body">
+                            <h3 class="leadership-name">Secretary</h3>
+                            <div class="leadership-title">Ministry of Agriculture, Eastern Province</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Provincial Director -->
                 <div class="col-lg-4 col-md-6">
                     <div class="leadership-card director-highlight">
                         <div class="leadership-img-wrapper">
