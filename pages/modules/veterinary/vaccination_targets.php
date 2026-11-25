@@ -15,6 +15,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 $user_role = $_SESSION['role'] ?? '';
 $user_id   = $_SESSION['user_id'] ?? null;
 $is_supervisory = in_array($user_role, ['district_dd', 'sms', 'admin', 'super_admin', 'deputy_director_district', 'provincial_director'], true);
+$is_read_only = ($user_role === 'sms');
 
 if (!isset($_SESSION['full_name'])) {
     $_SESSION['full_name'] = $_SESSION['username'] ?? 'Officer';
@@ -450,6 +451,9 @@ require_once '../../../includes/header.php';
         <span class="badge" style="background-color: #d4c7b7; color: #370709;"><i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($range_name) ?> Range</span>
         <span class="badge text-light" style="background-color: #a07174;"><i class="bi bi-building me-1"></i><?= htmlspecialchars($district_name) ?> District</span>
         <span class="badge bg-success text-light"><i class="bi bi-link-45deg me-1"></i>Animal Branding Baseline Synced</span>
+        <?php if ($is_read_only): ?>
+            <span class="badge bg-info text-dark"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+        <?php endif; ?>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
         <?php if ($is_supervisory && !empty($supervisory_ranges)): ?>
@@ -474,9 +478,11 @@ require_once '../../../includes/header.php';
             </select>
         </div>
 
+        <?php if (!$is_read_only): ?>
         <button type="button" class="btn btn-sm btn-dark text-nowrap fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVaccinationSession" onclick="prepareAddSessionModal();">
             <i class="bi bi-plus-circle me-1 text-warning"></i> Log Vaccination Program
         </button>
+        <?php endif; ?>
         <a href="annual_targets.php" class="btn btn-sm btn-secondary shadow-sm text-nowrap">
             <i class="bi bi-arrow-left me-1"></i>Back
         </a>
@@ -729,9 +735,11 @@ require_once '../../../includes/header.php';
                     <p class="text-muted small mb-0">Configured annual targets and personnel assignments aligned with live animal counts from the <strong>Animal Branding &amp; Farm Registration Registry (animal_branding.php)</strong>.</p>
                 </div>
                 <div>
+                    <?php if (!$is_read_only): ?>
                     <button class="btn btn-sm btn-dark fw-bold me-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#addTargetModal" id="addVaxTargetBtn">
                         <i class="bi bi-plus-circle me-1"></i> Configure Target
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="card-body px-4 pb-4">
@@ -754,7 +762,7 @@ require_once '../../../includes/header.php';
                                 <th class="text-center">Allocated LDO Target</th>
                                 <th class="text-center">Assigned Vaccinator</th>
                                 <th class="text-center">Allocated Man-Days</th>
-                                <th class="text-center">Action</th>
+                                <?php if (!$is_read_only): ?><th class="text-center">Action</th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -793,21 +801,23 @@ require_once '../../../includes/header.php';
                                 }
                                 echo '<td class="text-center">' . $assigned_personnel_display . '</td>';
                                 echo '<td class="text-center">' . number_format($vt['allocated_man_days'] ?? 0) . '</td>';
-                                echo '<td class="text-center">';
-                                echo '<button class="btn btn-xs btn-outline-primary edit-target-row-btn" ' .
-                                    ' data-species="' . $safe_sp . '"' .
-                                    ' data-qty="' . $qty . '"' .
-                                    ' data-fmd="' . intval($vt['target_fmd'] ?? 0) . '"' .
-                                    ' data-bq="' . intval($vt['target_bq'] ?? 0) . '"' .
-                                    ' data-hs="' . intval($vt['target_hs'] ?? 0) . '"' .
-                                    ' data-poultry="' . intval($vt['target_poultry_doses'] ?? 0) . '"' .
-                                    ' data-poultry-json="' . htmlspecialchars($vt['poultry_targets_json'] ?? '', ENT_QUOTES) . '"' .
-                                    ' data-ldo-count="' . intval($vt['available_ldo_count'] ?? 0) . '"' .
-                                    ' data-ldo-target="' . intval($vt['allocated_ldo_target'] ?? 0) . '"' .
-                                    ' data-man-days="' . intval($vt['allocated_man_days'] ?? 0) . '"' .
-                                    ' data-assigned-vaccinator="' . intval($vt['assigned_vaccinator_id'] ?? 0) . '"' .
-                                    '><i class="bi bi-pencil-square me-1"></i>Configure</button>';
-                                echo '</td>';
+                                if (!$is_read_only) {
+                                    echo '<td class="text-center">';
+                                    echo '<button class="btn btn-xs btn-outline-primary edit-target-row-btn" ' .
+                                        ' data-species="' . $safe_sp . '"' .
+                                        ' data-qty="' . $qty . '"' .
+                                        ' data-fmd="' . intval($vt['target_fmd'] ?? 0) . '"' .
+                                        ' data-bq="' . intval($vt['target_bq'] ?? 0) . '"' .
+                                        ' data-hs="' . intval($vt['target_hs'] ?? 0) . '"' .
+                                        ' data-poultry="' . intval($vt['target_poultry_doses'] ?? 0) . '"' .
+                                        ' data-poultry-json="' . htmlspecialchars($vt['poultry_targets_json'] ?? '', ENT_QUOTES) . '"' .
+                                        ' data-ldo-count="' . intval($vt['available_ldo_count'] ?? 0) . '"' .
+                                        ' data-ldo-target="' . intval($vt['allocated_ldo_target'] ?? 0) . '"' .
+                                        ' data-man-days="' . intval($vt['allocated_man_days'] ?? 0) . '"' .
+                                        ' data-assigned-vaccinator="' . intval($vt['assigned_vaccinator_id'] ?? 0) . '"' .
+                                        '><i class="bi bi-pencil-square me-1"></i>Configure</button>';
+                                    echo '</td>';
+                                }
                                 echo '</tr>';
                             }
                             ?>
@@ -830,9 +840,11 @@ require_once '../../../includes/header.php';
                     <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2">
                         <i class="bi bi-shield-check me-1 text-warning"></i>Flock Population: <strong><?= number_format($animal_pop_data['Chicken'] ?? 0) ?></strong> birds (from Animal Branding)
                     </span>
+                    <?php if (!$is_read_only): ?>
                     <button class="btn btn-sm btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addPoultryTargetModal" id="btnConfigurePoultryMatrix">
                         <i class="bi bi-plus-circle me-1"></i> Configure Poultry Targets
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="card-body px-4 pb-4">
@@ -855,7 +867,7 @@ require_once '../../../includes/header.php';
                                 <th class="text-center">Allocated LDO Target</th>
                                 <th class="text-center">Assigned Vaccinator</th>
                                 <th class="text-center">Allocated Man-Days</th>
-                                <th class="text-center">Action</th>
+                                <?php if (!$is_read_only): ?><th class="text-center">Action</th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -903,6 +915,7 @@ require_once '../../../includes/header.php';
                                     <td class="text-center"><?= number_format($p_ldo_target) ?></td>
                                     <td class="text-center"><?= $p_assigned_vaccinator_text ?></td>
                                     <td class="text-center"><?= number_format($p_man_days) ?></td>
+                                    <?php if (!$is_read_only): ?>
                                     <td class="text-center">
                                         <button class="btn btn-xs btn-outline-warning text-dark edit-poultry-matrix-btn" 
                                             data-bs-toggle="modal" 
@@ -913,6 +926,7 @@ require_once '../../../includes/header.php';
                                             <i class="bi bi-pencil-square me-1"></i>Configure
                                         </button>
                                     </td>
+                                    <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -929,11 +943,13 @@ require_once '../../../includes/header.php';
                                 <td class="text-center"><?= number_format($p_ldo_target) ?></td>
                                 <td class="text-center"><?= $p_assigned_vaccinator_text ?></td>
                                 <td class="text-center"><?= number_format($p_man_days) ?></td>
+                                <?php if (!$is_read_only): ?>
                                 <td class="text-center">
                                     <button class="btn btn-xs btn-dark" data-bs-toggle="modal" data-bs-target="#addPoultryTargetModal">
                                         <i class="bi bi-gear-fill me-1"></i>Configure All
                                     </button>
                                 </td>
+                                <?php endif; ?>
                             </tr>
                         </tfoot>
                     </table>
@@ -1060,9 +1076,11 @@ require_once '../../../includes/header.php';
                     <p class="text-muted small mb-0">Progressively record and monitor individual vaccination field programs by date, assigned vaccinators, batch number, and head counts.</p>
                 </div>
                 <div class="d-flex gap-2">
+                    <?php if (!$is_read_only): ?>
                     <button class="btn btn-sm btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVaccinationSession" onclick="prepareAddSessionModal();">
                         <i class="bi bi-plus-circle me-1 text-warning"></i> Log New Vaccination Program
                     </button>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="card-body px-4 pb-4">
@@ -1091,14 +1109,14 @@ require_once '../../../includes/header.php';
                                 <th class="text-center">Animals Vaccinated</th>
                                 <th class="text-center">Doses Administered</th>
                                 <th>Location & Batch</th>
-                                <th class="text-center" style="width: 100px;">Actions</th>
+                                <?php if (!$is_read_only): ?><th class="text-center" style="width: 100px;">Actions</th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($session_logs)): ?>
                                 <tr>
-                                    <td colspan="10" class="text-center text-muted py-4">
-                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>No vaccination programs logged yet for <?= htmlspecialchars($selected_year) ?>. Click <strong>"Log New Vaccination Program"</strong> to begin.
+                                    <td colspan="<?= $is_read_only ? 9 : 10 ?>" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>No vaccination programs logged yet for <?= htmlspecialchars($selected_year) ?>.<?= !$is_read_only ? ' Click <strong>"Log New Vaccination Program"</strong> to begin.' : '' ?>
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -1135,6 +1153,7 @@ require_once '../../../includes/header.php';
                                                 <div class="text-muted text-truncate" style="max-width: 200px;"><?= htmlspecialchars($s['remarks']) ?></div>
                                             <?php endif; ?>
                                         </td>
+                                        <?php if (!$is_read_only): ?>
                                         <td class="text-center">
                                             <button class="btn btn-xs btn-outline-primary edit-session-btn me-1" 
                                                 data-id="<?= $s['id'] ?>"
@@ -1159,6 +1178,7 @@ require_once '../../../includes/header.php';
                                                 <button type="submit" class="btn btn-xs btn-outline-danger"><i class="bi bi-trash"></i></button>
                                             </form>
                                         </td>
+                                        <?php endif; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -1181,9 +1201,11 @@ require_once '../../../includes/header.php';
                     </h5>
                     <p class="text-muted small mb-0">Registered casual vaccinators deployed in <?= htmlspecialchars($range_name) ?> for Year <?= htmlspecialchars($selected_year) ?>.</p>
                 </div>
+                <?php if (!$is_read_only): ?>
                 <button class="btn btn-sm btn-dark add-staff-btn shadow-sm" data-bs-toggle="modal" data-bs-target="#deployPersonnelModal">
                     <i class="bi bi-person-plus me-1"></i> Register New Vaccinator
                 </button>
+                <?php endif; ?>
             </div>
             <div class="card-body px-4 pb-4">
                 <div class="table-responsive">
@@ -1193,7 +1215,7 @@ require_once '../../../includes/header.php';
                                 <th style="width: 50px;">#</th>
                                 <th>Full Name</th>
                                 <th class="text-center" style="width: 250px;">NIC Number</th>
-                                <th class="text-center" style="width: 200px;">Actions</th>
+                                <?php if (!$is_read_only): ?><th class="text-center" style="width: 200px;">Actions</th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -1206,14 +1228,16 @@ require_once '../../../includes/header.php';
                                 echo '<td>' . $counter++ . '</td>';
                                 echo '<td class="fw-bold">' . $safe_name . '</td>';
                                 echo '<td class="text-center">' . $safe_nic . '</td>';
-                                echo '<td class="text-center">';
-                                echo '<button class="btn btn-xs btn-outline-primary edit-staff-btn me-2" data-id="' . $st['id'] . '" data-name="' . $safe_name . '" data-nic="' . $safe_nic . '"><i class="bi bi-pencil-square me-1"></i>Edit</button>';
-                                echo '<form action="processors/delete_vaccinator_deployment.php" method="POST" class="d-inline" onsubmit="return confirm(\'Are you sure you want to delete this vaccinator record?\');">';
-                                echo '<input type="hidden" name="id" value="' . $st['id'] . '">';
-                                echo '<input type="hidden" name="year" value="' . htmlspecialchars($selected_year) . '">';
-                                echo '<button type="submit" class="btn btn-xs btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete</button>';
-                                echo '</form>';
-                                echo '</td>';
+                                if (!$is_read_only) {
+                                    echo '<td class="text-center">';
+                                    echo '<button class="btn btn-xs btn-outline-primary edit-staff-btn me-2" data-id="' . $st['id'] . '" data-name="' . $safe_name . '" data-nic="' . $safe_nic . '"><i class="bi bi-pencil-square me-1"></i>Edit</button>';
+                                    echo '<form action="processors/delete_vaccinator_deployment.php" method="POST" class="d-inline" onsubmit="return confirm(\'Are you sure you want to delete this vaccinator record?\');">';
+                                    echo '<input type="hidden" name="id" value="' . $st['id'] . '">';
+                                    echo '<input type="hidden" name="year" value="' . htmlspecialchars($selected_year) . '">';
+                                    echo '<button type="submit" class="btn btn-xs btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete</button>';
+                                    echo '</form>';
+                                    echo '</td>';
+                                }
                                 echo '</tr>';
                             }
                             ?>
@@ -1230,14 +1254,23 @@ require_once '../../../includes/header.php';
 </div>
 
 <!-- Modals -->
+<?php if (!$is_read_only): ?>
 <?php include 'models/modal_vaccination_session.php'; ?>
 <?php include 'models/vaccination_staff.php'; ?>
 <?php include 'models/add_animal_population.php'; ?>
 <?php include 'models/add_target_modal.php'; ?>
+<?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
@@ -1418,11 +1451,19 @@ require_once '../../../includes/header.php';
     }
 
     $(document).ready(function() {
+        const exportButtons = [
+            { extend: 'csvHtml5', className: 'btn btn-sm btn-outline-success me-1', text: '<i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV' },
+            { extend: 'pdfHtml5', className: 'btn btn-sm btn-outline-danger me-1', text: '<i class="bi bi-file-earmark-pdf me-1"></i>PDF', orientation: 'landscape' },
+            { extend: 'print', className: 'btn btn-sm btn-outline-dark', text: '<i class="bi bi-printer me-1"></i>Print' }
+        ];
+
         // Initialize DataTables
         const sessionTable = $('#sessionLogsTable').DataTable({
             responsive: true,
             pageLength: 10,
-            order: [[1, 'desc']]
+            order: [[1, 'desc']],
+            dom: 'Bfrtip',
+            buttons: exportButtons
         });
 
         $('#sessionFilterInput').on('keyup', function() {
@@ -1436,7 +1477,9 @@ require_once '../../../includes/header.php';
         const combinedMatrixTable = $('#combinedMatrixTable').DataTable({
             responsive: true,
             pageLength: 10,
-            lengthMenu: [5, 10, 25]
+            lengthMenu: [5, 10, 25],
+            dom: 'Bfrtip',
+            buttons: exportButtons
         });
 
         $('#matrixFilter').on('keyup', function() {
@@ -1447,7 +1490,9 @@ require_once '../../../includes/header.php';
             responsive: true,
             pageLength: 10,
             ordering: false,
-            lengthChange: false
+            lengthChange: false,
+            dom: 'Bfrtip',
+            buttons: exportButtons
         });
 
         $('#poultryMatrixFilter').on('keyup', function() {
@@ -1456,7 +1501,9 @@ require_once '../../../includes/header.php';
 
         $('#casualVaccinatorsTable').DataTable({
             responsive: true,
-            pageLength: 10
+            pageLength: 10,
+            dom: 'Bfrtip',
+            buttons: exportButtons
         });
 
         // Initialize charts if charts tab is active initially

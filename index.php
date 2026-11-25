@@ -1611,14 +1611,14 @@ unset($_SESSION['login_error']); // Clear errors on reload
                 <div class="col-lg-4 col-md-6">
                     <div class="leadership-card">
                         <div class="leadership-img-wrapper">
-                            <img src="assets/img/test.jpg" alt="Additional Chief Secretary" class="leadership-photo">
+                            <img src="assets/img/cs2026New.jpg" alt="Additional Chief Secretary" class="leadership-photo">
                             <span class="leadership-badge-role">
-                                <i class="bi bi-person-badge-fill text-warning me-1"></i> Additional Chief Secretary
+                                <i class="bi bi-person-badge-fill text-warning me-1"></i> Chief Secretary
                             </span>
                         </div>
                         <div class="leadership-body">
-                            <h3 class="leadership-name">Additional Chief Secretary</h3>
-                            <div class="leadership-title">Chief Secretary's Secretariat, Eastern Province</div>
+                            <h3 class="leadership-name">Mr.K.Kunanathan</h3>
+                            <div class="leadership-title">Chief Secretary, Eastern Province</div>
                         </div>
                     </div>
                 </div>
@@ -1627,13 +1627,13 @@ unset($_SESSION['login_error']); // Clear errors on reload
                 <div class="col-lg-4 col-md-6">
                     <div class="leadership-card">
                         <div class="leadership-img-wrapper">
-                            <img src="assets/img/test.jpg" alt="Secretary, Ministry of Agriculture" class="leadership-photo">
+                            <img src="assets/img/723642531V.jpg" alt="Secretary, Ministry of Agriculture" class="leadership-photo">
                             <span class="leadership-badge-role">
-                                <i class="bi bi-briefcase-fill text-warning me-1"></i> Ministry Secretary
+                                <i class="bi bi-briefcase-fill text-warning me-1"></i> Ministry of Agriculture
                             </span>
                         </div>
                         <div class="leadership-body">
-                            <h3 class="leadership-name">Secretary</h3>
+                            <h3 class="leadership-name">Mr.A.L.M.Azmi</h3>
                             <div class="leadership-title">Ministry of Agriculture, Eastern Province</div>
                         </div>
                     </div>
@@ -1643,13 +1643,13 @@ unset($_SESSION['login_error']); // Clear errors on reload
                 <div class="col-lg-4 col-md-6">
                     <div class="leadership-card director-highlight">
                         <div class="leadership-img-wrapper">
-                            <img src="assets/img/pd.jpg" alt="Provincial Director" class="leadership-photo">
+                            <img src="assets/img/user.jpg" alt="Provincial Director" class="leadership-photo">
                             <span class="leadership-badge-role">
                                 <i class="bi bi-shield-check text-info me-1"></i> Provincial Director
                             </span>
                         </div>
                         <div class="leadership-body">
-                            <h3 class="leadership-name">Dr. (Mrs.) M. A. Nihal</h3>
+                            <h3 class="leadership-name">Provincial Director</h3>
                             <div class="leadership-title">Provincial Director of Animal Production & Health</div>
                         </div>
                     </div>

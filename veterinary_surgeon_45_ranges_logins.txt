@@ -1,0 +1,55 @@
+==========================================================================================================
+DAPH EASTERN PROVINCE - 45 VETERINARY RANGES (VETERINARY SURGEON) LOGIN CREDENTIALS
+Generated: 2026-11-25 13:01:39
+Role: veterinary_surgeon | Login Category: Range Veterinary Officer
+==========================================================================================================
+
+ID   | District     | Range Name         | Username               | Email                          | Password      
+----------------------------------------------------------------------------------------------------------------
+1    | Ampara       | Ampara             | vs_ampara              | vs_ampara@daph.lk              | WGbj!sFEJdN2  
+2    | Ampara       | Kalmunai TD        | vs_kalmunai_td         | vs_kalmunai_td@daph.lk         | Q$HB4PCx5j$2  
+3    | Ampara       | Kalmunai MD        | vs_kalmunai_md         | vs_kalmunai_md@daph.lk         | p!LYM%Y4ae4Y  
+4    | Ampara       | Sammanthurai       | vs_sammanthurai        | vs_sammanthurai@daph.lk        | 2rxTZ*mDag9F  
+5    | Ampara       | Navethanveli       | vs_navethanveli        | vs_navethanveli@daph.lk        | ZShLn49UKZ!@  
+6    | Ampara       | Akkaraipattu       | vs_akkaraipattu        | vs_akkaraipattu@daph.lk        | 47*suE#VY$4t  
+7    | Ampara       | Addalaichenai      | vs_addalaichenai       | vs_addalaichenai@daph.lk       | t5u!2NZ47ZEb  
+8    | Ampara       | Pottuvil           | vs_pottuvil            | vs_pottuvil@daph.lk            | mCv7$4t4sYE8  
+9    | Ampara       | Lahugala           | vs_lahugala            | vs_lahugala@daph.lk            | EU78q5rqH%Cu  
+10   | Ampara       | Uhana              | vs_uhana               | vs_uhana@daph.lk               | &xRDuYF4qH26  
+11   | Ampara       | Dehiattakandiya    | vs_dehiattakandiya     | vs_dehiattakandiya@daph.lk     | @dFqK%p4*c6t  
+12   | Ampara       | Mahaoya            | vs_mahaoya             | vs_mahaoya@daph.lk             | fk88wvKKHL2%  
+13   | Ampara       | Damana             | vs_damana              | vs_damana@daph.lk              | *Dvk5SbgpJjR  
+14   | Ampara       | Irakkamam          | vs_irakkamam           | vs_irakkamam@daph.lk           | c4H7xGcG#8$2  
+15   | Ampara       | Karaitivu          | vs_karaitivu           | vs_karaitivu@daph.lk           | NtjF9%#!nvEc  
+16   | Ampara       | Alayadivembu       | vs_alayadivembu        | vs_alayadivembu@daph.lk        | d#yMHK&a3f3W  
+17   | Ampara       | Thirukkovil        | vs_thirukkovil         | vs_thirukkovil@daph.lk         | VeSSb*2EFbG2  
+18   | Ampara       | Nintavur           | vs_nintavur            | vs_nintavur@daph.lk            | Ap4jd@Vz$*tL  
+19   | Ampara       | Sainthamaruthu     | vs_sainthamaruthu      | vs_sainthamaruthu@daph.lk      | B6tL@T$!cHsp  
+20   | Ampara       | Padiyathalawa      | vs_padiyathalawa       | vs_padiyathalawa@daph.lk       | fk5!DHBD4r!F  
+21   | Batticaloa   | Batticaloa         | vs_batticaloa          | vs_batticaloa@daph.lk          | rB5e7WV$$eD9  
+22   | Batticaloa   | Chenkalady         | vs_chenkalady          | vs_chenkalady@daph.lk          | F&xG7q5$y9#P  
+23   | Batticaloa   | Eravur             | vs_eravur              | vs_eravur@daph.lk              | j9rV4SRbGrE%  
+24   | Batticaloa   | Kathankudy         | vs_kathankudy          | vs_kathankudy@daph.lk          | Gm&Z82RtXYJD  
+25   | Batticaloa   | Valaichenai        | vs_valaichenai         | vs_valaichenai@daph.lk         | cXwa$3EzfZ8X  
+26   | Batticaloa   | Kiran              | vs_kiran               | vs_kiran@daph.lk               | SrBHvxC5w$8&  
+27   | Batticaloa   | Oddamavadi         | vs_oddamavadi          | vs_oddamavadi@daph.lk          | 7!#ysCdUV!Pn  
+28   | Batticaloa   | Vaharai            | vs_vaharai             | vs_vaharai@daph.lk             | x$n2YT9j$7V9  
+29   | Batticaloa   | Kaluwanchikudy     | vs_kaluwanchikudy      | vs_kaluwanchikudy@daph.lk      | KM!9xTT4PFCk  
+30   | Batticaloa   | Kokkaddicholai     | vs_kokkaddicholai      | vs_kokkaddicholai@daph.lk      | QvbSY#3br8*G  
+31   | Batticaloa   | karadiyanaru       | vs_karadiyanaru        | vs_karadiyanaru@daph.lk        | GzT7ShAq#&X@  
+32   | Batticaloa   | Sathurukondan      | vs_sathurukondan       | vs_sathurukondan@daph.lk       | 5#YV8BKqs#tP  
+33   | Batticaloa   | Thumpankerny       | vs_thumpankerny        | vs_thumpankerny@daph.lk        | hMw#Cnx4L2dz  
+34   | Batticaloa   | Rethintenna        | vs_rethintenna         | vs_rethintenna@daph.lk         | %6EBHPc$g4mQ  
+35   | Trincomalee  | Town & Gravets     | vs_town_gravets        | vs_town_gravets@daph.lk        | R3h%*wmpd@8*  
+36   | Trincomalee  | Kuchchaveli        | vs_kuchchaveli         | vs_kuchchaveli@daph.lk         | 8b68Pjd5r@w8  
+37   | Trincomalee  | Morawewa           | vs_morawewa            | vs_morawewa@daph.lk            | ffvCVa%2maNF  
+38   | Trincomalee  | PadaviSeripura     | vs_padaviseripura      | vs_padaviseripura@daph.lk      | wCdgh%8YP4Wh  
+39   | Trincomalee  | Thampalakamam      | vs_thampalakamam       | vs_thampalakamam@daph.lk       | fT4!K&JP7haN  
+40   | Trincomalee  | Kanthalai          | vs_kanthalai           | vs_kanthalai@daph.lk           | @hNmyT2hBvWw  
+41   | Trincomalee  | Kinniya            | vs_kinniya             | vs_kinniya@daph.lk             | L4&e8vdgZq%u  
+42   | Trincomalee  | Mutur              | vs_mutur               | vs_mutur@daph.lk               | 52SyFd$25EKV  
+43   | Trincomalee  | Echchilampattu     | vs_echchilampattu      | vs_echchilampattu@daph.lk      | te#J9!q46@*f  
+44   | Trincomalee  | Seruwila           | vs_seruwila            | vs_seruwila@daph.lk            | $Hu&UZJ&9Dd*  
+45   | Trincomalee  | Gomarankadawala    | vs_gomarankadawala     | vs_gomarankadawala@daph.lk     | KGs4sXuS@J!V  
+----------------------------------------------------------------------------------------------------------------
+Total Accounts: 45 (All passwords unique: 45)

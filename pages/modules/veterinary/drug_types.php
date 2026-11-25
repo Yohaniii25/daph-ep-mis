@@ -1,6 +1,7 @@
 <?php
 require_once '../../../includes/header.php';
 if (!in_array($_SESSION['role'], ['veterinary_surgeon', 'sms', 'district_dd', 'admin', 'super_admin'])) die("Access denied");
+$is_read_only = (($_SESSION['role'] ?? '') === 'sms');
 require_once __DIR__ . '/../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */
@@ -21,6 +22,9 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
             <div>
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Therapeutic Drug Classifications</h2>
                 <p class="text-muted small mb-0">Register brand names and chemical compositions for veterinary pharmaceutical inventory</p>
+                <?php if ($is_read_only): ?>
+                    <span class="badge bg-info text-dark mt-1"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+                <?php endif; ?>
             </div>
             <a href="drug_maintenance.php" class="btn btn-outline-secondary shadow-sm">
                 <i class="bi bi-arrow-left me-1"></i>Back to Drug Maintenance
@@ -44,12 +48,14 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
             </div>
             <div class="card-body">
                 <div class="row g-3">
+                    <?php if (!$is_read_only): ?>
                     <div class="col-md-3">
                         <button class="btn btn-success w-100 py-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#addDrugTypeModal">
                             <i class="bi bi-capsule mb-2 fs-5"></i><br>
                             Add New Drug Type
                         </button>
                     </div>
+                    <?php endif; ?>
                     <div class="col-md-3">
                         <a href="drug_maintenance.php" class="btn btn-outline-primary w-100 py-3 shadow-sm">
                             <i class="bi bi-journal-medical mb-2 fs-5"></i><br>
@@ -73,7 +79,7 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
                             <th style="width: 22%;">Chemical Composition</th>
                             <th style="width: 20%;">Display Name</th>
                             <th style="width: 20%;">Target Animals</th>
-                            <th style="width: 12%;" class="text-end">Actions</th>
+                            <?php if (!$is_read_only): ?><th style="width: 12%;" class="text-end">Actions</th><?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,6 +105,7 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
                                             </span>
                                         <?php endforeach; ?>
                                     </td>
+                                    <?php if (!$is_read_only): ?>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
                                             <button class="btn btn-outline-secondary edit-drug-btn"
@@ -119,6 +126,7 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
                                             </a>
                                         </div>
                                     </td>
+                                    <?php endif; ?>
                                 </tr>
                         <?php
                             endwhile;
@@ -131,7 +139,9 @@ $total_types = ($count_res) ? $count_res->fetch_assoc()['total_types'] : 0;
     </main>
 </div>
 
+<?php if (!$is_read_only): ?>
 <?php include './models/drug_type_modal.php'; ?>
+<?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

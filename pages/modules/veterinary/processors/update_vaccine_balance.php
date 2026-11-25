@@ -7,10 +7,11 @@ global $mysqli;
 
 $allowed_roles = [
     'veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon',
-    'district_dd', 'deputy_director_district', 'sms', 'provincial_director', 'administrator'
+    'district_dd', 'deputy_director_district', 'provincial_director', 'administrator'
 ];
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true) || !isset($_SESSION['user_id'])) {
+    http_response_code(403);
     header("Location: ../../../../index.php");
     exit();
 }

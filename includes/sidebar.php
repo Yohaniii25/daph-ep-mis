@@ -337,18 +337,20 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/veterinary/vaccination_targets.php">
                             <i class="bi bi-shield-check me-2"></i> Vaccination & Targets
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'mobile_clinics.php') ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/sms/mobile_clinics.php">
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'vaccine_balance.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccine_balance.php">
+                            <i class="bi bi-box-seam me-2"></i> Vaccine Balance
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['mobile_clinics.php', 'mobile_clinic_reports.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/mobile_clinics.php">
                             <i class="bi bi-truck me-2"></i> Mobile Clinics
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'outbreak_report.php') ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/sms/outbreak_report.php">
-                            <i class="bi bi-exclamation-triangle me-2"></i> Outbreak Report
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['drug_maintenance.php', 'drug_types.php', 'batches.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/drug_maintenance.php">
+                            <i class="bi bi-capsule me-2"></i> Drug Maintenance
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) === 'disease_control.php') ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/sms/disease_control.php">
-                            <i class="bi bi-virus me-2"></i> Disease Control
-                        </a>
+
+
                     <?php endif; ?>
 
                     <?php if ($is_farms_dd): ?>

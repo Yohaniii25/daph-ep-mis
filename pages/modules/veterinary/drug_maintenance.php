@@ -19,6 +19,7 @@ $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? '';
 $user_district_id = $_SESSION['district_id'] ?? null;
 $is_supervisory = in_array($user_role, ['district_dd', 'deputy_director_district', 'sms', 'provincial_director', 'admin', 'super_admin', 'administrator']);
+$is_read_only = ($user_role === 'sms');
 
 // View routing: 'hub' (Main Navigation Level), 'batches' (Batch Maintain View), 'maintenance' (Drug Maintain View)
 $view = $_GET['view'] ?? 'hub';
@@ -415,12 +416,14 @@ require_once __DIR__ . '/../../../includes/header.php';
                                     </p>
                                 </div>
                                 <div>
+                                    <?php if (!$is_read_only): ?>
                                     <button type="button" class="btn w-100 text-light fw-bold shadow-sm py-2 mb-2" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBalanceModal">
                                         <i class="bi bi-plus-circle me-1"></i>Add Vaccine Record
                                     </button>
+                                    <?php endif; ?>
                                     <div class="text-center">
-                                        <a href="vaccine_balance.php" class="small text-muted text-decoration-none">
-                                            <i class="bi bi-table me-1"></i>View Vaccine Balances Register &rarr;
+                                        <a href="vaccine_balance.php" class="<?= $is_read_only ? 'btn w-100 text-light fw-bold shadow-sm py-2 mb-2' : 'small text-muted text-decoration-none' ?>" <?= $is_read_only ? 'style="background-color: #820100;"' : '' ?>>
+                                            <i class="bi bi-table me-1"></i>View Vaccine Balances Register<?= $is_read_only ? '' : ' &rarr;' ?>
                                         </a>
                                     </div>
                                 </div>
@@ -450,11 +453,13 @@ require_once __DIR__ . '/../../../includes/header.php';
                                     <a href="drug_maintenance.php?view=batches" class="btn w-100 text-light fw-bold shadow-sm py-2 mb-2" style="background-color: #b08723;">
                                         <i class="bi bi-box-seam me-1"></i>Batch Maintain
                                     </a>
+                                    <?php if (!$is_read_only): ?>
                                     <div class="text-center">
                                         <button type="button" class="btn btn-link p-0 small text-muted text-decoration-none" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
                                             <i class="bi bi-plus-circle me-1"></i>Quick Add Batch &rarr;
                                         </button>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -585,9 +590,11 @@ require_once __DIR__ . '/../../../includes/header.php';
             <div class="card-body p-3">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
+                        <?php if (!$is_read_only): ?>
                         <button type="button" class="btn text-light fw-bold px-3 py-2 shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
                             <i class="bi bi-plus-circle me-1"></i>Add Batch
                         </button>
+                        <?php endif; ?>
                         <a href="drug_maintenance.php" class="btn btn-outline-secondary px-3 py-2 shadow-sm">
                             <i class="bi bi-arrow-left me-1"></i>Back to Navigation Menu
                         </a>
@@ -611,9 +618,11 @@ require_once __DIR__ . '/../../../includes/header.php';
                     <h5 class="m-0 fw-bold text-dark"><i class="bi bi-list-check me-2 text-warning"></i>List of Batch</h5>
                     <small class="text-muted">Master register of all vaccine & therapeutic drug stock batch codes, active status, and expiry schedules.</small>
                 </div>
+                <?php if (!$is_read_only): ?>
                 <button type="button" class="btn btn-sm text-light fw-bold shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
                     <i class="bi bi-plus-circle me-1"></i>Add Batch
                 </button>
+                <?php endif; ?>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -626,7 +635,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                 <th style="width: 14%;">Status</th>
                                 <th style="width: 20%;">Remarks / Log Notes</th>
                                 <th style="width: 15%;">Date Registered</th>
-                                <th style="width: 8%;" class="text-end">Actions</th>
+                                <?php if (!$is_read_only): ?><th style="width: 8%;" class="text-end">Actions</th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -667,6 +676,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                                 <i class="bi bi-calendar3 me-1.5 text-muted"></i><?= date('Y-m-d g:i A', strtotime($row['created_at'])) ?>
                                             </div>
                                         </td>
+                                        <?php if (!$is_read_only): ?>
                                         <td class="text-end">
                                             <div class="btn-group btn-group-sm">
                                                 <button type="button" class="btn btn-outline-secondary edit-batch-btn"
@@ -684,6 +694,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                                 </a>
                                             </div>
                                         </td>
+                                        <?php endif; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -757,11 +768,13 @@ require_once __DIR__ . '/../../../includes/header.php';
                                 </h5>
                                 <small class="text-muted">Consolidated historical and live inventory log entries across all drug formulations.</small>
                             </div>
+                            <?php if (!$is_read_only): ?>
                             <div class="d-flex align-items-center gap-2">
                                 <button type="button" class="btn text-light fw-bold px-3 py-2 shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addDrugRecordModal">
                                     <i class="bi bi-plus-circle me-1"></i>Add Drug Record
                                 </button>
                             </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Consolidated Table Grid -->
@@ -779,7 +792,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                         <th>Quantity Used</th>
                                         <th>Wasted / Damaged</th>
                                         <th class="bg-light-success fw-bold">End Balance</th>
-                                        <th style="width: 100px;">Actions</th>
+                                        <?php if (!$is_read_only): ?><th style="width: 100px;">Actions</th><?php endif; ?>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -800,6 +813,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                                 <td class="text-center font-monospace text-info">-<?= number_format($row['used_doses_count']) ?></td>
                                                 <td class="text-center font-monospace text-danger">-<?= number_format($row['doses_damaged']) ?></td>
                                                 <td class="text-center font-monospace fw-bold bg-light text-success"><?= number_format($row['balance_end_month']) ?></td>
+                                                <?php if (!$is_read_only): ?>
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group-sm">
                                                         <button type="button" class="btn btn-outline-primary edit-drug-record-btn"
@@ -821,6 +835,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                                         </a>
                                                     </div>
                                                 </td>
+                                                <?php endif; ?>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
@@ -844,11 +859,13 @@ require_once __DIR__ . '/../../../includes/header.php';
                                 </h5>
                                 <small class="text-muted">Master catalogue of all registered drug names, formulations, chemical compositions, and target animal species.</small>
                             </div>
+                            <?php if (!$is_read_only): ?>
                             <div class="d-flex align-items-center gap-2">
                                 <button type="button" class="btn btn-success fw-bold px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#addDrugTypeModal">
                                     <i class="bi bi-plus-circle me-1"></i>Add New Drug Name
                                 </button>
                             </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Specific List of Drugs Table -->
@@ -861,7 +878,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                         <th style="width: 22%;">Chemical Composition</th>
                                         <th style="width: 20%;">Display Name</th>
                                         <th style="width: 20%;">Target Animals</th>
-                                        <th style="width: 14%;" class="text-end">Actions</th>
+                                        <?php if (!$is_read_only): ?><th style="width: 14%;" class="text-end">Actions</th><?php endif; ?>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -884,6 +901,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                                         </span>
                                                     <?php endforeach; ?>
                                                 </td>
+                                                <?php if (!$is_read_only): ?>
                                                 <td class="text-end">
                                                     <div class="btn-group btn-group-sm">
                                                         <button type="button" class="btn btn-outline-secondary edit-drug-type-btn"
@@ -903,6 +921,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                                         </a>
                                                     </div>
                                                 </td>
+                                                <?php endif; ?>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
@@ -920,10 +939,12 @@ require_once __DIR__ . '/../../../includes/header.php';
 
 <?php 
 // Modals for the entire module
-include __DIR__ . '/models/add_vaccine_balance_modal.php'; 
-include __DIR__ . '/models/vaccine_batch_modal.php'; 
-include __DIR__ . '/models/drug_record_modal.php'; 
-include __DIR__ . '/models/drug_type_modal.php'; 
+if (!$is_read_only) {
+    include __DIR__ . '/models/add_vaccine_balance_modal.php'; 
+    include __DIR__ . '/models/vaccine_batch_modal.php'; 
+    include __DIR__ . '/models/drug_record_modal.php'; 
+    include __DIR__ . '/models/drug_type_modal.php'; 
+}
 ?>
 
 <?php

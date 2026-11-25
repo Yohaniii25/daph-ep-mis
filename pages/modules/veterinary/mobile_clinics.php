@@ -26,9 +26,33 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 }
 
 $user_id = (int)($_SESSION['user_id'] ?? 0);
-$range_id = (int)($_SESSION['range_id'] ?? 0);
+$user_role = $_SESSION['role'] ?? '';
+$is_supervisory = in_array($user_role, ['sms', 'district_dd', 'deputy_director_district', 'administrator', 'provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'admin'], true);
+$is_read_only = ($user_role === 'sms');
+$user_district_id = $_SESSION['district_id'] ?? null;
+
+$supervisory_ranges = [];
+if ($is_supervisory) {
+    if (!empty($user_district_id)) {
+        $r_stmt = $mysqli->prepare("SELECT id, name FROM veterinary_ranges WHERE district_id = ? ORDER BY name ASC");
+        if ($r_stmt) {
+            $r_stmt->bind_param("i", $user_district_id);
+            $r_stmt->execute();
+            $supervisory_ranges = $r_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $r_stmt->close();
+        }
+    } else {
+        $r_res = $mysqli->query("SELECT id, name FROM veterinary_ranges ORDER BY name ASC");
+        if ($r_res) {
+            $supervisory_ranges = $r_res->fetch_all(MYSQLI_ASSOC);
+        }
+    }
+}
+
+$requested_range_id = ($is_supervisory && isset($_GET['range_id']) && is_numeric($_GET['range_id'])) ? (int)$_GET['range_id'] : 0;
+$range_id = $requested_range_id > 0 ? $requested_range_id : (int)($_SESSION['range_id'] ?? 0);
 if ($range_id <= 0) {
-    $range_id = 1; // Default fallback to Range 1 (Ampara)
+    $range_id = !empty($supervisory_ranges) ? (int)$supervisory_ranges[0]['id'] : 1; // Default fallback
 }
 
 $range_name = 'Your Range';
@@ -126,6 +150,7 @@ require_once '../../../includes/header.php';
 
 <link rel="stylesheet" href="../../../assets/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 
 <style>
 .nav-pills .nav-link {
@@ -193,14 +218,27 @@ require_once '../../../includes/header.php';
                 <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
                     <i class="bi bi-geo-alt-fill me-1"></i><?= htmlspecialchars($range_name) ?> (<?= htmlspecialchars($district_name) ?>)
                 </span>
+                <?php if ($is_read_only): ?>
+                    <span class="badge bg-info text-dark"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+                <?php endif; ?>
             </div>
             <h2 class="h3 fw-bold mb-0 text-dark">Mobile Clinics &amp; Drug Distribution</h2>
             <p class="text-muted small mb-0">Record field clinic reports, medical team deployments, breeding &amp; health activities, and drug inventory dispensing.</p>
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <form method="GET" class="d-flex align-items-center gap-2">
+            <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
                 <input type="hidden" name="tab" value="<?= htmlspecialchars($active_tab) ?>">
+                <?php if ($is_supervisory && !empty($supervisory_ranges)): ?>
+                    <label class="small fw-bold text-muted mb-0">Range:</label>
+                    <select name="range_id" class="form-select form-select-sm fw-bold" onchange="this.form.submit()" style="min-width: 160px;">
+                        <?php foreach ($supervisory_ranges as $sr): ?>
+                            <option value="<?= (int)$sr['id'] ?>" <?= ($range_id == $sr['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($sr['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
                 <label class="small fw-bold text-muted mb-0">Year:</label>
                 <select name="year" class="form-select form-select-sm fw-bold font-monospace" onchange="this.form.submit()" style="width: 105px;">
                     <?php
@@ -304,6 +342,7 @@ require_once '../../../includes/header.php';
             </ul>
 
             <!-- ACTION BUTTONS -->
+            <?php if (!$is_read_only): ?>
             <div class="d-flex align-items-center gap-2">
                 <button type="button" class="btn btn-sm btn-danger shadow-sm fw-bold px-3" onclick="openRecordClinicModal()">
                     <i class="bi bi-plus-circle-fill me-1"></i>Record Mobile Clinic
@@ -312,6 +351,7 @@ require_once '../../../includes/header.php';
                     <i class="bi bi-capsule-pill me-1"></i>Record Drug Distribution
                 </button>
             </div>
+            <?php endif; ?>
         </div>
 
         <div class="card-body p-3 p-md-4">
@@ -400,12 +440,14 @@ require_once '../../../includes/header.php';
                                                     <button type="button" class="btn btn-outline-secondary" onclick="viewMobileClinic(<?= (int)$r['id'] ?>)" title="View & Print">
                                                         <i class="bi bi-printer"></i>
                                                     </button>
+                                                    <?php if (!$is_read_only): ?>
                                                     <button type="button" class="btn btn-outline-primary" onclick="editMobileClinic(<?= (int)$r['id'] ?>)" title="Edit">
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-outline-danger" onclick="deleteMobileClinic(<?= (int)$r['id'] ?>)" title="Delete">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -475,12 +517,14 @@ require_once '../../../includes/header.php';
                                                     <button type="button" class="btn btn-outline-secondary" onclick="viewDrugDistribution(<?= (int)$dr['id'] ?>)" title="View & Print">
                                                         <i class="bi bi-printer"></i>
                                                     </button>
+                                                    <?php if (!$is_read_only): ?>
                                                     <button type="button" class="btn btn-outline-primary" onclick="editDrugDistribution(<?= (int)$dr['id'] ?>)" title="Edit">
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
                                                     <button type="button" class="btn btn-outline-danger" onclick="deleteDrugDistribution(<?= (int)$dr['id'] ?>)" title="Delete">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -500,8 +544,10 @@ require_once '../../../includes/header.php';
 <!-- MODAL INCLUDES                                                            -->
 <!-- ========================================================================= -->
 <?php
-require_once __DIR__ . '/models/modal_record_mobile_clinic.php';
-require_once __DIR__ . '/models/modal_record_drug_distribution.php';
+if (!$is_read_only) {
+    require_once __DIR__ . '/models/modal_record_mobile_clinic.php';
+    require_once __DIR__ . '/models/modal_record_drug_distribution.php';
+}
 require_once __DIR__ . '/models/modal_view_mobile_clinic.php';
 require_once __DIR__ . '/models/modal_view_drug_distribution.php';
 ?>
@@ -510,6 +556,13 @@ require_once __DIR__ . '/models/modal_view_drug_distribution.php';
 <script src="../../../assets/js/jquery.min.js"></script>
 <script src="../../../assets/js/jquery.dataTables.min.js"></script>
 <script src="../../../assets/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="../../../assets/js/sweetalert2.all.min.js"></script>
 
 <script>
@@ -517,11 +570,19 @@ const CRUD_URL = 'processors/mobile_clinics_crud.php';
 let drugCatalog = [];
 
 $(document).ready(function() {
+    const exportButtons = [
+        { extend: 'csvHtml5', className: 'btn btn-sm btn-outline-success me-1', text: '<i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV' },
+        { extend: 'pdfHtml5', className: 'btn btn-sm btn-outline-danger me-1', text: '<i class="bi bi-file-earmark-pdf me-1"></i>PDF', orientation: 'landscape' },
+        { extend: 'print', className: 'btn btn-sm btn-outline-dark', text: '<i class="bi bi-printer me-1"></i>Print' }
+    ];
+
     // Initialize DataTables
     $('#tableMobileClinics').DataTable({
         pageLength: 10,
         responsive: true,
         order: [[1, 'desc']],
+        dom: 'Bfrtip',
+        buttons: exportButtons,
         language: { search: "_INPUT_", searchPlaceholder: "Search clinics..." }
     });
 
@@ -529,6 +590,8 @@ $(document).ready(function() {
         pageLength: 10,
         responsive: true,
         order: [[1, 'desc']],
+        dom: 'Bfrtip',
+        buttons: exportButtons,
         language: { search: "_INPUT_", searchPlaceholder: "Search drug distributions..." }
     });
 

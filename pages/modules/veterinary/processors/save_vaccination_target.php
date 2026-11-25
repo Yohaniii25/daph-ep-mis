@@ -6,8 +6,9 @@ require_once __DIR__ . '/../../../../config/db_connect.php';
 global $mysqli;
 
 
-$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'district_dd', 'sms', 'admin', 'super_admin', 'deputy_director_district', 'provincial_director'];
+$allowed_roles = ['veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon', 'district_dd', 'admin', 'super_admin', 'deputy_director_district', 'provincial_director'];
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
+    http_response_code(403);
     header("Location: ../vaccination_targets.php?status=error&msg=Unauthorized");
     exit();
 }

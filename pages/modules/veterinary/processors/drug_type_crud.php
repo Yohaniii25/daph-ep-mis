@@ -3,7 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'sms', 'district_dd', 'admin', 'super_admin'])) {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['veterinary_surgeon', 'district_dd', 'admin', 'super_admin'])) {
+    http_response_code(403);
     die("Access denied: Invalid profile context verification execution drop.");
 }
 

@@ -18,6 +18,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? '';
 $is_supervisory = in_array($user_role, ['district_dd', 'deputy_director_district', 'sms', 'provincial_director', 'administrator']);
+$is_read_only = ($user_role === 'sms');
 $district_id = $_SESSION['district_id'] ?? null;
 
 // Fetch Officer Details & Designation
@@ -225,6 +226,9 @@ require_once __DIR__ . '/../../../includes/header.php';
     <div>
         <h3 class="fw-bold mb-1" style="color: #370709;">Vaccine Balance - Monthly Returns & Cumulative YTD</h3>
         <p class="text-muted small mb-0">Track stock levels, field utilization, progressive cumulative summaries, and mid-year/annual exports for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong>.</p>
+        <?php if ($is_read_only): ?>
+            <span class="badge bg-info text-dark mt-1"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+        <?php endif; ?>
     </div>
     
     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -336,6 +340,7 @@ require_once __DIR__ . '/../../../includes/header.php';
     </div>
     <div class="card-body pt-0">
         <div class="row g-3">
+            <?php if (!$is_read_only): ?>
             <div class="col-md-4">
                 <button class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addVaccineBalanceModal">
                     <i class="bi bi-plus-circle fs-3 mb-1 text-warning"></i>
@@ -348,8 +353,9 @@ require_once __DIR__ . '/../../../includes/header.php';
                     <span class="small fw-bold text-uppercase">Register Vaccine Batch</span>
                 </button>
             </div>
-            <div class="col-md-4">
-                <a href="drug_maintenance.php<?= $range_id ? '?range_id=' . $range_id : '' ?>" class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background-color: #2b3a4a; min-height: 105px;">
+            <?php endif; ?>
+            <div class="<?= $is_read_only ? 'col-md-12' : 'col-md-4' ?>">
+                <a href="drug_maintenance.php?view=maintenance" class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background-color: #2b3a4a; min-height: 105px;">
                     <i class="bi bi-capsule fs-3 mb-1 text-light"></i>
                     <span class="small fw-bold text-uppercase">Drug Maintenance</span>
                 </a>
@@ -508,7 +514,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                         <th class="text-end">Transferred</th>
                         <th class="text-end">Closing</th>
                         <th>Expiry</th>
-                        <th class="text-end">Actions</th>
+                        <?php if (!$is_read_only): ?><th class="text-end">Actions</th><?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
@@ -538,10 +544,12 @@ require_once __DIR__ . '/../../../includes/header.php';
                                 <td class="text-end font-monospace text-warning">-<?= number_format($row['transferred_doses']) ?></td>
                                 <td class="text-end font-monospace fw-bold text-dark bg-light"><?= number_format($row['closing_balance']) ?></td>
                                 <td><span class="small font-monospace text-danger"><?= htmlspecialchars($row['expiry_date'] ?? 'N/A') ?></span></td>
+                                <?php if (!$is_read_only): ?>
                                 <td class="text-end">
                                     <button class="btn btn-xs btn-outline-primary btn-edit-vac" title="Edit"><i class="bi bi-pencil-square"></i></button>
                                     <button class="btn btn-xs btn-outline-danger btn-delete-vac" title="Delete"><i class="bi bi-trash"></i></button>
                                 </td>
+                                <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -584,9 +592,11 @@ require_once __DIR__ . '/../../../includes/header.php';
 </div>
 
 <!-- Modals -->
+<?php if (!$is_read_only): ?>
 <?php include 'models/add_vaccine_balance_modal.php'; ?>
 <?php include 'models/edit_vaccine_balance_modal.php'; ?>
 <?php include 'models/vaccine_batch_modal.php'; ?>
+<?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

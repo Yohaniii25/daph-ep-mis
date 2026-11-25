@@ -9,10 +9,11 @@ global $mysqli;
 
 $allowed_roles = [
     'veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon',
-    'sms', 'district_dd', 'deputy_director_district', 'provincial_director', 'administrator'
+    'district_dd', 'deputy_director_district', 'provincial_director', 'administrator'
 ];
 
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles, true)) {
+    http_response_code(403);
     if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Access denied']);

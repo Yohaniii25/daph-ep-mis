@@ -8,7 +8,6 @@ $allowed_roles = [
     'veterinary_surgeon',
     'district_dd',
     'deputy_director_district',
-    'sms',
     'administrator',
     'provincial_director',
     'admin',

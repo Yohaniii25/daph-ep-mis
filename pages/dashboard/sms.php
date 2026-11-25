@@ -66,19 +66,25 @@ require_once './includes/sidebar.php';
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="<?= BASE_PATH ?>pages/modules/sms/immunization.php" style="background-color: #b08723;" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/veterinary/vaccination_targets.php" style="background-color: #b08723;" class="btn btn-primary w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white;" class="bi bi-shield-check fs-4"></i><br>
-                            <span style="color:white">Immunization</span>
+                            <span style="color:white">Vaccination & Targets</span>
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="<?= BASE_PATH ?>pages/modules/sms/mobile_clinics.php" style="background-color: #689ccf;" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/veterinary/vaccine_balance.php" style="background-color: #2b3a4a;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
+                            <i style="color: white;" class="bi bi-box-seam fs-4"></i><br>
+                            <span style="color:white">Vaccine Balance</span>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <a href="<?= BASE_PATH ?>pages/modules/veterinary/mobile_clinics.php" style="background-color: #689ccf;" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white;" class="bi bi-capsule-pill fs-4"></i><br>
                             <span style="color:white">Mobile Clinic</span>
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="<?= BASE_PATH ?>pages/modules/sms/drug_maintenance.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/veterinary/drug_maintenance.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white; " class="bi bi-capsule fs-4"></i><br>
                             <span style="color:white">Drug Maintenance</span>
                         </a>

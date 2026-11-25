@@ -72,6 +72,13 @@ function sendJson($data) {
     exit();
 }
 
+// Strict read-only enforcement for Subject Matter Specialist (sms)
+$write_actions = ['save_mobile_clinic', 'delete_mobile_clinic', 'save_drug_distribution', 'delete_drug_distribution'];
+if (($_SESSION['role'] ?? '') === 'sms' && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || in_array($action, $write_actions, true))) {
+    http_response_code(403);
+    sendJson(['success' => false, 'message' => 'Forbidden: Subject Matter Specialist role has read-only access.']);
+}
+
 // -------------------------------------------------------------------------
 // ACTION: GET DRUG OPTIONS & CURRENT INVENTORY STOCKS
 // -------------------------------------------------------------------------

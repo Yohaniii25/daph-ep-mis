@@ -10,6 +10,7 @@ $allowed_roles = [
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles, true)) {
     die("Access denied");
 }
+$is_read_only = (($_SESSION['role'] ?? '') === 'sms');
 
 require_once __DIR__ . '/../../../config/db_connect.php';
 
@@ -37,9 +38,13 @@ if ($total_batches_res) {
                 <p class="text-muted small mb-0">Centralized tracking of vaccine & drug inventory batch codes, active status, and expiry schedules.</p>
             </div>
             <div class="d-flex align-items-center gap-2">
+                <?php if (!$is_read_only): ?>
                 <button type="button" class="btn text-light shadow-sm text-nowrap" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
                     <i class="bi bi-plus-circle me-1"></i>Add Batch
                 </button>
+                <?php else: ?>
+                <span class="badge bg-info text-dark"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+                <?php endif; ?>
                 <a href="drug_maintenance.php" class="btn btn-secondary shadow-sm text-nowrap">
                     <i class="bi bi-arrow-left me-1"></i>Back to Main Menu
                 </a>
@@ -63,12 +68,14 @@ if ($total_batches_res) {
             </div>
             <div class="card-body">
                 <div class="row g-3">
+                    <?php if (!$is_read_only): ?>
                     <div class="col-md-3">
                         <button class="btn w-100 py-3 text-light fw-bold shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addVaccineBatchModal">
                             <i class="bi bi-box-seam fs-5 text-warning"></i><br>
                             Add Batch
                         </button>
                     </div>
+                    <?php endif; ?>
                     <div class="col-md-3">
                         <a href="drug_maintenance.php?view=maintenance" class="btn btn-outline-secondary w-100 py-3 fw-bold shadow-sm">
                             <i class="bi bi-capsule fs-5 text-danger"></i><br>
@@ -99,7 +106,7 @@ if ($total_batches_res) {
                             <th style="width: 12%;">Status</th>
                             <th style="width: 20%;">Remarks / Log Notes</th>
                             <th style="width: 15%;">Date Registered</th>
-                            <th style="width: 8%;" class="text-end">Actions</th>
+                            <?php if (!$is_read_only): ?><th style="width: 8%;" class="text-end">Actions</th><?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
@@ -143,6 +150,7 @@ if ($total_batches_res) {
                                             <i class="bi bi-calendar3 me-1.5 text-muted"></i><?= date('Y-m-d g:i A', strtotime($row['created_at'])) ?>
                                         </div>
                                     </td>
+                                    <?php if (!$is_read_only): ?>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
                                             <button class="btn btn-outline-secondary edit-batch-btn"
@@ -161,6 +169,7 @@ if ($total_batches_res) {
                                             </a>
                                         </div>
                                     </td>
+                                    <?php endif; ?>
                                 </tr>
                         <?php
                             endwhile;
@@ -171,7 +180,9 @@ if ($total_batches_res) {
             </div>
         </div>
 
+<?php if (!$is_read_only): ?>
 <?php include __DIR__ . '/models/vaccine_batch_modal.php'; ?>
+<?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
