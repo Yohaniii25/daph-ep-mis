@@ -200,17 +200,25 @@ $current_view_param = $_GET['view'] ?? '';
  
                     <!-- Planning Deputy Director (H/Q-1) Menu -->
                     <?php if ($is_planning_dd): ?>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'planning_dd/range_details') !== false || in_array($current_file, ['range_statistics.php', 'pasture.php', 'annual_targets.php', 'monthly-annual-reports.php', 'animal_identification.php', 'regulatory_functions.php', 'clinical_services.php', 'animal_breeding.php', 'livestock_production.php', 'dairy_hub.php', 'projects.php', 'projects_progress.php', 'project_beneficiaries.php', 'monitoring.php', 'accounts.php', 'clean_sri_lanka.php'])) ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/planning_dd/range_details.php">
-                            <i class="bi bi-geo-alt me-2"></i> Range Details
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'monthly-annual-reports.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/monthly-annual-reports.php">
+                            <i class="bi bi-file-earmark-bar-graph me-2"></i> Monthly Summary Functions
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= (strpos($current_path, 'planning_dd/office_details') !== false) ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/planning_dd/office_details.php">
-                            <i class="bi bi-building me-2"></i> Office Details
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['projects_progress.php', 'project_beneficiaries.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/projects_progress.php">
+                            <i class="bi bi-kanban me-2"></i> Projects &amp; Monitoring
                         </a>
-                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['production_activities.php', 'activity_beneficiaries.php']) ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/veterinary/production_activities.php">
-                            <i class="bi bi-clipboard2-data me-2"></i> Production Activities Plan
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'range_statistics.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/range_statistics.php">
+                            <i class="bi bi-bar-chart-line me-2"></i> Range Statistics
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['annual_targets.php', 'vaccination_targets.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/annual_targets.php">
+                            <i class="bi bi-bullseye me-2"></i> Annual Targets
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'advanced_programme.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/advanced_programme.php">
+                            <i class="bi bi-calendar2-week me-2"></i> Advanced Programme
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['dairy_hub.php', 'dairy_application_form.php', 'dairy_project_summary.php']) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/veterinary/dairy_hub.php">
@@ -346,7 +354,7 @@ $current_view_param = $_GET['view'] ?? '';
                             <i class="bi bi-truck me-2"></i> Mobile Clinics
                         </a>
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array(basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)), ['drug_maintenance.php', 'drug_types.php', 'batches.php']) ? 'active' : '' ?>"
-                            href="<?= $base_path ?>pages/modules/veterinary/drug_maintenance.php">
+                            href="<?= $base_path ?>pages/modules/veterinary/drug_maintenance.php?view=maintenance">
                             <i class="bi bi-capsule me-2"></i> Drug Maintenance
                         </a>
 

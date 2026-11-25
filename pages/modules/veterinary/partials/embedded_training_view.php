@@ -11,6 +11,7 @@
  * @var string $tr_export_id    HTML ID for export buttons container
  */
 
+$is_read_only = $is_read_only ?? in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true);
 $total_sessions   = count($tr_records);
 $total_attendance = 0;
 $photos_count     = 0;
@@ -38,12 +39,14 @@ $avg_attendance = $total_sessions > 0 ? round($total_attendance / $total_session
         </div>
         <div class="d-flex align-items-center gap-2">
             <div id="<?= htmlspecialchars($tr_export_id) ?>" class="btn-group"></div>
+            <?php if (!$is_read_only): ?>
             <button type="button" 
                     class="btn text-white fw-semibold shadow-sm px-3" 
                     style="background-color: <?= htmlspecialchars($tr_theme_color) ?>; border-color: <?= htmlspecialchars($tr_theme_color) ?>;"
                     onclick="TrainingManager.openCreateModal('<?= htmlspecialchars($tr_context) ?>', '<?= htmlspecialchars(addslashes($tr_title)) ?>')">
                 <i class="bi bi-plus-circle me-1"></i> Log Training Session
             </button>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -93,7 +96,7 @@ $avg_attendance = $total_sessions > 0 ? round($total_attendance / $total_session
                         <th class="text-center" style="width: 110px;">Attendance</th>
                         <th class="text-center" style="width: 100px;">Photo Evidence</th>
                         <th>Resource Person</th>
-                        <th class="text-center" style="width: 100px;">Actions</th>
+                        <?php if (!$is_read_only): ?><th class="text-center" style="width: 100px;">Actions</th><?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
@@ -158,6 +161,7 @@ $avg_attendance = $total_sessions > 0 ? round($total_attendance / $total_session
                                 <div class="small fw-bold text-dark"><?= htmlspecialchars($row['trainer_name'] ?: 'Department Officer') ?></div>
                                 <small class="text-muted"><i class="bi bi-shield-check me-1 text-success"></i>Verified</small>
                             </td>
+                            <?php if (!$is_read_only): ?>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button type="button" 
@@ -174,6 +178,7 @@ $avg_attendance = $total_sessions > 0 ? round($total_attendance / $total_session
                                     </button>
                                 </div>
                             </td>
+                            <?php endif; ?>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

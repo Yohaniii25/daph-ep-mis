@@ -9,25 +9,18 @@
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Programme Year</label>
-                            <select name="programme_year" class="form-select" required>
-                                <option value="<?php echo date('Y'); ?>"><?php echo date('Y'); ?> (Current)</option>
-                                <option value="<?php echo date('Y') + 1; ?>"><?php echo date('Y') + 1; ?> (Next)</option>
-                            </select>
+                            <label class="form-label fw-bold">Planned Date</label>
+                            <input type="date" name="date" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
                         </div>
 
-                        <div class="col-md-8">
-                            <label class="form-label fw-bold">Activity Type</label>
-                            <select name="type_id" class="form-select" required>
-                                <option value="">-- Choose Category --</option>
-                                <?php
-                                $master_types = $mysqli->query("SELECT id, programme_name FROM master_programme_types WHERE is_active = 1 ORDER BY programme_name ASC");
-                                while($mt = $master_types->fetch_assoc()): ?>
-                                    <option value="<?php echo $mt['id']; ?>">
-                                        <?php echo htmlspecialchars($mt['programme_name']); ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Distance (km)</label>
+                            <input type="number" step="0.01" min="0" name="distance" class="form-control" value="0.00">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Time Duration</label>
+                            <input type="text" name="time_duration" class="form-control" placeholder="e.g. 09:00 AM - 02:00 PM">
                         </div>
 
                         <div class="col-md-12">
@@ -39,8 +32,8 @@
                         </div>
 
                         <div class="col-md-12">
-                            <label class="form-label fw-bold">Implementation Details</label>
-                            <textarea name="activity_description" class="form-control" rows="4" placeholder="Describe the specific objectives for this yearly activity..."></textarea>
+                            <label class="form-label fw-bold">Task / Implementation Details</label>
+                            <textarea name="task" class="form-control" rows="4" placeholder="Describe the specific task or activity..." required></textarea>
                         </div>
                     </div>
 

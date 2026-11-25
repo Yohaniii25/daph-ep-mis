@@ -21,13 +21,15 @@
                         <label class="form-label">Activity Description</label>
                         <textarea name="activity" class="form-control" rows="3" required></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Current Status</label>
-                        <select name="status" class="form-select">
-                            <option value="Not Started">Not Started</option>
-                            <option value="Ongoing">Ongoing</option>
-                            <option value="Completed">Completed</option>
-                        </select>
+                    <div class="row g-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Distance (km)</label>
+                            <input type="text" name="distance" class="form-control" placeholder="e.g. 12.5" value="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Time Duration</label>
+                            <input type="text" name="time_duration" class="form-control" placeholder="e.g. 09:00 AM - 01:00 PM">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

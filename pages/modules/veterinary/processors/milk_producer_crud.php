@@ -26,6 +26,11 @@ function jsonResponse(array $data): void {
     exit();
 }
 
+if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || $action === 'save_producer')) {
+    http_response_code(403);
+    jsonResponse(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify milk producer records.']);
+}
+
 function resolveVolumeRange(?float $vol, ?string $raw_range): string {
     if (!empty($raw_range) && in_array($raw_range, [
         'Below 5 liters', '5–10 liters', '10–20 liters', '20–40 liters', '40–100 liters', 'Above 100 liters'

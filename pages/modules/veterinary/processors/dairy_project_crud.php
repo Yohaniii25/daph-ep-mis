@@ -47,6 +47,12 @@ function jsonResponse($data) {
     exit();
 }
 
+$write_actions = ['save_summary', 'delete_summary', 'save_application', 'add_water_source', 'assign_executive_position', 'update_code_of_conduct'];
+if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || in_array($action, $write_actions, true))) {
+    http_response_code(403);
+    jsonResponse(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify Dairy Hub records.']);
+}
+
 // -------------------------------------------------------------------------
 // CENTRAL MASTER FILE RIPPLE SYNCHRONIZATION ENGINE
 // Ensures Central Master File is single source of truth across all modules

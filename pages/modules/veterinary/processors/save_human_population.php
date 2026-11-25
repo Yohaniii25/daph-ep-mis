@@ -34,6 +34,12 @@ if ($range_id <= 0) {
 
 $action = $_POST['action'] ?? $_GET['action'] ?? 'save';
 
+if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || $action !== 'get_list')) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify human population records.']);
+    exit();
+}
+
 if ($action === 'get_list') {
     // Return all human population records for this range grouped by year and ethnicity
     $stmt = $mysqli->prepare("

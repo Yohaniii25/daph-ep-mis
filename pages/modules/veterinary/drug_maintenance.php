@@ -22,7 +22,7 @@ $is_supervisory = in_array($user_role, ['district_dd', 'deputy_director_district
 $is_read_only = ($user_role === 'sms');
 
 // View routing: 'hub' (Main Navigation Level), 'batches' (Batch Maintain View), 'maintenance' (Drug Maintain View)
-$view = $_GET['view'] ?? 'hub';
+$view = $_GET['view'] ?? ($is_read_only ? 'maintenance' : 'hub');
 $active_tab_param = $_GET['tab'] ?? 'records';
 $selected_year = intval($_GET['year'] ?? date('Y'));
 
@@ -111,7 +111,8 @@ if ($batch_count) {
     $summary['total_batches'] = $batch_count->fetch_assoc()['total'] ?? 0;
 }
 
-// Stats sums from drug_records
+// Stats sums from drug_records (scoped to active range)
+$active_range_id = intval($range_id ?? 0);
 $stats_query = "
     SELECT 
         SUM(starter_count_month) AS total_starter,
@@ -120,17 +121,24 @@ $stats_query = "
         SUM(doses_damaged) AS total_damaged,
         SUM(starter_count_month + during_month_received - used_doses_count - doses_damaged) AS total_balance
     FROM drug_records
+    WHERE range_id = ?
 ";
-$stats_res = $mysqli->query($stats_query);
-if ($stats_res && $row = $stats_res->fetch_assoc()) {
-    $summary['total_starter'] = intval($row['total_starter'] ?? 0);
-    $summary['total_received'] = intval($row['total_received'] ?? 0);
-    $summary['total_used'] = intval($row['total_used'] ?? 0);
-    $summary['total_damaged'] = intval($row['total_damaged'] ?? 0);
-    $summary['total_balance'] = intval($row['total_balance'] ?? 0);
+$stats_stmt = $mysqli->prepare($stats_query);
+if ($stats_stmt) {
+    $stats_stmt->bind_param("i", $active_range_id);
+    $stats_stmt->execute();
+    $stats_res = $stats_stmt->get_result();
+    if ($stats_res && $row = $stats_res->fetch_assoc()) {
+        $summary['total_starter'] = intval($row['total_starter'] ?? 0);
+        $summary['total_received'] = intval($row['total_received'] ?? 0);
+        $summary['total_used'] = intval($row['total_used'] ?? 0);
+        $summary['total_damaged'] = intval($row['total_damaged'] ?? 0);
+        $summary['total_balance'] = intval($row['total_balance'] ?? 0);
+    }
+    $stats_stmt->close();
 }
 
-// Fetch all registered Drug Types with per-drug aggregate sums
+// Fetch all registered Drug Types with per-drug aggregate sums (scoped to active range)
 $drug_types_sql = "
     SELECT 
         t.id, 
@@ -147,16 +155,20 @@ $drug_types_sql = "
         COALESCE(SUM(r.doses_damaged), 0) AS damaged_sum,
         COALESCE(SUM(r.starter_count_month + r.during_month_received - r.used_doses_count - r.doses_damaged), 0) AS balance_sum
     FROM drug_types t
-    LEFT JOIN drug_records r ON t.id = r.drug_type_id
+    LEFT JOIN drug_records r ON t.id = r.drug_type_id AND r.range_id = ?
     GROUP BY t.id, t.brand_name, t.vaccine_name, t.chemical_composition, t.target_animal, t.description, t.expiry_date
     ORDER BY brand_name ASC
 ";
-$drug_types_res = $mysqli->query($drug_types_sql);
 $all_drug_types = [];
-if ($drug_types_res) {
+$dt_stmt = $mysqli->prepare($drug_types_sql);
+if ($dt_stmt) {
+    $dt_stmt->bind_param("i", $active_range_id);
+    $dt_stmt->execute();
+    $drug_types_res = $dt_stmt->get_result();
     while ($dt = $drug_types_res->fetch_assoc()) {
         $all_drug_types[$dt['id']] = $dt;
     }
+    $dt_stmt->close();
 }
 
 // Fetch master list of drug names specifically for Tab 2
@@ -169,7 +181,7 @@ if ($master_drugs_res) {
     }
 }
 
-// Fetch all ledger records joined with types and batches
+// Fetch all ledger records joined with types and batches (scoped to active range)
 $ledger_query = "
     SELECT r.*, 
            COALESCE(t.brand_name, t.vaccine_name) AS brand_name, 
@@ -181,14 +193,19 @@ $ledger_query = "
     FROM `drug_records` r
     LEFT JOIN `drug_types` t ON r.drug_type_id = t.id
     LEFT JOIN `vaccine_batches` b ON r.vaccine_batch_id = b.id
+    WHERE r.range_id = ?
     ORDER BY r.log_date DESC, r.id DESC
 ";
-$ledger_res = $mysqli->query($ledger_query);
 $all_records = [];
-if ($ledger_res) {
+$ledger_stmt = $mysqli->prepare($ledger_query);
+if ($ledger_stmt) {
+    $ledger_stmt->bind_param("i", $active_range_id);
+    $ledger_stmt->execute();
+    $ledger_res = $ledger_stmt->get_result();
     while ($rec = $ledger_res->fetch_assoc()) {
         $all_records[] = $rec;
     }
+    $ledger_stmt->close();
 }
 
 // Fetch all vaccine batches for the Batch Maintain view
@@ -829,7 +846,7 @@ require_once __DIR__ . '/../../../includes/header.php';
                                                             data-damaged="<?= $row['doses_damaged'] ?>">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
-                                                        <a href="processors/drug_record_crud.php?action=delete&id=<?= $row['id'] ?>&return_url=<?= urlencode('../drug_maintenance.php?view=maintenance&tab=records') ?>" 
+                                                        <a href="processors/drug_record_crud.php?action=delete&id=<?= $row['id'] ?>&range_id=<?= $active_range_id ?>&return_url=<?= urlencode('../drug_maintenance.php?view=maintenance&tab=records&range_id=' . $active_range_id) ?>" 
                                                            class="btn btn-outline-danger btn-delete-drug">
                                                             <i class="bi bi-trash"></i>
                                                         </a>

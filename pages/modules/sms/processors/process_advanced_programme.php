@@ -9,41 +9,32 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'sms') {
 
 if (isset($_POST['save_advanced'])) {
 
-    $user_id = $_SESSION['user_id'];
-    $type_id = intval($_POST['type_id']);
-    $year = intval($_POST['programme_year']);
-    $place = $mysqli->real_escape_string($_POST['place']);
-    $description = $mysqli->real_escape_string($_POST['activity_description']);
+    $user_id       = intval($_SESSION['user_id'] ?? 0);
+    $range_id      = intval($_SESSION['range_id'] ?? 1);
+    $date          = trim($_POST['date'] ?? date('Y-m-d'));
+    $place         = trim($_POST['place'] ?? '');
+    $task          = trim($_POST['task'] ?? '');
+    $distance      = floatval($_POST['distance'] ?? 0);
+    $time_duration = trim($_POST['time_duration'] ?? '');
 
-    if (empty($type_id) || empty($year) || empty($place)) {
+    if (empty($date) || empty($place) || empty($task)) {
         header("Location: ../advanced_programme.php?status=missing_fields");
         exit();
     }
 
-    $dup_check = $mysqli->query("SELECT id FROM advanced_programmes 
-                                 WHERE user_id = '$user_id' 
-                                 AND type_id = '$type_id' 
-                                 AND programme_year = '$year'");
-
-    if ($dup_check && $dup_check->num_rows > 0) {
-        header("Location: ../advanced_programme.php?status=record_exists");
-        exit();
+    $stmt = $mysqli->prepare("INSERT INTO advanced_programmes (range_id, user_id, date, task, place, distance, time_duration) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        $stmt->bind_param("iisssds", $range_id, $user_id, $date, $task, $place, $distance, $time_duration);
+        if ($stmt->execute()) {
+            $stmt->close();
+            header("Location: ../advanced_programme.php?status=success");
+            exit();
+        }
+        $stmt->close();
     }
 
-    $insert_sql = "INSERT INTO advanced_programmes 
-                   (user_id, type_id, programme_year, place, activity_description) 
-                   VALUES 
-                   ('$user_id', '$type_id', '$year', '$place', '$description')";
-
-    if ($mysqli->query($insert_sql)) {
-
-        header("Location: ../advanced_programme.php?status=success");
-        exit();
-    } else {
-
-        header("Location: ../advanced_programme.php?status=db_error");
-        exit();
-    }
+    header("Location: ../advanced_programme.php?status=db_error");
+    exit();
 
 } else {
     // Prevent direct access

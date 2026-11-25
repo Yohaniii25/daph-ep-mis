@@ -13,6 +13,28 @@ require_once __DIR__ . '/../../../../config/db_connect.php';
 global $mysqli;
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
+$user_role = $_SESSION['role'] ?? '';
+$user_id = intval($_SESSION['user_id'] ?? 0);
+$is_supervisory = in_array($user_role, ['district_dd', 'admin', 'super_admin'], true);
+
+$range_id = intval($_SESSION['range_id'] ?? 0);
+if ($is_supervisory && !empty($_REQUEST['range_id'])) {
+    $range_id = intval($_REQUEST['range_id']);
+}
+if ($range_id <= 0 && $user_id > 0) {
+    $u_stmt = $mysqli->prepare("SELECT range_id FROM users WHERE id = ? LIMIT 1");
+    if ($u_stmt) {
+        $u_stmt->bind_param("i", $user_id);
+        $u_stmt->execute();
+        if ($u_row = $u_stmt->get_result()->fetch_assoc()) {
+            $range_id = intval($u_row['range_id'] ?? 0);
+        }
+        $u_stmt->close();
+    }
+}
+if ($range_id <= 0) {
+    die("Error: Veterinary Range ID could not be resolved.");
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id                     = intval($_POST['id'] ?? 0);
@@ -28,18 +50,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("Data Validation Error: Crucial record metrics are missing.");
     }
 
-    $default_return = '../drug_maintenance.php?view=maintenance';
+    $default_return = '../drug_maintenance.php?view=maintenance&range_id=' . $range_id;
     $return_url = !empty($_POST['return_url']) ? $_POST['return_url'] : (!empty($_GET['return_url']) ? $_GET['return_url'] : $default_return);
     $separator = (strpos($return_url, '?') !== false) ? '&' : '?';
 
     if ($action === 'create') {
         $stmt = $mysqli->prepare("INSERT INTO `drug_records` 
-            (log_date, drug_type_id, vaccine_batch_id, starter_count_month, during_month_received, used_doses_count, doses_damaged) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)");
+            (range_id, log_date, drug_type_id, vaccine_batch_id, starter_count_month, during_month_received, used_doses_count, doses_damaged) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         if (!$stmt) {
             die("Database Error: " . $mysqli->error);
         }
-        $stmt->bind_param("siiiiii", $log_date, $drug_type_id, $vaccine_batch_id, $starter_count_month, $during_month_received, $used_doses_count, $doses_damaged);
+        $stmt->bind_param("isiiiiii", $range_id, $log_date, $drug_type_id, $vaccine_batch_id, $starter_count_month, $during_month_received, $used_doses_count, $doses_damaged);
         
         if ($stmt->execute()) {
             header("Location: {$return_url}{$separator}status=success&msg=Entry+Logged+Successfully");
@@ -57,11 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             during_month_received = ?, 
             used_doses_count = ?, 
             doses_damaged = ? 
-            WHERE id = ?");
+            WHERE id = ? AND range_id = ?");
         if (!$stmt) {
             die("Database Error: " . $mysqli->error);
         }
-        $stmt->bind_param("siiiiiii", $log_date, $drug_type_id, $vaccine_batch_id, $starter_count_month, $during_month_received, $used_doses_count, $doses_damaged, $id);
+        $stmt->bind_param("siiiiiiii", $log_date, $drug_type_id, $vaccine_batch_id, $starter_count_month, $during_month_received, $used_doses_count, $doses_damaged, $id, $range_id);
         
         if ($stmt->execute()) {
             header("Location: {$return_url}{$separator}status=success&msg=Record+Updated+Successfully");
@@ -75,15 +97,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     if ($id <= 0) die("Error: Missing targeting parameters.");
 
-    $default_return = '../drug_maintenance.php?view=maintenance';
+    $default_return = '../drug_maintenance.php?view=maintenance&range_id=' . $range_id;
     $return_url = !empty($_GET['return_url']) ? $_GET['return_url'] : $default_return;
     $separator = (strpos($return_url, '?') !== false) ? '&' : '?';
 
-    $stmt = $mysqli->prepare("DELETE FROM `drug_records` WHERE id = ?");
+    $stmt = $mysqli->prepare("DELETE FROM `drug_records` WHERE id = ? AND range_id = ?");
     if (!$stmt) {
         die("Database Error: " . $mysqli->error);
     }
-    $stmt->bind_param("i", $id);
+    $stmt->bind_param("ii", $id, $range_id);
     
     if ($stmt->execute()) {
         header("Location: {$return_url}{$separator}status=success&msg=Record+Purged");

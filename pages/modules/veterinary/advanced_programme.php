@@ -6,14 +6,44 @@ require_once __DIR__ . '/../../../config/db_connect.php';
 global $mysqli;
 
 // 1. Session and Role Guard
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+$allowed_roles = [
+    'veterinary_surgeon',
+    'government_veterinary_surgeon',
+    'additional_veterinary_surgeon',
+    'deputy_director_hq_1',
+    'deputy_director_hq_2',
+    'district_dd',
+    'deputy_director_district',
+    'provincial_director',
+    'administrator',
+    'admin',
+    'super_admin',
+    'sms'
+];
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     header("Location: ../../../../index.php");
     exit();
 }
 
+$user_role   = $_SESSION['role'] ?? '';
+$is_supervisory = in_array($user_role, ['deputy_director_hq_1', 'deputy_director_hq_2', 'district_dd', 'deputy_director_district', 'provincial_director', 'administrator', 'admin', 'super_admin', 'sms'], true);
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
+
 $user_id     = $_SESSION['user_id'] ?? null;
-$range_id    = $_SESSION['range_id'] ?? null;
+$requested_range_id = ($is_supervisory && isset($_GET['range_id']) && is_numeric($_GET['range_id'])) ? intval($_GET['range_id']) : null;
+$range_id    = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 $district_id = $_SESSION['district_id'] ?? null;
+
+$all_ranges = [];
+if ($is_supervisory) {
+    $r_res = $mysqli->query("SELECT vr.id, vr.name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id ORDER BY d.name ASC, vr.name ASC");
+    if ($r_res) {
+        $all_ranges = $r_res->fetch_all(MYSQLI_ASSOC);
+    }
+    if (empty($range_id) && !empty($all_ranges)) {
+        $range_id = intval($all_ranges[0]['id']);
+    }
+}
 
 if (empty($range_id)) {
     die('<div class="alert alert-danger text-center p-5 m-5">Error: Your account is not assigned to any Veterinary Range.</div>');
@@ -112,12 +142,15 @@ require_once '../../../includes/header.php';
 <link rel="stylesheet" href="../../../assets/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="../../../assets/css/buttons.bootstrap5.min.css">
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h3 class="fw-bold mb-1">Monthly Advance Programme</h3>
         <p class="text-muted small mb-0">Advance schedule and planned duties of the Veterinary Surgeon with standard administrative header.</p>
+        <?php if ($is_read_only): ?>
+            <span class="badge bg-info text-dark mt-1"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+        <?php endif; ?>
     </div>
-    <a href="monthly-annual-reports.php" class="btn btn-secondary shadow-sm text-nowrap">
+    <a href="monthly-annual-reports.php<?= $range_id ? '?range_id=' . intval($range_id) : '' ?>" class="btn btn-secondary shadow-sm text-nowrap">
         <i class="bi bi-arrow-left me-2"></i>Back to Reports
     </a>
 </div>
@@ -134,8 +167,18 @@ require_once '../../../includes/header.php';
                 </span>
                 <h5 class="fw-bold text-dark mb-0">Monthly Advance Programme Schedule</h5>
             </div>
-            <!-- Month & Year Selector -->
-            <form method="GET" class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+            <!-- Month, Year & Range Selector -->
+            <form method="GET" class="d-flex align-items-center gap-2 mt-2 mt-md-0 flex-wrap">
+                <?php if ($is_supervisory && !empty($all_ranges)): ?>
+                    <label class="form-label small text-muted mb-0 fw-bold text-nowrap">Range:</label>
+                    <select name="range_id" class="form-select form-select-sm" style="min-width: 175px;" onchange="this.form.submit()">
+                        <?php foreach ($all_ranges as $ar): ?>
+                            <option value="<?= (int)$ar['id'] ?>" <?= ($range_id == $ar['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars(($ar['district_name'] ? $ar['district_name'] . ' - ' : '') . $ar['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
                 <label class="form-label small text-muted mb-0 fw-bold text-nowrap"><i class="bi bi-funnel-fill me-1"></i>Period:</label>
                 <select name="month" class="form-select form-select-sm" style="min-width: 135px;" onchange="this.form.submit()">
                     <option value="0" <?= $selected_month === 0 ? 'selected' : '' ?>>All Months</option>
@@ -193,6 +236,7 @@ require_once '../../../includes/header.php';
     </div>
 </div>
 
+<?php if (!$is_read_only): ?>
 <!-- ============================================================ -->
 <!-- QUICK ACTIONS -->
 <!-- ============================================================ -->
@@ -211,6 +255,7 @@ require_once '../../../includes/header.php';
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- ============================================================ -->
 <!-- ADVANCE PROGRAM SCHEDULE TABLE -->
@@ -224,7 +269,7 @@ require_once '../../../includes/header.php';
                     <th style="width: 36%;">Work Description</th>
                     <th style="width: 26%;">Work Place / Visiting Place</th>
                     <th style="width: 14%;">Duty Time</th>
-                    <th style="width: 10%;" class="text-end">Actions</th>
+                    <?php if (!$is_read_only): ?><th style="width: 10%;" class="text-end">Actions</th><?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -247,10 +292,12 @@ require_once '../../../includes/header.php';
                                     <i class="bi bi-clock me-1 text-muted"></i><?= htmlspecialchars($prog['time_duration']) ?>
                                 </span>
                             </td>
+                            <?php if (!$is_read_only): ?>
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-primary btn-edit-prog" title="Edit Schedule"><i class="bi bi-pencil-square"></i></button>
                                 <button class="btn btn-sm btn-outline-danger btn-delete-prog" title="Delete Schedule"><i class="bi bi-trash"></i></button>
                             </td>
+                            <?php endif; ?>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -265,8 +312,10 @@ require_once '../../../includes/header.php';
 <!-- ============================================================ -->
 <!-- INCLUDED MODALS -->
 <!-- ============================================================ -->
+<?php if (!$is_read_only): ?>
 <?php include 'models/add_advanced_programme.php'; ?>
 <?php include 'models/edit_advanced_programme.php'; ?>
+<?php endif; ?>
 
 <?php require_once '../../../includes/footer.php'; ?>
 

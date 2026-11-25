@@ -6,6 +6,13 @@ require_once __DIR__ . '/../../../../config/db_connect.php';
 global $mysqli;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['logged_in'])) {
+    if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true)) {
+        http_response_code(403);
+        $_SESSION['msg'] = 'Forbidden: Read-only role cannot create or modify projects.';
+        $_SESSION['msg_type'] = 'danger';
+        header("Location: ../projects_progress.php");
+        exit();
+    }
     
     $range_id                          = !empty($_POST['range_id']) && is_numeric($_POST['range_id']) ? intval($_POST['range_id']) : intval($_SESSION['range_id'] ?? 1);
     $range_office_name                 = trim($_POST['range_office_name'] ?? '');

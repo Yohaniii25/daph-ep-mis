@@ -33,6 +33,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 
 $user_role   = $_SESSION['role'] ?? '';
 $user_id     = intval($_SESSION['user_id'] ?? 0);
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
 $session_range_id    = !empty($_SESSION['range_id']) ? intval($_SESSION['range_id']) : null;
 $session_district_id = !empty($_SESSION['district_id']) ? intval($_SESSION['district_id']) : null;
 
@@ -391,12 +392,16 @@ require_once '../../../includes/header.php';
                     <?php endforeach; ?>
                 </select>
             </form>
+            <?php if (!$is_read_only): ?>
             <button class="btn text-light fw-bold text-nowrap shadow-sm" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
                 <i class="bi bi-person-plus-fill me-1"></i> Enroll Beneficiary
             </button>
             <a href="dairy_application_form.php?range_id=<?= $range_id ?>" class="btn btn-outline-dark fw-semibold shadow-sm text-nowrap">
                 <i class="bi bi-file-earmark-plus me-1"></i> New Application Form
             </a>
+            <?php else: ?>
+            <span class="badge bg-info text-dark px-3 py-2"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -697,6 +702,7 @@ require_once '../../../includes/header.php';
                                                    title="Open Detailed Application Form for this Farmer">
                                                     <i class="bi bi-file-earmark-text-fill"></i> Form
                                                 </a>
+                                                <?php if (!$is_read_only): ?>
                                                 <!-- Scheduled Site Monitoring Visit Button -->
                                                 <button class="btn btn-sm btn-outline-warning me-1" 
                                                         title="Record Scheduled Site Monitoring Visit" 
@@ -717,6 +723,7 @@ require_once '../../../includes/header.php';
                                                         title="Delete Entry">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -739,11 +746,13 @@ require_once '../../../includes/header.php';
                     <h5 class="fw-bold mb-0" style="color: #370709;">Milk Collection &amp; Quality Monitoring Records</h5>
                     <small class="text-muted">Daily intake volume, Fat %, SNF %, and total payout metrics</small>
                 </div>
+                <?php if (!$is_read_only): ?>
                 <div>
                     <button class="btn btn-success btn-sm px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#addDairyModal">
                         <i class="bi bi-plus-circle me-1"></i> Record Milk Collection
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
 
             <div class="card shadow-sm border-0 mb-4">
@@ -814,9 +823,11 @@ require_once '../../../includes/header.php';
 
                         <!-- Header Action Buttons -->
                         <div class="d-flex flex-wrap align-items-center gap-2">
+                            <?php if (!$is_read_only): ?>
                             <button type="button" class="btn btn-light btn-sm fw-bold px-3 shadow-sm" id="btnOpenCodeOfConductModal">
                                 <i class="bi bi-pencil-square me-1 text-primary"></i> Edit Code of Conduct
                             </button>
+                            <?php endif; ?>
                             <button type="button" class="btn btn-outline-light btn-sm px-3 shadow-sm" onclick="window.print()">
                                 <i class="bi bi-printer me-1"></i> Print Society Roster
                             </button>
@@ -966,9 +977,11 @@ require_once '../../../includes/header.php';
                         <span class="badge bg-success-subtle text-success border border-success px-2 py-1 fw-bold">
                             <i class="bi bi-check-circle-fill me-1"></i> Formally Enacted &amp; Active
                         </span>
+                        <?php if (!$is_read_only): ?>
                         <button type="button" class="btn btn-sm btn-outline-primary" id="btnEditCodeInline">
                             <i class="bi bi-pencil-square me-1"></i> Edit Charter
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="card-body p-4 bg-light bg-opacity-50">
@@ -1009,13 +1022,13 @@ require_once '../../../includes/header.php';
                                     <th style="min-width: 105px;" class="text-center">Enrolled Date</th>
                                     <th style="min-width: 140px;" class="text-center">Executive Position</th>
                                     <th style="min-width: 80px;" class="text-center">Status</th>
-                                    <th style="min-width: 140px;" class="text-center">Administration Action</th>
+                                    <?php if (!$is_read_only): ?><th style="min-width: 140px;" class="text-center">Administration Action</th><?php endif; ?>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($society_members)): ?>
                                     <tr>
-                                        <td colspan="9" class="text-center py-5 text-muted">
+                                        <td colspan="<?= $is_read_only ? 8 : 9 ?>" class="text-center py-5 text-muted">
                                             <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
                                             No enrolled members registered in this range yet. Submitting a Dairy Farm Development Survey Application will automatically register farmers here.
                                         </td>
@@ -1105,6 +1118,7 @@ require_once '../../../includes/header.php';
                                                 <span class="badge bg-success-subtle text-success border border-success">Active</span>
                                             </td>
 
+                                            <?php if (!$is_read_only): ?>
                                             <!-- Action: Assign Executive Position -->
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-outline-primary fw-semibold btn-assign-exec-modal"
@@ -1115,6 +1129,7 @@ require_once '../../../includes/header.php';
                                                     <i class="bi bi-person-gear me-1"></i> Assign Position
                                                 </button>
                                             </td>
+                                            <?php endif; ?>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>

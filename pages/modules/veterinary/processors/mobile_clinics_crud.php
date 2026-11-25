@@ -84,19 +84,22 @@ if (($_SESSION['role'] ?? '') === 'sms' && (in_array($_SERVER['REQUEST_METHOD'],
 // -------------------------------------------------------------------------
 if ($action === 'get_drug_options') {
     $drugs = [];
-    $res = $mysqli->query("
+    $stmt = $mysqli->prepare("
         SELECT dt.id, dt.vaccine_name AS drug_name, dt.brand_name, dt.chemical_composition, dt.target_animal,
                IFNULL((
                    SELECT (dr.starter_count_month + dr.during_month_received - dr.used_doses_count - dr.doses_damaged)
                    FROM drug_records dr
-                   WHERE dr.drug_type_id = dt.id
+                   WHERE dr.drug_type_id = dt.id AND dr.range_id = ?
                    ORDER BY dr.log_date DESC, dr.id DESC
                    LIMIT 1
                ), 100) AS current_stock
         FROM drug_types dt
         ORDER BY dt.vaccine_name ASC
     ");
-    if ($res) {
+    if ($stmt) {
+        $stmt->bind_param("i", $range_id);
+        $stmt->execute();
+        $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) {
             $drugs[] = [
                 'id' => (int)$row['id'],
@@ -106,6 +109,7 @@ if ($action === 'get_drug_options') {
                 'stock' => (float)$row['current_stock']
             ];
         }
+        $stmt->close();
     }
     sendJson(['success' => true, 'drugs' => $drugs]);
 }
@@ -122,12 +126,12 @@ if ($action === 'get_drug_stock') {
         $stmt = $mysqli->prepare("
             SELECT (starter_count_month + during_month_received - used_doses_count - doses_damaged) AS bal
             FROM drug_records
-            WHERE drug_type_id = ?
+            WHERE drug_type_id = ? AND range_id = ?
             ORDER BY log_date DESC, id DESC
             LIMIT 1
         ");
         if ($stmt) {
-            $stmt->bind_param("i", $drug_id);
+            $stmt->bind_param("ii", $drug_id, $range_id);
             $stmt->execute();
             $res = $stmt->get_result();
             if ($r = $res->fetch_assoc()) {

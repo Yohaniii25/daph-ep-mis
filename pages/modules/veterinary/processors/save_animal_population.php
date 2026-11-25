@@ -18,6 +18,13 @@ $allowed_roles = [
 
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
 
+if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || ($action !== null && $action !== 'get_list'))) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify animal population records.']);
+    exit();
+}
+
 // Determine range_id (from request or session)
 $range_id = isset($_REQUEST['range_id']) && intval($_REQUEST['range_id']) > 0 
     ? intval($_REQUEST['range_id']) 

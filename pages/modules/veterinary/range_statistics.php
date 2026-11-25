@@ -29,6 +29,8 @@ if (!isset($_SESSION['full_name'])) {
 }
 
 $full_name   = $_SESSION['full_name'];
+$user_role   = $_SESSION['role'] ?? '';
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
 $requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
 $range_id    = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 $district_id = $_SESSION['district_id'] ?? null;
@@ -678,11 +680,13 @@ require_once '../../../includes/header.php';
                             <h5 class="fw-bold mb-1" style="color: #370709;"><i class="bi bi-people-fill me-2"></i>Human Population</h5>
                             <p class="text-muted small mb-0">Demographic composition tracking and sector breakdown analytics from database.</p>
                         </div>
+                        <?php if (!$is_read_only): ?>
                         <div>
                             <button type="button" class="btn btn-sm btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#manageHumanPopulationModal">
                                 <i class="bi bi-gear-fill me-1"></i> Manage Population
                             </button>
                         </div>
+                        <?php endif; ?>
                     </div>
                     <div class="card-body px-4 pb-4">
 
@@ -1622,7 +1626,9 @@ require_once '../../../includes/header.php';
         </div>
 
 <?php
-include 'models/manage_human_population_modal.php';
+if (!$is_read_only) {
+    include 'models/manage_human_population_modal.php';
+}
 
 ob_start();
 ?>

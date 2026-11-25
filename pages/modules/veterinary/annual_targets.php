@@ -29,8 +29,19 @@ if (!isset($_SESSION['full_name'])) {
 }
 
 $full_name   = $_SESSION['full_name'];
+$user_role   = $_SESSION['role'] ?? '';
+$is_supervisory = in_array($user_role, ['deputy_director_hq_1', 'district_dd', 'deputy_director_district', 'provincial_director', 'admin', 'super_admin', 'sms'], true);
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
 $range_id    = isset($_GET['range_id']) && intval($_GET['range_id']) > 0 ? intval($_GET['range_id']) : ($_SESSION['range_id'] ?? null);
 $district_id = $_SESSION['district_id'] ?? null;
+
+$all_ranges = [];
+if ($is_supervisory) {
+    $r_all = $mysqli->query("SELECT vr.id, vr.name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id ORDER BY d.name ASC, vr.name ASC");
+    if ($r_all) {
+        $all_ranges = $r_all->fetch_all(MYSQLI_ASSOC);
+    }
+}
 
 if (empty($range_id)) {
     if ($district_id) {
@@ -121,17 +132,35 @@ require_once '../../../includes/header.php';
 
 
 
-        <div class="mb-4 d-flex justify-content-between align-items-center">
+        <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Annual Targets</h2>
-                <p class="text-muted small mb-0">Annual Target Details</p>
+                <p class="text-muted small mb-0">Annual Target Details for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong></p>
+                <?php if ($is_read_only): ?>
+                    <span class="badge bg-info text-dark mt-1"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+                <?php endif; ?>
             </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <?php if ($is_supervisory && !empty($all_ranges)): ?>
+                    <form method="GET" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="year" value="<?= intval($selected_year) ?>">
+                        <label class="small fw-bold text-muted mb-0">Range:</label>
+                        <select name="range_id" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()" style="min-width: 190px;">
+                            <?php foreach ($all_ranges as $ar): ?>
+                                <option value="<?= (int)$ar['id'] ?>" <?= ($range_id == $ar['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars(($ar['district_name'] ? $ar['district_name'] . ' - ' : '') . $ar['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                <?php endif; ?>
             <?php if (isset($_SESSION['msg'])): ?>
                 <div class="alert alert-<?= $_SESSION['msg_type'] ?> py-2 px-3 mb-0 small">
                     <?= $_SESSION['msg'] ?>
                 </div>
                 <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
             <?php endif; ?>
+            </div>
         </div>
         <!-- Quick Actions & Target Modules Section -->
         <style>

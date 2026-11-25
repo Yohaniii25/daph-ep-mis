@@ -37,6 +37,12 @@ function sendJson($data) {
     exit();
 }
 
+$write_actions = ['save_training', 'delete_training'];
+if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || in_array($action, $write_actions, true))) {
+    http_response_code(403);
+    sendJson(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify training records.']);
+}
+
 $upload_base_dir = __DIR__ . '/../../../../assets/uploads/trainings/';
 if (!is_dir($upload_base_dir)) {
     mkdir($upload_base_dir, 0777, true);

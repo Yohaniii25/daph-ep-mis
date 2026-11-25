@@ -5,8 +5,8 @@ require_once __DIR__ . '/../../../config/db_connect.php';
 /** @var mysqli $mysqli */
 global $mysqli;
 
-// 1. Session and Role Guard (Include Veterinary Surgeon, District DD, and SMS)
-$allowed_roles = ['veterinary_surgeon', 'district_dd', 'sms', 'admin', 'super_admin', 'deputy_director_district', 'provincial_director'];
+// 1. Session and Role Guard (Include Veterinary Surgeon, District DD, DD HQ1, and SMS)
+$allowed_roles = ['veterinary_surgeon', 'district_dd', 'sms', 'admin', 'super_admin', 'deputy_director_district', 'deputy_director_hq_1', 'provincial_director'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     header("Location: ../../../../index.php");
     exit();
@@ -14,8 +14,8 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 
 $user_role = $_SESSION['role'] ?? '';
 $user_id   = $_SESSION['user_id'] ?? null;
-$is_supervisory = in_array($user_role, ['district_dd', 'sms', 'admin', 'super_admin', 'deputy_director_district', 'provincial_director'], true);
-$is_read_only = ($user_role === 'sms');
+$is_supervisory = in_array($user_role, ['district_dd', 'sms', 'admin', 'super_admin', 'deputy_director_district', 'deputy_director_hq_1', 'provincial_director'], true);
+$is_read_only = in_array($user_role, ['sms', 'deputy_director_hq_1'], true);
 
 if (!isset($_SESSION['full_name'])) {
     $_SESSION['full_name'] = $_SESSION['username'] ?? 'Officer';
@@ -1113,13 +1113,7 @@ require_once '../../../includes/header.php';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($session_logs)): ?>
-                                <tr>
-                                    <td colspan="<?= $is_read_only ? 9 : 10 ?>" class="text-center text-muted py-4">
-                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>No vaccination programs logged yet for <?= htmlspecialchars($selected_year) ?>.<?= !$is_read_only ? ' Click <strong>"Log New Vaccination Program"</strong> to begin.' : '' ?>
-                                    </td>
-                                </tr>
-                            <?php else: ?>
+                            <?php if (!empty($session_logs)): ?>
                                 <?php $scnt = 1; foreach ($session_logs as $s): ?>
                                     <tr>
                                         <td><?= $scnt++ ?></td>
@@ -1463,7 +1457,10 @@ require_once '../../../includes/header.php';
             pageLength: 10,
             order: [[1, 'desc']],
             dom: 'Bfrtip',
-            buttons: exportButtons
+            buttons: exportButtons,
+            language: {
+                emptyTable: 'No vaccination programs logged yet for <?= htmlspecialchars($selected_year) ?>.'
+            }
         });
 
         $('#sessionFilterInput').on('keyup', function() {

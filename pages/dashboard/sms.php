@@ -84,23 +84,12 @@ require_once './includes/sidebar.php';
                         </a>
                     </div>
                     <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="<?= BASE_PATH ?>pages/modules/veterinary/drug_maintenance.php" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
+                        <a href="<?= BASE_PATH ?>pages/modules/veterinary/drug_maintenance.php?view=maintenance" style="background-color: #370709;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
                             <i style="color: white; " class="bi bi-capsule fs-4"></i><br>
                             <span style="color:white">Drug Maintenance</span>
                         </a>
                     </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="<?= BASE_PATH ?>pages/modules/sms/outbreak_report.php" style="background-color: #a07174;" class="btn btn-info w-100 py-3 shadow-sm border-0 text-white d-block">
-                            <i style="color: white;" class="bi bi-envelope-plus fs-4"></i><br>
-                            <span style="color:white">Outbreak Report</span>
-                        </a>
-                    </div>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <a href="<?= BASE_PATH ?>pages/modules/sms/disease_control.php" style="background-color: #8d170e;" class="btn w-100 py-3 shadow-sm border-0 text-white d-block">
-                            <i style="color: white; " class="bi bi-bandaid fs-4"></i><br>
-                            <span style="color:white">Disease Control</span>
-                        </a>
-                    </div>
+
                 </div>
             </div>
         </div>

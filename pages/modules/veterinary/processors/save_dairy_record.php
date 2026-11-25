@@ -6,6 +6,12 @@ require_once __DIR__ . '/../../../../config/db_connect.php';
 global $mysqli;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true)) {
+        http_response_code(403);
+        $_SESSION['error'] = 'Forbidden: Read-only role cannot modify dairy records.';
+        header("Location: ../dairy_hub.php");
+        exit();
+    }
     $range_id = $_SESSION['range_id'];
     $user_id  = $_SESSION['user_id'];
     

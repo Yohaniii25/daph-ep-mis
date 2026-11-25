@@ -29,6 +29,9 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
     exit();
 }
 
+$user_role = $_SESSION['role'] ?? '';
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
+
 $requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
 $range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 
@@ -106,9 +109,13 @@ require_once '../../../includes/header.php';
                 <a href="projects_progress.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-secondary shadow-sm text-nowrap">
                     <i class="bi bi-arrow-left me-2"></i>Back
                 </a>
+                <?php if (!$is_read_only): ?>
                 <button class="btn btn-success shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
                     <i class="bi bi-person-plus-fill me-1"></i> Register Beneficiary
                 </button>
+                <?php else: ?>
+                <span class="badge bg-info text-dark"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -176,9 +183,11 @@ require_once '../../../includes/header.php';
                 <h5 class="mb-0 fw-bold text-dark">
                     <i class="bi bi-person-lines-fill me-2 text-primary"></i>Individual Beneficiary Profiles &amp; Milestone Tracking
                 </h5>
+                <?php if (!$is_read_only): ?>
                 <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addBeneficiaryModal">
                     <i class="bi bi-plus-circle me-1"></i> Add Individual Profile
                 </button>
+                <?php endif; ?>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -252,6 +261,7 @@ require_once '../../../includes/header.php';
                                         <button class="btn btn-outline-primary" title="View Dossier Profile" onclick='viewBeneficiaryProfile(<?= json_encode($b) ?>)'>
                                             <i class="bi bi-eye"></i>
                                         </button>
+                                        <?php if (!$is_read_only): ?>
                                         <button class="btn btn-outline-secondary" title="Edit Profile" onclick='editBeneficiary(<?= json_encode($b) ?>)'>
                                             <i class="bi bi-pencil"></i>
                                         </button>
@@ -261,6 +271,7 @@ require_once '../../../includes/header.php';
                                         <button class="btn btn-outline-danger" title="Remove" onclick="deleteBeneficiary(<?= $b['id'] ?>, '<?= htmlspecialchars($b['beneficiary_name']) ?>')">
                                             <i class="bi bi-trash"></i>
                                         </button>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>

@@ -338,9 +338,9 @@ require_once __DIR__ . '/../../../includes/header.php';
             </button>
         </div>
     </div>
+    <?php if (!$is_read_only): ?>
     <div class="card-body pt-0">
         <div class="row g-3">
-            <?php if (!$is_read_only): ?>
             <div class="col-md-4">
                 <button class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;" data-bs-toggle="modal" data-bs-target="#addVaccineBalanceModal">
                     <i class="bi bi-plus-circle fs-3 mb-1 text-warning"></i>
@@ -353,15 +353,15 @@ require_once __DIR__ . '/../../../includes/header.php';
                     <span class="small fw-bold text-uppercase">Register Vaccine Batch</span>
                 </button>
             </div>
-            <?php endif; ?>
-            <div class="<?= $is_read_only ? 'col-md-12' : 'col-md-4' ?>">
-                <a href="drug_maintenance.php?view=maintenance" class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background-color: #2b3a4a; min-height: 105px;">
+            <div class="col-md-4">
+                <a href="drug_maintenance.php?view=maintenance<?= $range_id ? '&range_id=' . intval($range_id) : '' ?>" class="btn w-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background-color: #2b3a4a; min-height: 105px;">
                     <i class="bi bi-capsule fs-3 mb-1 text-light"></i>
                     <span class="small fw-bold text-uppercase">Drug Maintenance</span>
                 </a>
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <!-- ============================================================ -->

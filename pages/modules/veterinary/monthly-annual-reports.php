@@ -5,14 +5,45 @@ require_once __DIR__ . '/../../../config/db_connect.php';
 /** @var mysqli $mysqli */
 global $mysqli;
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'veterinary_surgeon') {
+$allowed_roles = [
+    'veterinary_surgeon',
+    'government_veterinary_surgeon',
+    'additional_veterinary_surgeon',
+    'deputy_director_hq_1',
+    'deputy_director_hq_2',
+    'district_dd',
+    'deputy_director_district',
+    'provincial_director',
+    'administrator',
+    'admin',
+    'super_admin',
+    'sms'
+];
+
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
     header("Location: ../../../index.php");
     exit();
 }
 
-// Extract base operational keys from the live user session wrapper
+$user_role = $_SESSION['role'] ?? '';
+$is_supervisory = in_array($user_role, ['deputy_director_hq_1', 'deputy_director_hq_2', 'district_dd', 'deputy_director_district', 'provincial_director', 'administrator', 'admin', 'super_admin', 'sms'], true);
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
+
+// Extract base operational keys from request or session
 $user_id = $_SESSION['user_id'] ?? null;
-$range_id = $_SESSION['range_id'] ?? null;
+$requested_range_id = ($is_supervisory && isset($_GET['range_id']) && is_numeric($_GET['range_id'])) ? intval($_GET['range_id']) : null;
+$range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
+
+$all_ranges = [];
+if ($is_supervisory) {
+    $r_res = $mysqli->query("SELECT vr.id, vr.name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id ORDER BY d.name ASC, vr.name ASC");
+    if ($r_res) {
+        $all_ranges = $r_res->fetch_all(MYSQLI_ASSOC);
+    }
+    if (empty($range_id) && !empty($all_ranges)) {
+        $range_id = intval($all_ranges[0]['id']);
+    }
+}
 
 $range_name = 'Your Range';
 $district_name = 'Your District';
@@ -71,15 +102,32 @@ require_once '../../../includes/header.php';
 
 
 
-        <div class="mb-4 d-flex justify-content-between align-items-center">
+        <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h2 class="h4 fw-bold mb-1" style="color: #370709;">Monthly Reports</h2>
                 <p class="text-muted small mb-0">Official mapping profile metrics dynamically captured for <strong class="text-dark"><?= htmlspecialchars($range_name) ?></strong></p>
+                <?php if ($is_read_only): ?>
+                    <span class="badge bg-info text-dark mt-1"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+                <?php endif; ?>
             </div>
 
-            <a href="range_details.php" class="btn btn-secondary shadow-sm text-nowrap">
-                <i class="bi bi-arrow-left me-2"></i>Back
-            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <?php if ($is_supervisory && !empty($all_ranges)): ?>
+                    <form method="GET" class="d-flex align-items-center gap-2">
+                        <label class="small fw-bold text-muted mb-0">Range:</label>
+                        <select name="range_id" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()" style="min-width: 200px;">
+                            <?php foreach ($all_ranges as $ar): ?>
+                                <option value="<?= (int)$ar['id'] ?>" <?= ($range_id == $ar['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars(($ar['district_name'] ? $ar['district_name'] . ' - ' : '') . $ar['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                <?php endif; ?>
+                <a href="range_details.php<?= $range_id ? '?range_id=' . intval($range_id) : '' ?>" class="btn btn-secondary shadow-sm text-nowrap">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+            </div>
             <?php if (isset($_SESSION['msg'])): ?>
                 <div class="alert alert-<?= $_SESSION['msg_type'] ?> py-2 px-3 mb-0 small">
                     <?= $_SESSION['msg'] ?>
@@ -97,71 +145,59 @@ require_once '../../../includes/header.php';
                 <div class="card-body pt-0">
                     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3">
 
+                        <?php $rq = $range_id ? '?range_id=' . intval($range_id) : ''; ?>
                         <div class="col">
-                            <a href="advanced_programme.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;">
+                            <a href="advanced_programme.php<?= $rq ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #820100; min-height: 105px;">
                                 <i class="bi bi-file-earmark-bar-graph-fill fs-3 mb-1"></i>
                                 <span class="text-center">Advanced Programme</span>
                             </a>
                         </div>
                         <div class="col">
-                            <a href="daily_diary.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #370709; min-height: 105px;">
+                            <a href="daily_diary.php<?= $rq ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #370709; min-height: 105px;">
                                 <i class="bi bi-bar-chart fs-3 mb-1"></i>
                                 <span class="text-center">Daily Diary</span>
                             </a>
                         </div>
-                        <!-- <div class="col">
-                            <a href="monthly-annual-reports.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #b08723; min-height: 105px;">
-                                <i class="bi bi-calendar-week fs-3 mb-1"></i>
-                                <span class="text-center">Monthly Returns</span>
-                            </a>
-                        </div> -->
                         <div class="col">
-                            <a href="production_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #a07174; min-height: 105px;">
+                            <a href="production_balance.php<?= $rq ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #a07174; min-height: 105px;">
                                 <i class="bi bi-backpack4 fs-3 mb-1"></i>
                                 <span class="text-center">Production Balance</span>
                             </a>
                         </div>
                         <div class="col">
-                            <a href="vaccine_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #689ccf; min-height: 105px;">
+                            <a href="vaccine_balance.php<?= $rq ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #689ccf; min-height: 105px;">
                                 <i class="bi bi-capsule fs-3 mb-1"></i>
                                 <span class="text-center">Vaccine Balance</span>
                             </a>
                         </div>
 
                         <div class="col">
-                            <a href="drug_maintenance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #2e7d32; min-height: 105px;">
+                            <a href="drug_maintenance.php<?= $rq ? $rq . '&view=maintenance' : '?view=maintenance' ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #2e7d32; min-height: 105px;">
                                 <i class="bi bi-capsule-pill fs-3 mb-1"></i>
                                 <span class="text-center">Drugs Balance</span>
                             </a>
                         </div>
                         <div class="col">
-                            <a href="ear_tag_balance.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #e65100; min-height: 105px;">
+                            <a href="ear_tag_balance.php<?= $rq ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #e65100; min-height: 105px;">
                                 <i class="bi bi-ear fs-3 mb-1"></i>
                                 <span class="text-center">Ear Tag Balance</span>
                             </a>
                         </div>
                         <div class="col">
-                            <a href="cattle_voucher.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #455a64; min-height: 105px;">
+                            <a href="cattle_voucher.php<?= $rq ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #455a64; min-height: 105px;">
                                 <i class="bi bi-card-heading fs-3 mb-1"></i>
                                 <span class="text-center">Cattle Voucher</span>
                             </a>
                         </div>
-                        <!-- <div class="col">
-                            <a href="ear_tag_balance.php?tab=identification" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #00695c; min-height: 105px;">
-                                <i class="bi bi-tag-fill fs-3 mb-1"></i>
-                                <span class="text-center">Animal Identification</span>
-                            </a>
-                        </div> -->
                         <div class="col">
-                            <a href="health_certificate.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #1565c0; min-height: 105px;">
+                            <a href="health_certificate.php<?= $rq ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #1565c0; min-height: 105px;">
                                 <i class="bi bi-hospital fs-3 mb-1"></i>
                                 <span class="text-center">Health Certificate</span>
                             </a>
                         </div>
 
-
                         <div class="col">
-                            <a href="mobile_clinics.php" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #283593; min-height: 105px;">
+                            <a href="mobile_clinics.php<?= $rq ?>" class="btn w-100 h-100 py-3 text-light border-0 shadow-sm d-flex flex-column align-items-center justify-content-center" style="background-color: #283593; min-height: 105px;">
                                 <i class="bi bi-truck fs-3 mb-1"></i>
                                 <span class="text-center">Mobile Clinics &amp; Drugs</span>
                             </a>

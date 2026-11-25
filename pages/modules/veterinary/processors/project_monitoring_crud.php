@@ -32,6 +32,12 @@ function sendJson($data) {
     exit();
 }
 
+$write_actions = ['save_beneficiary', 'delete_beneficiary', 'save_monitoring_visit'];
+if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || in_array($action, $write_actions, true))) {
+    http_response_code(403);
+    sendJson(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify project or monitoring records.']);
+}
+
 // -------------------------------------------------------------------------
 // 1. ACTION: GET 23 PSDG PROJECT CATALOG ITEMS
 // -------------------------------------------------------------------------

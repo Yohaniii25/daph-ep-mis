@@ -29,8 +29,20 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
     exit();
 }
 
+$user_role = $_SESSION['role'] ?? '';
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
+$is_supervisory = in_array($user_role, ['deputy_director_hq_1', 'deputy_director_hq_2', 'district_dd', 'deputy_director_district', 'provincial_director', 'admin', 'super_admin', 'administrator', 'sms', 'planning_officer'], true);
+
 $requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
 $range_id = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
+
+$all_ranges = [];
+if ($is_supervisory) {
+    $r_res = $mysqli->query("SELECT vr.id, vr.name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id ORDER BY d.name ASC, vr.name ASC");
+    if ($r_res) {
+        $all_ranges = $r_res->fetch_all(MYSQLI_ASSOC);
+    }
+}
 
 if (empty($range_id)) {
     $first_r = $mysqli->query("SELECT id FROM veterinary_ranges ORDER BY id ASC LIMIT 1")->fetch_assoc();
@@ -133,17 +145,35 @@ require_once '../../../includes/header.php';
             <div>
                 <h2 class="h4 mb-0 fw-bold text-uppercase">Projects and Monitoring</h2>
                 <small class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i><?= htmlspecialchars($range_name) ?><?= !empty($district_name) ? ' (' . htmlspecialchars($district_name) . ')' : '' ?> | Unified Projects Registry &amp; Scheduled Field Monitoring</small>
+                <?php if ($is_read_only): ?>
+                    <span class="badge bg-info text-dark ms-2"><i class="bi bi-eye-fill me-1"></i>Read-Only &amp; Reporting Access</span>
+                <?php endif; ?>
             </div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
+                <?php if ($is_supervisory && !empty($all_ranges)): ?>
+                    <form method="GET" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="tab" value="<?= htmlspecialchars($active_tab) ?>">
+                        <label class="small fw-bold text-muted mb-0">Range:</label>
+                        <select name="range_id" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()" style="min-width: 190px;">
+                            <?php foreach ($all_ranges as $ar): ?>
+                                <option value="<?= (int)$ar['id'] ?>" <?= ($range_id == $ar['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars(($ar['district_name'] ? $ar['district_name'] . ' - ' : '') . $ar['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                <?php endif; ?>
                 <a href="range_details.php<?= $requested_range_id ? '?range_id=' . $requested_range_id : ($range_id ? '?range_id=' . $range_id : '') ?>" class="btn btn-secondary shadow-sm text-nowrap">
                     <i class="bi bi-arrow-left me-2"></i>Back
                 </a>
+                <?php if (!$is_read_only): ?>
                 <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#scheduledVisitModal">
                     <i class="bi bi-journal-plus me-1"></i> Record Site Visit
                 </button>
                 <button class="btn btn-primary shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#addProjectModal">
                     <i class="bi bi-plus-circle me-1"></i> Add Project
                 </button>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -351,9 +381,11 @@ require_once '../../../includes/header.php';
                             </h5>
                             <small class="text-muted">Mandatory milestone visits at 1 Month, 3 Months, 6 Months, and Bi-Annually</small>
                         </div>
+                        <?php if (!$is_read_only): ?>
                         <button class="btn btn-dark btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#scheduledVisitModal">
                             <i class="bi bi-plus-lg me-1"></i> Log Field Inspection
                         </button>
+                        <?php endif; ?>
                     </div>
 
                     <div class="card-body">
@@ -583,8 +615,10 @@ require_once '../../../includes/header.php';
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
+<?php if (!$is_read_only): ?>
 <?php include 'models/add_project_modal.php'; ?>
 <?php include __DIR__ . '/models/modal_log_training.php'; ?>
+<?php endif; ?>
 <script src="../../../assets/js/training_manager.js"></script>
 
 <script>

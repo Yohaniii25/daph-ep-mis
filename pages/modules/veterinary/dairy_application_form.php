@@ -29,6 +29,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
     header("Location: ../../../../index.php");
     exit();
 }
+$is_read_only = in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true);
 
 // 2. Fetch parameters
 $param_farm_reg_no = trim($_GET['farm_reg_no'] ?? '');
@@ -1481,9 +1482,13 @@ require_once '../../../includes/header.php';
                     </button>
                 </div>
                 <div class="d-flex align-items-center gap-2">
+                    <?php if (!$is_read_only): ?>
                     <button type="submit" id="btnSubmitApp" class="btn text-white px-4 py-2 fw-bold shadow-sm" style="background-color: #820100; font-size: 0.95rem;">
                         <i class="bi bi-cloud-check-fill me-1"></i> Save Survey Application
                     </button>
+                    <?php else: ?>
+                    <span class="badge bg-info text-dark px-3 py-2"><i class="bi bi-eye-fill me-1"></i>Read-Only View</span>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
