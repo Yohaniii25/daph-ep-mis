@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once __DIR__ . '/../../../config/db_connect.php';
+require_once __DIR__ . '/../../../includes/rbac.php';
+require_once __DIR__ . '/../../../includes/range_scope.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
@@ -19,29 +21,20 @@ $allowed_roles = [
     'super_admin'
 ];
 
-if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
-    header("Location: ../../../../index.php");
-    exit();
-}
+require_module_roles($allowed_roles, false, '../../../../index.php');
 
 if (!isset($_SESSION['full_name'])) {
     $_SESSION['full_name'] = $_SESSION['username'] ?? 'Officer';
 }
 
-$full_name   = $_SESSION['full_name'];
-$user_role   = $_SESSION['role'] ?? '';
-$is_supervisory = in_array($user_role, ['deputy_director_hq_1', 'district_dd', 'deputy_director_district', 'provincial_director', 'admin', 'super_admin', 'sms'], true);
-$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
-$range_id    = isset($_GET['range_id']) && intval($_GET['range_id']) > 0 ? intval($_GET['range_id']) : ($_SESSION['range_id'] ?? null);
-$district_id = $_SESSION['district_id'] ?? null;
-
-$all_ranges = [];
-if ($is_supervisory) {
-    $r_all = $mysqli->query("SELECT vr.id, vr.name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id ORDER BY d.name ASC, vr.name ASC");
-    if ($r_all) {
-        $all_ranges = $r_all->fetch_all(MYSQLI_ASSOC);
-    }
-}
+$full_name      = $_SESSION['full_name'];
+$user_role      = get_current_user_role();
+$is_supervisory = is_supervisory_role($user_role);
+$is_read_only   = is_read_only_role($user_role);
+$scope          = resolve_range_scope($mysqli, $is_supervisory);
+$range_id       = $scope['range_id'];
+$district_id    = $scope['district_id'];
+$all_ranges     = $scope['ranges'];
 
 if (empty($range_id)) {
     if ($district_id) {

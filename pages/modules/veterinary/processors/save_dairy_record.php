@@ -1,17 +1,13 @@
 <?php
 session_start();
 require_once __DIR__ . '/../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../includes/rbac.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true)) {
-        http_response_code(403);
-        $_SESSION['error'] = 'Forbidden: Read-only role cannot modify dairy records.';
-        header("Location: ../dairy_hub.php");
-        exit();
-    }
+    block_read_only_writes([], false, '../dairy_hub.php', 'Forbidden: Read-only role cannot modify dairy records.');
     $range_id = $_SESSION['range_id'];
     $user_id  = $_SESSION['user_id'];
     

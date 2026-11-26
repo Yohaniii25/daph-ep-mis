@@ -1,5 +1,10 @@
 <?php
-// add_user.php  →  Keep this file forever (protect it later with .htaccess)
+// add_user.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once 'includes/rbac.php';
+require_module_roles(['administrator', 'provincial_director', 'admin', 'super_admin'], false, 'index.php');
 require_once 'config/db_connect.php';
 require_once 'includes/notification_helper.php';
 

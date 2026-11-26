@@ -7,6 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../includes/rbac.php';
 
 header('Content-Type: application/json');
 
@@ -26,10 +27,7 @@ function jsonResponse(array $data): void {
     exit();
 }
 
-if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || $action === 'save_producer')) {
-    http_response_code(403);
-    jsonResponse(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify milk producer records.']);
-}
+block_read_only_writes(['save_producer'], true, null, 'Forbidden: Read-only role cannot modify milk producer records.');
 
 function resolveVolumeRange(?float $vol, ?string $raw_range): string {
     if (!empty($raw_range) && in_array($raw_range, [

@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../includes/rbac.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
@@ -21,11 +22,7 @@ $allowed_roles = [
     'super_admin'
 ];
 
-if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
-    header('Content-Type: application/json; charset=UTF-8');
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
-    exit();
-}
+require_module_roles($allowed_roles, true);
 
 $user_id = (int)($_SESSION['user_id'] ?? 0);
 if ($user_id > 0) {
@@ -72,12 +69,13 @@ function sendJson($data) {
     exit();
 }
 
-// Strict read-only enforcement for Subject Matter Specialist (sms)
-$write_actions = ['save_mobile_clinic', 'delete_mobile_clinic', 'save_drug_distribution', 'delete_drug_distribution'];
-if (($_SESSION['role'] ?? '') === 'sms' && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || in_array($action, $write_actions, true))) {
-    http_response_code(403);
-    sendJson(['success' => false, 'message' => 'Forbidden: Subject Matter Specialist role has read-only access.']);
-}
+// Strict read-only enforcement
+block_read_only_writes(
+    ['save_mobile_clinic', 'delete_mobile_clinic', 'save_drug_distribution', 'delete_drug_distribution'],
+    true,
+    null,
+    'Forbidden: Read-only role cannot modify mobile clinic or drug distribution records.'
+);
 
 // -------------------------------------------------------------------------
 // ACTION: GET DRUG OPTIONS & CURRENT INVENTORY STOCKS

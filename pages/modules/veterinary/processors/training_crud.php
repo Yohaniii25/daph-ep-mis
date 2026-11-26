@@ -3,6 +3,7 @@ session_start();
 header('Content-Type: application/json; charset=UTF-8');
 
 require_once __DIR__ . '/../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../includes/rbac.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
@@ -25,10 +26,7 @@ $allowed_roles = [
     'livestock_development_officer'
 ];
 
-if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
-    exit();
-}
+require_module_roles($allowed_roles, true);
 
 $action = $_REQUEST['action'] ?? '';
 
@@ -37,11 +35,7 @@ function sendJson($data) {
     exit();
 }
 
-$write_actions = ['save_training', 'delete_training'];
-if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || in_array($action, $write_actions, true))) {
-    http_response_code(403);
-    sendJson(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify training records.']);
-}
+block_read_only_writes(['save_training', 'delete_training'], true, null, 'Forbidden: Read-only role cannot modify training records.');
 
 $upload_base_dir = __DIR__ . '/../../../../assets/uploads/trainings/';
 if (!is_dir($upload_base_dir)) {

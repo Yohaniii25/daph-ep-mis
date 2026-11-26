@@ -9,6 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../includes/rbac.php';
 require_once __DIR__ . '/dairy_db_migration.php';
 
 /** @var mysqli $mysqli */
@@ -33,10 +34,7 @@ $allowed_roles = [
     'planning_officer'
 ];
 
-if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access. Please log in.']);
-    exit();
-}
+require_module_roles($allowed_roles, true);
 
 $action = trim($_REQUEST['action'] ?? '');
 $user_id = intval($_SESSION['user_id'] ?? 0);
@@ -47,11 +45,12 @@ function jsonResponse($data) {
     exit();
 }
 
-$write_actions = ['save_summary', 'delete_summary', 'save_application', 'add_water_source', 'assign_executive_position', 'update_code_of_conduct'];
-if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || in_array($action, $write_actions, true))) {
-    http_response_code(403);
-    jsonResponse(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify Dairy Hub records.']);
-}
+block_read_only_writes(
+    ['save_summary', 'delete_summary', 'save_application', 'add_water_source', 'assign_executive_position', 'update_code_of_conduct'],
+    true,
+    null,
+    'Forbidden: Read-only role cannot modify Dairy Hub records.'
+);
 
 // -------------------------------------------------------------------------
 // CENTRAL MASTER FILE RIPPLE SYNCHRONIZATION ENGINE

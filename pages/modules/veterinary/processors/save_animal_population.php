@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../../../../config/db_connect.php';
+require_once __DIR__ . '/../../../../includes/rbac.php';
 
 // Allowed roles
 $allowed_roles = [
@@ -18,12 +19,7 @@ $allowed_roles = [
 
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
 
-if (in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true) && (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'], true) || ($action !== null && $action !== 'get_list'))) {
-    http_response_code(403);
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Forbidden: Read-only role cannot modify animal population records.']);
-    exit();
-}
+block_read_only_writes(['save', 'delete'], true, null, 'Forbidden: Read-only role cannot modify animal population records.');
 
 // Determine range_id (from request or session)
 $range_id = isset($_REQUEST['range_id']) && intval($_REQUEST['range_id']) > 0 

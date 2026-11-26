@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once __DIR__ . '/../../../config/db_connect.php';
+require_once __DIR__ . '/../../../includes/rbac.php';
+require_once __DIR__ . '/../../../includes/range_scope.php';
 
 /** @var mysqli $mysqli */
 global $mysqli;
@@ -20,30 +22,17 @@ $allowed_roles = [
     'super_admin',
     'sms'
 ];
-if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles, true)) {
-    header("Location: ../../../../index.php");
-    exit();
-}
+require_module_roles($allowed_roles, false, '../../../../index.php');
 
-$user_role   = $_SESSION['role'] ?? '';
-$is_supervisory = in_array($user_role, ['deputy_director_hq_1', 'deputy_director_hq_2', 'district_dd', 'deputy_director_district', 'provincial_director', 'administrator', 'admin', 'super_admin', 'sms'], true);
-$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
+$user_role   = get_current_user_role();
+$is_supervisory = is_supervisory_role($user_role);
+$is_read_only = is_read_only_role($user_role);
 
 $user_id     = $_SESSION['user_id'] ?? null;
-$requested_range_id = ($is_supervisory && isset($_GET['range_id']) && is_numeric($_GET['range_id'])) ? intval($_GET['range_id']) : null;
-$range_id    = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
-$district_id = $_SESSION['district_id'] ?? null;
-
-$all_ranges = [];
-if ($is_supervisory) {
-    $r_res = $mysqli->query("SELECT vr.id, vr.name, d.name AS district_name FROM veterinary_ranges vr LEFT JOIN districts d ON vr.district_id = d.id ORDER BY d.name ASC, vr.name ASC");
-    if ($r_res) {
-        $all_ranges = $r_res->fetch_all(MYSQLI_ASSOC);
-    }
-    if (empty($range_id) && !empty($all_ranges)) {
-        $range_id = intval($all_ranges[0]['id']);
-    }
-}
+$scope       = resolve_range_scope($mysqli, $is_supervisory);
+$range_id    = $scope['range_id'];
+$district_id = $scope['district_id'];
+$all_ranges  = $scope['ranges'];
 
 if (empty($range_id)) {
     die('<div class="alert alert-danger text-center p-5 m-5">Error: Your account is not assigned to any Veterinary Range.</div>');
