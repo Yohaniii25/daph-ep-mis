@@ -143,24 +143,36 @@ if (empty($species_labels)) {
 <div class="container-fluid px-4 py-3">
 
     <!-- Header & Navigation Link -->
+    <?php $is_hq2_view = (($_SESSION['role'] ?? '') === 'deputy_director_hq_2'); ?>
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <div class="d-flex align-items-center gap-2">
-                <h2 class="fw-bold mb-0 text-dark">Planning Deputy Director Visual Dashboard</h2>
-                <span class="badge bg-primary px-3 py-2 rounded-pill fw-semibold">HQ-1 Visual Overview</span>
+                <h2 class="fw-bold mb-0 text-dark"><?= $is_hq2_view ? 'Deputy Director (H/Q-2) Visual Dashboard' : 'Planning Deputy Director Visual Dashboard' ?></h2>
+                <span class="badge bg-primary px-3 py-2 rounded-pill fw-semibold"><?= $is_hq2_view ? 'HQ-2 Visual Overview' : 'HQ-1 Visual Overview' ?></span>
                 <span class="badge bg-dark px-3 py-2 rounded-pill fw-normal">Province-Wide Analytics</span>
             </div>
             <p class="text-muted small mb-0 mt-1">
-                Executive High-Level Visual Summary & Comparative Analytics Across All 45 Veterinary Ranges in the Eastern Province.
+                <?= $is_hq2_view
+                    ? 'Executive Visual Summary & View-Only Access to Regional Farms and Training Centers across the Eastern Province.'
+                    : 'Executive High-Level Visual Summary & Comparative Analytics Across All 45 Veterinary Ranges in the Eastern Province.' ?>
             </p>
         </div>
-        <div class="d-flex align-items-center gap-2 mt-3 mt-md-0">
+        <div class="d-flex align-items-center gap-2 mt-3 mt-md-0 flex-wrap">
             <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="window.print()">
                 <i class="bi bi-printer me-1"></i> Print Dashboard
             </button>
-            <a href="<?= BASE_PATH ?>pages/planning_dd/range_details.php" class="btn btn-danger btn-sm shadow-sm">
-                <i class="bi bi-grid-3x3-gap-fill me-1"></i> Range Details Hub
-            </a>
+            <?php if ($is_hq2_view): ?>
+                <a href="<?= BASE_PATH ?>pages/modules/district/regional_farms.php" class="btn btn-success btn-sm shadow-sm">
+                    <i class="bi bi-flower1 me-1"></i> Regional Farms
+                </a>
+                <a href="<?= BASE_PATH ?>pages/modules/district/training_centers.php" class="btn btn-danger btn-sm shadow-sm">
+                    <i class="bi bi-mortarboard me-1"></i> Training Centers
+                </a>
+            <?php else: ?>
+                <a href="<?= BASE_PATH ?>pages/modules/veterinary/monthly-annual-reports.php" class="btn btn-danger btn-sm shadow-sm">
+                    <i class="bi bi-grid-3x3-gap-fill me-1"></i> Monthly Summary Hub
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 

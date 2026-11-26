@@ -3,6 +3,7 @@ $role = $_SESSION['role'] ?? '';
 $user_role = $_SESSION['user_role'] ?? '';
 $is_pd = (in_array($role, ['provincial_director']) || $user_role === 'Provincial Director' || $role === 'Provincial Director');
 $is_planning_dd = ($role === 'deputy_director_hq_1');
+$is_hq_2 = ($role === 'deputy_director_hq_2');
 $is_hr_user = ($role === 'administrator');
 $is_finance_admin = ($role === 'finance_admin');
 $is_planning_officer = ($role === 'planning_officer');
@@ -223,6 +224,18 @@ $current_view_param = $_GET['view'] ?? '';
                         <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['dairy_hub.php', 'dairy_application_form.php', 'dairy_project_summary.php']) ? 'active' : '' ?>"
                             href="<?= $base_path ?>pages/modules/veterinary/dairy_hub.php">
                             <i class="bi bi-patch-check me-2"></i> Dairy Hub &amp; Approvals
+                        </a>
+                    <?php endif; ?>
+
+                    <!-- Deputy Director (H/Q-2) Menu -->
+                    <?php if ($is_hq_2): ?>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'regional_farms.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/regional_farms.php">
+                            <i class="bi bi-flower1 me-2"></i> Regional Farms
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'training_centers.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/training_centers.php">
+                            <i class="bi bi-mortarboard me-2"></i> Training Centers
                         </a>
                     <?php endif; ?>
 
