@@ -14,6 +14,7 @@ require_once __DIR__ . '/../../../config/db_connect.php';
 /** @var mysqli $mysqli */
 global $mysqli;
 require_once '../../../includes/notification_helper.php';
+require_once __DIR__ . '/../../../includes/approval_helper.php';
 
 // Authorization: Provincial Director, Administrator, Deputy Director H/Q 1 & 2
 $allowed_roles = ['administrator', 'provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2'];
