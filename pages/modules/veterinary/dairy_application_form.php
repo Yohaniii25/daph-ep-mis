@@ -29,7 +29,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
     header("Location: ../../../../index.php");
     exit();
 }
-$is_read_only = in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true);
+$is_read_only = in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms', 'provincial_director'], true);
 
 // 2. Fetch parameters
 $param_farm_reg_no = trim($_GET['farm_reg_no'] ?? '');

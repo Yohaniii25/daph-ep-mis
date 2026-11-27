@@ -30,7 +30,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 }
 
 $user_role = $_SESSION['role'] ?? '';
-$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms', 'provincial_director'], true);
 $is_supervisory = in_array($user_role, ['deputy_director_hq_1', 'deputy_director_hq_2', 'district_dd', 'deputy_director_district', 'provincial_director', 'admin', 'super_admin', 'administrator', 'sms', 'planning_officer'], true);
 
 $requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;

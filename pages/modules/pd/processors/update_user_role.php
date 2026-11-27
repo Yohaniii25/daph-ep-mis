@@ -13,9 +13,10 @@ require_once '../../../../includes/notification_helper.php';
 
 $is_ajax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_POST['ajax']);
 
-// Authorization: Provincial Director, Administrator, HQ Deputy Directors
-$allowed_roles = ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'administrator'];
+// Authorization: Administrator, HQ Deputy Directors (Provincial Director is read-only)
+$allowed_roles = ['deputy_director_hq_1', 'deputy_director_hq_2', 'administrator'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles)) {
+    http_response_code(403);
     if ($is_ajax) {
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);

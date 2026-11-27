@@ -11,7 +11,7 @@
  * @var string $tr_export_id    HTML ID for export buttons container
  */
 
-$is_read_only = $is_read_only ?? in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms'], true);
+$is_read_only = $is_read_only ?? in_array($_SESSION['role'] ?? '', ['deputy_director_hq_1', 'sms', 'provincial_director'], true);
 $total_sessions   = count($tr_records);
 $total_attendance = 0;
 $photos_count     = 0;

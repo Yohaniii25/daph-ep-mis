@@ -23,7 +23,7 @@ if (!function_exists('is_read_only_role')) {
     function is_read_only_role(?string $role = null): bool
     {
         $role = $role ?? get_current_user_role();
-        return in_array($role, ['sms', 'deputy_director_hq_1'], true);
+        return in_array($role, ['sms', 'deputy_director_hq_1', 'provincial_director'], true);
     }
 }
 

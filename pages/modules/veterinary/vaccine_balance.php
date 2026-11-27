@@ -18,7 +18,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? '';
 $is_supervisory = in_array($user_role, ['district_dd', 'deputy_director_district', 'sms', 'provincial_director', 'administrator']);
-$is_read_only = ($user_role === 'sms');
+$is_read_only = in_array($user_role, ['sms', 'deputy_director_hq_1', 'provincial_director'], true);
 $district_id = $_SESSION['district_id'] ?? null;
 
 // Fetch Officer Details & Designation

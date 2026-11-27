@@ -33,7 +33,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 
 $user_role   = $_SESSION['role'] ?? '';
 $user_id     = intval($_SESSION['user_id'] ?? 0);
-$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms', 'provincial_director'], true);
 $session_range_id    = !empty($_SESSION['range_id']) ? intval($_SESSION['range_id']) : null;
 $session_district_id = !empty($_SESSION['district_id']) ? intval($_SESSION['district_id']) : null;
 

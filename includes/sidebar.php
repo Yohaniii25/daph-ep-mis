@@ -269,6 +269,50 @@ $current_view_param = $_GET['view'] ?? '';
                             href="<?= $base_path ?>pages/modules/veterinary/dairy_hub.php">
                             <i class="bi bi-patch-check me-2"></i> Dairy Hub &amp; Approvals
                         </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'monthly-annual-reports.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/monthly-annual-reports.php">
+                            <i class="bi bi-file-earmark-bar-graph me-2"></i> Monthly Summary Functions
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'vaccination_targets.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccination_targets.php">
+                            <i class="bi bi-shield-check me-2"></i> Vaccination &amp; Targets
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'vaccine_balance.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/vaccine_balance.php">
+                            <i class="bi bi-box-seam me-2"></i> Vaccine Balance
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['mobile_clinics.php', 'mobile_clinic_reports.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/mobile_clinics.php">
+                            <i class="bi bi-truck me-2"></i> Mobile Clinics
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['drug_maintenance.php', 'drug_types.php', 'batches.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/drug_maintenance.php?view=maintenance">
+                            <i class="bi bi-capsule me-2"></i> Drug Maintenance
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= in_array($current_file, ['projects_progress.php', 'project_beneficiaries.php']) ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/projects_progress.php">
+                            <i class="bi bi-kanban me-2"></i> Projects &amp; Monitoring
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'range_statistics.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/range_statistics.php">
+                            <i class="bi bi-bar-chart-line me-2"></i> Range Statistics
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'annual_targets.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/annual_targets.php">
+                            <i class="bi bi-bullseye me-2"></i> Annual Targets
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'advanced_programme.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/veterinary/advanced_programme.php">
+                            <i class="bi bi-calendar2-week me-2"></i> Advanced Programme
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'regional_farms.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/regional_farms.php">
+                            <i class="bi bi-flower1 me-2"></i> Regional Farms
+                        </a>
+                        <a class="nav-link d-flex align-items-center px-4 py-3 <?= ($current_file === 'training_centers.php') ? 'active' : '' ?>"
+                            href="<?= $base_path ?>pages/modules/district/training_centers.php">
+                            <i class="bi bi-mortarboard me-2"></i> Training Centers
+                        </a>
 
                     <?php endif; ?>
 

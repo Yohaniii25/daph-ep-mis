@@ -9,7 +9,6 @@ $allowed_roles = [
     'district_dd',
     'deputy_director_district',
     'administrator',
-    'provincial_director',
     'admin',
     'super_admin'
 ];

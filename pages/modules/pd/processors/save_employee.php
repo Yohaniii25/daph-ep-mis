@@ -11,9 +11,10 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once '../../../../config/db_connect.php';
 require_once '../../../../includes/notification_helper.php';
 
-// Authorization: Provincial Director, Administrator, HQ Deputy Directors
-$allowed_roles = ['provincial_director', 'deputy_director_hq_1', 'deputy_director_hq_2', 'administrator'];
+// Authorization: Administrator, HQ Deputy Directors (Provincial Director is read-only)
+$allowed_roles = ['administrator', 'deputy_director_hq_1', 'deputy_director_hq_2'];
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowed_roles)) {
+    http_response_code(403);
     header("Location: ../../../../index.php");
     exit();
 }

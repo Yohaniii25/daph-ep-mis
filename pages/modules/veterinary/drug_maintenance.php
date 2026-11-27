@@ -19,7 +19,7 @@ $user_id = $_SESSION['user_id'] ?? null;
 $user_role = $_SESSION['role'] ?? '';
 $user_district_id = $_SESSION['district_id'] ?? null;
 $is_supervisory = in_array($user_role, ['district_dd', 'deputy_director_district', 'sms', 'provincial_director', 'admin', 'super_admin', 'administrator']);
-$is_read_only = ($user_role === 'sms');
+$is_read_only = in_array($user_role, ['sms', 'deputy_director_hq_1', 'provincial_director'], true);
 
 // View routing: 'hub' (Main Navigation Level), 'batches' (Batch Maintain View), 'maintenance' (Drug Maintain View)
 $view = $_GET['view'] ?? ($is_read_only ? 'maintenance' : 'hub');

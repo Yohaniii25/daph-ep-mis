@@ -30,7 +30,7 @@ if (!isset($_SESSION['full_name'])) {
 
 $full_name   = $_SESSION['full_name'];
 $user_role   = $_SESSION['role'] ?? '';
-$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms'], true);
+$is_read_only = in_array($user_role, ['deputy_director_hq_1', 'sms', 'provincial_director'], true);
 $requested_range_id = isset($_GET['range_id']) && is_numeric($_GET['range_id']) ? (int)$_GET['range_id'] : null;
 $range_id    = $requested_range_id ?: ($_SESSION['range_id'] ?? null);
 $district_id = $_SESSION['district_id'] ?? null;

@@ -23,6 +23,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
 }
 
 $user_role = $_SESSION['role'];
+$is_read_only = ($user_role === 'provincial_director');
 
 // Fetch all employees from live users table joined with district, range, farm, and training center
 $query = "
@@ -197,10 +198,14 @@ require_once '../../../includes/sidebar.php';
                 <p class="text-muted small mb-0">Province-wide personnel registry, executive appointments, and instant role oversight</p>
             </div>
             <div class="d-flex gap-2 mt-2 mt-md-0">
+                <?php if (!$is_read_only): ?>
                 <button type="button" class="btn text-light shadow-sm btn-sm px-3 d-flex align-items-center gap-2" style="background-color: #820100;" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                     <i class="bi bi-person-plus-fill"></i>
                     <span>Register New Officer</span>
                 </button>
+                <?php else: ?>
+                <span class="badge bg-info text-dark d-flex align-items-center px-3 py-2"><i class="bi bi-eye-fill me-1"></i>Read-Only View</span>
+                <?php endif; ?>
                 <button class="btn btn-outline-secondary shadow-sm btn-sm px-3 d-flex align-items-center gap-2" onclick="refreshDirectory()">
                     <i class="bi bi-arrow-clockwise"></i>
                     <span>Refresh</span>
@@ -373,7 +378,7 @@ require_once '../../../includes/sidebar.php';
                                 <th>District / Scope</th>
                                 <th>Facility / Range</th>
                                 <th>Status</th>
-                                <th class="text-center" style="width: 140px;">Actions</th>
+                                <?php if (!$is_read_only): ?><th class="text-center" style="width: 140px;">Actions</th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -464,12 +469,14 @@ require_once '../../../includes/sidebar.php';
                                             <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2">Inactive</span>
                                         <?php endif; ?>
                                     </td>
+                                    <?php if (!$is_read_only): ?>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Assign New Role / Designation"
                                             onclick="openAssignRoleModal(<?= htmlspecialchars(json_encode($officer), ENT_QUOTES, 'UTF-8') ?>)">
                                             <i class="bi bi-pencil-square me-1"></i>Assign Role
                                         </button>
                                     </td>
+                                    <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -481,11 +488,13 @@ require_once '../../../includes/sidebar.php';
     </main>
 </div>
 
+<?php if (!$is_read_only): ?>
 <!-- DEDICATED ADD EMPLOYEE MODAL (PD SPECIFIC) -->
 <?php require_once __DIR__ . '/models/add_employee.php'; ?>
 
 <!-- DEDICATED ASSIGN ROLE MODAL (PD SPECIFIC) -->
 <?php require_once __DIR__ . '/models/assign_role_modal.php'; ?>
+<?php endif; ?>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="../../../assets/js/bootstrap.bundle.min.js"></script>

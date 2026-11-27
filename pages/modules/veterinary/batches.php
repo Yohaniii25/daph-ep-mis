@@ -10,7 +10,7 @@ $allowed_roles = [
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles, true)) {
     die("Access denied");
 }
-$is_read_only = (($_SESSION['role'] ?? '') === 'sms');
+$is_read_only = in_array($_SESSION['role'] ?? '', ['sms', 'deputy_director_hq_1', 'provincial_director'], true);
 
 require_once __DIR__ . '/../../../config/db_connect.php';
 

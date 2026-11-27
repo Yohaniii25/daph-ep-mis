@@ -9,7 +9,7 @@ global $mysqli;
 
 $allowed_roles = [
     'veterinary_surgeon', 'government_veterinary_surgeon', 'additional_veterinary_surgeon',
-    'district_dd', 'deputy_director_district', 'provincial_director', 'administrator'
+    'district_dd', 'deputy_director_district', 'administrator'
 ];
 
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles, true)) {

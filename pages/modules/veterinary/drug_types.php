@@ -1,7 +1,7 @@
 <?php
 require_once '../../../includes/header.php';
-if (!in_array($_SESSION['role'], ['veterinary_surgeon', 'sms', 'district_dd', 'admin', 'super_admin'])) die("Access denied");
-$is_read_only = (($_SESSION['role'] ?? '') === 'sms');
+if (!in_array($_SESSION['role'], ['veterinary_surgeon', 'sms', 'district_dd', 'provincial_director', 'deputy_director_hq_1', 'admin', 'super_admin'])) die("Access denied");
+$is_read_only = in_array($_SESSION['role'] ?? '', ['sms', 'deputy_director_hq_1', 'provincial_director'], true);
 require_once __DIR__ . '/../../../config/db_connect.php';
 
 /** @var mysqli $mysqli */

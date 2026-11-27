@@ -15,7 +15,7 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['role'] ?? '', $allowe
 $user_role = $_SESSION['role'] ?? '';
 $user_id   = $_SESSION['user_id'] ?? null;
 $is_supervisory = in_array($user_role, ['district_dd', 'sms', 'admin', 'super_admin', 'deputy_director_district', 'deputy_director_hq_1', 'provincial_director'], true);
-$is_read_only = in_array($user_role, ['sms', 'deputy_director_hq_1'], true);
+$is_read_only = in_array($user_role, ['sms', 'deputy_director_hq_1', 'provincial_director'], true);
 
 if (!isset($_SESSION['full_name'])) {
     $_SESSION['full_name'] = $_SESSION['username'] ?? 'Officer';
